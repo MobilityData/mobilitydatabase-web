@@ -544,11 +544,13 @@ export default function FeedSummary({
                     sx={{
                       height: '1px',
                       width: '100%',
-                      background: `radial-gradient(circle,${getFeedStatusData(
-                        (feed as GTFSFeedType)?.status ?? '',
-                        theme,
-                        t,
-                      )?.color} 54%, rgba(255, 255, 255, 0) 100%)`,
+                      background: `radial-gradient(circle,${
+                        getFeedStatusData(
+                          (feed as GTFSFeedType)?.status ?? '',
+                          theme,
+                          t,
+                        )?.color
+                      } 54%, rgba(255, 255, 255, 0) 100%)`,
                     }}
                   >
                     {/* TODO: nice to have, a placement of the chip relative to the current date */}

@@ -60,8 +60,9 @@ export default async function DataQualitySummary({
                   latestDataset?.validation_report?.unique_error_count !==
                     undefined &&
                   latestDataset?.validation_report?.unique_error_count > 0
-                    ? `${latestDataset?.validation_report
-                        ?.unique_error_count} ${tCommon('feedback.errors')}`
+                    ? `${
+                        latestDataset?.validation_report?.unique_error_count
+                      } ${tCommon('feedback.errors')}`
                     : tCommon('feedback.noErrors')
                 }
                 color={
@@ -94,8 +95,9 @@ export default async function DataQualitySummary({
                   latestDataset?.validation_report?.unique_warning_count !==
                     undefined &&
                   latestDataset?.validation_report?.unique_warning_count > 0
-                    ? `${latestDataset?.validation_report
-                        ?.unique_warning_count} ${tCommon('feedback.warnings')}`
+                    ? `${
+                        latestDataset?.validation_report?.unique_warning_count
+                      } ${tCommon('feedback.warnings')}`
                     : tCommon('feedback.noWarnings')
                 }
                 color={

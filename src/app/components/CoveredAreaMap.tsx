@@ -260,7 +260,9 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
         }
       }
       const feedBoundingBox: LatLngTuple[] =
-        feed?.data_type === 'gtfs' ? boundingBox ?? [] : gbfsGeoJsonBoundingBox;
+        feed?.data_type === 'gtfs'
+          ? (boundingBox ?? [])
+          : gbfsGeoJsonBoundingBox;
       return (
         <MapGeoJSON
           key={`geojson-${feed?.id}`}

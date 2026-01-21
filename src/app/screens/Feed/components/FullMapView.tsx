@@ -380,7 +380,7 @@ export default function FullMapView(): React.ReactElement {
                 onCheckboxChange={(checkboxData: CheckboxStructure[]) => {
                   const nextTypeIds = checkboxData
                     .map((item) =>
-                      item.checked ? item?.props?.routeTypeId ?? '' : '',
+                      item.checked ? (item?.props?.routeTypeId ?? '') : '',
                     )
                     .filter((item) => item !== '');
 

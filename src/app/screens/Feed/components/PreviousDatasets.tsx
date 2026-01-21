@@ -225,10 +225,10 @@ export default function PreviousDatasets({
                               dataset?.validation_report?.unique_error_count !=
                                 undefined &&
                               dataset?.validation_report?.unique_error_count > 0
-                                ? `${dataset?.validation_report
-                                    ?.unique_error_count} ${tCommon(
-                                    'feedback.errors',
-                                  )}`
+                                ? `${
+                                    dataset?.validation_report
+                                      ?.unique_error_count
+                                  } ${tCommon('feedback.errors')}`
                                 : tCommon('feedback.noErrors')
                             }
                             color={
@@ -262,10 +262,10 @@ export default function PreviousDatasets({
                                 ?.unique_warning_count != undefined &&
                               dataset?.validation_report?.unique_warning_count >
                                 0
-                                ? `${dataset?.validation_report
-                                    ?.unique_warning_count} ${tCommon(
-                                    'feedback.warnings',
-                                  )}`
+                                ? `${
+                                    dataset?.validation_report
+                                      ?.unique_warning_count
+                                  } ${tCommon('feedback.warnings')}`
                                 : tCommon('feedback.noWarnings')
                             }
                             color={
