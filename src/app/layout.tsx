@@ -1,12 +1,11 @@
-import * as React from 'react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/next';
 import ThemeRegistry from './registry';
-
 import { Providers } from './providers';
 import { type ReactElement } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { getRemoteConfigValues } from '../lib/remote-config.server';
-
 import { Mulish, IBM_Plex_Mono } from 'next/font/google';
 import Footer from './components/Footer';
 import Header from './components/Header';
@@ -56,6 +55,8 @@ export default async function RootLayout({
                 sx={{ minHeight: 'calc(100vh - 32px - 64px - 232px - 20px)' }}
               >
                 {children}
+                <SpeedInsights />
+                <Analytics />
               </Container>
               <Footer />
             </Providers>
