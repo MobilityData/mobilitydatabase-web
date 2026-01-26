@@ -68,10 +68,10 @@
     "e2e:run": "CYPRESS_BASE_URL=http://localhost:3001 cypress run",
     "e2e:open": "CYPRESS_BASE_URL=http://localhost:3001 cypress open",
     "firebase:auth:emulator:dev": "firebase emulators:start --only auth --project mobility-feeds-dev",
-    "generate:api-types:output": "npx openapi-typescript ../docs/DatabaseCatalogAPI.yaml -o $OUTPUT_PATH_TYPES && eslint $OUTPUT_PATH_TYPES --fix",
-    "generate:api-types": "OUTPUT_PATH_TYPES=src/app/services/feeds/types.ts npm run generate:api-types:output",
-    "generate:gbfs-validator-types:output": "npx openapi-typescript ../docs/GbfsValidator.yaml -o $OUTPUT_PATH_TYPES && eslint $OUTPUT_PATH_TYPES --fix",
-    "generate:gbfs-validator-types": "OUTPUT_PATH_TYPES=src/app/services/feeds/gbfs-validator-types.ts npm run generate:gbfs-validator-types:output"
+    "generate:api-types:output": "npm exec -- openapi-typescript ./external_types/DatabaseCatalogAPI.yaml -o $npm_config_output_path && eslint $npm_config_output_path --fix",
+    "generate:api-types": "npm run generate:api-types:output -- --output-file=src/app/services/feeds/types.ts",
+    "generate:gbfs-validator-types:output": "npm exec -- openapi-typescript ./external_types/GbfsValidator.yaml -o $npm_config_output_path && eslint $npm_config_output_path --fix",
+    "generate:gbfs-validator-types": "npm run generate:gbfs-validator-types:output -- --output-file=src/app/services/feeds/gbfs-validator-types.ts"
   },
   "eslintConfig": {
     "extends": [
@@ -131,7 +131,7 @@
     "jest-environment-jsdom": "^30.2.0",
     "msw": "^2.12.7",
     "next-devtools-mcp": "^0.3.9",
-    "openapi-typescript": "^6.7.5",
+    "openapi-typescript": "^7.10.1",
     "prettier": "^3.0.3",
     "ts-loader": "^9.4.4",
     "ts-node": "^10.9.2",

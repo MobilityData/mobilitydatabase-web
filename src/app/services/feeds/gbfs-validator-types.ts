@@ -3,16 +3,17 @@
  * Do not make direct changes to the file.
  */
 
+
 export interface paths {
-  '/validate': {
+  "/validate": {
     /** Validate GBFS feed */
     post: {
-      requestBody: components['requestBodies']['ValidateRequestBody'];
+      requestBody: components["requestBodies"]["ValidateRequestBody"];
       responses: {
         /** @description Validation result */
         200: {
           content: {
-            'application/json': components['schemas']['ValidationResult'];
+            "application/json": components["schemas"]["ValidationResult"];
           };
         };
       };
@@ -83,16 +84,16 @@ export interface components {
        * @example en
        */
       language?: string | null;
-      errors?: Array<components['schemas']['FileError']>;
+      errors?: components["schemas"]["FileError"][];
       schema?: Record<string, never>;
       /** @description System errors that occurred while processing this file, such as fetch failures or parsing errors. These are not validation errors but rather issues that prevented proper validation. */
-      systemErrors?: Array<components['schemas']['SystemError']>;
+      systemErrors?: components["schemas"]["SystemError"][];
     };
     ValidationResult: {
       summary?: {
         /** @example v1.2 */
         validatorVersion?: string;
-        files?: Array<components['schemas']['GbfsFile']>;
+        files?: components["schemas"]["GbfsFile"][];
       };
     };
   };
@@ -101,13 +102,10 @@ export interface components {
   requestBodies: {
     ValidateRequestBody: {
       content: {
-        'application/json': {
+        "application/json": {
           /** @example https://example.com/gbfs.json */
           feedUrl: string;
-          auth?:
-            | components['schemas']['BasicAuth']
-            | components['schemas']['BearerTokenAuth']
-            | components['schemas']['OAuthClientCredentialsGrantAuth'];
+          auth?: components["schemas"]["BasicAuth"] | components["schemas"]["BearerTokenAuth"] | components["schemas"]["OAuthClientCredentialsGrantAuth"];
         };
       };
     };
