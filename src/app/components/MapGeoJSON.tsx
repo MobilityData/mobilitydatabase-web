@@ -45,15 +45,10 @@ export const MapGeoJSON = (
   const theme = useTheme();
   const t = useTranslations('feeds');
   const { geoJSONData, displayMapDetails = true } = props;
-  const [ready, setReady] = React.useState(false);
   const [popupInfo, setPopupInfo] = React.useState<{
     lngLat: { lng: number; lat: number };
     properties: Record<string, string | number>;
   } | null>(null);
-
-  React.useEffect(() => {
-    setReady(true);
-  }, []);
 
   const bounds = React.useMemo(() => {
     return getBoundsFromCoordinates(props.polygon);
@@ -66,16 +61,7 @@ export const MapGeoJSON = (
       delete feature.properties.stops_in_area_coverage;
     });
   }
-
-  if (!ready) {
-    return (
-      <Box
-        style={{ minHeight: '400px', height: '100%', width: '100%' }}
-        data-testid='map-geojson-loading'
-      />
-    );
-  }
-
+  
   return (
     <Box
       sx={{

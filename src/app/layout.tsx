@@ -35,9 +35,11 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }): Promise<ReactElement> {
-  const locale = await getLocale();
-  const messages = await getMessages();
-  const remoteConfig = await getRemoteConfigValues();
+  const [locale, messages, remoteConfig] = await Promise.all([
+    getLocale(),
+    getMessages(),
+    getRemoteConfigValues(),
+  ]);
 
   return (
     <html lang={locale}>
@@ -48,11 +50,14 @@ export default async function RootLayout({
               <Header />
               <Container
                 maxWidth={false}
+                disableGutters
                 component={'main'}
                 id='next'
                 /* 100vh - header margin - header - footer - footer padding */
                 /* Not perfect, to revisit: for client loading state */
-                sx={{ minHeight: 'calc(100vh - 32px - 64px - 232px - 20px)' }}
+                sx={{
+                  minHeight: 'calc(100vh - 32px - 64px - 232px - 20px)'
+                }}
               >
                 {children}
                 <SpeedInsights />

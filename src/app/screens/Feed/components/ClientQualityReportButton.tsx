@@ -1,7 +1,5 @@
 'use client';
 
-// TODO: look into SSR patterns for components like this
-// That require client-side only libraries like react-ga4
 
 import { Button } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';

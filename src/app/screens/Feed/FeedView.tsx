@@ -1,6 +1,3 @@
-// This component is deprecated in favor of FeedView
-// They should have the same functionality
-
 import {
   Box,
   Button,
@@ -36,9 +33,9 @@ import {
   type GTFSRTFeedType,
 } from '../../services/feeds/utils';
 import ClientDownloadButton from './components/ClientDownloadButton';
-import { type LatLngTuple } from 'leaflet';
 import { type components } from '../../services/feeds/types';
 import ClientQualityReportButton from './components/ClientQualityReportButton';
+import { getBoundingBox } from './Feed.functions';
 
 interface Props {
   feed: BasicFeedType;
@@ -49,6 +46,8 @@ interface Props {
   totalRoutes?: number;
   routeTypes?: string[];
 }
+
+type LatestDatasetFull = components['schemas']['GtfsDataset'] | undefined;
 
 export default async function FeedView({
   feed,
@@ -104,44 +103,9 @@ export default async function FeedView({
       ? (feed as GBFSFeedType)?.source_info?.producer_url
       : undefined; // Simplified
 
-  // Bounding box logic
-  // TODO: put it in better place
-  const getBoundingBox = (): LatLngTuple[] | undefined => {
-    if (feed == undefined || feed.data_type !== 'gtfs') {
-      return undefined;
-    }
-    const gtfsFeed: GTFSFeedType = feed;
-    if (
-      gtfsFeed.bounding_box?.maximum_latitude == undefined ||
-      gtfsFeed.bounding_box?.maximum_longitude == undefined ||
-      gtfsFeed.bounding_box?.minimum_latitude == undefined ||
-      gtfsFeed.bounding_box?.minimum_longitude == undefined
-    ) {
-      return undefined;
-    }
-    return [
-      [
-        gtfsFeed.bounding_box.minimum_latitude,
-        gtfsFeed.bounding_box.minimum_longitude,
-      ],
-      [
-        gtfsFeed.bounding_box.minimum_latitude,
-        gtfsFeed.bounding_box.maximum_longitude,
-      ],
-      [
-        gtfsFeed.bounding_box.maximum_latitude,
-        gtfsFeed.bounding_box.maximum_longitude,
-      ],
-      [
-        gtfsFeed.bounding_box.maximum_latitude,
-        gtfsFeed.bounding_box.minimum_longitude,
-      ],
-    ];
-  };
-  const boundingBox = getBoundingBox();
+  const boundingBox = getBoundingBox(feed as GTFSFeedType);
 
-  // TODO: clean this up
-  let latestDataset: components['schemas']['GtfsDataset'] | undefined;
+  let latestDataset: LatestDatasetFull;
   if (feed.data_type === 'gtfs') {
     const gtfsFeed: GTFSFeedType = feed;
     latestDataset = initialDatasets?.find(
@@ -149,7 +113,6 @@ export default async function FeedView({
     );
   }
 
-  // Derived state for warnings
   const hasDatasets =
     initialDatasets != undefined && initialDatasets.length > 0;
 

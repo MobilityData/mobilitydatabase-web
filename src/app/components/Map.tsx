@@ -21,24 +21,11 @@ export const Map = (
   props: React.PropsWithChildren<MapProps>,
 ): React.ReactElement => {
   const theme = useTheme();
-  const [ready, setReady] = React.useState(false);
-
-  React.useEffect(() => {
-    setReady(true);
-  }, []);
 
   const bounds = React.useMemo(() => {
     return getBoundsFromCoordinates(props.polygon);
   }, [props.polygon]);
 
-  if (!ready) {
-    return (
-      <Box
-        style={{ minHeight: '400px', height: '100%', width: '100%' }}
-        data-testid='map-loading'
-      />
-    );
-  }
   // Convert LatLngExpression[] to GeoJSON ring for Source
   const coordinates = props.polygon.map((p) => {
     return [p[1], p[0]];
