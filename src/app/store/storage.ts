@@ -1,3 +1,9 @@
+// This file is a custom storage implementation for redux-persist
+// Provides a no-op storage for server-side rendering (SSR) environments
+// and uses localStorage for client-side environments.
+// This is temporary due to migrating to Next.js and an extra error catching measure
+// When more of the app is migrated to Next.js, we can remove this
+
 import createWebStorage from 'redux-persist/lib/storage/createWebStorage';
 
 const createNoopStorage = (): {
