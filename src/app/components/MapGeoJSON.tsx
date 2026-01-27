@@ -61,7 +61,7 @@ export const MapGeoJSON = (
       delete feature.properties.stops_in_area_coverage;
     });
   }
-  
+
   return (
     <Box
       sx={{

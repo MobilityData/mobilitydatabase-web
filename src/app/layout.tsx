@@ -56,7 +56,7 @@ export default async function RootLayout({
                 /* 100vh - header margin - header - footer - footer padding */
                 /* Not perfect, to revisit: for client loading state */
                 sx={{
-                  minHeight: 'calc(100vh - 32px - 64px - 232px - 20px)'
+                  minHeight: 'calc(100vh - 32px - 64px - 232px - 20px)',
                 }}
               >
                 {children}

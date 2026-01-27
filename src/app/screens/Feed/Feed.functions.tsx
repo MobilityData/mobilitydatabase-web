@@ -1,6 +1,9 @@
 import { Box, Typography } from '@mui/material';
 
-import { type GTFSFeedType, type GBFSVersionType } from '../../services/feeds/utils';
+import {
+  type GTFSFeedType,
+  type GBFSVersionType,
+} from '../../services/feeds/utils';
 import { type LatLngTuple } from 'leaflet';
 import { type GeoJSONData, type GeoJSONDataGBFS } from '../../types';
 
