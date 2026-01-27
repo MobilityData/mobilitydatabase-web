@@ -20,6 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import { WEB_VALIDATOR_LINK } from '../constants/Navigation';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import '../styles/TextShimmer.css';
+import { useTranslations } from 'next-intl';
 
 interface ActionBoxProps {
   IconComponent: React.ElementType;
@@ -53,6 +54,7 @@ const ActionBox = ({
 
 function Component(): React.ReactElement {
   const [searchInputValue, setSearchInputValue] = useState('');
+  const tCommon = useTranslations('common');
   const navigate = useNavigate();
   const theme = useTheme();
 
@@ -168,7 +170,7 @@ function Component(): React.ReactElement {
             color='primary'
             onClick={handleSearch}
           >
-            Search
+            {tCommon('search')}
           </Button>
         </Box>
         <Box
