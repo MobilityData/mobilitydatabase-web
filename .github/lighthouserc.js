@@ -34,7 +34,10 @@ module.exports = {
           height: 940,
           deviceScaleRatio: 1,
           disabled: false
-        }
+        },
+        extraHeaders: JSON.stringify({
+          'x-vercel-protection-bypass': process.env.VERCEL_TOKEN
+        })
       }
     },
     upload: {
