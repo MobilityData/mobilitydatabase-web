@@ -1,0 +1,194 @@
+name: Vercel Preview (PR)
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: vercel-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  deploy_preview:
+    # ✅ Only run for same-repo PRs (not forks)
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+
+      - name: 1Password - Load Secrets
+        uses: 1Password/load-secrets-action@v2.0.0
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          VERCEL_TOKEN: "op://TECHNOLOGIES/kjzkrs62v42mvsvw23cewbyemi/VERCEL_TOKEN-MobilityDatabase-web-it-account"
+          VERCEL_PROJECT_ID: "op://TECHNOLOGIES/kjzkrs62v42mvsvw23cewbyemi/VERCEL_PROJECT_ID-MobilityDatabase-web"
+          VERCEL_ORG_ID: "op://TECHNOLOGIES/kjzkrs62v42mvsvw23cewbyemi/VERCEL_ORG_ID-MobilityDatabase-web"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.12.0
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Cache Cypress binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-binary-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            cypress-${{ runner.os }}-binary-
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Unit tests
+        run: yarn test:ci
+    
+      - name: Cypress test
+        uses: cypress-io/github-action@v6
+        with:
+          start: |
+            yarn e2e:setup
+            yarn e2e:run
+          wait-on: npx wait-on --timeout 120000 http://127.0.0.1:3001 http://127.0.0.1:9099
+    
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: ./cypress/screenshots
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-videos
+          path: ./cypress/videos
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Pull Vercel settings (preview)
+        run: vercel pull --yes --environment=preview --token=${{ env.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ env.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ env.VERCEL_PROJECT_ID }}
+          VERCEL_TELEMETRY_DISABLED: 1
+
+      - name: Build (preview)
+        run: vercel build --token=${{ env.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ env.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ env.VERCEL_PROJECT_ID }}
+          VERCEL_TELEMETRY_DISABLED: 1
+
+      - name: Deploy (preview) and capture URL
+        id: deploy
+        run: |
+          URL=$(vercel deploy --prebuilt --token=${{ env.VERCEL_TOKEN }})
+          echo "preview_url=$URL" >> $GITHUB_OUTPUT
+        env:
+          VERCEL_ORG_ID: ${{ env.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ env.VERCEL_PROJECT_ID }}
+          VERCEL_TELEMETRY_DISABLED: 1
+
+      - name: Comment on PR with Preview URL (update existing)
+        uses: actions/github-script@v7
+        env:
+          PREVIEW_URL: ${{ steps.deploy.outputs.preview_url }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+
+            const marker = "<!-- vercel-preview-url -->";
+            const sha = context.payload.pull_request.head.sha.slice(0,7);
+
+            const body =
+              `${marker}\n` +
+              `✅ **Vercel Preview ready**\n\n` +
+              `- Preview: ${process.env.PREVIEW_URL}\n` +
+              `- Commit: \`${sha}\`\n`;
+
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number, per_page: 100 }
+            );
+
+            const existing = comments.find(c => c.body?.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner, repo,
+                comment_id: existing.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner, repo,
+                issue_number,
+                body
+              });
+            }
+
+      - name: Lighthouse Check
+        id: lighthouse-check
+        uses: treosh/lighthouse-ci-action@v12
+        # Runs on: Homepage, Search page, GTFS page, GTFS-RT page, and GBFS page
+        with:
+          configPath: ./.github/lighthouserc.js
+          temporaryPublicStorage: true
+        env:
+          LHCI_PREVIEW_URL_BASE64: ${{ steps.deploy.outputs.preview_url  }}
+    
+      - name: Format lighthouse score
+        id: format_lighthouse_score
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const results = ${{ steps.lighthouse-check.outputs.manifest }}
+            const links = ${{ steps.lighthouse-check.outputs.links }}
+            let comment = []
+            results.forEach((resultData, index) => {
+                const result = resultData.summary;
+
+                const formatResult = (res) => Math.round((res * 100))
+                Object.keys(result).forEach(key => result[key] = formatResult(result[key]))
+
+                const score = res => res >= 90 ? '🟢' : res >= 50 ? '🟠' : '🔴'
+                const link = Object.keys(links)[index] ?? 'Unknown URL';
+                const linkUrl = links[link] ?? '#';
+                comment = comment.concat(...[
+                    `*Lighthouse ran on ${link} * (Desktop)`,
+                    `⚡️ HTML Report [Lighthouse report](${linkUrl}) for the changes in this PR:`,
+                    '| Performance | Accessibility | Best Practices | SEO |',
+                    '| --- | --- | --- | --- |',
+                    `| ${score(result.performance)} ${result.performance} | ${score(result.accessibility)} ${result.accessibility} | ${score(result['best-practices'])} ${result['best-practices']} | ${score(result.seo)} ${result.seo} |`,
+                    ' ',
+                    ' ',
+                ])
+            })
+            const finalComment = comment.join('\n')
+            core.setOutput("comment", finalComment); 
+
+      - name: Add lighthouse comment to PR
+        id: comment_to_pr
+        uses: marocchino/sticky-pull-request-comment@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          number: ${{ github.event.issue.number }}
+          header: lighthouse
+          message: |
+            ${{ steps.format_lighthouse_score.outputs.comment }}
