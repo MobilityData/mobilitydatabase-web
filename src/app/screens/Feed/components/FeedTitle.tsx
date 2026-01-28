@@ -1,27 +1,26 @@
-import { Typography, useTheme } from '@mui/material';
+import { Typography } from '@mui/material';
 import {
   type GTFSFeedType,
   type GTFSRTFeedType,
 } from '../../../services/feeds/utils';
-import { useTranslation } from 'react-i18next';
+import { getTranslations } from 'next-intl/server';
 
 interface FeedTitleProps {
   sortedProviders: string[];
   feed: GTFSFeedType | GTFSRTFeedType;
 }
 
-export default function FeedTitle({
+export default async function FeedTitle({
   sortedProviders,
   feed,
-}: FeedTitleProps): React.ReactElement {
-  const { t } = useTranslation('feeds');
-  const theme = useTheme();
+}: FeedTitleProps): Promise<React.ReactElement> {
+  const tCommon = await getTranslations('common');
   const mainProvider = sortedProviders[0];
   let extraProviders: string | undefined;
   let realtimeFeedName: string | undefined;
   if (sortedProviders.length > 1) {
     extraProviders =
-      '+' + (sortedProviders.length - 1) + ' ' + t('common:others');
+      '+' + (sortedProviders.length - 1) + ' ' + tCommon('others');
   }
   if (
     feed?.data_type === 'gtfs_rt' &&
@@ -33,8 +32,8 @@ export default function FeedTitle({
   return (
     <Typography
       component='h1'
+      color='primary'
       sx={{
-        color: theme.palette.primary.main,
         fontWeight: 'bold',
         fontSize: { xs: 24, sm: 36 },
         lineHeight: 'normal',

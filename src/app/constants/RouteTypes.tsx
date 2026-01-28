@@ -13,7 +13,6 @@ import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
 import PlaceIcon from '@mui/icons-material/Place';
 import DirectionsSubwayIcon from '@mui/icons-material/DirectionsSubway';
 import type { SvgIconComponent } from '@mui/icons-material';
-import type { TFunction } from 'i18next';
 import * as React from 'react';
 
 export interface RouteTypeMetadata {
@@ -92,18 +91,18 @@ export const getStopByLocationTypeOrDefault = (
 
 export const getRouteTypeTranslatedName = (
   routeTypeId: string,
-  t: TFunction,
+  t: (key: string) => string,
 ): string => {
   const routeType = getRouteByTypeOrDefault(routeTypeId);
   return !(routeType.isDefault ?? false)
-    ? t(`common:gtfsSpec.routeType.${routeTypeId}.name`)
+    ? t(`gtfsSpec.routeType.${routeTypeId}.name`)
     : routeType.name;
 };
 
 export const renderRouteTypeIcon = (
   routeType: string,
   routeColorText: string,
-): JSX.Element | null => {
+): React.ReactElement | null => {
   const routeTypeMetadata = getRouteByTypeOrDefault(routeType);
   // The route type could be out of specs (e.g. google route types), so we may not have an icon.
   if (routeTypeMetadata?.icon == null) {
@@ -116,7 +115,7 @@ export const renderRouteTypeIcon = (
 export const renderLocationTypeIcon = (
   locationType: string,
   iconColor: string,
-): JSX.Element | null => {
+): React.ReactElement | null => {
   const locationTypeMetadata = getStopByLocationTypeOrDefault(locationType);
   // The location type could be out of specs, so we may not have an icon.
   if (locationTypeMetadata?.icon == null) {

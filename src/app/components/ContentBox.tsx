@@ -1,3 +1,4 @@
+'use client';
 import * as React from 'react';
 import { Box, Typography, useTheme, type SxProps } from '@mui/material';
 
@@ -13,7 +14,7 @@ export interface ContentBoxProps {
 
 export const ContentBox = (
   props: React.PropsWithChildren<ContentBoxProps>,
-): JSX.Element => {
+): React.ReactElement => {
   const theme = useTheme();
   return (
     <Box

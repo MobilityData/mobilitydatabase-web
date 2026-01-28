@@ -20,26 +20,26 @@ const parseSampleRate = (
   return parsed;
 };
 
-const dsn = process.env.REACT_APP_SENTRY_DSN || '';
+const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN ?? '';
 const environment =
-  process.env.REACT_APP_FIREBASE_PROJECT_ID ||
-  process.env.NODE_ENV ||
+  process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ??
+  process.env.NODE_ENV ??
   'mobility-feeds-dev';
 const release = packageJson.version;
 const tracesSampleRate = parseSampleRate(
-  process.env.REACT_APP_SENTRY_TRACES_SAMPLE_RATE,
+  process.env.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE,
   0.05,
 );
 const replaysSessionSampleRate = parseSampleRate(
-  process.env.REACT_APP_SENTRY_REPLAY_SESSION_SAMPLE_RATE,
+  process.env.NEXT_PUBLIC_SENTRY_REPLAY_SESSION_SAMPLE_RATE,
   0.0,
 );
 const replaysOnErrorSampleRate = parseSampleRate(
-  process.env.REACT_APP_SENTRY_REPLAY_ERROR_SAMPLE_RATE,
+  process.env.NEXT_PUBLIC_SENTRY_REPLAY_ERROR_SAMPLE_RATE,
   1.0,
 );
 
-if (dsn) {
+if (dsn.length > 0) {
   const routerTracingIntegration =
     Sentry.reactRouterV6BrowserTracingIntegration({
       useEffect: React.useEffect,
@@ -50,11 +50,11 @@ if (dsn) {
     });
 
   const integrations = [];
-  if (routerTracingIntegration) {
+  if (routerTracingIntegration != null) {
     integrations.push(routerTracingIntegration);
   }
   const replayIntegration = Sentry.replayIntegration?.();
-  if (replayIntegration) {
+  if (replayIntegration != null) {
     integrations.push(replayIntegration);
   }
 
@@ -62,21 +62,21 @@ if (dsn) {
     dsn,
     environment,
     release,
-    integrations: integrations,
+    integrations,
     tracesSampleRate,
     replaysSessionSampleRate,
     replaysOnErrorSampleRate,
     ignoreErrors: [/ResizeObserver loop limit exceeded/i],
     beforeSend(event) {
       // remove user IP and geo context
-      if (event.user) {
+      if (event.user != null) {
         delete event.user.ip_address;
       }
-      if (event.contexts && event.contexts.geo) {
+      if (event.contexts?.geo != null) {
         delete event.contexts.geo;
       }
       return event;
-    }
+    },
   });
 }
 

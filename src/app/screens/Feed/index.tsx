@@ -1,3 +1,6 @@
+// This component is deprecated in favor of FeedView
+// They should have the same functionality
+
 import * as React from 'react';
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
@@ -35,11 +38,9 @@ import {
   selectHasLoadedAllDatasets,
   selectLatestDatasetsData,
 } from '../../store/dataset-selectors';
-import PreviousDatasets from './components/PreviousDatasets';
-import DataQualitySummary from './components/DataQualitySummary';
 import AssociatedFeeds from './components/AssociatedFeeds';
 import { WarningContentBox } from '../../components/WarningContentBox';
-import { Trans, useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { Helmet } from 'react-helmet-async';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import {
@@ -74,7 +75,7 @@ const wrapComponent = (
   structuredData: Record<string, unknown> | undefined,
   child: React.ReactElement,
 ): React.ReactElement => {
-  const { t } = useTranslation('feeds');
+  const t = useTranslations('feeds');
   const theme = useTheme();
   return (
     <Container
@@ -140,8 +141,7 @@ const handleOpenFullQualityReportClick = (): void => {
 };
 
 export default function Feed(): React.ReactElement {
-  const { t } = useTranslation('feeds');
-  const theme = useTheme();
+  const t = useTranslations('feeds');
   const dispatch = useAppDispatch();
   const { feedId, feedDataType } = useParams();
   const user = useSelector(selectUserProfile);
@@ -355,7 +355,7 @@ export default function Feed(): React.ReactElement {
     feedId,
     structuredData,
     <Box sx={{ position: 'relative' }}>
-      <Grid container item xs={12} spacing={3} alignItems={'end'}>
+      <Grid container size={12} spacing={3} alignItems={'end'}>
         <Button
           sx={{ py: 0 }}
           size='large'
@@ -372,7 +372,7 @@ export default function Feed(): React.ReactElement {
           {t('common:back')}
         </Button>
 
-        <Grid item>
+        <Grid>
           <Typography
             sx={{
               a: {
@@ -402,7 +402,7 @@ export default function Feed(): React.ReactElement {
         <FeedTitle sortedProviders={sortedProviders} feed={feed} />
       </Box>
       {feed?.feed_name !== '' && feed?.data_type === 'gtfs' && (
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Typography
             sx={{
               fontWeight: 'bold',
@@ -415,13 +415,13 @@ export default function Feed(): React.ReactElement {
         </Grid>
       )}
 
-      {feed?.data_type === 'gtfs' && (
+      {/* {feed?.data_type === 'gtfs' && (
         <DataQualitySummary
           feedStatus={feed?.status}
           isOfficialFeed={feed.official === true}
           latestDataset={latestDataset}
         />
-      )}
+      )} */}
       {feed?.data_type === 'gtfs_rt' && feed.official === true && (
         <Box sx={{ my: 1 }}>
           <OfficialChip></OfficialChip>
@@ -491,7 +491,7 @@ export default function Feed(): React.ReactElement {
 
       {feed?.data_type === 'gtfs_rt' &&
         (feed as GTFSRTFeedType)?.entity_types != undefined && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Typography variant='h5'>
               {' '}
               {((feed as GTFSRTFeedType)?.entity_types ?? [])
@@ -512,28 +512,29 @@ export default function Feed(): React.ReactElement {
         !hasDatasets &&
         !hasFeedRedirect && (
           <WarningContentBox>
-            <Trans i18nKey='unableToDownloadFeed'>
-              Unable to download this feed. If there is a more recent URL for
-              this feed,{' '}
-              <Button variant='text' className='inline' href='/contribute'>
-                please submit it here
-              </Button>
-            </Trans>
+            {t.rich('unableToDownloadFeed', {
+              link: (chunks) => (
+                <Button variant='text' className='inline' href='/contribute'>
+                  {chunks}
+                </Button>
+              ),
+            })}
           </WarningContentBox>
         )}
       {hasFeedRedirect && (
-        <Grid item xs={12}>
+        <Grid size={12}>
           <WarningContentBox>
-            <Trans i18nKey='feedHasBeenReplaced'>
-              This feed has been replaced with a different producer URL.
-              <Button
-                variant='text'
-                className='inline'
-                href={`/feeds/${feed?.redirects?.[0]?.target_id}`}
-              >
-                Go to the new feed here
-              </Button>
-            </Trans>
+            {t.rich('feedHasBeenReplaced', {
+              link: (chunks) => (
+                <Button
+                  variant='text'
+                  className='inline'
+                  href={`/feeds/${feed?.redirects?.[0]?.target_id}`}
+                >
+                  {chunks}
+                </Button>
+              ),
+            })}
           </WarningContentBox>
         </Grid>
       )}
@@ -567,10 +568,9 @@ export default function Feed(): React.ReactElement {
         )}
         {feed?.data_type === 'gbfs' && <>{gbfsOpenFeedUrlElement()}</>}
       </Box>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Box
           sx={feedDetailContentContainerStyle({
-            theme,
             isGtfsRT: feed?.data_type === 'gtfs_rt',
           })}
         >
@@ -605,15 +605,15 @@ export default function Feed(): React.ReactElement {
       )}
 
       {feed?.data_type === 'gtfs' && hasDatasets && (
-        <Grid item xs={12}>
-          <PreviousDatasets
+        <Grid size={12}>
+          {/* <PreviousDatasets
             datasets={datasets}
             isLoadingDatasets={datasetLoadingStatus === 'loading'}
             hasloadedAllDatasets={hasLoadedAllDatasets ?? false}
             loadMoreDatasets={(offset: number) => {
               loadDatasets(offset);
             }}
-          />
+          /> */}
         </Grid>
       )}
     </Box>,

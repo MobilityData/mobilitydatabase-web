@@ -1,13 +1,12 @@
+'use client';
+
 import './App.css';
 import AppRouter from './router/Router';
 import { BrowserRouter } from 'react-router-dom';
-import { RemoteConfigProvider } from './context/RemoteConfigProvider';
 import { useDispatch } from 'react-redux';
 import { anonymousLogin } from './store/profile-reducer';
-import i18n from '../i18n';
-import { Suspense, useEffect, useState } from 'react';
-import { I18nextProvider } from 'react-i18next';
 import { app } from '../firebase';
+import { Suspense, useEffect, useState } from 'react';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import AppContainer from './AppContainer';
@@ -39,17 +38,14 @@ function App(): React.ReactElement {
           }
         />
       </Helmet>
-      <RemoteConfigProvider>
-        <I18nextProvider i18n={i18n}>
-          <Suspense>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <BrowserRouter>
-                <AppContainer>{isAppReady ? <AppRouter /> : null}</AppContainer>
-              </BrowserRouter>
-            </LocalizationProvider>
-          </Suspense>
-        </I18nextProvider>
-      </RemoteConfigProvider>
+      <Suspense>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          {/* BrowserRouter will be deprecated in favor of Next AppRouter */}
+          <BrowserRouter>
+            <AppContainer>{isAppReady ? <AppRouter /> : null}</AppContainer>
+          </BrowserRouter>
+        </LocalizationProvider>
+      </Suspense>
     </HelmetProvider>
   );
 }

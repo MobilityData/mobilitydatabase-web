@@ -1,3 +1,4 @@
+'use client';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -26,9 +27,9 @@ import {
   selectFeedsData,
   selectFeedsStatus,
 } from '../../store/feeds-selectors';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import SearchTable from './SearchTable';
-import { Trans, useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import {
   getDataTypeParamFromSelectedFeedTypes,
   getInitialSelectedFeedTypes,
@@ -38,7 +39,6 @@ import {
   searchBarStyles,
   stickyHeaderStyles,
 } from './Feeds.styles';
-import { MainPageHeader } from '../../styles/PageHeader.style';
 import { ColoredContainer } from '../../styles/PageLayout.style';
 import AdvancedSearchTable from './AdvancedSearchTable';
 import ViewHeadlineIcon from '@mui/icons-material/ViewHeadline';
@@ -47,8 +47,11 @@ import { SearchFilters } from './SearchFilters';
 
 export default function Feed(): React.ReactElement {
   const theme = useTheme();
-  const { t } = useTranslation('feeds');
-  const [searchParams, setSearchParams] = useSearchParams();
+  const t = useTranslations('feeds');
+  const tCommon = useTranslations('common');
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const [searchLimit] = useState(20); // leaving possibility to edit in future
   const [selectedFeedTypes, setSelectedFeedTypes] = useState(
     getInitialSelectedFeedTypes(searchParams),
@@ -173,7 +176,10 @@ export default function Feed(): React.ReactElement {
       newSearchParams.set('utm_source', 'transitfeeds');
     }
     if (searchParams.toString() !== newSearchParams.toString()) {
-      setSearchParams(newSearchParams, { replace: false });
+      const queryString = newSearchParams.toString();
+      router.push(
+        `${pathname}${queryString.length > 0 ? `?${queryString}` : ''}`,
+      );
     }
   }, [
     activeSearch,
@@ -310,9 +316,9 @@ export default function Feed(): React.ReactElement {
           maxWidth={'xl'}
           sx={{ boxSizing: 'content-box' }}
         >
-          <MainPageHeader ref={containerRef}>
-            {t('common:feeds')}
-          </MainPageHeader>
+          <Typography variant='h1' ref={containerRef}>
+            {tCommon('feeds')}
+          </Typography>
           {activeSearch !== '' && (
             <Typography variant='subtitle1'>
               {t('searchFor')}: <b>{activeSearch}</b>
@@ -367,7 +373,7 @@ export default function Feed(): React.ReactElement {
               type='submit'
               sx={{ m: 1, height: '55px', mr: 0 }}
             >
-              {t('common:search')}
+              {tCommon('search')}
             </Button>
           </Container>
         </Box>
@@ -383,9 +389,7 @@ export default function Feed(): React.ReactElement {
             }}
           >
             <Grid
-              item
-              xs={12}
-              md={2}
+              size={{ xs: 12, md: 2 }}
               sx={{
                 minWidth: '275px',
                 pr: 2,
@@ -398,7 +402,7 @@ export default function Feed(): React.ReactElement {
                 selectedGbfsVersions={selectGbfsVersions}
                 setSelectedFeedTypes={(feedTypes) => {
                   setActivePagination(1);
-                  setSelectedFeedTypes(feedTypes);
+                  setSelectedFeedTypes({ ...feedTypes });
                 }}
                 setIsOfficialFeedSearch={(isOfficial) => {
                   setActivePagination(1);
@@ -418,14 +422,14 @@ export default function Feed(): React.ReactElement {
               ></SearchFilters>
             </Grid>
 
-            <Grid item xs={12} md={10}>
+            <Grid size={{ xs: 12, md: 10 }}>
               <Box sx={chipHolderStyles}>
                 {selectedFeedTypes.gtfs && (
                   <Chip
                     color='primary'
                     variant='outlined'
                     size='small'
-                    label={t('common:gtfsSchedule')}
+                    label={tCommon('gtfsSchedule')}
                     onDelete={() => {
                       setActivePagination(1);
                       setSelectedFeedTypes({
@@ -440,7 +444,7 @@ export default function Feed(): React.ReactElement {
                     color='primary'
                     variant='outlined'
                     size='small'
-                    label={t('common:gtfsRealtime')}
+                    label={tCommon('gtfsRealtime')}
                     onDelete={() => {
                       setActivePagination(1);
                       setSelectedFeedTypes({
@@ -455,7 +459,7 @@ export default function Feed(): React.ReactElement {
                     color='primary'
                     variant='outlined'
                     size='small'
-                    label={t('common:gbfs')}
+                    label={tCommon('gbfs')}
                     onDelete={() => {
                       setActivePagination(1);
                       setSelectedFeedTypes({
@@ -528,7 +532,7 @@ export default function Feed(): React.ReactElement {
                 )}
               </Box>
               {feedStatus === 'loading' && (
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Skeleton
                     animation='wave'
                     variant='text'
@@ -554,21 +558,20 @@ export default function Feed(): React.ReactElement {
               )}
 
               {feedStatus === 'error' && (
-                <Grid item xs={12}>
-                  <h3>{t('common:errors.generic')}</h3>
+                <Grid size={12}>
+                  <h3>{tCommon('errors.generic')}</h3>
                   <Typography>
-                    <Trans i18nKey='errorAndContact'>
-                      Please check your internet connection and try again. If
-                      the problem persists
-                      <Button
-                        variant='text'
-                        className='inline'
-                        href={'mailto:api@mobilitydata.org'}
-                      >
-                        contact us
-                      </Button>
-                      for for further assistance.
-                    </Trans>
+                    {t.rich('errorAndContact', {
+                      contactLink: (chunks) => (
+                        <Button
+                          variant='text'
+                          className='inline'
+                          href={'mailto:api@mobilitydata.org'}
+                        >
+                          {chunks}
+                        </Button>
+                      ),
+                    })}
                   </Typography>
                 </Grid>
               )}
@@ -576,7 +579,7 @@ export default function Feed(): React.ReactElement {
               {feedsData !== undefined && feedStatus === 'loaded' && (
                 <>
                   {feedsData?.results?.length === 0 && (
-                    <Grid item xs={12}>
+                    <Grid size={12}>
                       <h3>{t('noResults', { activeSearch })}</h3>
                       <Typography>{t('searchSuggestions')}</Typography>
                       <ul>
@@ -605,8 +608,7 @@ export default function Feed(): React.ReactElement {
                     feedsData?.results?.length > 0 && (
                       <TableContainer sx={{ overflowX: 'initial' }}>
                         <Grid
-                          item
-                          xs={12}
+                          size={12}
                           sx={{
                             display: 'flex',
                             justifyContent: 'space-between',

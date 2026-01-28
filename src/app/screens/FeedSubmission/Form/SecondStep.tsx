@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
 import { type FeedSubmissionFormFormInput } from '.';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { getCountryDataList } from 'countries-list';
 import { useState } from 'react';
 import FormLabelDescription from './components/FormLabelDescription';
@@ -36,7 +36,8 @@ export default function FormSecondStep({
   handleBack,
 }: FormSecondStepProps): React.ReactElement {
   const [countryList] = useState(getCountryDataList());
-  const { t } = useTranslation('feeds');
+  const t = useTranslations('feeds');
+  const tCommon = useTranslations('common');
   const {
     control,
     handleSubmit,
@@ -61,13 +62,13 @@ export default function FormSecondStep({
       {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
       <form onSubmit={handleSubmit(onSubmit)}>
         <Grid container direction={'column'} rowSpacing={2}>
-          <Grid item>
+          <Grid>
             <FormControl
               component='fieldset'
               error={errors.country !== undefined}
             >
               <FormLabel component='legend' required data-cy='countryLabel'>
-                {t('common:country')}
+                {tCommon('country')}
               </FormLabel>
               <Controller
                 rules={{ required: 'Country is required' }}
@@ -82,7 +83,7 @@ export default function FormSecondStep({
                       data-cy='countryDropdown'
                     >
                       <MenuItem value={''}>
-                        <em>{t('common:chooseCountry')}</em>
+                        <em>{tCommon('chooseCountry')}</em>
                       </MenuItem>
                       {countryList.map((country) => (
                         <MenuItem key={country.iso2} value={country.iso2}>
@@ -98,9 +99,9 @@ export default function FormSecondStep({
               />
             </FormControl>
           </Grid>
-          <Grid item>
+          <Grid>
             <FormControl component='fieldset' fullWidth>
-              <FormLabel component='legend'>{t('common:region')}</FormLabel>
+              <FormLabel component='legend'>{tCommon('region')}</FormLabel>
               <Controller
                 control={control}
                 name='region'
@@ -110,10 +111,10 @@ export default function FormSecondStep({
               />
             </FormControl>
           </Grid>
-          <Grid item>
+          <Grid>
             <FormControl component='fieldset' fullWidth>
               <FormLabel component='legend'>
-                {t('common:municipality')}
+                {tCommon('municipality')}
               </FormLabel>
               <Controller
                 control={control}
@@ -124,9 +125,9 @@ export default function FormSecondStep({
               />
             </FormControl>
           </Grid>
-          <Grid item>
+          <Grid>
             <FormControl component='fieldset' fullWidth>
-              <FormLabel component='legend'>{t('common:name')}</FormLabel>
+              <FormLabel component='legend'>{tCommon('name')}</FormLabel>
               <FormLabelDescription>
                 {t('feedNameDetails')}
               </FormLabelDescription>
@@ -139,7 +140,7 @@ export default function FormSecondStep({
               />
             </FormControl>
           </Grid>
-          <Grid item>
+          <Grid>
             <FormControl
               component='fieldset'
               fullWidth
@@ -168,7 +169,7 @@ export default function FormSecondStep({
           </Grid>
 
           <Grid container spacing={2}>
-            <Grid item>
+            <Grid>
               <Button
                 onClick={() => {
                   handleBack(getValues());
@@ -176,17 +177,17 @@ export default function FormSecondStep({
                 variant='outlined'
                 sx={{ mt: 3, mb: 2 }}
               >
-                {t('common:back')}
+                {tCommon('back')}
               </Button>
             </Grid>
-            <Grid item>
+            <Grid>
               <Button
                 type='submit'
                 variant='contained'
                 sx={{ mt: 3, mb: 2 }}
                 data-cy='secondStepSubmit'
               >
-                {t('common:next')}
+                {tCommon('next')}
               </Button>
             </Grid>
           </Grid>

@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 import '../styles/Footer.css';
 import TwitterIcon from '@mui/icons-material/Twitter';
@@ -7,11 +8,8 @@ import { MOBILITY_DATA_LINKS } from '../constants/Navigation';
 import { fontFamily } from '../Theme';
 
 const Footer: React.FC = () => {
+  // TODO: revisit theming for SSR components
   const theme = useTheme();
-  const navigateTo = (link: string): void => {
-    window.open(link, '_blank');
-  };
-
   const SlackSvg = (
     <svg
       xmlns='http://www.w3.org/2000/svg'
@@ -51,9 +49,10 @@ const Footer: React.FC = () => {
           aria-label='twitter'
           className='link-button'
           color='primary'
-          onClick={() => {
-            navigateTo(MOBILITY_DATA_LINKS.twitter);
-          }}
+          component='a'
+          href={MOBILITY_DATA_LINKS.twitter}
+          target='_blank'
+          rel='noreferrer'
         >
           <TwitterIcon />
         </IconButton>
@@ -61,9 +60,10 @@ const Footer: React.FC = () => {
           aria-label='slack'
           className='link-button'
           color='primary'
-          onClick={() => {
-            navigateTo(MOBILITY_DATA_LINKS.slack);
-          }}
+          component='a'
+          href={MOBILITY_DATA_LINKS.slack}
+          target='_blank'
+          rel='noreferrer'
         >
           {SlackSvg}
         </IconButton>
@@ -71,9 +71,10 @@ const Footer: React.FC = () => {
           aria-label='linkedin'
           className='link-button'
           color='primary'
-          onClick={() => {
-            navigateTo(MOBILITY_DATA_LINKS.linkedin);
-          }}
+          component='a'
+          href={MOBILITY_DATA_LINKS.linkedin}
+          target='_blank'
+          rel='noreferrer'
         >
           <LinkedIn />
         </IconButton>
@@ -81,9 +82,10 @@ const Footer: React.FC = () => {
           aria-label='github'
           className='link-button'
           color='primary'
-          onClick={() => {
-            navigateTo(MOBILITY_DATA_LINKS.github);
-          }}
+          component='a'
+          href={MOBILITY_DATA_LINKS.github}
+          target='_blank'
+          rel='noreferrer'
         >
           <GitHub />
         </IconButton>

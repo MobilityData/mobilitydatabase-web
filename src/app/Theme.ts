@@ -1,3 +1,5 @@
+'use client';
+
 import {
   type PaletteColor,
   type Theme,
@@ -54,8 +56,8 @@ export enum ThemeModeEnum {
 }
 
 export const fontFamily = {
-  primary: '"Mulish"',
-  secondary: '"IBM Plex Mono"',
+  primary: 'var(--font-mulish)',
+  secondary: 'var(--font-ibm-plex-mono)',
 };
 
 const palette = {
@@ -249,6 +251,13 @@ export const getTheme = (mode: ThemeModeEnum): Theme => {
             },
           },
         ],
+        styleOverrides: {
+          h1: {
+            fontWeight: 700,
+            color: chosenPalette.primary.main,
+            fontSize: '2.125rem', // h4 size
+          },
+        },
       },
     },
   });

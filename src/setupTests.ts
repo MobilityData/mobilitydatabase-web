@@ -5,20 +5,38 @@
 import '@testing-library/jest-dom';
 
 jest.mock('leaflet/dist/leaflet.css', () => ({}));
-jest.mock('react-leaflet', () => ({})); 
+jest.mock('react-leaflet', () => ({}));
 
-jest.mock('react-i18next', () => ({
-  // this mock makes sure any components using the translate hook can use it without a warning being shown
-  useTranslation: () => {
-    return {
-      t: (str: string) => str,
-      i18n: {
-        changeLanguage: () => new Promise(() => {}),
-      },
-    };
-  },
-  initReactI18next: {
-    type: '3rdParty',
-    init: () => {},
-  },
+jest.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+  useLocale: () => 'en',
+}));
+
+jest.mock('next-intl/server', () => ({
+  getTranslations: jest.fn().mockImplementation(async (namespace) => {
+    return await Promise.resolve((key: string) => {
+      if (namespace === 'common') {
+        switch (key) {
+          case 'others':
+            return 'others';
+          case 'gtfsSchedule':
+            return 'GTFS schedule';
+          case 'gtfsRealtime':
+            return 'GTFS realtime';
+          default:
+            return key;
+        }
+      }
+      if (namespace === 'feeds') {
+        switch (key) {
+          case 'detailPageDescription':
+            return 'Explore the feed details';
+          default:
+            return key;
+        }
+      }
+      return key;
+    });
+  }),
+  getLocale: jest.fn().mockResolvedValue('en'),
 }));

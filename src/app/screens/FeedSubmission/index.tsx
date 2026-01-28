@@ -10,14 +10,13 @@ import {
 } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import { selectIsAuthenticated } from '../../store/profile-selectors';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { useLocation } from 'react-router-dom';
 import FeedSubmissionForm from './Form';
-import { MainPageHeader } from '../../styles/PageHeader.style';
 import { ColoredContainer } from '../../styles/PageLayout.style';
 
 function Component(): React.ReactElement {
-  const { t } = useTranslation('feeds');
+  const t = useTranslations('feeds');
   const location = useLocation();
   const [showLoginSuccess, setShowLoginSuccess] = React.useState(
     location.state?.from === 'registration',
@@ -34,7 +33,7 @@ function Component(): React.ReactElement {
       >
         {!isAuthenticated && (
           <>
-            <MainPageHeader>{t('form.addOrUpdateFeed')}</MainPageHeader>
+            <Typography variant='h1'>{t('form.addOrUpdateFeed')}</Typography>
             <Typography sx={{ my: 2 }}>{t('form.signUp')}</Typography>
             <Button variant='contained' href='/sign-up?add_feed=true'>
               {t('form.signUpAction')}
@@ -87,9 +86,9 @@ function Component(): React.ReactElement {
               </Typography>
             </ColoredContainer>
             <Container maxWidth='md'>
-              <MainPageHeader sx={{ my: 3 }}>
+              <Typography variant='h1' sx={{ my: 3 }}>
                 Add or update a feed
-              </MainPageHeader>
+              </Typography>
               <FeedSubmissionForm />
             </Container>
           </>

@@ -1,12 +1,11 @@
 import createClient, { type Middleware } from 'openapi-fetch';
 import type { paths } from './types';
 import { type AllFeedsParams, type AllFeedType } from './utils';
-import { getEnvConfig } from '../../utils/config';
-
-const API_BASE_URL = getEnvConfig('REACT_APP_FEED_API_BASE_URL');
+import { type GtfsRoute } from '../../types';
+import { getFeedFilesBaseUrl } from '../../utils/config';
 
 const client = createClient<paths>({
-  baseUrl: `${API_BASE_URL}`,
+  baseUrl: String(process.env.NEXT_PUBLIC_FEED_API_BASE_URL),
   querySerializer: {
     // serialize arrays as comma-separated values
     // More info: https://swagger.io/docs/specification/serialization/#query
@@ -24,7 +23,9 @@ const throwOnError: Middleware = {
       if (res.headers.get('content-type')?.includes('json') === true) {
         body = await res.clone().json();
       }
-      throw new Error(body);
+      const errorMessage =
+        typeof body === 'string' ? body : JSON.stringify(body);
+      throw new Error(errorMessage);
     }
     return undefined;
   },
@@ -309,4 +310,36 @@ export const getLicense = async (
     .finally(() => {
       client.eject(authMiddleware);
     });
+};
+
+/**
+ * Builds the URL for the routes.json file for a given feed and dataset.
+ * @param feedId - The feed ID
+ * @param datasetId - The dataset ID (visualization_dataset_id )
+ * @returns The URL for the routes.json file
+ */
+export function buildRoutesUrl(feedId: string, datasetId: string): string {
+  return `${getFeedFilesBaseUrl()}/${feedId}/${datasetId}/pmtiles/routes.json`;
+}
+
+/**
+ * Fetches the routes.json data for a GTFS feed.
+ * @param feedId - The feed ID
+ * @param datasetId - The dataset ID (visualization_dataset_id)
+ * @returns An array of GtfsRoute objects, or undefined if the fetch fails
+ */
+export const getGtfsFeedRoutes = async (
+  feedId: string,
+  datasetId: string,
+): Promise<GtfsRoute[] | undefined> => {
+  const url = buildRoutesUrl(feedId, datasetId);
+  try {
+    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!res.ok) {
+      return undefined;
+    }
+    return (await res.json()) as GtfsRoute[];
+  } catch (error) {
+    return undefined;
+  }
 };

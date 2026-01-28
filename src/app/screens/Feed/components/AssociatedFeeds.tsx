@@ -1,3 +1,5 @@
+'use client';
+
 import * as React from 'react';
 import { ContentBox } from '../../../components/ContentBox';
 import {
@@ -14,7 +16,7 @@ import {
   type AllFeedType,
   type GTFSRTFeedType,
 } from '../../../services/feeds/utils';
-import { Link } from 'react-router-dom';
+import NextLink from 'next/link';
 
 export interface AssociatedFeedsProps {
   feeds: AllFeedType[] | undefined;
@@ -23,7 +25,7 @@ export interface AssociatedFeedsProps {
 
 const renderAssociatedGTFSFeedRow = (
   assocFeed: GTFSFeedType,
-): JSX.Element | undefined => {
+): React.ReactElement | undefined => {
   const theme = useTheme();
   if (assocFeed === undefined) {
     return undefined;
@@ -34,8 +36,8 @@ const renderAssociatedGTFSFeedRow = (
   return (
     <TableRow
       key={assocFeed?.id}
-      component={Link}
-      to={`/feeds/gtfs/${assocFeed?.id}`}
+      component={NextLink}
+      href={`/feeds/gtfs/${assocFeed?.id}`}
       sx={{
         textDecoration: 'none',
         '&:hover, &:focus': {
@@ -67,7 +69,7 @@ const renderAssociatedGTFSFeedRow = (
 
 const renderAssociatedGTFSRTFeedRow = (
   assocGTFSRTFeed: GTFSRTFeedType,
-): JSX.Element | undefined => {
+): React.ReactElement | undefined => {
   const theme = useTheme();
   if (assocGTFSRTFeed === undefined) {
     return undefined;
@@ -77,8 +79,8 @@ const renderAssociatedGTFSRTFeedRow = (
   return (
     <TableRow
       key={assocGTFSRTFeed?.id}
-      component={Link}
-      to={`/feeds/gtfs_rt/${assocGTFSRTFeed?.id}`}
+      component={NextLink}
+      href={`/feeds/gtfs_rt/${assocGTFSRTFeed?.id}`}
       sx={{
         textDecoration: 'none',
         '&:hover, &:focus': {

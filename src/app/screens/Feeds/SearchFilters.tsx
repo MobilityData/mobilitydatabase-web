@@ -1,8 +1,10 @@
+'use client';
+
 import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import NestedCheckboxList, {
   type CheckboxStructure,
 } from '../../components/NestedCheckboxList';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { useRemoteConfig } from '../../context/RemoteConfigProvider';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useEffect, useState } from 'react';
@@ -47,7 +49,8 @@ export function SearchFilters({
   areFeatureFiltersEnabled,
   areGBFSFiltersEnabled,
 }: SearchFiltersProps): React.ReactElement {
-  const { t } = useTranslation('feeds');
+  const t = useTranslations('feeds');
+  const tCommon = useTranslations('common');
   const { config } = useRemoteConfig();
 
   const gbfsVersionsObject: GbfsVersionConfig = JSON.parse(config.gbfsVersions);
@@ -68,17 +71,17 @@ export function SearchFilters({
 
   const dataTypesCheckboxData: CheckboxStructure[] = [
     {
-      title: t('common:gtfsSchedule'),
+      title: tCommon('gtfsSchedule'),
       checked: selectedFeedTypes.gtfs,
       type: 'checkbox',
     },
     {
-      title: t('common:gtfsRealtime'),
+      title: tCommon('gtfsRealtime'),
       checked: selectedFeedTypes.gtfs_rt,
       type: 'checkbox',
     },
     {
-      title: t('common:gbfs'),
+      title: tCommon('gbfs'),
       checked: selectedFeedTypes.gbfs,
       type: 'checkbox',
     },

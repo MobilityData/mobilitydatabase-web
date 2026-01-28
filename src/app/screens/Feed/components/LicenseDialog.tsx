@@ -23,7 +23,7 @@ import {
   selectLicenseErrors,
 } from '../../../store/license-selectors';
 import { loadingLicense } from '../../../store/license-reducer';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 
 export interface LicenseDialogProps {
   open: boolean;
@@ -36,7 +36,7 @@ export default function LicenseDialog({
   onClose,
   licenseId,
 }: LicenseDialogProps): React.ReactElement {
-  const { t } = useTranslation('feeds');
+  const t = useTranslations('feeds');
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
   const dispatch = useDispatch();
@@ -173,7 +173,7 @@ export default function LicenseDialog({
                         ruleData.rules != undefined &&
                         ruleData.rules.length > 0;
                       return (
-                        <Grid item xs={12} key={ruleData.title}>
+                        <Grid size={12} key={ruleData.title}>
                           <Typography
                             variant='h6'
                             sx={{
@@ -195,7 +195,7 @@ export default function LicenseDialog({
                           {hasRules ? (
                             <Grid container spacing={2}>
                               {ruleData.rules?.map((rule, index) => (
-                                <Grid item xs={12} md={6} key={index}>
+                                <Grid size={{ xs: 12, md: 6 }} key={index}>
                                   <Box
                                     sx={{
                                       p: 1.5,

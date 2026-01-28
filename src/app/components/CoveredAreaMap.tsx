@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Box,
@@ -10,21 +12,22 @@ import {
   Fab,
 } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import MapIcon from '@mui/icons-material/Map';
 import TravelExploreIcon from '@mui/icons-material/TravelExplore';
 import { WarningContentBox } from './WarningContentBox';
 import { mapBoxPositionStyle } from '../screens/Feed/Feed.styles';
-import {
-  type GeoJSONData,
-  type GeoJSONDataGBFS,
-  MapGeoJSON,
-} from './MapGeoJSON';
-import { Map } from './Map';
-import { useTranslation } from 'react-i18next';
-import type { LatLngExpression } from 'leaflet';
+import dynamic from 'next/dynamic';
+import { type GeoJSONData, type GeoJSONDataGBFS } from './MapGeoJSON';
+import { useTranslations } from 'next-intl';
+import type { LatLngTuple } from 'leaflet';
 import { useTheme } from '@mui/material/styles';
-import { type GTFSFeedType, type AllFeedType } from '../services/feeds/utils';
+import {
+  type GTFSFeedType,
+  type AllFeedType,
+  type GBFSFeedType,
+  type GBFSVersionType,
+} from '../services/feeds/utils';
 import { OpenInNew } from '@mui/icons-material';
 import { computeBoundingBox } from '../screens/Feed/Feed.functions';
 import { displayFormattedDate } from '../utils/date';
@@ -34,12 +37,24 @@ import { GtfsVisualizationMap } from './GtfsVisualizationMap';
 import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
 import { useRemoteConfig } from '../context/RemoteConfigProvider';
 import ReactGA from 'react-ga4';
-import { selectLatestGbfsVersion } from '../store/feed-selectors';
 import { selectGtfsDatasetRoutesLoadingStatus } from '../store/supporting-files-selectors';
-import { type LatestDatasetLite } from './GtfsVisualizationMap.functions';
+import {
+  getLatestGbfsVersion,
+  type LatestDatasetLite,
+} from './GtfsVisualizationMap.functions';
+
+// Dynamically import Map and MapGeoJSON for code splitting and bundle size
+// Useful since these components are rendered conditionally to the tab and will only import when on page
+const MapGeoJSON = dynamic(
+  async () => await import('./MapGeoJSON').then((mod) => mod.MapGeoJSON),
+  { ssr: false },
+);
+const Map = dynamic(async () => await import('./Map').then((mod) => mod.Map), {
+  ssr: false,
+});
 
 interface CoveredAreaMapProps {
-  boundingBox?: LatLngExpression[];
+  boundingBox?: LatLngTuple[];
   latestDataset?: LatestDatasetLite;
   feed: AllFeedType;
 }
@@ -69,7 +84,8 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
   latestDataset,
   feed,
 }) => {
-  const { t } = useTranslation('feeds');
+  const t = useTranslations('feeds');
+  const tCommon = useTranslations('common');
   const theme = useTheme();
   const { config } = useRemoteConfig();
 
@@ -82,7 +98,11 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
     feed?.data_type === 'gtfs' ? 'gtfsVisualizationView' : 'boundingBoxView',
   );
 
-  const latestGbfsVersion = useSelector(selectLatestGbfsVersion);
+  const latestGbfsVersion = useMemo((): GBFSVersionType | undefined => {
+    if (feed?.data_type !== 'gbfs') return undefined;
+    return getLatestGbfsVersion(feed as GBFSFeedType);
+  }, [feed]);
+
   const routesJsonLoadingStatus = useSelector(
     selectGtfsDatasetRoutesLoadingStatus,
   );
@@ -188,7 +208,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
     return undefined;
   };
 
-  const renderMap = (): JSX.Element => {
+  const renderMap = (): React.ReactElement => {
     const displayBoundingBoxMap =
       view === 'boundingBoxView' &&
       (feed?.data_type === 'gtfs' ||
@@ -198,7 +218,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
       view === 'gtfsVisualizationView' && feed?.data_type === 'gtfs';
 
     if (displayBoundingBoxMap && boundingBox != undefined) {
-      return <Map polygon={boundingBox} />;
+      return <Map key={`bbox-${feed?.id}`} polygon={boundingBox} />;
     }
 
     if (
@@ -213,7 +233,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
             size='small'
             sx={{ position: 'absolute', top: 16, right: 16 }}
             component={Link}
-            to='./map'
+            href='./map'
           >
             <ZoomOutMapIcon></ZoomOutMapIcon>
           </Fab>
@@ -232,17 +252,20 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
       );
     }
     if (config.enableDetailedCoveredArea && geoJsonData != null) {
-      let gbfsGeoJsonBoundingBox: LatLngExpression[] = [];
+      let gbfsGeoJsonBoundingBox: LatLngTuple[] = [];
       if (feed?.data_type === 'gbfs') {
         gbfsGeoJsonBoundingBox = computeBoundingBox(geoJsonData) ?? [];
         if (gbfsGeoJsonBoundingBox.length === 0) {
           setGeoJsonError(true);
         }
       }
-      const feedBoundingBox: LatLngExpression[] =
-        feed?.data_type === 'gtfs' ? boundingBox ?? [] : gbfsGeoJsonBoundingBox;
+      const feedBoundingBox: LatLngTuple[] =
+        feed?.data_type === 'gtfs'
+          ? (boundingBox ?? [])
+          : gbfsGeoJsonBoundingBox;
       return (
         <MapGeoJSON
+          key={`geojson-${feed?.id}`}
           geoJSONData={geoJsonData}
           polygon={feedBoundingBox}
           displayMapDetails={feed?.data_type === 'gtfs'}
@@ -308,7 +331,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
                 color='text.secondary'
                 sx={{ display: 'block', px: 1 }}
               >
-                {t('common:updated')}:{' '}
+                {tCommon('updated')}:{' '}
                 {displayFormattedDate(
                   (geoJsonData as GeoJSONDataGBFS).extracted_at,
                 )}
@@ -324,7 +347,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
                   variant='text'
                   disableElevation
                   component={Link}
-                  to='./map'
+                  href='./map'
                   onClick={handleOpenDetailedMapClick}
                   endIcon={<OpenInNewIcon></OpenInNewIcon>}
                 >
@@ -392,7 +415,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
         )}
 
       {(boundingBox != undefined || !geoJsonError) && (
-        <Box sx={mapBoxPositionStyle}>
+        <Box key={view} sx={mapBoxPositionStyle}>
           {geoJsonLoading || routesJsonLoadingStatus === 'loading' ? (
             <Skeleton
               variant='rectangular'

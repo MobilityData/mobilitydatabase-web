@@ -7,7 +7,7 @@ import {
 } from '../../constants/RouteTypes';
 import { Box, Link, Typography, useTheme } from '@mui/material';
 import AccessibleIcon from '@mui/icons-material/Accessible';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 
 interface MapDataPopupProps {
   mapClickRouteData: Record<string, string> | null;
@@ -17,10 +17,11 @@ interface MapDataPopupProps {
 
 export const MapDataPopup = (
   props: React.PropsWithChildren<MapDataPopupProps>,
-): JSX.Element => {
+): React.ReactElement => {
   const { mapClickRouteData, mapClickStopData, onPopupClose } = props;
   const theme = useTheme();
-  const { t } = useTranslation('feeds');
+  const t = useTranslations('feeds');
+  const tCommon = useTranslations('common');
 
   function getGradientBorder(colorString: string): string {
     try {
@@ -69,7 +70,10 @@ export const MapDataPopup = (
                   mapClickRouteData.route_text_color,
                 )}
                 <Typography component={'p'} variant={'body2'}>
-                  {getRouteTypeTranslatedName(mapClickRouteData.route_type, t)}{' '}
+                  {getRouteTypeTranslatedName(
+                    mapClickRouteData.route_type,
+                    tCommon,
+                  )}{' '}
                   <b style={{ marginLeft: '8px' }}>
                     {mapClickRouteData.route_id}
                   </b>

@@ -18,7 +18,7 @@ import {
   getLocationName,
   getCountryLocationSummaries,
 } from '../../services/feeds/utils';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import GtfsRtEntities from './GtfsRtEntities';
 import { Link } from 'react-router-dom';
 import { getEmojiFlag, type TCountryCode } from 'countries-list';
@@ -37,13 +37,13 @@ const HeaderTableCell = styled(TableCell)(() => ({
 
 export const getDataTypeElement = (
   dataType: 'gtfs' | 'gtfs_rt' | 'gbfs',
-): JSX.Element => {
-  const { t } = useTranslation('feeds');
+): React.ReactElement => {
+  const tCommon = useTranslations('common');
   const DataTypeHolder = ({
     children,
   }: {
     children: React.ReactNode;
-  }): JSX.Element => {
+  }): React.ReactElement => {
     return (
       <Box
         sx={{
@@ -57,11 +57,11 @@ export const getDataTypeElement = (
     );
   };
   if (dataType === 'gtfs') {
-    return <DataTypeHolder>{t('common:gtfsSchedule')}</DataTypeHolder>;
+    return <DataTypeHolder>{tCommon('gtfsSchedule')}</DataTypeHolder>;
   } else if (dataType === 'gtfs_rt') {
-    return <DataTypeHolder>{t('common:gtfsRealtime')}</DataTypeHolder>;
+    return <DataTypeHolder>{tCommon('gtfsRealtime')}</DataTypeHolder>;
   } else {
-    return <DataTypeHolder>{t('common:gbfs')}</DataTypeHolder>;
+    return <DataTypeHolder>{tCommon('gbfs')}</DataTypeHolder>;
   }
 };
 
@@ -73,7 +73,7 @@ export default function SearchTable({
   const [providersPopoverData, setProvidersPopoverData] = React.useState<
     string[] | undefined
   >(undefined);
-  const { t } = useTranslation('feeds');
+  const t = useTranslations('feeds');
   if (feedsData === undefined) return <></>;
 
   // Reason for all component overrite is for SEO purposes.

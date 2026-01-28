@@ -20,7 +20,7 @@ import {
 } from 'react-hook-form';
 import { type YesNoFormInput, type FeedSubmissionFormFormInput } from '.';
 import { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { isValidFeedLink } from '../../../services/feeds/utils';
 import FormLabelDescription from './components/FormLabelDescription';
 
@@ -47,7 +47,8 @@ export default function FormFirstStep({
   submitFormData,
   setNumberOfSteps,
 }: FormFirstStepProps): React.ReactElement {
-  const { t } = useTranslation('feeds');
+  const t = useTranslations('feeds');
+  const tCommon = useTranslations('common');
   const {
     control,
     handleSubmit,
@@ -109,7 +110,7 @@ export default function FormFirstStep({
       {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
       <form onSubmit={handleSubmit(onSubmit)}>
         <Grid container direction={'column'} rowSpacing={2}>
-          <Grid item>
+          <Grid>
             <FormControl
               component='fieldset'
               error={errors.isOfficialProducer !== undefined}
@@ -118,7 +119,7 @@ export default function FormFirstStep({
                 {t('areYouOfficialProducer')}
               </FormLabel>
               <Controller
-                rules={{ required: t('common:form.required') }}
+                rules={{ required: tCommon('form.required') }}
                 control={control}
                 name='isOfficialProducer'
                 render={({ field }) => (
@@ -127,13 +128,13 @@ export default function FormFirstStep({
                       <FormControlLabel
                         value='yes'
                         control={<Radio />}
-                        label={t('common:form.yes')}
+                        label={tCommon('form.yes')}
                         data-cy='isOfficialProducerYes'
                       />
                       <FormControlLabel
                         value='no'
                         control={<Radio />}
-                        label={t('common:form.no')}
+                        label={tCommon('form.no')}
                         data-cy='isOfficialProducerNo'
                       />
                     </RadioGroup>
@@ -145,7 +146,7 @@ export default function FormFirstStep({
               />
             </FormControl>
           </Grid>
-          <Grid item sx={{ '&.MuiGrid-item': { pt: '4px' } }}>
+          <Grid sx={{ '&.MuiGrid-item': { pt: '4px' } }}>
             <FormControl
               component='fieldset'
               error={errors.isOfficialFeed !== undefined}
@@ -167,10 +168,10 @@ export default function FormFirstStep({
                       data-cy='isOfficialFeed'
                       sx={{ width: '200px' }}
                     >
-                      <MenuItem value={'yes'}>{t('common:form.yes')}</MenuItem>
-                      <MenuItem value={'no'}>{t('common:form.no')}</MenuItem>
+                      <MenuItem value={'yes'}>{tCommon('form.yes')}</MenuItem>
+                      <MenuItem value={'no'}>{tCommon('form.no')}</MenuItem>
                       <MenuItem value={'unsure'}>
-                        {t('common:form.notSure')}
+                        {tCommon('form.notSure')}
                       </MenuItem>
                     </Select>
                     <FormHelperText>
@@ -185,7 +186,7 @@ export default function FormFirstStep({
           {/* New fields for unofficial feeds, moved right after isOfficialFeed */}
           {isOfficialFeed === 'no' && (
             <>
-              <Grid item>
+              <Grid>
                 <FormControl component='fieldset' fullWidth>
                   <FormLabel>{t('form.unofficialDesc')}</FormLabel>
                   <Controller
@@ -204,7 +205,7 @@ export default function FormFirstStep({
                   />
                 </FormControl>
               </Grid>
-              <Grid item>
+              <Grid>
                 <FormControl component='fieldset' fullWidth>
                   <FormLabel>{t('form.updateFreq')}</FormLabel>
                   <Controller
@@ -223,7 +224,7 @@ export default function FormFirstStep({
               </Grid>
             </>
           )}
-          <Grid item>
+          <Grid>
             <FormControl component='fieldset'>
               <FormLabel required>{t('dataType')}</FormLabel>
               <Controller
@@ -232,17 +233,17 @@ export default function FormFirstStep({
                 render={({ field }) => (
                   <Select {...field} data-cy='dataType' sx={{ width: '200px' }}>
                     <MenuItem value={'gtfs'}>
-                      {t('common:gtfsSchedule')}
+                      {tCommon('gtfsSchedule')}
                     </MenuItem>
                     <MenuItem value={'gtfs_rt'}>
-                      {t('common:gtfsRealtime')}
+                      {tCommon('gtfsRealtime')}
                     </MenuItem>
                   </Select>
                 )}
               />
             </FormControl>
           </Grid>
-          <Grid item>
+          <Grid>
             <FormControl component='fieldset' fullWidth>
               <FormLabel>{t('transitProviderName')}</FormLabel>
               <Controller
@@ -255,7 +256,7 @@ export default function FormFirstStep({
             </FormControl>
           </Grid>
           {dataType === 'gtfs' && (
-            <Grid item>
+            <Grid>
               <FormControl
                 component='fieldset'
                 fullWidth
@@ -286,14 +287,14 @@ export default function FormFirstStep({
             </Grid>
           )}
 
-          <Grid item>
+          <Grid>
             <FormControl
               component='fieldset'
               error={errors.dataType !== undefined}
             >
               <FormLabel required>{t('areYouUpdatingFeed')}</FormLabel>
               <Controller
-                rules={{ required: t('common:form.required') }}
+                rules={{ required: tCommon('form.required') }}
                 control={control}
                 name='isUpdatingFeed'
                 render={({ field }) => (
@@ -302,15 +303,15 @@ export default function FormFirstStep({
                     sx={{ width: '200px' }}
                     data-cy='isUpdatingFeed'
                   >
-                    <MenuItem value={'yes'}>{t('common:form.yes')}</MenuItem>
-                    <MenuItem value={'no'}>{t('common:form.no')}</MenuItem>
+                    <MenuItem value={'yes'}>{tCommon('form.yes')}</MenuItem>
+                    <MenuItem value={'no'}>{tCommon('form.no')}</MenuItem>
                   </Select>
                 )}
               />
             </FormControl>
           </Grid>
           {dataType === 'gtfs' && isUpdatingFeed === 'yes' && (
-            <Grid item>
+            <Grid>
               <FormControl
                 component='fieldset'
                 fullWidth
@@ -342,14 +343,14 @@ export default function FormFirstStep({
           )}
 
           <Grid container spacing={2}>
-            <Grid item>
+            <Grid>
               <Button
                 type='submit'
                 variant='contained'
                 sx={{ mt: 3, mb: 2 }}
                 data-cy='submitFirstStep'
               >
-                {t('common:next')}
+                {tCommon('next')}
               </Button>
             </Grid>
           </Grid>

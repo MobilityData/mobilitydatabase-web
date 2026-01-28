@@ -1,3 +1,5 @@
+'use client';
+
 import * as React from 'react';
 import {
   AppBar,
@@ -28,13 +30,10 @@ import {
   gbfsMetricsNavItems,
 } from '../constants/Navigation';
 import type NavigationItem from '../interface/Navigation';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { selectIsAuthenticated, selectUserEmail } from '../store/selectors';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import LogoutConfirmModal from './LogoutConfirmModal';
 import { BikeScooterOutlined, OpenInNew } from '@mui/icons-material';
 import { useRemoteConfig } from '../context/RemoteConfigProvider';
-import i18n from '../../i18n';
 import { NestedMenuItem } from 'mui-nested-menu';
 import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
 import DepartureBoardIcon from '@mui/icons-material/DepartureBoard';
@@ -43,14 +42,19 @@ import { defaultRemoteConfigValues } from '../interface/RemoteConfig';
 import { animatedButtonStyling } from './Header.style';
 import DrawerContent from './HeaderMobileDrawer';
 import ThemeToggle from './ThemeToggle';
-import { useTranslation } from 'react-i18next';
+import { useTranslations, useLocale } from 'next-intl';
+import { useSelector } from 'react-redux';
+import {
+  selectIsAuthenticated,
+  selectUserEmail,
+} from '../store/profile-selectors';
 
 export default function DrawerAppBar(): React.ReactElement {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParams = useSearchParams();
   const hasTransitFeedsRedirectParam =
     searchParams.get('utm_source') === 'transitfeeds';
   const theme = useTheme();
-  const location = useLocation();
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [hasTransitFeedsRedirect, setHasTransitFeedsRedirect] = React.useState(
     hasTransitFeedsRedirectParam,
@@ -60,25 +64,19 @@ export default function DrawerAppBar(): React.ReactElement {
   const [navigationItems, setNavigationItems] = React.useState<
     NavigationItem[]
   >(buildNavigationItems(defaultRemoteConfigValues));
-  const [currentLanguage, setCurrentLanguage] = React.useState<
-    string | undefined
-  >(i18n.language);
+  const locale = useLocale();
   const { config } = useRemoteConfig();
-  const { t } = useTranslation('common');
-
-  i18n.on('languageChanged', (lang) => {
-    setCurrentLanguage(i18n.language);
-  });
+  const t = useTranslations('common');
 
   React.useEffect(() => {
-    setActiveTab(location.pathname);
-  }, [location.pathname]);
+    setActiveTab(pathname ?? '');
+  }, [pathname]);
 
   React.useEffect(() => {
     setNavigationItems(buildNavigationItems(config));
   }, [config]);
 
-  const navigateTo = useNavigate();
+  const router = useRouter();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const userEmail = useSelector(selectUserEmail);
 
@@ -87,11 +85,11 @@ export default function DrawerAppBar(): React.ReactElement {
   };
 
   const handleNavigation = (navigationItem: NavigationItem | string): void => {
-    if (typeof navigationItem === 'string') navigateTo(navigationItem);
+    if (typeof navigationItem === 'string') router.push(navigationItem);
     else {
       if (navigationItem.external === true)
         window.open(navigationItem.target, '_blank', 'noopener noreferrer');
-      else navigateTo(navigationItem.target);
+      else router.push(navigationItem.target);
     }
     setMobileOpen(false);
   };
@@ -391,12 +389,31 @@ export default function DrawerAppBar(): React.ReactElement {
               </Button>
             )}
             <ThemeToggle></ThemeToggle>
-            {/* Testing language tool */}
-            {config.enableLanguageToggle && currentLanguage !== undefined && (
+            {/* Testing language tool -> to revisit */}
+            {config.enableLanguageToggle && (
               <Select
-                value={currentLanguage}
-                onChange={(lang) => {
-                  void i18n.changeLanguage(lang.target.value);
+                value={locale}
+                onChange={(e) => {
+                  const newLocale = e.target.value;
+                  const currentHost = window.location.host;
+                  const currentProtocol = window.location.protocol;
+                  const currentPath =
+                    window.location.pathname + window.location.search;
+
+                  let newHost = currentHost;
+                  if (newLocale === 'fr') {
+                    if (!currentHost.startsWith('fr.')) {
+                      newHost = 'fr.' + currentHost;
+                    }
+                  } else {
+                    if (currentHost.startsWith('fr.')) {
+                      newHost = currentHost.replace('fr.', '');
+                    }
+                  }
+
+                  if (newHost !== currentHost) {
+                    window.location.href = `${currentProtocol}//${newHost}${currentPath}`;
+                  }
                 }}
                 variant='standard'
                 inputProps={{ 'aria-label': 'language select' }}
@@ -413,8 +430,11 @@ export default function DrawerAppBar(): React.ReactElement {
             onClose={() => {
               setHasTransitFeedsRedirect(false);
               if (hasTransitFeedsRedirectParam) {
-                searchParams.delete('utm_source');
-                setSearchParams(searchParams);
+                // Remove utm_source from URL
+                const newSearchParams = new URLSearchParams(searchParams);
+                newSearchParams.delete('utm_source');
+                const newPath = `${pathname}?${newSearchParams.toString()}`;
+                router.replace(newPath);
               }
             }}
             sx={{ '.MuiAlert-message': { pb: { xs: 0, md: 1 } } }}

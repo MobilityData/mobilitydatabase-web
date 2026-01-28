@@ -1,7 +1,11 @@
 import { Box, Typography } from '@mui/material';
-import { type TFunction } from 'i18next';
-import { type GBFSVersionType } from '../../services/feeds/utils';
-import { type LatLngExpression } from 'leaflet';
+
+import {
+  type GTFSFeedType,
+  type GBFSVersionType,
+} from '../../services/feeds/utils';
+import { type LatLngTuple } from 'leaflet';
+import { type GeoJSONData, type GeoJSONDataGBFS } from '../../types';
 
 export function formatProvidersSorted(provider: string): string[] {
   const providers = provider.split(',').filter((n) => n);
@@ -28,7 +32,8 @@ export function getFeedFormattedName(
 }
 
 export function generateDescriptionMetaTag(
-  t: TFunction<'feeds'>,
+  // Look into proper typing for t
+  t: (key: string, options?: Record<string, string>) => string,
   sortedProviders: string[],
   dataType: 'gtfs' | 'gtfs_rt' | 'gbfs' | undefined,
   feedName?: string,
@@ -42,13 +47,13 @@ export function generateDescriptionMetaTag(
   }
   let dataTypeVerbose = '';
   if (dataType === 'gtfs') {
-    dataTypeVerbose = t('common:gtfsSchedule');
+    dataTypeVerbose = t('common.gtfsSchedule');
   } else if (dataType === 'gtfs_rt') {
-    dataTypeVerbose = t('common:gtfsRealtime');
+    dataTypeVerbose = t('common.gtfsRealtime');
   } else if (dataType === 'gbfs') {
-    dataTypeVerbose = t('common:gbfs');
+    dataTypeVerbose = t('common.gbfs');
   }
-  return t('detailPageDescription', { formattedName, dataTypeVerbose });
+  return t('feeds.detailPageDescription', { formattedName, dataTypeVerbose });
 }
 
 export function generatePageTitle(
@@ -76,7 +81,7 @@ export const formatServiceDateRange = (
   dateStart: string,
   dateEnd: string,
   timeZone?: string,
-): JSX.Element => {
+): React.ReactElement => {
   const startDate = new Date(dateStart);
   const endDate = new Date(dateEnd);
   const usedTimezone = timeZone ?? 'UTC';
@@ -129,8 +134,12 @@ export const sortGbfsVersions = (
 // Discuss if gbfs-feeds endpoint should include the bounding box
 /* eslint-disable */
 export function computeBoundingBox(
-  geojson: any,
-): LatLngExpression[] | undefined {
+  geojson: GeoJSONData | GeoJSONDataGBFS,
+): LatLngTuple[] | undefined {
+  if (geojson == null) {
+    return undefined;
+  }
+
   let minX = Infinity,
     minY = Infinity,
     maxX = -Infinity,
@@ -164,7 +173,7 @@ export function computeBoundingBox(
   }
 
   if (geojson.type === 'FeatureCollection') {
-    geojson.features.forEach((f: any) => extractCoords(f.geometry));
+    geojson.features?.forEach((f: any) => extractCoords(f.geometry));
   }
 
   if (
@@ -181,3 +190,38 @@ export function computeBoundingBox(
     [maxY, maxX],
   ];
 }
+
+export const getBoundingBox = (
+  feed: GTFSFeedType,
+): LatLngTuple[] | undefined => {
+  if (feed == undefined || feed.data_type !== 'gtfs') {
+    return undefined;
+  }
+  const gtfsFeed: GTFSFeedType = feed;
+  if (
+    gtfsFeed.bounding_box?.maximum_latitude == undefined ||
+    gtfsFeed.bounding_box?.maximum_longitude == undefined ||
+    gtfsFeed.bounding_box?.minimum_latitude == undefined ||
+    gtfsFeed.bounding_box?.minimum_longitude == undefined
+  ) {
+    return undefined;
+  }
+  return [
+    [
+      gtfsFeed.bounding_box.minimum_latitude,
+      gtfsFeed.bounding_box.minimum_longitude,
+    ],
+    [
+      gtfsFeed.bounding_box.minimum_latitude,
+      gtfsFeed.bounding_box.maximum_longitude,
+    ],
+    [
+      gtfsFeed.bounding_box.maximum_latitude,
+      gtfsFeed.bounding_box.maximum_longitude,
+    ],
+    [
+      gtfsFeed.bounding_box.maximum_latitude,
+      gtfsFeed.bounding_box.minimum_longitude,
+    ],
+  ];
+};

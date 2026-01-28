@@ -15,7 +15,7 @@ import {
   useWatch,
 } from 'react-hook-form';
 import { type YesNoFormInput, type FeedSubmissionFormFormInput } from '.';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import FormLabelDescription from './components/FormLabelDescription';
 
 export interface FeedSubmissionFormInputFourthStep {
@@ -37,7 +37,8 @@ export default function FormFourthStep({
   submitFormData,
   handleBack,
 }: FormFourthStepProps): React.ReactElement {
-  const { t } = useTranslation('feeds');
+  const t = useTranslations('feeds');
+  const tCommon = useTranslations('common');
   const {
     control,
     handleSubmit,
@@ -69,7 +70,7 @@ export default function FormFourthStep({
       {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
       <form onSubmit={handleSubmit(onSubmit)}>
         <Grid container direction={'column'} rowSpacing={2}>
-          <Grid item>
+          <Grid>
             <FormControl component='fieldset' fullWidth>
               <FormLabel component='legend' data-cy='dataProducerEmailLabel'>
                 {t('dataProducerEmail')}
@@ -90,7 +91,7 @@ export default function FormFourthStep({
               />
             </FormControl>
           </Grid>
-          <Grid item>
+          <Grid>
             <FormControl
               component='fieldset'
               error={errors.isInterestedInQualityAudit !== undefined}
@@ -104,7 +105,7 @@ export default function FormFourthStep({
               <Controller
                 control={control}
                 name='isInterestedInQualityAudit'
-                rules={{ required: t('common:form.required') }}
+                rules={{ required: tCommon('form.required') }}
                 render={({ field }) => (
                   <>
                     <Select
@@ -112,8 +113,8 @@ export default function FormFourthStep({
                       sx={{ width: '200px' }}
                       data-cy='interestedInAudit'
                     >
-                      <MenuItem value='yes'>{t('common:form:yes')}</MenuItem>
-                      <MenuItem value='no'>{t('common:form:no')}</MenuItem>
+                      <MenuItem value='yes'>{tCommon('form.yes')}</MenuItem>
+                      <MenuItem value='no'>{tCommon('form.no')}</MenuItem>
                     </Select>
                     <FormHelperText>
                       {errors.isInterestedInQualityAudit?.message ?? ''}
@@ -124,7 +125,7 @@ export default function FormFourthStep({
             </FormControl>
           </Grid>
           {isInterestedInQualityAudit === 'yes' && (
-            <Grid item>
+            <Grid>
               <FormControl
                 component='fieldset'
                 fullWidth
@@ -147,7 +148,7 @@ export default function FormFourthStep({
               </FormControl>
             </Grid>
           )}
-          <Grid item>
+          <Grid>
             <FormControl
               component='fieldset'
               error={errors.hasLogoPermission !== undefined}
@@ -162,7 +163,7 @@ export default function FormFourthStep({
               <Controller
                 control={control}
                 name='hasLogoPermission'
-                rules={{ required: t('common:form.required') }}
+                rules={{ required: tCommon('form.required') }}
                 render={({ field }) => (
                   <>
                     <Select
@@ -170,8 +171,8 @@ export default function FormFourthStep({
                       sx={{ width: '200px' }}
                       data-cy='logoPermission'
                     >
-                      <MenuItem value='yes'>{t('common:form.yes')}</MenuItem>
-                      <MenuItem value='no'>{t('common:form.no')}</MenuItem>
+                      <MenuItem value='yes'>{tCommon('form.yes')}</MenuItem>
+                      <MenuItem value='no'>{tCommon('form.no')}</MenuItem>
                     </Select>
                     <FormHelperText>
                       {errors.hasLogoPermission?.message ?? ''}
@@ -181,7 +182,7 @@ export default function FormFourthStep({
               />
             </FormControl>
           </Grid>
-          <Grid item>
+          <Grid>
             <FormControl component='fieldset' fullWidth>
               <FormLabel>{t('whatToolsCreateGtfs')}</FormLabel>
               <FormLabelDescription>
@@ -203,7 +204,7 @@ export default function FormFourthStep({
           </Grid>
 
           <Grid container spacing={2}>
-            <Grid item>
+            <Grid>
               <Button
                 onClick={() => {
                   handleBack(getValues());
@@ -211,17 +212,17 @@ export default function FormFourthStep({
                 variant='outlined'
                 sx={{ mt: 3, mb: 2 }}
               >
-                {t('common:back')}
+                {tCommon('back')}
               </Button>
             </Grid>
-            <Grid item>
+            <Grid>
               <Button
                 type='submit'
                 variant='contained'
                 sx={{ mt: 3, mb: 2 }}
                 data-cy='fourthStepSubmit'
               >
-                {t('common:form.submit')}
+                {tCommon('form.submit')}
               </Button>
             </Grid>
           </Grid>

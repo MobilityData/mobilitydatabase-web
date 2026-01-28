@@ -28,4 +28,9 @@ yarn-error.log*
 cypress/screenshots
 cypress/videos
 
+.env
 .env.*
+
+.next
+next-env.d.ts
+.vercel

@@ -1,3 +1,6 @@
+'use client';
+
+// TODO: needs to be a server friendly component
 import { useMemo, useState } from 'react';
 import { type components } from '../../../services/feeds/types';
 import LicenseDialog from './LicenseDialog';
@@ -16,13 +19,13 @@ import {
   DialogTitle,
   Grid,
   IconButton,
-  Link,
+  Link as MuiLink,
   Tooltip,
   Typography,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { GroupCard, GroupHeader } from '../FeedSummary.styles';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import LinkIcon from '@mui/icons-material/Link';
@@ -40,13 +43,8 @@ import { getEmojiFlag, type TCountryCode } from 'countries-list';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import GavelIcon from '@mui/icons-material/Gavel';
 import { getFeedStatusData } from '../../../utils/feedStatusConsts';
-import { useSelector } from 'react-redux';
-import { Link as RouterLink } from 'react-router-dom';
+import Link from 'next/link';
 import ReactGA from 'react-ga4';
-import {
-  selectGtfsDatasetRoutesTotal,
-  selectGtfsDatasetRouteTypes,
-} from '../../../store/supporting-files-selectors';
 import { getRouteTypeTranslatedName } from '../../../constants/RouteTypes';
 import {
   featureChipsStyle,
@@ -64,6 +62,8 @@ export interface FeedSummaryProps {
   sortedProviders: string[];
   latestDataset?: components['schemas']['GtfsDataset'] | undefined;
   autoDiscoveryUrl?: string;
+  totalRoutes?: number;
+  routeTypes?: string[];
 }
 
 export default function FeedSummary({
@@ -71,8 +71,11 @@ export default function FeedSummary({
   sortedProviders,
   latestDataset,
   autoDiscoveryUrl,
+  routeTypes,
+  totalRoutes,
 }: FeedSummaryProps): React.ReactElement {
-  const { t } = useTranslation('feeds');
+  const t = useTranslations('feeds');
+  const tCommon = useTranslations('common');
   const theme = useTheme();
   const [openLocationDetails, setOpenLocationDetails] = useState<
     'summary' | 'fullList' | undefined
@@ -82,8 +85,6 @@ export default function FeedSummary({
   const [showAllFeatures, setShowAllFeatures] = useState(false);
 
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
-  const totalRoutes = useSelector(selectGtfsDatasetRoutesTotal);
-  const routeTypes = useSelector(selectGtfsDatasetRouteTypes);
 
   const uniqueCountries = useMemo(() => {
     return getCountryLocationSummaries(feed?.locations ?? []).map(
@@ -176,12 +177,12 @@ export default function FeedSummary({
         >
           <GroupHeader variant='body1' sx={{ mb: 0 }}>
             <DatasetIcon fontSize='inherit' />
-            {t('feeds:feedSummary.routes')}
+            {t('feedSummary.routes')}
           </GroupHeader>
           <Chip
             data-testid='data-type'
             size='small'
-            label={t('common:' + feed?.data_type)}
+            label={tCommon(feed?.data_type ?? '')}
             color='secondary'
           ></Chip>
         </Box>
@@ -300,7 +301,7 @@ export default function FeedSummary({
                           variant='h6'
                           sx={{ fontWeight: 700, mr: 0.5 }}
                         >
-                          {getRouteTypeTranslatedName(routeType, t)}
+                          {getRouteTypeTranslatedName(routeType, tCommon)}
                           {index < routeTypes.length - 1 ? ',' : ''}
                         </Typography>
                       </Box>
@@ -318,8 +319,8 @@ export default function FeedSummary({
                   color='secondary'
                   size='small'
                   sx={{ height: 'fit-content', mt: 0.5, ml: '-5px' }}
-                  component={RouterLink}
-                  to='./map'
+                  component={Link}
+                  href={`/feeds/${feed?.data_type}/${feed?.id}/map`}
                   onClick={handleOpenDetailedMapClick}
                 >
                   {t('feedSummary.viewOnMap')}
@@ -405,14 +406,14 @@ export default function FeedSummary({
                     ? t('feedSummary.producerUrl')
                     : t('feedSummary.providerUrl')}
                 </Typography>
-                <Link
+                <MuiLink
                   href={(feed as GBFSFeedType)?.provider_url}
                   target='_blank'
                   rel='noreferrer'
                   variant='body1'
                 >
                   {(feed as GBFSFeedType)?.provider_url}
-                </Link>
+                </MuiLink>
               </Box>
             </>
           )}
@@ -444,7 +445,7 @@ export default function FeedSummary({
                 color='secondary'
                 size='small'
                 startIcon={<EmailIcon />}
-                component={Link}
+                component={MuiLink}
                 href={`mailto:${feed?.feed_contact_email}`}
               >
                 {feed?.feed_contact_email}
@@ -464,9 +465,9 @@ export default function FeedSummary({
             <Box sx={{ ml: 2 }}>
               <Typography variant='h6' sx={{ fontWeight: 700 }}>
                 {feed?.source_info?.authentication_type === 1 &&
-                  t('common:apiKey')}
+                  tCommon('apiKey')}
                 {feed?.source_info?.authentication_type === 2 &&
-                  t('common:httpHeader')}
+                  tCommon('httpHeader')}
               </Typography>
               {feed?.source_info?.authentication_info_url != undefined && (
                 <Button
@@ -511,7 +512,7 @@ export default function FeedSummary({
             >
               <Box>
                 <Typography variant='subtitle2' sx={{ lineHeight: 1.5 }}>
-                  {t('common:start')}
+                  {tCommon('start')}
                 </Typography>
                 <Typography variant='body1' sx={{ fontWeight: 700 }}>
                   {formatDateShort(
@@ -543,11 +544,13 @@ export default function FeedSummary({
                     sx={{
                       height: '1px',
                       width: '100%',
-                      background: `radial-gradient(circle,${getFeedStatusData(
-                        (feed as GTFSFeedType)?.status ?? '',
-                        theme,
-                        t,
-                      )?.color} 54%, rgba(255, 255, 255, 0) 100%)`,
+                      background: `radial-gradient(circle,${
+                        getFeedStatusData(
+                          (feed as GTFSFeedType)?.status ?? '',
+                          theme,
+                          t,
+                        )?.color
+                      } 54%, rgba(255, 255, 255, 0) 100%)`,
                     }}
                   >
                     {/* TODO: nice to have, a placement of the chip relative to the current date */}
@@ -574,7 +577,7 @@ export default function FeedSummary({
 
               <Box>
                 <Typography variant='subtitle2' sx={{ lineHeight: 1.5 }}>
-                  {t('common:end')}
+                  {tCommon('end')}
                 </Typography>
                 <Typography variant='body1' sx={{ fontWeight: 700 }}>
                   {formatDateShort(
@@ -593,7 +596,7 @@ export default function FeedSummary({
             <GroupHeader variant='body1'>
               <LayersIcon fontSize='inherit' />
               {t('features')}
-              <Tooltip title={t('common:moreInfo')} placement='top'>
+              <Tooltip title={tCommon('moreInfo')} placement='top'>
                 <IconButton
                   href='https://gtfs.org/getting_started/features/overview/'
                   target='_blank'
@@ -617,7 +620,7 @@ export default function FeedSummary({
                       const featureDecorators =
                         getFeatureComponentDecorators(feature);
                       return (
-                        <Grid item key={feature} data-testid='feature-chips'>
+                        <Grid key={feature} data-testid='feature-chips'>
                           <Tooltip
                             title={`Group: ${featureDecorators.component}`}
                             key={index}
@@ -625,7 +628,7 @@ export default function FeedSummary({
                           >
                             <Chip
                               size='small'
-                              component={Link}
+                              component={MuiLink}
                               label={feature}
                               variant='filled'
                               sx={{
@@ -655,8 +658,8 @@ export default function FeedSummary({
                           sx={{ ml: 1 }}
                         >
                           {showAllFeatures
-                            ? t('common:showLess')
-                            : t('common:showMore', {
+                            ? tCommon('showLess')
+                            : tCommon('showMore', {
                                 count: allFeatures.length - 6,
                               })}
                         </Button>
@@ -682,7 +685,7 @@ export default function FeedSummary({
             >
               <GroupHeader variant='body1' sx={{ mb: 0 }}>
                 <GavelIcon fontSize='inherit' />
-                {t('common:license')}
+                {tCommon('license')}
               </GroupHeader>
               {feed?.source_info?.license_is_spdx != undefined &&
                 feed.source_info.license_is_spdx && (
@@ -719,7 +722,7 @@ export default function FeedSummary({
                 </Button>
               </>
             ) : (
-              <Link
+              <MuiLink
                 href={feed?.source_info?.license_url ?? ''}
                 target='_blank'
                 rel='noopener noreferrer'
@@ -727,7 +730,7 @@ export default function FeedSummary({
                 variant='body1'
               >
                 {feed?.source_info?.license_url}
-              </Link>
+              </MuiLink>
             )}
           </GroupCard>
         )}

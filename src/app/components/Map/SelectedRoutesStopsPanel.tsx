@@ -1,7 +1,7 @@
 import { Box, Typography, useTheme } from '@mui/material';
 import { useRef } from 'react';
 import Draggable from 'react-draggable';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { type MapStopElement } from '../MapElement';
 
 interface SelectedRoutesStopsPanelProps {
@@ -13,7 +13,7 @@ interface SelectedRoutesStopsPanelProps {
 
 export const SelectedRoutesStopsPanel = (
   props: React.PropsWithChildren<SelectedRoutesStopsPanelProps>,
-): JSX.Element => {
+): React.ReactElement => {
   const {
     filteredRoutes,
     selectedRouteStops,
@@ -22,7 +22,7 @@ export const SelectedRoutesStopsPanel = (
   } = props;
   const theme = useTheme();
   const routeStopsPanelNodeRef = useRef<HTMLDivElement | null>(null);
-  const { t } = useTranslation('feeds');
+  const t = useTranslations('feeds');
   return (
     <Draggable
       nodeRef={routeStopsPanelNodeRef}
@@ -56,7 +56,7 @@ export const SelectedRoutesStopsPanel = (
           className='drag-handle'
         >
           <Typography variant='subtitle2' sx={{ fontWeight: 600 }}>
-            {t('selectedRouteStops.title', {
+            {t('selectedRouteStops.title_one', {
               count: filteredRoutes.length,
             })}{' '}
             ({selectedRouteStops.length})
@@ -65,7 +65,7 @@ export const SelectedRoutesStopsPanel = (
             variant='caption'
             sx={{ color: theme.palette.text.secondary }}
           >
-            {t('selectedRouteStops.routeIds', {
+            {t('selectedRouteStops.routeIds_one', {
               count: filteredRoutes.length,
             })}
             : {filteredRoutes.join(' | ')}

@@ -65,7 +65,7 @@ export default function GbfsFeedSearchInput({
   // Used to keep the auth inputs up to date
   useEffect(() => {
     setRequiresAuth(auth !== undefined);
-    setAuthType(auth == undefined ? '' : auth.authType ?? '');
+    setAuthType(auth == undefined ? '' : (auth.authType ?? ''));
     setBasicAuthUsername(
       auth != null && 'username' in auth ? auth.username : undefined,
     );

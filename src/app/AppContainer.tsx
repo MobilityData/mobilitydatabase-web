@@ -1,12 +1,12 @@
+'use client';
+
 import * as React from 'react';
-import { useSelector } from 'react-redux';
 import { Box, LinearProgress } from '@mui/material';
-import { selectLoadingApp } from './store/selectors';
 import type ContextProviderProps from './interface/ContextProviderProps';
-import Footer from './components/Footer';
-import Header from './components/Header';
 import { useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { selectLoadingApp } from './store/selectors';
+import { useSelector } from 'react-redux';
 
 const AppContainer: React.FC<ContextProviderProps> = ({ children }) => {
   const isAppLoading = useSelector(selectLoadingApp);
@@ -23,16 +23,12 @@ const AppContainer: React.FC<ContextProviderProps> = ({ children }) => {
         <link rel='canonical' href={canonicalUrl} />
       </Helmet>
       <Box id='app-main-container'>
-        <Header />
         {isAppLoading ? (
           <Box sx={{ width: '100%', mt: '-31px' }}>
             <LinearProgress />
           </Box>
         ) : (
-          <>
-            {children}
-            <Footer />
-          </>
+          <>{children}</>
         )}
       </Box>
     </>

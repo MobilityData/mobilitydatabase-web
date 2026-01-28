@@ -4,8 +4,7 @@ import Container from '@mui/material/Container';
 import { Button, Card, styled, Typography, useTheme } from '@mui/material';
 import EmailIcon from '@mui/icons-material/Email';
 import GitHubIcon from '@mui/icons-material/GitHub';
-import { useTranslation } from 'react-i18next';
-import { MainPageHeader } from '../styles/PageHeader.style';
+import { useTranslations } from 'next-intl';
 
 const ContactUsItem = styled(Card)(({ theme }) => ({
   padding: theme.spacing(2),
@@ -32,7 +31,7 @@ const ContactUsItem = styled(Card)(({ theme }) => ({
 }));
 
 export default function ContactUs(): React.ReactElement {
-  const { t } = useTranslation('contactUs');
+  const t = useTranslations('contactUs');
   const theme = useTheme();
   const SlackSvg = (
     <svg
@@ -49,7 +48,7 @@ export default function ContactUs(): React.ReactElement {
   );
   return (
     <Container component='main' maxWidth={'lg'}>
-      <MainPageHeader>{t('title')}</MainPageHeader>
+      <Typography variant='h1'>{t('title')}</Typography>
       <Box
         sx={{
           mt: 2,

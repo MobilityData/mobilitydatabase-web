@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Box,
   Fab,
@@ -22,7 +24,7 @@ import NestedCheckboxList, {
   type CheckboxStructure,
 } from '../../../components/NestedCheckboxList';
 import { CenterFocusStrong, ChevronLeft } from '@mui/icons-material';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { SearchHeader } from '../../../styles/Filters.styles';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import TuneIcon from '@mui/icons-material/Tune';
@@ -42,7 +44,7 @@ import {
   selectUserProfile,
 } from '../../../store/selectors';
 import { useSelector } from 'react-redux';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useRouter } from 'next/navigation';
 import { clearDataset } from '../../../store/dataset-reducer';
 import { useAppDispatch } from '../../../hooks';
 import { useRemoteConfig } from '../../../context/RemoteConfigProvider';
@@ -52,11 +54,13 @@ import type { GTFSFeedType } from '../../../services/feeds/utils';
 import RouteSelector from '../../../components/RouteSelector';
 
 export default function FullMapView(): React.ReactElement {
-  const { t } = useTranslation('feeds');
+  const t = useTranslations('feeds');
+  const tCommon = useTranslations('common');
   const { config } = useRemoteConfig();
 
-  const { feedId } = useParams();
-  const navigate = useNavigate();
+  const params = useParams();
+  const router = useRouter();
+  const feedId = params.feedId as string;
 
   const theme = useTheme();
   const dispatch = useAppDispatch();
@@ -134,7 +138,7 @@ export default function FullMapView(): React.ReactElement {
 
   const getUniqueRouteTypesCheckboxData = (): CheckboxStructure[] =>
     (routeTypes ?? []).map((routeTypeId) => {
-      const translatedName = getRouteTypeTranslatedName(routeTypeId, t);
+      const translatedName = getRouteTypeTranslatedName(routeTypeId, tCommon);
       return {
         title: translatedName,
         checked: filteredRouteTypeIds.includes(routeTypeId),
@@ -340,13 +344,13 @@ export default function FullMapView(): React.ReactElement {
               sx={{ pl: 0, display: { xs: 'none', md: 'inline-flex' } }}
               onClick={() => {
                 if (!hasError && feedId != null) {
-                  navigate(`/feeds/${feedId}`);
+                  router.push(`/feeds/gtfs/${feedId}`);
                 } else {
-                  navigate('/');
+                  router.push('/');
                 }
               }}
             >
-              {t('common:back')}
+              {tCommon('back')}
             </Button>
             <Button
               size='large'
@@ -376,7 +380,7 @@ export default function FullMapView(): React.ReactElement {
                 onCheckboxChange={(checkboxData: CheckboxStructure[]) => {
                   const nextTypeIds = checkboxData
                     .map((item) =>
-                      item.checked ? item?.props?.routeTypeId ?? '' : '',
+                      item.checked ? (item?.props?.routeTypeId ?? '') : '',
                     )
                     .filter((item) => item !== '');
 
@@ -482,9 +486,9 @@ export default function FullMapView(): React.ReactElement {
               sx={{ position: 'absolute', top: 10, right: 10, zIndex: 1000 }}
               onClick={() => {
                 if (!hasError && feedId != null) {
-                  navigate(`/feeds/${feedId}`);
+                  router.push(`/feeds/${feed?.data_type}/${feedId}`);
                 } else {
-                  navigate('/');
+                  router.push('/');
                 }
               }}
             >
@@ -605,7 +609,7 @@ export default function FullMapView(): React.ReactElement {
                             { value: 14, label: '14' },
                           ]}
                           onChange={(_, v) => {
-                            setCustomStopRadius(v as number);
+                            setCustomStopRadius(v);
                           }}
                           aria-label={t(
                             'fullMapView.style.customStopRadiusAria',

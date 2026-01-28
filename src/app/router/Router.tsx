@@ -10,11 +10,9 @@ import ChangePassword from '../screens/ChangePassword';
 import Home from '../screens/Home';
 import ForgotPassword from '../screens/ForgotPassword';
 import FAQ from '../screens/FAQ';
-import About from '../screens/About';
 import PostRegistration from '../screens/PostRegistration';
 import TermsAndConditions from '../screens/TermsAndConditions';
 import PrivacyPolicy from '../screens/PrivacyPolicy';
-import Feed from '../screens/Feed';
 import Feeds from '../screens/Feeds';
 import { SIGN_OUT_TARGET } from '../constants/Navigation';
 import {
@@ -34,7 +32,6 @@ import GBFSFeedAnalytics from '../screens/Analytics/GBFSFeedAnalytics';
 import GBFSNoticeAnalytics from '../screens/Analytics/GBFSNoticeAnalytics';
 import GBFSVersionAnalytics from '../screens/Analytics/GBFSVersionAnalytics';
 import ContactUs from '../screens/ContactUs';
-import FullMapView from '../screens/Feed/components/FullMapView';
 import GbfsValidator from '../screens/GbfsValidator';
 import { GbfsAuthProvider } from '../context/GbfsAuthProvider';
 
@@ -91,7 +88,6 @@ export const AppRouter: React.FC = () => {
       </Route>
       <Route path='forgot-password' element={<ForgotPassword />} />
       <Route path='faq' element={<FAQ />} />
-      <Route path='about' element={<About />} />
       <Route path='contact-us' element={<ContactUs />} />
       <Route path='feeds' element={<Feeds />} />
       <Route
@@ -110,10 +106,6 @@ export const AppRouter: React.FC = () => {
         path='feeds/gtfs_rt'
         element={<Navigate to='/feeds?gtfs_rt=true' replace />}
       />
-      <Route path='feeds/:feedId' element={<Feed />} />
-      <Route path='feeds/:feedDataType/:feedId' element={<Feed />} />
-      <Route path='feeds/:feedId/map' element={<FullMapView />} />
-      <Route path='feeds/:feedDataType/:feedId/map' element={<FullMapView />} />
       <Route path='contribute' element={<FeedSubmission />} />
       <Route path='contribute/submitted' element={<FeedSubmitted />} />
       <Route path='contribute-faq' element={<FeedSubmissionFAQ />} />

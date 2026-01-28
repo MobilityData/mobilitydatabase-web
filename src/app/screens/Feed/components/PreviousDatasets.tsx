@@ -1,3 +1,5 @@
+'use client';
+
 import * as React from 'react';
 import { ContentBox } from '../../../components/ContentBox';
 import {
@@ -28,53 +30,94 @@ import CodeIcon from '@mui/icons-material/Code';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import { WEB_VALIDATOR_LINK } from '../../../constants/Navigation';
 import { formatServiceDateRange } from '../Feed.functions';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
+import { getGtfsFeedDatasets } from '../../../services/feeds';
+import { getUserAccessToken } from '../../../services/profile-service';
 
 export interface PreviousDatasetsProps {
-  datasets:
-    | paths['/v1/gtfs_feeds/{id}/datasets']['get']['responses'][200]['content']['application/json']
-    | undefined;
-  isLoadingDatasets: boolean;
-  hasloadedAllDatasets: boolean;
-  loadMoreDatasets: (offset: number) => void;
+  initialDatasets?: paths['/v1/gtfs_feeds/{id}/datasets']['get']['responses'][200]['content']['application/json'];
+  feedId: string;
 }
 
 export default function PreviousDatasets({
-  datasets,
-  isLoadingDatasets,
-  hasloadedAllDatasets,
-  loadMoreDatasets,
+  initialDatasets,
+  feedId,
 }: PreviousDatasetsProps): React.ReactElement {
   const theme = useTheme();
-  const { t } = useTranslation('feeds');
+  const t = useTranslations('feeds');
+  const tCommon = useTranslations('common');
+  const [datasets, setDatasets] = React.useState(initialDatasets ?? []);
+  const [isLoadingDatasets, setIsLoadingDatasets] = React.useState(false);
+  const [hasloadedAllDatasets, setHasLoadedAllDatasets] = React.useState(
+    (initialDatasets?.length ?? 0) < 10,
+  );
   const [scrollPosition, setScrollPosition] = React.useState(0);
   const bottomRef = React.useRef<HTMLDivElement>(null);
   const listRef = React.useRef<HTMLDivElement>(null);
 
+  const loadMoreDatasets = React.useCallback(
+    async (offset: number) => {
+      if (isLoadingDatasets || hasloadedAllDatasets) return;
+
+      setIsLoadingDatasets(true);
+      try {
+        const accessToken = await getUserAccessToken();
+        const newDatasets = await getGtfsFeedDatasets(feedId, accessToken, {
+          limit: 10,
+          offset,
+        });
+
+        if (newDatasets != null && newDatasets.length > 0) {
+          if (newDatasets.length < 10) {
+            setHasLoadedAllDatasets(true);
+          }
+          setDatasets((prev) => [...prev, ...newDatasets]);
+        } else {
+          setHasLoadedAllDatasets(true);
+        }
+      } catch (error) {
+        setHasLoadedAllDatasets(true);
+      } finally {
+        setIsLoadingDatasets(false);
+      }
+    },
+    [feedId, isLoadingDatasets, hasloadedAllDatasets],
+  );
+
   React.useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
+        const entry = entries[0];
         if (
-          entries[0].isIntersecting &&
+          entry.isIntersecting &&
           !hasloadedAllDatasets &&
-          !isLoadingDatasets
+          !isLoadingDatasets &&
+          datasets.length > 0
         ) {
-          const currentNumberOfDatasets = datasets?.length ?? 0;
+          const currentNumberOfDatasets = datasets.length;
           const currentScrollPosition = listRef.current?.scrollTop ?? 0;
-          loadMoreDatasets(currentNumberOfDatasets);
+          void loadMoreDatasets(currentNumberOfDatasets);
           setScrollPosition(currentScrollPosition);
         }
       },
-      { root: null, threshold: 1.0 },
+      {
+        root: listRef.current,
+        threshold: 1.0,
+        rootMargin: '20px',
+      },
     );
 
-    if (bottomRef.current != null) {
-      observer.observe(bottomRef.current);
+    const bottomElement = bottomRef.current;
+    if (bottomElement != null) {
+      observer.observe(bottomElement);
     }
+
     return () => {
-      if (bottomRef.current != null) observer.unobserve(bottomRef.current);
+      if (bottomElement != null) {
+        observer.unobserve(bottomElement);
+      }
     };
-  }, [datasets, hasloadedAllDatasets]);
+  }, [datasets, hasloadedAllDatasets, isLoadingDatasets, loadMoreDatasets]);
 
   /**
    * When datasets loads, the default behavior is to bring the user to the bottom
@@ -88,7 +131,7 @@ export default function PreviousDatasets({
         list.scrollTop = scrollPosition + 150;
       }
     }
-  }, [datasets]);
+  }, [datasets, scrollPosition]);
 
   return (
     <>
@@ -182,11 +225,11 @@ export default function PreviousDatasets({
                               dataset?.validation_report?.unique_error_count !=
                                 undefined &&
                               dataset?.validation_report?.unique_error_count > 0
-                                ? `${dataset?.validation_report
-                                    ?.unique_error_count} ${t(
-                                    'common:feedback.errors',
-                                  )}`
-                                : t('common:feedback.noErrors')
+                                ? `${
+                                    dataset?.validation_report
+                                      ?.unique_error_count
+                                  } ${tCommon('feedback.errors')}`
+                                : tCommon('feedback.noErrors')
                             }
                             color={
                               dataset?.validation_report?.unique_error_count !=
@@ -219,11 +262,11 @@ export default function PreviousDatasets({
                                 ?.unique_warning_count != undefined &&
                               dataset?.validation_report?.unique_warning_count >
                                 0
-                                ? `${dataset?.validation_report
-                                    ?.unique_warning_count} ${t(
-                                    'common:feedback.warnings',
-                                  )}`
-                                : t('common:feedback.noWarnings')
+                                ? `${
+                                    dataset?.validation_report
+                                      ?.unique_warning_count
+                                  } ${tCommon('feedback.warnings')}`
+                                : tCommon('feedback.noWarnings')
                             }
                             color={
                               dataset?.validation_report
@@ -246,7 +289,7 @@ export default function PreviousDatasets({
                             label={`${
                               dataset?.validation_report?.unique_info_count ??
                               '0'
-                            } ${t('common:feedback.infoNotices')}`}
+                            } ${tCommon('feedback.infoNotices')}`}
                             color='primary'
                             variant='outlined'
                           />
@@ -277,7 +320,7 @@ export default function PreviousDatasets({
                               href={dataset.hosted_url}
                               rel='noreferrer nofollow'
                             >
-                              {t('common:download')}
+                              {tCommon('download')}
                             </Button>
                           </Tooltip>
                         )}

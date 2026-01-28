@@ -9,7 +9,7 @@ import {
 import { type SubmitHandler, Controller, useForm } from 'react-hook-form';
 import { type AuthTypes, type FeedSubmissionFormFormInput } from '.';
 import { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { isValidFeedLink } from '../../../services/feeds/utils';
 
 export interface FeedSubmissionFormInputSecondStepRT {
@@ -37,7 +37,8 @@ export default function FormSecondStepRT({
   submitFormData,
   handleBack,
 }: FormSecondStepRTProps): React.ReactElement {
-  const { t } = useTranslation('feeds');
+  const t = useTranslations('feeds');
+  const tCommon = useTranslations('common');
   const {
     control,
     handleSubmit,
@@ -113,7 +114,7 @@ export default function FormSecondStepRT({
       {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
       <form onSubmit={handleSubmit(onSubmit)}>
         <Grid container direction={'column'} rowSpacing={2}>
-          <Grid item>
+          <Grid>
             <FormControl
               component='fieldset'
               fullWidth
@@ -139,7 +140,7 @@ export default function FormSecondStepRT({
             </FormControl>
           </Grid>
           {isFeedUpdate && (
-            <Grid item mb={2}>
+            <Grid mb={2}>
               <FormControl
                 component='fieldset'
                 fullWidth
@@ -169,7 +170,7 @@ export default function FormSecondStepRT({
               </FormControl>
             </Grid>
           )}
-          <Grid item>
+          <Grid>
             <FormControl
               component='fieldset'
               fullWidth
@@ -194,7 +195,7 @@ export default function FormSecondStepRT({
             </FormControl>
           </Grid>
           {isFeedUpdate && (
-            <Grid item mb={2}>
+            <Grid mb={2}>
               <FormControl
                 component='fieldset'
                 fullWidth
@@ -224,7 +225,7 @@ export default function FormSecondStepRT({
               </FormControl>
             </Grid>
           )}
-          <Grid item>
+          <Grid>
             <FormControl
               component='fieldset'
               fullWidth
@@ -249,7 +250,7 @@ export default function FormSecondStepRT({
             </FormControl>
           </Grid>
           {isFeedUpdate && (
-            <Grid item mb={2}>
+            <Grid mb={2}>
               <FormControl
                 component='fieldset'
                 fullWidth
@@ -280,7 +281,7 @@ export default function FormSecondStepRT({
             </Grid>
           )}
 
-          <Grid item>
+          <Grid>
             <FormControl
               component='fieldset'
               fullWidth
@@ -310,7 +311,7 @@ export default function FormSecondStepRT({
             </FormControl>
           </Grid>
           <Grid container spacing={2}>
-            <Grid item>
+            <Grid>
               <Button
                 onClick={() => {
                   handleBack(getValues());
@@ -318,17 +319,17 @@ export default function FormSecondStepRT({
                 variant='outlined'
                 sx={{ mt: 3, mb: 2 }}
               >
-                {t('common:back')}
+                {tCommon('back')}
               </Button>
             </Grid>
-            <Grid item>
+            <Grid>
               <Button
                 type='submit'
                 variant='contained'
                 sx={{ mt: 3, mb: 2 }}
                 data-cy='secondStepRtSubmit'
               >
-                {t('common:next')}
+                {tCommon('next')}
               </Button>
             </Grid>
           </Grid>

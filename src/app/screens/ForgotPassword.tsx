@@ -22,7 +22,6 @@ import {
   ACCOUNT_TARGET,
   COMPLETE_REGISTRATION_TARGET,
 } from '../constants/Navigation';
-import { getEnvConfig } from '../utils/config';
 import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function ForgotPassword(): React.ReactElement {
@@ -120,7 +119,7 @@ export default function ForgotPassword(): React.ReactElement {
             </Alert>
           ) : null}
           <ReCAPTCHA
-            sitekey={getEnvConfig('REACT_APP_RECAPTCHA_SITE_KEY')}
+            sitekey={String(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY)}
             onChange={onChangeReCaptcha}
             data-testid='reCaptcha'
             style={{ alignSelf: 'center', margin: 'normal' }}

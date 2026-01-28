@@ -44,7 +44,6 @@ import {
 } from '../constants/Validation';
 import { type UserCredential, getAuth, signInWithPopup } from 'firebase/auth';
 import ReCAPTCHA from 'react-google-recaptcha';
-import { getEnvConfig } from '../utils/config';
 import { VisibilityOffOutlined, VisibilityOutlined } from '@mui/icons-material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
@@ -349,7 +348,7 @@ export default function SignUp(): React.ReactElement {
           ) : null}
           <Box m={1}>
             <ReCAPTCHA
-              sitekey={getEnvConfig('REACT_APP_RECAPTCHA_SITE_KEY')}
+              sitekey={String(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY)}
               onChange={onChangeReCaptcha}
               data-testid='reCaptcha'
               style={{ alignSelf: 'center', margin: 'normal' }}
