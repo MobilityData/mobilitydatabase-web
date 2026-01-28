@@ -14,9 +14,10 @@ import { Container } from '@mui/material';
 export const metadata = {
   title: 'Mobility Database',
   description: 'Mobility Database',
-  robots: process.env.VERCEL_ENV === 'production'
-    ? 'index, follow'
-    : 'noindex, nofollow',
+  robots:
+    process.env.VERCEL_ENV === 'production'
+      ? 'index, follow'
+      : 'noindex, nofollow',
 };
 
 const mulish = Mulish({

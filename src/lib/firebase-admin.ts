@@ -19,7 +19,8 @@ export function getFirebaseAdminApp(): App {
   if (existingApps.length > 0) {
     adminApp = existingApps.find(
       (existingApp) =>
-        existingApp.options.projectId === process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        existingApp.options.projectId ===
+        process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
     );
     if (adminApp != undefined) {
       return adminApp;
