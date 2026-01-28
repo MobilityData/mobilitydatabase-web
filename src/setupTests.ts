@@ -4,8 +4,23 @@
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
 
+// Polyfills for Node.js environment
+import { TextEncoder, TextDecoder } from 'util';
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+
+// Mock fetch for Jest environment
+global.fetch = jest.fn();
+
 jest.mock('leaflet/dist/leaflet.css', () => ({}));
 jest.mock('react-leaflet', () => ({}));
+
+// Mock Firebase Auth
+jest.mock('firebase/auth', () => ({
+  GoogleAuthProvider: jest.fn().mockImplementation(() => ({})),
+  GithubAuthProvider: jest.fn().mockImplementation(() => ({})),
+  OAuthProvider: jest.fn().mockImplementation(() => ({})),
+}));
 
 jest.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
