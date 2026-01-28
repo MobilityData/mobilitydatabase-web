@@ -29,9 +29,9 @@ jobs:
           export-env: true
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          VERCEL_TOKEN: "op://TECHNOLOGIES/kjzkrs62v42mvsvw23cewbyemi/VERCEL_TOKEN-MobilityDatabase-web-it-account"
-          VERCEL_PROJECT_ID: "op://TECHNOLOGIES/kjzkrs62v42mvsvw23cewbyemi/VERCEL_PROJECT_ID-MobilityDatabase-web"
-          VERCEL_ORG_ID: "op://TECHNOLOGIES/kjzkrs62v42mvsvw23cewbyemi/VERCEL_ORG_ID-MobilityDatabase-web"
+          VERCEL_TOKEN: "op://rbiv7rvkkrsdlpcrz3bmv7nmcu/MobilityDatabase Vercel Deployment/VERCEL_TOKEN-it-account"
+          VERCEL_PROJECT_ID: "op://rbiv7rvkkrsdlpcrz3bmv7nmcu/MobilityDatabase Vercel Deployment/VERCEL_PROJECT_ID"
+          VERCEL_ORG_ID: "op://rbiv7rvkkrsdlpcrz3bmv7nmcu/MobilityDatabase Vercel Deployment/VERCEL_ORG_ID"
 
       - name: Setup Node
         uses: actions/setup-node@v4
