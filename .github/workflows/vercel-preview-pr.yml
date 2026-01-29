@@ -68,10 +68,10 @@ jobs:
       - name: Cypress test
         uses: cypress-io/github-action@v6
         with:
-          start: |
-            yarn e2e:setup
-            yarn e2e:run
-          wait-on: npx wait-on --timeout 120000 http://127.0.0.1:3001 http://127.0.0.1:9099
+          start: yarn e2e:setup
+          command: yarn e2e:run
+          wait-on: 'http://127.0.0.1:3001, http://127.0.0.1:9099'
+          wait-on-timeout: 120
     
       - uses: actions/upload-artifact@v4
         if: failure()
