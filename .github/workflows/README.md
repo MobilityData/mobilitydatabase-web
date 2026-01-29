@@ -1,6 +1,6 @@
 ## Vercel Deployments
 
-### Feature PR to main [vercel-preview-pr.yml](./web-app-deployer.yml)
+### Feature PR to main [vercel-preview-pr.yml](./vercel-preview-pr.yml)
 - Runs checks: lint, test, e2e:test
 - Creates a preview URL to test feature using the DEV environment
 - Generate Lighthouse report based on preview URL
