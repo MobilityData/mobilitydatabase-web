@@ -9,6 +9,6 @@
 - Vercel automatically deploys any new changes done in main to the staging environment
 - No github workflow
 
-### Production Release [verecl-prod-on-release.yml](./verecl-prod-on-release.yml)
+### Production Release [vercel-prod-on-release.yml](./vercel-prod-on-release.yml)
 - Done automatically on Github releases 
 - Can be manually triggered
