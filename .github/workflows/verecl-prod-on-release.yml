@@ -1,0 +1,66 @@
+name: Deploy to Vercel Production on Release
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 1Password - Load Secrets
+        uses: 1Password/load-secrets-action@v2.0.0
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          VERCEL_TOKEN: "op://TECHNOLOGIES/kjzkrs62v42mvsvw23cewbyemi/VERCEL_TOKEN-MobilityDatabase-web-it-account"
+          VERCEL_PROJECT_ID: "op://TECHNOLOGIES/kjzkrs62v42mvsvw23cewbyemi/VERCEL_PROJECT_ID-MobilityDatabase-web"
+          VERCEL_ORG_ID: "op://TECHNOLOGIES/kjzkrs62v42mvsvw23cewbyemi/VERCEL_ORG_ID-MobilityDatabase-web"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.12.0
+          cache: 'yarn'
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Pull Vercel env (production)
+        run: vercel pull --yes --environment=production --token=${{ env.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ env.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ env.VERCEL_PROJECT_ID }}
+    
+      - uses: actions/cache@v4
+        with:
+            path: .next/cache
+            key: ${{ runner.os }}-nextcache-node24.12.0-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
+            restore-keys: |
+                ${{ runner.os }}-nextcache-node24.12.0-${{ hashFiles('yarn.lock') }}-
+
+
+      - name: Install deps
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        run: vercel build --prod --token=${{ env.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ env.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ env.VERCEL_PROJECT_ID }}
+
+      - name: Deploy
+        run: vercel deploy --prebuilt --prod --token=${{ env.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ env.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ env.VERCEL_PROJECT_ID }}
