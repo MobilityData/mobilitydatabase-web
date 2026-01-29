@@ -24,7 +24,7 @@ module.exports = {
           disabled: false
         },
         extraHeaders: JSON.stringify({
-          'x-vercel-protection-bypass': process.env.VERCEL_TOKEN
+          'x-vercel-protection-bypass': String(process.env.VERCEL_AUTOMATION_BYPASS_SECRET)
         })
       }
     },
