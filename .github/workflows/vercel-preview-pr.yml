@@ -60,7 +60,7 @@ jobs:
         run: npm i -g vercel@latest
 
       - name: Pull environment variables from Vercel for e2e tests
-        run: vercel env pull .env.test --environment=preview --yes --token=${{ env.VERCEL_TOKEN }}
+        run: vercel env pull .env.local --environment=preview --yes --token=${{ env.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ env.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ env.VERCEL_PROJECT_ID }}

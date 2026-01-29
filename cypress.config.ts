@@ -1,15 +1,11 @@
 import { defineConfig } from 'cypress';
 import * as dotenv from 'dotenv';
 const localEnv = dotenv.config({ path: './.env.development' }).parsed || {};
-const ciEnv = dotenv.config({ path: './.env.test' }).parsed || {};
-
+const ciEnv = dotenv.config({ path: './.env.local' }).parsed || {};
 
 const isCI = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
-
 const chosenEnv = isCI ? ciEnv : localEnv;
 
-console.log(`Using ${isCI ? '.env.test' : '.env.development'} for Cypress configuration.`);
-console.log('chosenEnv.NEXT_PUBLIC_FIREBASE_PROJECT_ID:', String(chosenEnv.NEXT_PUBLIC_FIREBASE_PROJECT_ID));
 
 export default defineConfig({
   env: chosenEnv,
