@@ -12,7 +12,7 @@ export async function register(): Promise<void> {
     if (process.env.NEXT_RUNTIME === 'nodejs') {
       const { server } = await import('./mocks/server');
       server.listen({
-        onUnhandledRequest: 'warn', // Don't warn about unhandled requests
+        onUnhandledRequest: 'bypass', // Don't warn about unhandled requests
       });
       console.log('🔶 MSW Server started for API mocking');
     }

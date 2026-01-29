@@ -87,9 +87,9 @@ jobs:
 
       - name: Wait for Vercel deployment and get preview URL
         id: get_vercel_url
-        uses: patrickedqvist/wait-for-vercel-preview@v1.3.2
+        uses: patrickedqvist/wait-for-vercel-preview@v1.3.3
         with:
-          token: ${{ env.VERCEL_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           max_timeout: 300
 
       - name: Lighthouse Check
@@ -100,7 +100,7 @@ jobs:
           configPath: ./.github/lighthouserc.js
           temporaryPublicStorage: true
         env:
-          LHCI_PREVIEW_URL_BASE64: ${{ steps.get_vercel_url.outputs.preview_url  }}
+          LHCI_PREVIEW_URL_BASE64: ${{ steps.get_vercel_url.outputs.url  }}
           VERCEL_TOKEN: ${{ env.VERCEL_TOKEN }}
     
       - name: Format lighthouse score
