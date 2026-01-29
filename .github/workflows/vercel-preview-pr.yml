@@ -102,7 +102,7 @@ jobs:
           configPath: ./.github/lighthouserc.js
           temporaryPublicStorage: true
         env:
-          LHCI_PREVIEW_URL_BASE64: ${{ steps.get_vercel_url.outputs.url  }}
+          LHCI_PREVIEW_URL: ${{ steps.get_vercel_url.outputs.url  }}
           VERCEL_TOKEN: ${{ env.VERCEL_TOKEN }}
     
       - name: Format lighthouse score
