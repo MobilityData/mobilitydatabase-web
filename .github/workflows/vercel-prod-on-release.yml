@@ -5,6 +5,9 @@ on:
   release:
     types: [published]
 
+env:
+  NODE_VERSION: '24.12.0'
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -30,7 +33,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 24.12.0
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
 
       - name: Install Vercel CLI
@@ -45,9 +48,9 @@ jobs:
       - uses: actions/cache@v4
         with:
             path: .next/cache
-            key: ${{ runner.os }}-nextcache-node24.12.0-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
+            key: ${{ runner.os }}-nextcache-node${{ env.NODE_VERSION }}-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
             restore-keys: |
-                ${{ runner.os }}-nextcache-node24.12.0-${{ hashFiles('yarn.lock') }}-
+                ${{ runner.os }}-nextcache-node${{ env.NODE_VERSION }}-${{ hashFiles('yarn.lock') }}-
 
 
       - name: Install deps

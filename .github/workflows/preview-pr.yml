@@ -1,19 +1,44 @@
-name: Vercel Preview (PR)
+name: Preview (PR)
 
 on:
   pull_request:
     branches: [main]
-    types: [opened, synchronize, reopened]
 
 concurrency:
   group: vercel-preview-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
-jobs:
-  deploy_preview:
-    # ✅ Only run for same-repo PRs (not forks)
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+env:
+  NODE_VERSION: '24.12.0'
 
+jobs:
+  # ✅ Runs for all PRs (including forks)
+  lint_and_test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Unit tests
+        run: yarn test:ci
+
+  # ✅ Only runs for same-repo PRs (not forks) - requires secrets
+  e2e_and_preview:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    needs: lint_and_test
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -37,7 +62,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 24.12.0
+          node-version: ${{ env.NODE_VERSION }}
           cache: yarn
 
       - name: Install dependencies
@@ -50,12 +75,6 @@ jobs:
           key: cypress-${{ runner.os }}-binary-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             cypress-${{ runner.os }}-binary-
-
-      - name: Lint
-        run: yarn lint
-
-      - name: Unit tests
-        run: yarn test:ci
 
       - name: Install Vercel CLI
         run: npm i -g vercel@latest
