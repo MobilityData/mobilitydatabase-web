@@ -6,8 +6,8 @@
  */
 
 import { type ReactElement } from 'react';
-import { getFeed } from '../../services/feeds';
-import { getSSRAccessToken } from '../../utils/auth-server';
+import { getFeed } from '../../../services/feeds';
+import { getSSRAccessToken } from '../../../utils/auth-server';
 import { notFound, redirect } from 'next/navigation';
 
 interface Props {

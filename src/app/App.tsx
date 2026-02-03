@@ -10,11 +10,18 @@ import { Suspense, useEffect, useState } from 'react';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import AppContainer from './AppContainer';
-import { Helmet, HelmetProvider } from 'react-helmet-async';
 
-function App(): React.ReactElement {
+interface AppProps {
+  locale?: string;
+}
+
+function App({ locale }: AppProps): React.ReactElement {
   const dispatch = useDispatch();
   const [isAppReady, setIsAppReady] = useState(false);
+
+  // Determine basename for BrowserRouter based on locale
+  // Non-default locales (e.g., 'fr') need their prefix as basename
+  const basename = locale && locale !== 'en' ? `/${locale}` : undefined;
 
   useEffect(() => {
     app.auth().onAuthStateChanged((user) => {
@@ -29,24 +36,14 @@ function App(): React.ReactElement {
   }, [dispatch]);
 
   return (
-    <HelmetProvider>
-      <Helmet>
-        <meta
-          name='description'
-          content={
-            "Access GTFS, GTFS Realtime, GBFS transit data with over 4,000 feeds from 70+ countries on the web's leading transit data platform."
-          }
-        />
-      </Helmet>
       <Suspense>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           {/* BrowserRouter will be deprecated in favor of Next AppRouter */}
-          <BrowserRouter>
+          <BrowserRouter basename={basename}>
             <AppContainer>{isAppReady ? <AppRouter /> : null}</AppContainer>
           </BrowserRouter>
         </LocalizationProvider>
       </Suspense>
-    </HelmetProvider>
   );
 }
 
