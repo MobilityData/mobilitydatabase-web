@@ -9,7 +9,6 @@ import { type RemoteConfigValues } from './interface/RemoteConfig';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
-
 interface ProvidersProps {
   children: React.ReactNode;
   remoteConfig: RemoteConfigValues;

@@ -54,7 +54,8 @@ async function exchangeCustomTokenForIdToken(
     idToken: string;
     expiresIn?: string; // seconds as string
   };
-  const expiresInSec = data.expiresIn ? Number(data.expiresIn) : undefined;
+  const expiresInSec =
+    data.expiresIn != null ? Number(data.expiresIn) : undefined;
   return { idToken: data.idToken, expiresInSec };
 }
 
