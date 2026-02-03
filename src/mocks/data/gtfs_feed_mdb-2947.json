@@ -1,0 +1,14 @@
+{
+  "id": "mdb-2947",
+  "data_type": "gtfs",
+  "provider": "Example Transit Agency",
+  "feed_name": "Example City Transit",
+  "locations": [
+    {
+      "country_code": "US",
+      "subdivision_name": "Example State",
+      "municipality": "Example City",
+      "country": "United States"
+    }
+  ]
+}

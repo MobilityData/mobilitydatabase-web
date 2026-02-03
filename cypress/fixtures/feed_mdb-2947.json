@@ -1,0 +1,21 @@
+{
+  "id": "mdb-2947",
+  "data_type": "gtfs",
+  "status": "active",
+  "created_at": "2024-10-01T00:00:00Z",
+  "external_ids": [
+    { "external_id": "2947", "source": "mdb" }
+  ],
+  "provider": "Example Transit Agency",
+  "feed_name": "Example City Transit",
+  "note": "Mock fixture for local dev",
+  "feed_contact_email": "",
+  "source_info": {
+    "producer_url": "https://example.com/gtfs.zip",
+    "authentication_type": 0,
+    "authentication_info_url": "",
+    "api_key_parameter_name": "",
+    "license_url": ""
+  },
+  "redirects": []
+}

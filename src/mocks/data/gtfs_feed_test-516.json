@@ -1,0 +1,14 @@
+{
+  "id": "test-516",
+  "data_type": "gtfs",
+  "provider": "Metropolitan Transit Authority (MTA)",
+  "feed_name": "NYC Subway",
+  "locations": [
+    {
+      "country_code": "US",
+      "subdivision_name": "New York",
+      "municipality": "New York City",
+      "country": "United States"
+    }
+  ]
+}

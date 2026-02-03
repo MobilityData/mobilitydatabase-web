@@ -3,6 +3,7 @@ import 'server-only';
 import { cache } from 'react';
 import { getRemoteConfig } from 'firebase-admin/remote-config';
 import { getFirebaseAdminApp } from './firebase-admin';
+import { getEnvConfig } from '../app/utils/config';
 import {
   defaultRemoteConfigValues,
   type RemoteConfigValues,
@@ -51,6 +52,13 @@ function parseConfigValue(
  * Returns the template parameters merged with defaults.
  */
 async function fetchRemoteConfigFromFirebase(): Promise<RemoteConfigValues> {
+  // Dev/mock bypass: return defaults without touching Admin SDK
+  const isMock =
+    getEnvConfig('NEXT_PUBLIC_API_MOCKING') === 'enabled' ||
+    getEnvConfig('LOCAL_DEV_NO_ADMIN') === '1';
+  if (isMock) {
+    return defaultRemoteConfigValues;
+  }
   const app = getFirebaseAdminApp();
   const remoteConfigAdmin = getRemoteConfig(app);
 
@@ -95,6 +103,13 @@ async function fetchRemoteConfigFromFirebase(): Promise<RemoteConfigValues> {
  */
 export const getRemoteConfigValues = cache(
   async (): Promise<RemoteConfigValues> => {
+    // Dev/mock bypass: use defaults immediately
+    const isMock =
+      getEnvConfig('NEXT_PUBLIC_API_MOCKING') === 'enabled' ||
+      getEnvConfig('LOCAL_DEV_NO_ADMIN') === '1';
+    if (isMock) {
+      return defaultRemoteConfigValues;
+    }
     const now = Date.now();
     const cacheAge = (now - cacheTimestamp) / 1000;
 

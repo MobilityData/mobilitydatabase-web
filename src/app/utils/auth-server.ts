@@ -64,6 +64,13 @@ async function exchangeCustomTokenForIdToken(
  * Caches the token until near expiry to minimize exchanges.
  */
 export async function getGcipIdToken(): Promise<string> {
+  // Dev/mock bypass: allow local runs without Firebase Admin/service accounts
+  const isMock =
+    getEnvConfig('NEXT_PUBLIC_API_MOCKING') === 'enabled' ||
+    getEnvConfig('LOCAL_DEV_NO_ADMIN') === '1';
+  if (isMock) {
+    return 'dev-mock-token';
+  }
   // Use cached token if still valid for at least 60 seconds
   if (cached != undefined && cached.expiresAt - now() > 60_000) {
     return cached.token;
@@ -89,11 +96,6 @@ export async function getGcipIdToken(): Promise<string> {
   };
   return idToken;
 }
-
-// export interface EndUserIdentity {
-//   subject?: string;
-//   email?: string;
-// }
 
 /**
  * Returns a GCIP ID token suitable for IAP-protected API calls.

@@ -3,22 +3,35 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { getEnvConfig, nonEmpty } from '../app/utils/config';
 
-/**
- * Centralized Firebase Admin initialization.
- * Prefers explicit service account credentials via env.
- * Fallback to ADC only when GOOGLE_APPLICATION_CREDENTIALS is set.
- */
-
-/**
- * Server-only Firebase Admin SDK initialization.
- * Uses Application Default Credentials (ADC) which works automatically on Cloud Run.
- * For local development, you can either:
- * 1. Run `gcloud auth application-default login`
- * 2. Set GOOGLE_APPLICATION_CREDENTIALS env var to a service account JSON path
- */
-
 let adminApp: App | undefined;
 
+/**
+ * ensureAdminInitialized
+ * Creates or reuses a singleton Firebase Admin App.
+ *
+ * Selection order:
+ * 1) Reuse an existing Admin app from `getApps()`, preferring the one whose
+ *    `options.projectId` matches `NEXT_PUBLIC_FIREBASE_PROJECT_ID`; falls back
+ *    to the first app if no match.
+ * 2) If `GOOGLE_SA_JSON` is set (server-only inline JSON), parse and initialize
+ *    with `cert(serviceAccount)`.
+ * 3) If `GOOGLE_SA_JSON_PATH` is set, read and parse the JSON file and
+ *    initialize with `cert(serviceAccount)`.
+ * 4) If none of the above are provided, throws an error to avoid implicit ADC
+ *    behavior (metadata server lookups) in serverless environments.
+ *
+ * Environment variables accessed:
+ * - NEXT_PUBLIC_FIREBASE_PROJECT_ID: Used to match existing apps and as fallback
+ *   when the service account JSON lacks `project_id`.
+ * - GOOGLE_SA_JSON: Server-only inline service account JSON string
+ *   (must include `project_id`, `client_email`, and `private_key`).
+ * - GOOGLE_SA_JSON_PATH: Path to a service account JSON file containing the
+ *   same required fields.
+ *
+ * Notes:
+ * - Uses `getEnvConfig` and `nonEmpty` to read configuration consistently.
+ * - Keep credentials server-only; do not expose inline JSON to client code.
+ */
 function ensureAdminInitialized(): App {
   // Reuse already initialized app
   const existingApps = getApps();
