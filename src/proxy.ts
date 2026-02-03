@@ -14,12 +14,12 @@ import { routing } from './i18n/routing';
  * - If a supported locale already exists in the pathname, continue without redirect
  * - If no locale in pathname, internally rewrite to default locale path
  */
-export default function proxy(request: NextRequest) {
+export default function proxy(request: NextRequest): NextResponse<unknown> {
   const { pathname } = request.nextUrl;
 
   // Check if any supported locale already exists in the pathname
   const pathnameHasLocale = routing.locales.some(
-    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`,
   );
 
   // If locale exists in path, let it through
@@ -42,4 +42,3 @@ export const config = {
   // - Static files with extensions (.ico, .png, etc.)
   matcher: ['/((?!api|_next|.*\\..*).*)'],
 };
-

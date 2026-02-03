@@ -1,11 +1,13 @@
 import { type ReactElement } from 'react';
 import { setRequestLocale } from 'next-intl/server';
-import { routing } from '../../../i18n/routing';
+import { type AVAILABLE_LOCALES, routing } from '../../../i18n/routing';
 import AboutPage from './components/AboutPage';
 
 export const dynamic = 'force-static';
 
-export function generateStaticParams() {
+export function generateStaticParams(): Array<{
+  locale: (typeof AVAILABLE_LOCALES)[number];
+}> {
   return routing.locales.map((locale) => ({ locale }));
 }
 

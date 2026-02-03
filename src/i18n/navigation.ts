@@ -3,7 +3,7 @@ import { routing } from './routing';
 
 /**
  * Locale-aware navigation APIs.
- * 
+ *
  * Use these instead of Next.js navigation to automatically handle locale prefixes:
  * - Link: Locale-aware link component
  * - redirect: Server-side redirect with locale

@@ -21,7 +21,7 @@ function App({ locale }: AppProps): React.ReactElement {
 
   // Determine basename for BrowserRouter based on locale
   // Non-default locales (e.g., 'fr') need their prefix as basename
-  const basename = locale && locale !== 'en' ? `/${locale}` : undefined;
+  const basename = locale != null && locale !== 'en' ? `/${locale}` : undefined;
 
   useEffect(() => {
     app.auth().onAuthStateChanged((user) => {
@@ -36,14 +36,14 @@ function App({ locale }: AppProps): React.ReactElement {
   }, [dispatch]);
 
   return (
-      <Suspense>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          {/* BrowserRouter will be deprecated in favor of Next AppRouter */}
-          <BrowserRouter basename={basename}>
-            <AppContainer>{isAppReady ? <AppRouter /> : null}</AppContainer>
-          </BrowserRouter>
-        </LocalizationProvider>
-      </Suspense>
+    <Suspense>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        {/* BrowserRouter will be deprecated in favor of Next AppRouter */}
+        <BrowserRouter basename={basename}>
+          <AppContainer>{isAppReady ? <AppRouter /> : null}</AppContainer>
+        </BrowserRouter>
+      </LocalizationProvider>
+    </Suspense>
   );
 }
 

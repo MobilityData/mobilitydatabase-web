@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import type ContextProviderProps from '../interface/ContextProviderProps';
 import { Provider } from 'react-redux';
 import { store } from '../store/store';
 import { PersistGate } from 'redux-persist/integration/react';
-import { persistStore, type Persistor } from 'redux-persist';
+import { persistStore } from 'redux-persist';
 import { useAppDispatch } from '../hooks';
 import { resetProfileErrors } from '../store/profile-reducer';
 

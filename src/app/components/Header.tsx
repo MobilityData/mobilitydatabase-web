@@ -50,23 +50,30 @@ import {
 } from '../store/profile-selectors';
 
 // Lazy load components not needed for initial render
-const LogoutConfirmModal = dynamic(() => import('./LogoutConfirmModal'), {
-  ssr: false,
-});
-const DrawerContent = dynamic(() => import('./HeaderMobileDrawer'), {
-  ssr: false,
-});
+const LogoutConfirmModal = dynamic(
+  async () => await import('./LogoutConfirmModal'),
+  {
+    ssr: false,
+  },
+);
+const DrawerContent = dynamic(
+  async () => await import('./HeaderMobileDrawer'),
+  {
+    ssr: false,
+  },
+);
 
 // Hook to safely access search params only on client
-function useClientSearchParams() {
-  const [searchParams, setSearchParams] = React.useState<URLSearchParams | null>(null);
-  
+function useClientSearchParams(): URLSearchParams | null {
+  const [searchParams, setSearchParams] =
+    React.useState<URLSearchParams | null>(null);
+
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       setSearchParams(new URLSearchParams(window.location.search));
     }
   }, []);
-  
+
   return searchParams;
 }
 
@@ -74,11 +81,12 @@ export default function DrawerAppBar(): React.ReactElement {
   const clientSearchParams = useClientSearchParams();
   const hasTransitFeedsRedirectParam =
     clientSearchParams?.get('utm_source') === 'transitfeeds';
-    
+
   const theme = useTheme();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = React.useState(false);
-  const [hasTransitFeedsRedirect, setHasTransitFeedsRedirect] = React.useState(false);
+  const [hasTransitFeedsRedirect, setHasTransitFeedsRedirect] =
+    React.useState(false);
   const [openDialog, setOpenDialog] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState('');
   const [navigationItems, setNavigationItems] = React.useState<
@@ -125,7 +133,8 @@ export default function DrawerAppBar(): React.ReactElement {
     handleMenuClose();
   };
 
-  const container = typeof window !== 'undefined' ? () => window.document.body : undefined;
+  const container =
+    typeof window !== 'undefined' ? () => window.document.body : undefined;
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -446,7 +455,7 @@ export default function DrawerAppBar(): React.ReactElement {
             severity='warning'
             onClose={() => {
               setHasTransitFeedsRedirect(false);
-              if (hasTransitFeedsRedirectParam && clientSearchParams) {
+              if (hasTransitFeedsRedirectParam && clientSearchParams != null) {
                 // Remove utm_source from URL
                 const newSearchParams = new URLSearchParams(clientSearchParams);
                 newSearchParams.delete('utm_source');

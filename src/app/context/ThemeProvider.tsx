@@ -11,24 +11,28 @@ import type ContextProviderProps from '../interface/ContextProviderProps';
 
 // TODO: Revisit theme for best SSR practices
 
-const ThemeContext = createContext({ 
+const ThemeContext = createContext({
   mode: ThemeModeEnum.light,
-  toggleTheme: () => {} 
+  toggleTheme: () => {},
 });
 
 export const ThemeProvider: React.FC<ContextProviderProps> = ({ children }) => {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
-  
+
   // Initialize with system preference for SSR, then check localStorage on client
   const [mode, setMode] = useState<ThemeModeEnum>(
-    prefersDarkMode ? ThemeModeEnum.dark : ThemeModeEnum.light
+    prefersDarkMode ? ThemeModeEnum.dark : ThemeModeEnum.light,
   );
 
   // Load theme from localStorage only on client side
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('theme');
-      if (savedTheme && Object.values(ThemeModeEnum).includes(savedTheme as ThemeModeEnum)) {
+      if (
+        savedTheme != null &&
+        savedTheme !== '' &&
+        Object.values(ThemeModeEnum).includes(savedTheme as ThemeModeEnum)
+      ) {
         setMode(savedTheme as ThemeModeEnum);
       }
     }
@@ -55,5 +59,5 @@ export const ThemeProvider: React.FC<ContextProviderProps> = ({ children }) => {
   );
 };
 
-export const useTheme = (): { mode: ThemeModeEnum, toggleTheme: () => void } =>
+export const useTheme = (): { mode: ThemeModeEnum; toggleTheme: () => void } =>
   useContext(ThemeContext);

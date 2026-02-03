@@ -11,11 +11,12 @@ import { Mulish, IBM_Plex_Mono } from 'next/font/google';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 import { Container } from '@mui/material';
-import { routing } from '../../i18n/routing';
+import { type AVAILABLE_LOCALES, routing } from '../../i18n/routing';
 
 export const metadata = {
   title: 'Mobility Database',
-  description: "Access GTFS, GTFS Realtime, GBFS transit data with over 4,000 feeds from 70+ countries on the web's leading transit data platform.",
+  description:
+    "Access GTFS, GTFS Realtime, GBFS transit data with over 4,000 feeds from 70+ countries on the web's leading transit data platform.",
   robots:
     process.env.VERCEL_ENV === 'production'
       ? 'index, follow'
@@ -46,13 +47,15 @@ const ibmPlexMono = IBM_Plex_Mono({
  * Generate static params for all locales.
  * This enables static generation for locale-prefixed routes.
  */
-export function generateStaticParams() {
+export function generateStaticParams(): Array<{
+  locale: (typeof AVAILABLE_LOCALES)[number];
+}> {
   return routing.locales.map((locale) => ({ locale }));
 }
 
 interface LocaleLayoutProps {
   children: React.ReactNode;
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: (typeof AVAILABLE_LOCALES)[number] }>;
 }
 
 /**
@@ -81,8 +84,8 @@ export default async function LocaleLayout({
   return (
     <html lang={locale}>
       <head>
-        <link rel="preconnect" href="https://firebaseapp.com" />
-        <link rel="dns-prefetch" href="https://firebaseapp.com" />
+        <link rel='preconnect' href='https://firebaseapp.com' />
+        <link rel='dns-prefetch' href='https://firebaseapp.com' />
       </head>
       <body className={`${mulish.variable} ${ibmPlexMono.variable}`}>
         <ThemeRegistry>
@@ -110,4 +113,3 @@ export default async function LocaleLayout({
     </html>
   );
 }
-

@@ -8,11 +8,7 @@ const ThemeToggle = (): React.ReactElement => {
 
   return (
     <IconButton onClick={toggleTheme} color='inherit' aria-label='Theme Toggle'>
-      {mode === 'dark' ? (
-        <Brightness7Icon />
-      ) : (
-        <Brightness4Icon />
-      )}
+      {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
     </IconButton>
   );
 };

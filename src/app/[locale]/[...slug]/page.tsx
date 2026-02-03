@@ -16,7 +16,7 @@ interface PageProps {
 
 export default function Page({ params }: PageProps): ReactNode {
   const { locale } = use(params);
-  
+
   // Pass locale to App so BrowserRouter can use correct basename
   return <App locale={locale} />;
 }
