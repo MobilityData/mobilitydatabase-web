@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import dynamic from 'next/dynamic';
 import {
   AppBar,
   Box,
@@ -30,8 +31,8 @@ import {
   gbfsMetricsNavItems,
 } from '../constants/Navigation';
 import type NavigationItem from '../interface/Navigation';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import LogoutConfirmModal from './LogoutConfirmModal';
+import { usePathname, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { BikeScooterOutlined, OpenInNew } from '@mui/icons-material';
 import { useRemoteConfig } from '../context/RemoteConfigProvider';
 import { NestedMenuItem } from 'mui-nested-menu';
@@ -40,7 +41,6 @@ import DepartureBoardIcon from '@mui/icons-material/DepartureBoard';
 import { fontFamily } from '../Theme';
 import { defaultRemoteConfigValues } from '../interface/RemoteConfig';
 import { animatedButtonStyling } from './Header.style';
-import DrawerContent from './HeaderMobileDrawer';
 import ThemeToggle from './ThemeToggle';
 import { useTranslations, useLocale } from 'next-intl';
 import { useSelector } from 'react-redux';
@@ -49,16 +49,36 @@ import {
   selectUserEmail,
 } from '../store/profile-selectors';
 
+// Lazy load components not needed for initial render
+const LogoutConfirmModal = dynamic(() => import('./LogoutConfirmModal'), {
+  ssr: false,
+});
+const DrawerContent = dynamic(() => import('./HeaderMobileDrawer'), {
+  ssr: false,
+});
+
+// Hook to safely access search params only on client
+function useClientSearchParams() {
+  const [searchParams, setSearchParams] = React.useState<URLSearchParams | null>(null);
+  
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setSearchParams(new URLSearchParams(window.location.search));
+    }
+  }, []);
+  
+  return searchParams;
+}
+
 export default function DrawerAppBar(): React.ReactElement {
-  const searchParams = useSearchParams();
+  const clientSearchParams = useClientSearchParams();
   const hasTransitFeedsRedirectParam =
-    searchParams.get('utm_source') === 'transitfeeds';
+    clientSearchParams?.get('utm_source') === 'transitfeeds';
+    
   const theme = useTheme();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = React.useState(false);
-  const [hasTransitFeedsRedirect, setHasTransitFeedsRedirect] = React.useState(
-    hasTransitFeedsRedirectParam,
-  );
+  const [hasTransitFeedsRedirect, setHasTransitFeedsRedirect] = React.useState(false);
   const [openDialog, setOpenDialog] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState('');
   const [navigationItems, setNavigationItems] = React.useState<
@@ -67,6 +87,12 @@ export default function DrawerAppBar(): React.ReactElement {
   const locale = useLocale();
   const { config } = useRemoteConfig();
   const t = useTranslations('common');
+
+  React.useEffect(() => {
+    if (hasTransitFeedsRedirectParam) {
+      setHasTransitFeedsRedirect(true);
+    }
+  }, [hasTransitFeedsRedirectParam]);
 
   React.useEffect(() => {
     setActiveTab(pathname ?? '');
@@ -99,8 +125,7 @@ export default function DrawerAppBar(): React.ReactElement {
     handleMenuClose();
   };
 
-  const container =
-    window !== undefined ? () => window.document.body : undefined;
+  const container = typeof window !== 'undefined' ? () => window.document.body : undefined;
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -159,22 +184,14 @@ export default function DrawerAppBar(): React.ReactElement {
               }}
               className='btn-link'
             >
-              <picture style={{ display: 'flex' }}>
-                <source
-                  media='(min-width: 50px)'
-                  srcSet='/assets/MOBILTYDATA_logo_purple_M.webp'
-                  width='50'
-                  height='50'
-                />
-                <source
-                  src='/assets/MOBILTYDATA_logo_purple_M.png'
-                  type='image/png'
-                />
-                <img
-                  alt='MobilityData logo'
-                  src='/assets/MOBILTYDATA_logo_purple_M.png'
-                />
-              </picture>
+              <Image
+                src='/assets/MOBILTYDATA_logo_purple_M.webp'
+                alt='MobilityData logo'
+                width={50}
+                height={50}
+                priority
+                fetchPriority='high'
+              />
               <Typography
                 variant='h5'
                 component='h1'
@@ -429,9 +446,9 @@ export default function DrawerAppBar(): React.ReactElement {
             severity='warning'
             onClose={() => {
               setHasTransitFeedsRedirect(false);
-              if (hasTransitFeedsRedirectParam) {
+              if (hasTransitFeedsRedirectParam && clientSearchParams) {
                 // Remove utm_source from URL
-                const newSearchParams = new URLSearchParams(searchParams);
+                const newSearchParams = new URLSearchParams(clientSearchParams);
                 newSearchParams.delete('utm_source');
                 const newPath = `${pathname}?${newSearchParams.toString()}`;
                 router.replace(newPath);
