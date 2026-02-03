@@ -15,7 +15,7 @@ import { routing } from '../../i18n/routing';
 
 export const metadata = {
   title: 'Mobility Database',
-  description: 'Mobility Database',
+  description: "Access GTFS, GTFS Realtime, GBFS transit data with over 4,000 feeds from 70+ countries on the web's leading transit data platform.",
   robots:
     process.env.VERCEL_ENV === 'production'
       ? 'index, follow'

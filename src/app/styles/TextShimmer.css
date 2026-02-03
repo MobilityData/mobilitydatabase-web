@@ -37,11 +37,12 @@
   -webkit-animation-duration: 8s;
   -moz-animation-duration: 8s;
   animation-duration: 8s;
+  animation-delay: 1s;
   -webkit-animation-iteration-count: infinite;
   -moz-animation-iteration-count: infinite;
   animation-iteration-count: infinite;
   background-repeat: no-repeat;
-  background-position: 0 0;
+  background-position: -10% 0;
   background-color: rgba(56, 89, 250, 0.6);
 }
 
