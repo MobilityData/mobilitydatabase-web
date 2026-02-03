@@ -1,0 +1,166 @@
+name: Preview (PR)
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: vercel-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '24.12.0'
+
+jobs:
+  # ✅ Runs for all PRs (including forks)
+  lint_and_test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Unit tests
+        run: yarn test:ci
+
+  # ✅ Only runs for same-repo PRs (not forks) - requires secrets
+  e2e_and_preview:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    needs: lint_and_test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+
+      - name: 1Password - Load Secrets
+        uses: 1Password/load-secrets-action@v2.0.0
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          VERCEL_TOKEN: "op://rbiv7rvkkrsdlpcrz3bmv7nmcu/MobilityDatabase Vercel Deployment/VERCEL_TOKEN-it-account"
+          VERCEL_PROJECT_ID: "op://rbiv7rvkkrsdlpcrz3bmv7nmcu/MobilityDatabase Vercel Deployment/VERCEL_PROJECT_ID"
+          VERCEL_ORG_ID: "op://rbiv7rvkkrsdlpcrz3bmv7nmcu/MobilityDatabase Vercel Deployment/VERCEL_ORG_ID"
+          VERCEL_AUTOMATION_BYPASS_SECRET: "op://rbiv7rvkkrsdlpcrz3bmv7nmcu/MobilityDatabase Vercel Deployment/VERCEL_AUTOMATION_BYPASS_SECRET"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Cache Cypress binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-binary-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            cypress-${{ runner.os }}-binary-
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Pull environment variables from Vercel for e2e tests
+        run: vercel env pull .env.local --environment=preview --yes --token=${{ env.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ env.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ env.VERCEL_PROJECT_ID }}
+    
+      - name: Cypress test
+        uses: cypress-io/github-action@v6
+        with:
+          start: yarn e2e:setup
+          command: yarn e2e:run
+          wait-on: 'http://127.0.0.1:3001, http://127.0.0.1:9099'
+          wait-on-timeout: 120
+    
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: ./cypress/screenshots
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-videos
+          path: ./cypress/videos
+
+      - name: Wait for Vercel deployment and get preview URL
+        id: get_vercel_url
+        uses: patrickedqvist/wait-for-vercel-preview@v1.3.3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          vercel_protection_bypass_header: ${{ env.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          max_timeout: 300
+
+      - name: Lighthouse Check
+        id: lighthouse-check
+        uses: treosh/lighthouse-ci-action@v12
+        # Runs on: Homepage, Search page, GTFS page, GTFS-RT page, and GBFS page
+        with:
+          configPath: ./.github/lighthouserc.js
+          temporaryPublicStorage: true
+        env:
+          LHCI_PREVIEW_URL: ${{ steps.get_vercel_url.outputs.url  }}
+          VERCEL_TOKEN: ${{ env.VERCEL_TOKEN }}
+    
+      - name: Format lighthouse score
+        id: format_lighthouse_score
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const results = ${{ steps.lighthouse-check.outputs.manifest }}
+            const links = ${{ steps.lighthouse-check.outputs.links }}
+            let comment = []
+            results.forEach((resultData, index) => {
+                const result = resultData.summary;
+
+                const formatResult = (res) => Math.round((res * 100))
+                Object.keys(result).forEach(key => result[key] = formatResult(result[key]))
+
+                const score = res => res >= 90 ? '🟢' : res >= 50 ? '🟠' : '🔴'
+                const link = Object.keys(links)[index] ?? 'Unknown URL';
+                const linkUrl = links[link] ?? '#';
+                comment = comment.concat(...[
+                    `*Lighthouse ran on ${link} * (Desktop)`,
+                    `⚡️ HTML Report [Lighthouse report](${linkUrl}) for the changes in this PR:`,
+                    '| Performance | Accessibility | Best Practices | SEO |',
+                    '| --- | --- | --- | --- |',
+                    `| ${score(result.performance)} ${result.performance} | ${score(result.accessibility)} ${result.accessibility} | ${score(result['best-practices'])} ${result['best-practices']} | ${score(result.seo)} ${result.seo} |`,
+                    ' ',
+                    ' ',
+                ])
+            })
+            const finalComment = comment.join('\n')
+            core.setOutput("comment", finalComment); 
+
+      - name: Add lighthouse comment to PR
+        id: comment_to_pr
+        uses: marocchino/sticky-pull-request-comment@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          number: ${{ github.event.issue.number }}
+          header: lighthouse
+          message: |
+            ${{ steps.format_lighthouse_score.outputs.comment }}
