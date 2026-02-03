@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import type ContextProviderProps from '../interface/ContextProviderProps';
 import { Provider } from 'react-redux';
 import { store } from '../store/store';
 import { PersistGate } from 'redux-persist/integration/react';
-import { persistStore } from 'redux-persist';
+import { persistStore, type Persistor } from 'redux-persist';
 import { useAppDispatch } from '../hooks';
 import { resetProfileErrors } from '../store/profile-reducer';
 
@@ -22,7 +22,7 @@ const AppContent: React.FC<ContextProviderProps> = ({ children }) => {
     dispatch(resetProfileErrors());
   }, []);
   return (
-    <PersistGate loading={null} persistor={persistor}>
+    <PersistGate loading={children} persistor={persistor}>
       {children}
     </PersistGate>
   );
