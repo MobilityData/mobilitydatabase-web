@@ -172,13 +172,12 @@ export default async function HomePage(): Promise<ReactElement> {
         <Box
           component='section'
           sx={{
-            background: 'background.paper',
+            backgroundColor: 'background.paper',
             borderRadius: '6px 0px 0px 6px',
             p: {
               xs: 2,
               sm: 4,
             },
-            fontSize: '18px',
             fontWeight: 700,
             mr: 0,
             mt: 5,
@@ -186,13 +185,11 @@ export default async function HomePage(): Promise<ReactElement> {
           role='contentinfo'
           aria-label='About Mobility Database'
         >
-          <Typography component='h3' sx={{ fontSize: '20px', fontWeight: 700, mb: 2 }}>
+          <Typography component='h3' sx={{ fontWeight: 700, mb: 2 }}>
             About Our Platform
           </Typography>
-          <Typography component='p' sx={{ mb: 2 }}>
-            {t('description')}
-          </Typography>
-          <Typography component='p'>
+          <Typography sx={{ mb: 2 }}>{t('description')}</Typography>
+          <Typography sx={{ mb: 2 }}>
             {t('validatorIntro')}
             <Button
               variant='text'
