@@ -1,45 +1,103 @@
-import { cookies } from 'next/headers';
-import { app } from '../../firebase';
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/auth';
-// TODO: for anonymous auth use fireabse admin
+import 'server-only';
+import { getAuth } from 'firebase-admin/auth';
+import { getEnvConfig, nonEmpty } from './config';
+import { getFirebaseAdminApp } from '../../lib/firebase-admin';
 
-/**
- * Retrieves the Firebase access token from the 'firebase_token' cookie.
- * If the cookie is missing, performs a server-side anonymous login to generate a token.
- * This ensures SSR pages can access the API even for direct, unauthenticated visits.
- */
-export async function getSSRAccessToken(): Promise<string> {
-  const cookieStore = await cookies();
-  const tokenCookie = cookieStore.get('firebase_token');
+interface CachedToken {
+  token: string;
+  expiresAt: number; // epoch ms
+}
 
-  if (tokenCookie?.value != null && tokenCookie.value.length > 0) {
-    try {
-      // Basic JWT decoding to check expiry
-      const token = tokenCookie.value;
-      const payloadBase64 = token.split('.')[1];
-      const payload = JSON.parse(
-        Buffer.from(payloadBase64, 'base64').toString(),
-      );
-      const now = Math.floor(Date.now() / 1000);
+let cached: CachedToken | undefined;
+function now(): number {
+  return Date.now();
+}
 
-      if (payload.exp != null && payload.exp > now) {
-        return token;
-      }
-    } catch (error) {}
+async function exchangeCustomTokenForIdToken(
+  customToken: string,
+): Promise<{ idToken: string; expiresInSec?: number }> {
+  // Accept multiple env var names for dev/prod convenience
+  const apiKey =
+    nonEmpty(getEnvConfig('GCIP_API_KEY')) ??
+    nonEmpty(getEnvConfig('FIREBASE_API_KEY')) ??
+    nonEmpty(getEnvConfig('NEXT_PUBLIC_FIREBASE_API_KEY'));
+  if (apiKey == undefined) {
+    throw new Error('GCIP/Firebase API key is not set');
   }
 
-  // Fallback: Server-side Anonymous Login
-  // We use NONE persistence to verify we don't store this session in any shared environment storage
-  try {
-    const auth = app.auth();
-    await auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
-    const userCredential = await auth.signInAnonymously();
-    if (userCredential.user != null) {
-      const token = await userCredential.user.getIdToken();
-      return token;
-    }
-  } catch (error) {}
+  const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${apiKey}`;
+  const body: Record<string, unknown> = {
+    token: customToken,
+    returnSecureToken: true,
+  };
 
-  return '';
+  const tenantId =
+    nonEmpty(getEnvConfig('GCIP_TENANT_ID')) ??
+    nonEmpty(getEnvConfig('NEXT_PUBLIC_GCIP_TENANT_ID'));
+  if (tenantId != undefined) {
+    body.tenantId = tenantId;
+  }
+
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    cache: 'no-store',
+  });
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(
+      `GCIP signInWithCustomToken failed: ${resp.status} ${text}`,
+    );
+  }
+  const data = (await resp.json()) as {
+    idToken: string;
+    expiresIn?: string; // seconds as string
+  };
+  const expiresInSec = data.expiresIn ? Number(data.expiresIn) : undefined;
+  return { idToken: data.idToken, expiresInSec };
+}
+
+/**
+ * Returns a GCIP ID token suitable for calling an IAP-protected API configured with Identity Platform.
+ * Caches the token until near expiry to minimize exchanges.
+ */
+export async function getGcipIdToken(): Promise<string> {
+  // Use cached token if still valid for at least 60 seconds
+  if (cached != undefined && cached.expiresAt - now() > 60_000) {
+    return cached.token;
+  }
+
+  // Ensure Admin app is initialized centrally
+  const adminApp = getFirebaseAdminApp();
+  const serviceUid =
+    nonEmpty(getEnvConfig('GCIP_SERVICE_UID')) ??
+    nonEmpty(getEnvConfig('NEXT_GCIP_SERVICE_UID')) ??
+    'iap-service-caller';
+  const customToken = await getAuth(adminApp).createCustomToken(serviceUid, {
+    service: true,
+  });
+  const { idToken, expiresInSec } =
+    await exchangeCustomTokenForIdToken(customToken);
+  // Default TTL ~ 55 minutes if expiresIn not present
+  const ttlMs = (expiresInSec ?? 3600) * 1000;
+  const safetyMs = 300_000; // refresh 5 minutes early
+  cached = {
+    token: idToken,
+    expiresAt: now() + ttlMs - safetyMs,
+  };
+  return idToken;
+}
+
+// export interface EndUserIdentity {
+//   subject?: string;
+//   email?: string;
+// }
+
+/**
+ * Returns a GCIP ID token suitable for IAP-protected API calls.
+ * This avoids trusting client tokens and keeps credentials server-side only.
+ */
+export async function getSSRAccessToken(): Promise<string> {
+  return await getGcipIdToken();
 }

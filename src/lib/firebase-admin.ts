@@ -1,4 +1,13 @@
 import { initializeApp, getApps, cert, type App } from 'firebase-admin/app';
+import fs from 'node:fs';
+import path from 'node:path';
+import { getEnvConfig, nonEmpty } from '../app/utils/config';
+
+/**
+ * Centralized Firebase Admin initialization.
+ * Prefers explicit service account credentials via env.
+ * Fallback to ADC only when GOOGLE_APPLICATION_CREDENTIALS is set.
+ */
 
 /**
  * Server-only Firebase Admin SDK initialization.
@@ -10,44 +19,48 @@ import { initializeApp, getApps, cert, type App } from 'firebase-admin/app';
 
 let adminApp: App | undefined;
 
+function ensureAdminInitialized(): App {
+  // Reuse already initialized app
+  const existingApps = getApps();
+  const projectId = getEnvConfig('NEXT_PUBLIC_FIREBASE_PROJECT_ID');
+  if (existingApps.length > 0) {
+    const matchedApp =
+      existingApps.find((app) => app.options?.projectId === projectId) ??
+      existingApps[0];
+    return matchedApp;
+  }
+
+  // Prefer inline service account JSON (server-only)
+  const inlineJson = nonEmpty(getEnvConfig('GOOGLE_SA_JSON'));
+  if (inlineJson != undefined) {
+    const serviceAccount = JSON.parse(inlineJson);
+    return initializeApp({
+      credential: cert(serviceAccount),
+      projectId: serviceAccount.project_id,
+    });
+  }
+
+  // Or load from file path
+  const filePath = nonEmpty(getEnvConfig('GOOGLE_SA_JSON_PATH'));
+  if (filePath != undefined) {
+    const raw = fs.readFileSync(path.resolve(filePath), 'utf8');
+    const serviceAccount = JSON.parse(raw);
+    return initializeApp({
+      credential: cert(serviceAccount),
+      projectId: serviceAccount.project_id ?? projectId,
+    });
+  }
+
+  // No credentials provided: fail fast instead of attempting metadata server
+  throw new Error(
+    'Missing server-side credentials. Set GOOGLE_SA_JSON (inline), or GOOGLE_SA_JSON_PATH(file path).',
+  );
+}
+
 export function getFirebaseAdminApp(): App {
   if (adminApp != undefined) {
     return adminApp;
   }
-
-  const existingApps = getApps();
-  if (existingApps.length > 0) {
-    adminApp = existingApps.find(
-      (existingApp) =>
-        existingApp.options.projectId === process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    );
-    if (adminApp != undefined) {
-      return adminApp;
-    }
-  }
-
-  // Check if we have explicit credentials via environment variable
-  const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-
-  if (serviceAccountJson != null && serviceAccountJson.length > 0) {
-    try {
-      const serviceAccount = JSON.parse(serviceAccountJson);
-      adminApp = initializeApp({
-        credential: cert(serviceAccount),
-        projectId: serviceAccount.project_id,
-      });
-    } catch (error) {
-      console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON:', error);
-      // Fall through to ADC
-    }
-  }
-
-  if (adminApp == undefined) {
-    // Use Application Default Credentials (works on Cloud Run automatically)
-    adminApp = initializeApp({
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    });
-  }
-
+  adminApp = ensureAdminInitialized();
   return adminApp;
 }

@@ -9,7 +9,6 @@ import { type RemoteConfigValues } from './interface/RemoteConfig';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
-import AuthTokenSync from './components/AuthTokenSync';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -23,7 +22,6 @@ export function Providers({
 }: ProvidersProps): React.ReactElement {
   return (
     <ContextProviders>
-      <AuthTokenSync />
       <RemoteConfigProvider config={remoteConfig}>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           {children}

@@ -38,3 +38,19 @@ export const getFeedFilesBaseUrl = (): string => {
   }
   return `https://${prefix}files.mobilitydatabase.org`;
 };
+
+/**
+ * Treat empty or whitespace-only strings as "not set".
+ *
+ * @param value Raw string.
+ * @returns The trimmed string when non-empty; otherwise undefined.
+ */
+export const nonEmpty = (
+  value: string | undefined | null,
+): string | undefined => {
+  if (value == undefined) {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed === '' ? undefined : trimmed;
+};
