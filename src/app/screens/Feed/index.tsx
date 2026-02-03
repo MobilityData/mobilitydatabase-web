@@ -41,7 +41,6 @@ import {
 import AssociatedFeeds from './components/AssociatedFeeds';
 import { WarningContentBox } from '../../components/WarningContentBox';
 import { useTranslations } from 'next-intl';
-import { Helmet } from 'react-helmet-async';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import {
   ctaContainerStyle,
@@ -83,25 +82,6 @@ const wrapComponent = (
       sx={{ width: '100%', m: 'auto', px: 0 }}
       maxWidth='xl'
     >
-      <Helmet>
-        {descriptionMeta != undefined && (
-          <meta name='description' content={descriptionMeta} />
-        )}
-        {feedDataType != undefined && (
-          <link
-            rel='canonical'
-            href={
-              window.location.origin + '/feeds/' + feedDataType + '/' + feedId
-            }
-          />
-        )}
-        {structuredData != undefined && (
-          <script type='application/ld+json'>
-            {JSON.stringify(structuredData)}
-          </script>
-        )}
-      </Helmet>
-
       <CssBaseline />
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         <Box

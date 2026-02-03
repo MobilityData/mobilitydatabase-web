@@ -7,7 +7,6 @@ import ContactInformation from '../screens/ContactInformation';
 import { ProtectedRoute } from './ProtectedRoute';
 import CompleteRegistration from '../screens/CompleteRegistration';
 import ChangePassword from '../screens/ChangePassword';
-import Home from '../screens/Home';
 import ForgotPassword from '../screens/ForgotPassword';
 import FAQ from '../screens/FAQ';
 import PostRegistration from '../screens/PostRegistration';
@@ -67,7 +66,6 @@ export const AppRouter: React.FC = () => {
 
   return (
     <Routes>
-      <Route path='/' element={<Home />} />
       <Route path='sign-in' element={<SignIn />} />
       <Route path='sign-up' element={<SignUp />} />
       <Route element={<ProtectedRoute targetStatus='authenticated' />}>
