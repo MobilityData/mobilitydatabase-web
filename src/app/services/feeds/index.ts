@@ -191,8 +191,8 @@ export const getGtfsFeedAssociatedGtfsRtFeeds = async (
 export const getGtfsFeedDatasets = async (
   id: string,
   accessToken: string,
-  userContextJwt?: string,
   queryParams?: paths['/v1/gtfs_feeds/{id}/datasets']['get']['parameters']['query'],
+  userContextJwt?: string,
 ): Promise<
   | paths['/v1/gtfs_feeds/{id}/datasets']['get']['responses'][200]['content']['application/json']
   | undefined

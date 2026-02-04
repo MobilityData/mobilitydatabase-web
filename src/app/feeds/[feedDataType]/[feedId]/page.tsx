@@ -60,10 +60,10 @@ const fetchInitialDatasets = cache(
       const datasets = await getGtfsFeedDatasets(
         feedId,
         accessToken,
-        userContextJwt,
         {
           limit: 10,
         },
+        userContextJwt,
       );
       return datasets;
     } catch (e) {
