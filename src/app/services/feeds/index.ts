@@ -3,6 +3,7 @@ import type { paths } from './types';
 import { type AllFeedsParams, type AllFeedType } from './utils';
 import { type GtfsRoute } from '../../types';
 import { getFeedFilesBaseUrl } from '../../utils/config';
+import { generateAuthMiddlewareWithToken } from '../../context/api-auth-middleware';
 
 const client = createClient<paths>({
   baseUrl: String(process.env.NEXT_PUBLIC_FEED_API_BASE_URL),
@@ -33,15 +34,17 @@ const throwOnError: Middleware = {
 
 client.use(throwOnError);
 
-const generateAuthMiddlewareWithToken = (accessToken: string): Middleware => {
-  return {
-    async onRequest(req) {
-      // add Authorization header to every request
-      req.headers.set('Authorization', `Bearer ${accessToken}`);
-      return req;
-    },
-  };
-};
+async function withAuthMiddleware<T>(
+  authMiddleware: Middleware,
+  fn: () => Promise<T>,
+): Promise<T> {
+  client.use(authMiddleware);
+  try {
+    return await fn();
+  } finally {
+    client.eject(authMiddleware);
+  }
+}
 
 export const getFeeds = async (): Promise<
   | paths['/v1/feeds']['get']['responses'][200]['content']['application/json']
@@ -61,24 +64,21 @@ export const getFeeds = async (): Promise<
 export const getFeed = async (
   feedId: string,
   accessToken: string,
+  userContextJwt?: string,
 ): Promise<
   | paths['/v1/feeds/{id}']['get']['responses'][200]['content']['application/json']
   | undefined
 > => {
-  const authMiddleware = generateAuthMiddlewareWithToken(accessToken);
-  client.use(authMiddleware);
-  return await client
-    .GET('/v1/feeds/{id}', { params: { path: { id: feedId } } })
-    .then((response) => {
-      const data = response.data;
-      return data;
-    })
-    .catch(function (error) {
-      throw error;
-    })
-    .finally(() => {
-      client.eject(authMiddleware);
+  const authMiddleware = generateAuthMiddlewareWithToken(
+    accessToken,
+    userContextJwt,
+  );
+  return await withAuthMiddleware(authMiddleware, async () => {
+    const response = await client.GET('/v1/feeds/{id}', {
+      params: { path: { id: feedId } },
     });
+    return response.data;
+  });
 };
 
 export const getGtfsFeeds = async (): Promise<
@@ -114,141 +114,119 @@ export const getGtfsRtFeeds = async (): Promise<
 export const getGtfsFeed = async (
   id: string,
   accessToken: string,
+  userContextJwt?: string,
 ): Promise<AllFeedType> => {
-  const authMiddleware = generateAuthMiddlewareWithToken(accessToken);
-  client.use(authMiddleware);
-  return await client
-    .GET('/v1/gtfs_feeds/{id}', { params: { path: { id } } })
-    .then((response) => {
-      const data = response.data;
-      return data;
-    })
-    .catch(function (error) {
-      throw error;
-    })
-    .finally(() => {
-      client.eject(authMiddleware);
+  const authMiddleware = generateAuthMiddlewareWithToken(
+    accessToken,
+    userContextJwt,
+  );
+  return await withAuthMiddleware(authMiddleware, async () => {
+    const response = await client.GET('/v1/gtfs_feeds/{id}', {
+      params: { path: { id } },
     });
+    return response.data as AllFeedType;
+  });
 };
 
 export const getGtfsRtFeed = async (
   id: string,
   accessToken: string,
+  userContextJwt?: string,
 ): Promise<
   | paths['/v1/gtfs_rt_feeds/{id}']['get']['responses'][200]['content']['application/json']
   | undefined
 > => {
-  const authMiddleware = generateAuthMiddlewareWithToken(accessToken);
-  client.use(authMiddleware);
-  return await client
-    .GET('/v1/gtfs_rt_feeds/{id}', { params: { path: { id } } })
-    .then((response) => {
-      const data = response.data;
-      return data;
-    })
-    .catch(function (error) {
-      throw error;
-    })
-    .finally(() => {
-      client.eject(authMiddleware);
+  const authMiddleware = generateAuthMiddlewareWithToken(
+    accessToken,
+    userContextJwt,
+  );
+  return await withAuthMiddleware(authMiddleware, async () => {
+    const response = await client.GET('/v1/gtfs_rt_feeds/{id}', {
+      params: { path: { id } },
     });
+    return response.data;
+  });
 };
 
 export const getGbfsFeed = async (
   id: string,
   accessToken: string,
+  userContextJwt?: string,
 ): Promise<
   | paths['/v1/gbfs_feeds/{id}']['get']['responses'][200]['content']['application/json']
   | undefined
 > => {
-  const authMiddleware = generateAuthMiddlewareWithToken(accessToken);
-  client.use(authMiddleware);
-  return await client
-    .GET('/v1/gbfs_feeds/{id}', { params: { path: { id } } })
-    .then((response) => {
-      const data = response.data;
-      return data;
-    })
-    .catch(function (error) {
-      throw error;
-    })
-    .finally(() => {
-      client.eject(authMiddleware);
+  const authMiddleware = generateAuthMiddlewareWithToken(
+    accessToken,
+    userContextJwt,
+  );
+  return await withAuthMiddleware(authMiddleware, async () => {
+    const response = await client.GET('/v1/gbfs_feeds/{id}', {
+      params: { path: { id } },
     });
+    return response.data;
+  });
 };
 
 export const getGtfsFeedAssociatedGtfsRtFeeds = async (
   id: string,
   accessToken: string,
+  userContextJwt?: string,
 ): Promise<
   | paths['/v1/gtfs_feeds/{id}/gtfs_rt_feeds']['get']['responses'][200]['content']['application/json']
   | undefined
 > => {
-  const authMiddleware = generateAuthMiddlewareWithToken(accessToken);
-  client.use(authMiddleware);
-  return await client
-    .GET('/v1/gtfs_feeds/{id}/gtfs_rt_feeds', {
+  const authMiddleware = generateAuthMiddlewareWithToken(
+    accessToken,
+    userContextJwt,
+  );
+  return await withAuthMiddleware(authMiddleware, async () => {
+    const response = await client.GET('/v1/gtfs_feeds/{id}/gtfs_rt_feeds', {
       params: { path: { id } },
-    })
-    .then((response) => {
-      const data = response.data;
-      return data;
-    })
-    .catch(function (error) {
-      throw error;
-    })
-    .finally(() => {
-      client.eject(authMiddleware);
     });
+    return response.data;
+  });
 };
 
 export const getGtfsFeedDatasets = async (
   id: string,
   accessToken: string,
+  userContextJwt?: string,
   queryParams?: paths['/v1/gtfs_feeds/{id}/datasets']['get']['parameters']['query'],
 ): Promise<
   | paths['/v1/gtfs_feeds/{id}/datasets']['get']['responses'][200]['content']['application/json']
   | undefined
 > => {
-  const authMiddleware = generateAuthMiddlewareWithToken(accessToken);
-  client.use(authMiddleware);
-  return await client
-    .GET('/v1/gtfs_feeds/{id}/datasets', {
+  const authMiddleware = generateAuthMiddlewareWithToken(
+    accessToken,
+    userContextJwt,
+  );
+  return await withAuthMiddleware(authMiddleware, async () => {
+    const response = await client.GET('/v1/gtfs_feeds/{id}/datasets', {
       params: { query: queryParams, path: { id } },
-    })
-    .then((response) => {
-      const data = response.data;
-      return data;
-    })
-    .catch(function (error) {
-      throw error;
-    })
-    .finally(() => {
-      client.eject(authMiddleware);
     });
+    return response.data;
+  });
 };
 
 export const getDatasetGtfs = async (
   id: string,
   accessToken: string,
+  userContextJwt?: string,
 ): Promise<
   | paths['/v1/datasets/gtfs/{id}']['get']['responses'][200]['content']['application/json']
   | undefined
 > => {
-  const authMiddleware = generateAuthMiddlewareWithToken(accessToken);
-  client.use(authMiddleware);
-  return await client
-    .GET('/v1/datasets/gtfs/{id}', { params: { path: { id } } })
-    .then((response) => {
-      const data = response.data;
-      return data;
-    })
-    .catch(function (error) {
-      throw error;
-    })
-    .finally(() => {
-      client.eject(authMiddleware);
+  const authMiddleware = generateAuthMiddlewareWithToken(
+    accessToken,
+    userContextJwt,
+  );
+  return await withAuthMiddleware(authMiddleware, async () => {
+    const response = await client.GET('/v1/datasets/gtfs/{id}', {
+      params: { path: { id } },
     });
+    return response.data;
+  });
 };
 
 export const getMetadata = async (): Promise<
@@ -269,47 +247,39 @@ export const getMetadata = async (): Promise<
 export const searchFeeds = async (
   params: AllFeedsParams,
   accessToken: string,
+  userContextJwt?: string,
 ): Promise<
   | paths['/v1/search']['get']['responses'][200]['content']['application/json']
   | undefined
 > => {
-  const authMiddleware = generateAuthMiddlewareWithToken(accessToken);
-  client.use(authMiddleware);
-  return await client
-    .GET('/v1/search', { params })
-    .then((response) => {
-      const data = response.data;
-      return data;
-    })
-    .catch(function (error) {
-      throw error;
-    })
-    .finally(() => {
-      client.eject(authMiddleware);
-    });
+  const authMiddleware = generateAuthMiddlewareWithToken(
+    accessToken,
+    userContextJwt,
+  );
+  return await withAuthMiddleware(authMiddleware, async () => {
+    const response = await client.GET('/v1/search', { params });
+    return response.data;
+  });
 };
 
 export const getLicense = async (
   id: string,
   accessToken: string,
+  userContextJwt?: string,
 ): Promise<
   | paths['/v1/licenses/{id}']['get']['responses'][200]['content']['application/json']
   | undefined
 > => {
-  const authMiddleware = generateAuthMiddlewareWithToken(accessToken);
-  client.use(authMiddleware);
-  return await client
-    .GET('/v1/licenses/{id}', { params: { path: { id } } })
-    .then((response) => {
-      const data = response.data;
-      return data;
-    })
-    .catch(function (error) {
-      throw error;
-    })
-    .finally(() => {
-      client.eject(authMiddleware);
+  const authMiddleware = generateAuthMiddlewareWithToken(
+    accessToken,
+    userContextJwt,
+  );
+  return await withAuthMiddleware(authMiddleware, async () => {
+    const response = await client.GET('/v1/licenses/{id}', {
+      params: { path: { id } },
     });
+    return response.data;
+  });
 };
 
 /**
