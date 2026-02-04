@@ -4,7 +4,8 @@ This document explains how server-side authentication works in the Mobility Data
 
 ## Overview
 - Server components/actions call the Mobility Feed API using a server‑minted GCIP ID token.
-- The client never forwards its token to the server; all API calls use server credentials only.
+- The client never forwards its Firebase ID token to the server; all API calls use server credentials only.
+- A short‑lived HTTP‑only session cookie (`md_session`) stores a server‑signed JWT with the current user's identity (including guest/anonymous flag).
 - Firebase Admin is initialized once via a centralized helper and used for both Remote Config and token minting.
 - Mock mode (MSW) enables local development without hitting the real API or Firebase.
 
@@ -16,8 +17,31 @@ This document explains how server-side authentication works in the Mobility Data
 
 Key code paths:
 - `src/lib/firebase-admin.ts`: centralized Admin initialization (`getFirebaseAdminApp()`), backed by `ensureAdminInitialized()`.
-- `src/app/utils/auth-server.ts`: token functions `getGcipIdToken()` and `getSSRAccessToken()` (the canonical token provider for SSR calls).
-- `src/app/services/feeds/index.ts`: OpenAPI client; injects `Authorization` header using the token returned by `getSSRAccessToken()`.
+- `src/app/utils/auth-server.ts`: token functions `getGcipIdToken()` and `getSSRAccessToken()` (the canonical token provider for SSR calls) and helpers for reading the session cookie.
+- `src/app/services/feeds/index.ts`: OpenAPI client; injects `Authorization` and user‑context headers using the token returned by `getSSRAccessToken()`.
+
+## Session Cookie & SSR User Identity
+
+To let server components know "who" the current user is (including guests) without ever trusting client tokens directly, the web app uses a short‑lived, server‑signed session JWT stored in the `md_session` HTTP‑only cookie.
+
+Flow:
+1. The user signs in on the client with Firebase Auth (email/password, provider, or anonymous).
+2. After any successful login, a Redux saga calls `setUserCookieSession()` from [src/app/services/session-service.ts](src/app/services/session-service.ts).
+3. `setUserCookieSession()` reads the current Firebase ID token from the client SDK and POSTs it to `/api/session`.
+4. The `/api/session` `POST` handler in [src/app/api/session/route.ts](src/app/api/session/route.ts):
+    - Verifies the ID token with Firebase Admin.
+    - Derives an `isGuest` flag from the sign‑in provider (`anonymous` → guest).
+    - Issues a short‑lived session JWT (1 hour) signed with `NEXT_SESSION_JWT_SECRET` containing:
+       - `uid`, optional `email`, `isGuest`, `iat`, and `exp`.
+    - Sets the `md_session` cookie (HTTP‑only, `sameSite=lax`, `secure` in production).
+
+On the server side:
+- [src/app/utils/session-jwt.ts](src/app/utils/session-jwt.ts) defines the `SessionPayload` type and helpers to sign/verify the JWT used in `md_session`.
+- [src/app/utils/auth-server.ts](src/app/utils/auth-server.ts) exposes:
+   - `getCurrentUserFromCookie()` to decode the session cookie into `SessionPayload` for SSR.
+   - `getUserContextJwtFromCookie()` to obtain the raw, verified session JWT for forwarding to the backend.
+
+The GCIP ID token used for IAP remains a server‑minted token that does not depend on the client token; the session cookie is only used for identifying the current end‑user (including guests) and for per‑user attribution.
 
 ## Firebase Admin Initialization
 Centralized in `getFirebaseAdminApp()`:
@@ -33,6 +57,7 @@ Server‑side credentials and config (server‑only):
 - `GOOGLE_SA_JSON`: Inline service account JSON string.
 - `GOOGLE_SA_JSON_PATH`: Absolute/relative path to service account JSON file.
 - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`: Project ID; used to match Admin apps and as fallback when JSON lacks `project_id`.
+- `NEXT_SESSION_JWT_SECRET`: Secret used to sign and verify the `md_session` session JWT on the web side.
 
 GCIP / Identity Toolkit:
 - `GCIP_API_KEY` (or `FIREBASE_API_KEY` or `NEXT_PUBLIC_FIREBASE_API_KEY`): API key for `accounts:signInWithCustomToken`.
@@ -42,6 +67,8 @@ GCIP / Identity Toolkit:
 Mock/dev:
 - `NEXT_PUBLIC_API_MOCKING=enabled`: Enables MSW mock service worker in the browser.
 - `LOCAL_DEV_NO_ADMIN=1` (optional): Bypass Admin initialization for Remote Config/token code paths during local experimentation.
+
+> Note: On the Mobility Feed API (Python) side, a matching secret (e.g. `S2S_JWT_SECRET`) is used to validate the user‑context JWT forwarded from the web app.
 
 ## Remote Config
 - Server‑side code fetches Firebase Remote Config via Admin SDK.
@@ -68,10 +95,27 @@ Setup:
 - Do **not** forward client tokens to the server.
 - Keep all credentials server‑only and never expose service account JSON to client code.
 
+### End‑User Context Propagation to the Mobility Feed API
+
+In addition to the GCIP ID token for IAP, SSR API calls also propagate a compact, server‑signed user‑context JWT so the backend can attribute requests to an end‑user without trusting any client tokens:
+
+- The `md_session` cookie's JWT is reused as this user‑context token.
+- On the server, [src/app/utils/auth-server.ts](src/app/utils/auth-server.ts) reads the cookie via `getUserContextJwtFromCookie()`.
+- [src/app/context/api-auth-middleware.ts](src/app/context/api-auth-middleware.ts) provides `generateAuthMiddlewareWithToken(accessToken, userContextJwt?)`, which:
+   - Sets `Authorization: Bearer <accessToken>` for IAP.
+   - When `userContextJwt` is present, also sets `x-mdb-user-context: <userContextJwt>`.
+- All server‑side feeds service functions in [src/app/services/feeds/index.ts](src/app/services/feeds/index.ts) accept an optional `userContextJwt` and pass it into this middleware.
+
+On the Mobility Feed API side (see [mobility-feed-api/api/src/middleware/request_context.py](mobility-feed-api/api/src/middleware/request_context.py)):
+- The `RequestContext` middleware reads `x-mdb-user-context`.
+- It verifies the HS256 signature using a shared secret and decodes the payload.
+- It populates `user_id`, `user_email`, and an `is_guest` flag for auditing and per‑user behavior.
+
 ## Security Considerations
 - **No client token pass‑through**: Prevents elevation of privilege and token replay.
 - **Server‑only credentials**: Service account material must never be sent to the client.
-- **Optional auditing**: You may forward end‑user identity headers (e.g., `X-User-Subject`, `X-User-Email`) for backend audit trails if required.
+- **End‑user attribution without client tokens**: The backend receives only a server‑signed, minimal user‑context JWT via `x-mdb-user-context`, never the raw client Firebase ID token.
+- **Guest users**: Anonymous sign‑ins are explicitly flagged via `isGuest` in the session JWT so both the web app and backend can distinguish guest from authenticated accounts.
 
 ## Troubleshooting
 Common issues and fixes:
