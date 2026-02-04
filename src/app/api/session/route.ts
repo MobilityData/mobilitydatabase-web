@@ -87,3 +87,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ authenticated: false }, { status: 200 });
   }
 }
+
+export async function DELETE(req: NextRequest): Promise<NextResponse> {
+  // Clear the session cookie so that subsequent requests have no session.
+  const response = NextResponse.json({ status: 'logged_out' });
+  // Use the built-in delete helper to ensure the cookie is removed.
+  response.cookies.delete(COOKIE_NAME);
+  return response;
+}

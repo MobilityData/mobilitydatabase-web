@@ -139,7 +139,6 @@ export async function getSSRAccessToken(): Promise<string> {
   } catch {
     console.warn('No cookie found');
   }
-  console.log(userInfo);
   return await getGcipIdToken(userInfo);
 }
 

@@ -39,7 +39,10 @@ import {
   retrieveUserInformation,
   sendEmailVerification,
 } from '../../services';
-import { setUserCookieSession } from '../../services/session-service';
+import {
+  setUserCookieSession,
+  clearUserCookieSession,
+} from '../../services/session-service';
 import {
   type AdditionalUserInfo,
   type UserCredential,
@@ -91,6 +94,9 @@ function* logoutSaga({
   try {
     navigateTo(redirectScreen);
     yield app.auth().signOut();
+    // Clear the HTTP-only md_session cookie on logout so that
+    // server-side requests immediately see the user as logged out.
+    yield call(clearUserCookieSession);
     yield put(logoutSuccess());
     if (propagate) {
       broadcastMessage(LOGOUT_CHANNEL);

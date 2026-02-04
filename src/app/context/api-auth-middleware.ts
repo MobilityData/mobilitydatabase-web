@@ -33,7 +33,6 @@ export const generateAuthMiddlewareWithToken = (
       // compact user-context JWT so the backend can attribute calls to
       // an end-user without relying on IAP to forward custom claims.
       if (userContextJwt != null && userContextJwt !== '') {
-        console.log('user contet ' + userContextJwt);
         req.headers.set(USER_CONTEXT_HEADER, userContextJwt);
       }
 
