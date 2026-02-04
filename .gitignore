@@ -35,4 +35,4 @@ cypress/videos
 next-env.d.ts
 .vercel
 
-.vscode/settings.json
+.vscode/
