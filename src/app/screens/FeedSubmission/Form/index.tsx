@@ -11,7 +11,7 @@ import {
   CircularProgress,
   Typography,
 } from '@mui/material';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import FormThirdStep from './ThirdStep';
 import { submitNewFeedForm } from '../../../services/feeds/add-feed-form-service';
 import { useTranslations } from 'next-intl';
@@ -91,13 +91,14 @@ const defaultFormValues: FeedSubmissionFormFormInput = {
 
 export default function FeedSubmissionForm(): React.ReactElement {
   const t = useTranslations('feeds');
-  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const [isSubmitLoading, setIsSubmitLoading] = React.useState(false);
   const [submitError, setSubmitError] = React.useState<undefined | string>(
     undefined,
   );
   const [steps, setSteps] = React.useState(['', '', '']);
-  const navigateTo = useNavigate();
   const [formData, setFormData] =
     React.useState<FeedSubmissionFormFormInput>(defaultFormValues);
   const [stepsCompleted, setStepsCompleted] = React.useState({
@@ -115,26 +116,26 @@ export default function FeedSubmissionForm(): React.ReactElement {
 
     if (step === '2' || step === '3' || step === '4') {
       if (!stepsCompleted['1']) {
-        setSearchParams({});
+        router.push(pathname);
       }
       return;
     }
 
     if (step === '3' || step === '4') {
       if (!stepsCompleted['2']) {
-        setSearchParams({ step: '1' });
+        router.push(`${pathname}?step=1`);
       }
       return;
     }
 
     if (step === '4') {
       if (!stepsCompleted['3'] || !(formData.isOfficialProducer === 'yes')) {
-        setSearchParams({ step: '3' });
+        router.push(`${pathname}?step=3`);
       }
       return;
     }
     setSubmitError(undefined);
-  }, [searchParams]);
+  }, [searchParams, stepsCompleted, formData.isOfficialProducer, router, pathname]);
 
   const handleNext = (): void => {
     const nextStep =
@@ -142,18 +143,19 @@ export default function FeedSubmissionForm(): React.ReactElement {
         ? 2
         : Number(searchParams.get('step')) + 1;
     setStepsCompleted({ ...stepsCompleted, [currentStep]: true });
-    setSearchParams({ step: nextStep.toString() });
     if (nextStep === steps.length + 1) {
-      navigateTo('/contribute/submitted');
+      router.push('/contribute/submitted');
+    } else {
+      router.push(`${pathname}?step=${nextStep}`);
     }
   };
 
   const handleBack = (): void => {
     const previousStep = (currentStep - 1).toString();
     if (previousStep === '1') {
-      setSearchParams({});
+      router.push(pathname);
     } else {
-      setSearchParams({ step: previousStep });
+      router.push(`${pathname}?step=${previousStep}`);
     }
   };
 

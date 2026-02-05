@@ -28,12 +28,12 @@ import {
   selectChangePasswordStatus,
 } from '../store/profile-selectors';
 import { useSelector } from 'react-redux/es/hooks/useSelector';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { VisibilityOffOutlined, VisibilityOutlined } from '@mui/icons-material';
 
 export default function ChangePassword(): React.ReactElement {
   const dispatch = useAppDispatch();
-  const navigateTo = useNavigate();
+  const router = useRouter();
   const changePasswordError = useSelector(selectChangePasswordError);
   const changePasswordStatus = useSelector(selectChangePasswordStatus);
   const [isSubmitted, setIsSubmitted] = React.useState(false);
@@ -276,7 +276,7 @@ export default function ChangePassword(): React.ReactElement {
             onClick={() => {
               setDialogOpen(false);
               dispatch(changePasswordInit());
-              navigateTo('/account');
+              router.push('/account');
             }}
             color='primary'
             autoFocus
