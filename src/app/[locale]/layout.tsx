@@ -11,7 +11,7 @@ import { Mulish, IBM_Plex_Mono } from 'next/font/google';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 import { Container } from '@mui/material';
-import { type AVAILABLE_LOCALES, routing } from '../../i18n/routing';
+import { type Locale, routing } from '../../i18n/routing';
 
 export const metadata = {
   title: 'Mobility Database',
@@ -47,15 +47,13 @@ const ibmPlexMono = IBM_Plex_Mono({
  * Generate static params for all locales.
  * This enables static generation for locale-prefixed routes.
  */
-export function generateStaticParams(): Array<{
-  locale: (typeof AVAILABLE_LOCALES)[number];
-}> {
+export function generateStaticParams(): Array<{ locale: Locale }> {
   return routing.locales.map((locale) => ({ locale }));
 }
 
 interface LocaleLayoutProps {
   children: React.ReactNode;
-  params: Promise<{ locale: (typeof AVAILABLE_LOCALES)[number] }>;
+  params: Promise<{ locale: string }>;
 }
 
 /**
@@ -68,13 +66,16 @@ export default async function LocaleLayout({
 }: LocaleLayoutProps): Promise<ReactElement> {
   const { locale } = await params;
 
-  // Validate the locale
+  // Validate the locale and narrow the type
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
 
+  // At this point, locale is guaranteed to be a valid Locale type
+  const validLocale = locale as Locale;
+
   // Enable static rendering for this locale
-  setRequestLocale(locale);
+  setRequestLocale(validLocale);
 
   const [messages, remoteConfig] = await Promise.all([
     getMessages(),
@@ -82,7 +83,7 @@ export default async function LocaleLayout({
   ]);
 
   return (
-    <html lang={locale}>
+    <html lang={validLocale}>
       <head>
         <link rel='preconnect' href='https://firebaseapp.com' />
         <link rel='dns-prefetch' href='https://firebaseapp.com' />
@@ -102,8 +103,12 @@ export default async function LocaleLayout({
                 }}
               >
                 {children}
-                <SpeedInsights />
-                <Analytics />
+                {process.env.VERCEL_ENV === 'production' && (
+                  <>
+                    <SpeedInsights />
+                    <Analytics />
+                  </>
+                )}
               </Container>
               <Footer />
             </Providers>
