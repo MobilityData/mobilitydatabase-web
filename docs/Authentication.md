@@ -101,7 +101,7 @@ In addition to the GCIP ID token for IAP, SSR API calls also propagate a compact
 
 - The `md_session` cookie's JWT is reused as this user‑context token.
 - On the server, [src/app/utils/auth-server.ts](src/app/utils/auth-server.ts) reads the cookie via `getUserContextJwtFromCookie()`.
-- [src/app/context/api-auth-middleware.ts](src/app/context/api-auth-middleware.ts) provides `generateAuthMiddlewareWithToken(accessToken, userContextJwt?)`, which:
+- [src/app/services/api-auth-middleware.ts](src/app/services/api-auth-middleware.ts) provides `generateAuthMiddlewareWithToken(accessToken, userContextJwt?)`, which:
    - Sets `Authorization: Bearer <accessToken>` for IAP.
    - When `userContextJwt` is present, also sets `x-mdb-user-context: <userContextJwt>`.
 - All server‑side feeds service functions in [src/app/services/feeds/index.ts](src/app/services/feeds/index.ts) accept an optional `userContextJwt` and pass it into this middleware.

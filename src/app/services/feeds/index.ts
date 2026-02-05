@@ -3,7 +3,7 @@ import type { paths } from './types';
 import { type AllFeedsParams, type AllFeedType } from './utils';
 import { type GtfsRoute } from '../../types';
 import { getFeedFilesBaseUrl } from '../../utils/config';
-import { generateAuthMiddlewareWithToken } from '../../context/api-auth-middleware';
+import { generateAuthMiddlewareWithToken } from '../api-auth-middleware';
 
 const client = createClient<paths>({
   baseUrl: String(process.env.NEXT_PUBLIC_FEED_API_BASE_URL),
