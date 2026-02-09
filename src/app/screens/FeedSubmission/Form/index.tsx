@@ -135,7 +135,13 @@ export default function FeedSubmissionForm(): React.ReactElement {
       return;
     }
     setSubmitError(undefined);
-  }, [searchParams, stepsCompleted, formData.isOfficialProducer, router, pathname]);
+  }, [
+    searchParams,
+    stepsCompleted,
+    formData.isOfficialProducer,
+    router,
+    pathname,
+  ]);
 
   const handleNext = (): void => {
     const nextStep =
