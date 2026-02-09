@@ -12,7 +12,10 @@ import {
 } from '../../../services/feeds';
 import { notFound } from 'next/navigation';
 import type { Metadata, ResolvingMetadata } from 'next';
-import { getSSRAccessToken } from '../../../utils/auth-server';
+import {
+  getSSRAccessToken,
+  getUserContextJwtFromCookie,
+} from '../../../utils/auth-server';
 import {
   type GTFSFeedType,
   type GTFSRTFeedType,
@@ -32,15 +35,16 @@ interface Props {
 const fetchFeedData = cache(
   async (feedDataType: string, feedId: string, accessToken: string) => {
     try {
+      const userContextJwt = await getUserContextJwtFromCookie();
       let feed;
       if (feedDataType === 'gtfs') {
-        feed = await getGtfsFeed(feedId, accessToken);
+        feed = await getGtfsFeed(feedId, accessToken, userContextJwt);
       } else if (feedDataType === 'gtfs_rt') {
-        feed = await getGtfsRtFeed(feedId, accessToken);
+        feed = await getGtfsRtFeed(feedId, accessToken, userContextJwt);
       } else if (feedDataType === 'gbfs') {
-        feed = await getGbfsFeed(feedId, accessToken);
+        feed = await getGbfsFeed(feedId, accessToken, userContextJwt);
       } else {
-        feed = await getFeed(feedId, accessToken);
+        feed = await getFeed(feedId, accessToken, userContextJwt);
       }
       return feed;
     } catch (e) {
@@ -52,9 +56,15 @@ const fetchFeedData = cache(
 const fetchInitialDatasets = cache(
   async (feedId: string, accessToken: string) => {
     try {
-      const datasets = await getGtfsFeedDatasets(feedId, accessToken, {
-        limit: 10,
-      });
+      const userContextJwt = await getUserContextJwtFromCookie();
+      const datasets = await getGtfsFeedDatasets(
+        feedId,
+        accessToken,
+        {
+          limit: 10,
+        },
+        userContextJwt,
+      );
       return datasets;
     } catch (e) {
       return [];
@@ -65,9 +75,10 @@ const fetchInitialDatasets = cache(
 const fetchRelatedFeeds = cache(
   async (feedReferences: string[], accessToken: string) => {
     try {
+      const userContextJwt = await getUserContextJwtFromCookie();
       const feedPromises = feedReferences.map(
         async (feedId) =>
-          await getFeed(feedId, accessToken).catch((e) => {
+          await getFeed(feedId, accessToken, userContextJwt).catch((e) => {
             return undefined;
           }),
       );
@@ -218,12 +229,14 @@ export default async function FeedPage({
       accessToken,
     );
 
+    const userContextJwt = await getUserContextJwtFromCookie();
     const associatedGtfsRtFeedsArrays = await Promise.all(
       gtfsFeeds.map(
         async (gtfsFeed) =>
           await getGtfsFeedAssociatedGtfsRtFeeds(
             gtfsFeed?.id ?? '',
             accessToken,
+            userContextJwt,
           ),
       ),
     );

@@ -40,6 +40,10 @@ import {
   sendEmailVerification,
 } from '../../services';
 import {
+  setUserCookieSession,
+  clearUserCookieSession,
+} from '../../services/session-service';
+import {
   type AdditionalUserInfo,
   type UserCredential,
   getAdditionalUserInfo,
@@ -90,6 +94,9 @@ function* logoutSaga({
   try {
     navigateTo(redirectScreen);
     yield app.auth().signOut();
+    // Clear the HTTP-only md_session cookie on logout so that
+    // server-side requests immediately see the user as logged out.
+    yield call(clearUserCookieSession);
     yield put(logoutSuccess());
     if (propagate) {
       broadcastMessage(LOGOUT_CHANNEL);
@@ -262,6 +269,11 @@ function* anonymousLoginSaga(): Generator {
   }
 }
 
+function* sessionCookieAfterLoginSaga(): Generator {
+  // Establish server-side HTTP-only session cookie after any loginSuccess.
+  yield call(setUserCookieSession);
+}
+
 export function* watchAuth(): Generator {
   yield takeLatest(USER_PROFILE_LOGIN, emailLoginSaga);
   yield takeLatest(USER_PROFILE_LOGOUT, logoutSaga);
@@ -274,4 +286,6 @@ export function* watchAuth(): Generator {
   yield takeLatest(USER_PROFILE_CHANGE_PASSWORD, changePasswordSaga);
   yield takeLatest(USER_PROFILE_RESET_PASSWORD, resetPasswordSaga);
   yield takeLatest(USER_PROFILE_ANONYMOUS_LOGIN, anonymousLoginSaga);
+  // When loginSuccess is dispatched (any login flow), set the session cookie.
+  yield takeLatest(loginSuccess.type, sessionCookieAfterLoginSaga);
 }

@@ -9,8 +9,6 @@ import { type RemoteConfigValues } from './interface/RemoteConfig';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
-import AuthTokenSync from './components/AuthTokenSync';
-
 interface ProvidersProps {
   children: React.ReactNode;
   remoteConfig: RemoteConfigValues;
@@ -21,9 +19,20 @@ export function Providers({
   children,
   remoteConfig,
 }: ProvidersProps): React.ReactElement {
+  // Start MSW in mock mode to intercept API calls client-side
+  React.useEffect(() => {
+    if (process.env.NEXT_PUBLIC_API_MOCKING === 'enabled') {
+      // Lazy-load the worker to avoid bundling in prod
+      import('../mocks/browser')
+        .then(async ({ worker }) => await worker.start())
+        .catch((err) => {
+          console.warn('MSW mock worker failed to start:', err);
+        });
+    }
+  }, []);
+
   return (
     <ContextProviders>
-      <AuthTokenSync />
       <RemoteConfigProvider config={remoteConfig}>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           {children}

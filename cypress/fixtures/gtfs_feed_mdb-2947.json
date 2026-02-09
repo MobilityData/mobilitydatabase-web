@@ -1,0 +1,53 @@
+{
+  "id": "mdb-2947",
+  "data_type": "gtfs",
+  "status": "active",
+  "created_at": "2024-10-01T00:00:00Z",
+  "external_ids": [
+    { "external_id": "2947", "source": "mdb" }
+  ],
+  "provider": "Example Transit Agency",
+  "feed_name": "Example City Transit",
+  "note": "Mock fixture for local dev",
+  "feed_contact_email": "",
+  "source_info": {
+    "producer_url": "https://example.com/gtfs.zip",
+    "authentication_type": 0,
+    "authentication_info_url": "",
+    "api_key_parameter_name": "",
+    "license_url": ""
+  },
+  "redirects": [],
+  "locations": [
+    {
+      "country_code": "US",
+      "subdivision_name": "Example State",
+      "municipality": "Example City"
+    }
+  ],
+  "latest_dataset": {
+    "id": "mdb-2947-202410010000",
+    "hosted_url": "https://files.example.com/mdb-2947/mdb-2947-202410010000.zip",
+    "bounding_box": {
+      "minimum_latitude": 40.0,
+      "maximum_latitude": 41.0,
+      "minimum_longitude": -75.0,
+      "maximum_longitude": -74.0
+    },
+    "downloaded_at": "2024-10-01T00:00:15Z",
+    "hash": "mockhash2947",
+    "validation_report": {
+      "validated_at": "2024-10-01T00:10:00Z",
+      "features": ["Transfers", "Shapes"],
+      "validator_version": "5.0.2-SNAPSHOT",
+      "total_error": 0,
+      "total_warning": 10,
+      "total_info": 0,
+      "unique_error_count": 0,
+      "unique_warning_count": 2,
+      "unique_info_count": 0,
+      "url_json": "https://files.example.com/mdb-2947/report.json",
+      "url_html": "https://files.example.com/mdb-2947/report.html"
+    }
+  }
+}
