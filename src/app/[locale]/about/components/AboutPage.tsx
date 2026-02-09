@@ -41,7 +41,7 @@ export default async function AboutPage(): Promise<ReactElement> {
         >
           {t('whyUse')}
         </Typography>
-        <Typography className='answer'>
+        <Typography component='div' className='answer'>
           {t('whyUseAnswer')}
           <br /> <br />
           In addition to our database, we develop and maintain other tools that
