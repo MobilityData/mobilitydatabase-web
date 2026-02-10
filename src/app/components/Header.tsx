@@ -15,7 +15,6 @@ import {
   MenuItem,
   Select,
   useTheme,
-  Link,
   Alert,
   AlertTitle,
 } from '@mui/material';
@@ -43,11 +42,8 @@ import { defaultRemoteConfigValues } from '../interface/RemoteConfig';
 import { animatedButtonStyling } from './Header.style';
 import ThemeToggle from './ThemeToggle';
 import { useTranslations, useLocale } from 'next-intl';
-import { useSelector } from 'react-redux';
-import {
-  selectIsAuthenticated,
-  selectUserEmail,
-} from '../store/profile-selectors';
+import Link from 'next/link';
+import { app } from '../../firebase';
 
 // Lazy load components not needed for initial render
 const LogoutConfirmModal = dynamic(
@@ -78,6 +74,9 @@ function useClientSearchParams(): URLSearchParams | null {
 }
 
 export default function DrawerAppBar(): React.ReactElement {
+  const [currentUser, setCurrentUser] = React.useState<
+    { email: string; isAuthenticated: boolean } | undefined
+  >(undefined);
   const clientSearchParams = useClientSearchParams();
   const hasTransitFeedsRedirectParam =
     clientSearchParams?.get('utm_source') === 'transitfeeds';
@@ -97,6 +96,21 @@ export default function DrawerAppBar(): React.ReactElement {
   const t = useTranslations('common');
 
   React.useEffect(() => {
+    const auth = app.auth();
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        setCurrentUser({
+          email: user.email || '',
+          isAuthenticated: !user.isAnonymous,
+        });
+      } else {
+        setCurrentUser(undefined);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  React.useEffect(() => {
     if (hasTransitFeedsRedirectParam) {
       setHasTransitFeedsRedirect(true);
     }
@@ -111,8 +125,10 @@ export default function DrawerAppBar(): React.ReactElement {
   }, [config]);
 
   const router = useRouter();
-  const isAuthenticated = useSelector(selectIsAuthenticated);
-  const userEmail = useSelector(selectUserEmail);
+
+  const isAuthenticated =
+    currentUser != null && currentUser.isAuthenticated === true;
+  const userEmail = currentUser?.email;
 
   const handleDrawerToggle = (): void => {
     setMobileOpen((prevState) => !prevState);
@@ -184,7 +200,7 @@ export default function DrawerAppBar(): React.ReactElement {
             >
               <MenuIcon />
             </IconButton>
-            <a
+            <Link
               href={'/'}
               style={{
                 textDecoration: 'none',
@@ -213,28 +229,34 @@ export default function DrawerAppBar(): React.ReactElement {
               >
                 Mobility Database
               </Typography>
-            </a>
+            </Link>
           </Box>
 
           <Box sx={{ display: { xs: 'none', md: 'block' } }}>
             {navigationItems.map((item) => (
-              <Button
-                sx={(theme) => ({
-                  ...animatedButtonStyling(theme),
-                  color: theme.palette.text.primary,
-                })}
+              <Link
+                data-cy={
+                  'header-' + item.title.toLowerCase().replace(/\s+/g, '-')
+                }
                 href={item.external === true ? item.target : '/' + item.target}
                 key={item.title}
                 target={item.external === true ? '_blank' : '_self'}
                 rel={item.external === true ? 'noopener noreferrer' : ''}
-                variant={'text'}
-                endIcon={item.external === true ? <OpenInNew /> : null}
-                className={
-                  activeTab.includes('/' + item.target) ? 'active' : ''
-                }
               >
-                {item.title}
-              </Button>
+                <Button
+                  sx={(theme) => ({
+                    ...animatedButtonStyling(theme),
+                    color: theme.palette.text.primary,
+                  })}
+                  variant={'text'}
+                  endIcon={item.external === true ? <OpenInNew /> : null}
+                  className={
+                    activeTab.includes('/' + item.target) ? 'active' : ''
+                  }
+                >
+                  {item.title}
+                </Button>
+              </Link>
             ))}
             {config.gbfsValidator && (
               <>
@@ -383,6 +405,7 @@ export default function DrawerAppBar(): React.ReactElement {
                   onClose={handleMenuClose}
                 >
                   <MenuItem
+                    data-cy='accountDetailsHeader'
                     onClick={() => {
                       handleMenuItemClick(navigationAccountItem);
                     }}
@@ -495,6 +518,7 @@ export default function DrawerAppBar(): React.ReactElement {
           }}
         >
           <DrawerContent
+            isAuthenticated={isAuthenticated}
             onLogoutClick={handleLogoutClick}
             navigationItems={navigationItems}
             metricsOptionsEnabled={metricsOptionsEnabled}

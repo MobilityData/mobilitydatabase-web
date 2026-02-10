@@ -13,7 +13,6 @@ import {
   useTheme,
   Link,
 } from '@mui/material';
-import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import {
   ACCOUNT_TARGET,
@@ -22,7 +21,6 @@ import {
   SIGN_IN_TARGET,
 } from '../constants/Navigation';
 import type NavigationItem from '../interface/Navigation';
-import { selectIsAuthenticated } from '../store/profile-selectors';
 import { fontFamily } from '../Theme';
 import { mobileNavElementStyle } from './Header.style';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -32,17 +30,18 @@ import { useTranslations } from 'next-intl';
 const websiteTile = 'Mobility Database';
 
 interface DrawerContentProps {
+  isAuthenticated: boolean;
   onLogoutClick: React.MouseEventHandler;
   navigationItems: NavigationItem[];
   metricsOptionsEnabled: boolean;
 }
 
 export default function DrawerContent({
+  isAuthenticated,
   onLogoutClick,
   navigationItems,
   metricsOptionsEnabled,
 }: DrawerContentProps): React.ReactElement {
-  const isAuthenticated = useSelector(selectIsAuthenticated);
   const router = useRouter();
   const { config } = useRemoteConfig();
   const t = useTranslations('common');
