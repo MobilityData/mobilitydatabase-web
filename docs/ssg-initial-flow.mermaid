@@ -1,0 +1,41 @@
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant B as Browser
+    participant CDN as CDN/Edge Cache
+    participant Next as Next.js Build (CI)
+    participant I18N as next-intl (generateStaticParams)
+    participant RC as Firebase Remote Config (build-time)
+    participant JS as Client JS (Header component)
+
+    rect rgb(235, 245, 255)
+      note over Next,RC: BUILD TIME (SSG)
+      Next->>I18N: generateStaticParams() → all locales
+      I18N-->>Next: locale list
+      Next->>I18N: Build locale message bundles (baked)
+      Next->>RC: Fetch Remote Config snapshot (baked)
+      RC-->>Next: Remote Config values
+      Next->>Next: Render pages to static HTML
+      Next->>Next: Extract critical MUI styles (Emotion)
+      note over Next: <style data-emotion="mui-*"> inlined in HTML
+      Next->>Next: Emit JS/CSS assets (Header client bundle)
+      Next->>CDN: Deploy static HTML + assets
+    end
+
+    rect rgb(245, 245, 245)
+      note over U,CDN: RUNTIME (User request)
+      U->>B: Navigate to /{locale}/page
+      B->>CDN: GET /{locale}/page
+      CDN-->>B: 200 Static HTML (SSG + inline MUI styles)
+
+      note over B: ✅ Styled content is painted\n(LCP occurs here)
+
+      B->>CDN: GET external CSS (non-critical)
+      CDN-->>B: CSS files
+      B->>CDN: GET JS bundle(s)
+      CDN-->>B: JS
+
+      note over B: React hydration begins
+      B->>JS: Hydrate client components
+      note over JS: ✅ Header hydration completes\n(interactivity enabled)
+    end
