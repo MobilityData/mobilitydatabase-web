@@ -1,3 +1,4 @@
+```mermaid
 sequenceDiagram
     autonumber
     actor U as User
@@ -39,3 +40,4 @@ sequenceDiagram
       B->>JS: Hydrate client components
       note over JS: ✅ Header hydration completes\n(interactivity enabled)
     end
+```
