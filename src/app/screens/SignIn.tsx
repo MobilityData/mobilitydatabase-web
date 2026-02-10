@@ -9,7 +9,7 @@ import Container from '@mui/material/Container';
 import GoogleIcon from '@mui/icons-material/Google';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import AppleIcon from '@mui/icons-material/Apple';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppDispatch } from '../hooks';
 import {
   login,
@@ -50,14 +50,14 @@ import { VisibilityOffOutlined, VisibilityOutlined } from '@mui/icons-material';
 
 export default function SignIn(): React.ReactElement {
   const dispatch = useAppDispatch();
-  const navigateTo = useNavigate();
+  const router = useRouter();
   const theme = useTheme();
   const userProfileStatus = useSelector(selectUserProfileStatus);
   const emailLoginError = useSelector(selectEmailLoginError);
   const [isSubmitted, setIsSubmitted] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
   const [showNoEmailSnackbar, setShowNoEmailSnackbar] = React.useState(false);
-  const [searchParams] = useSearchParams();
+  const searchParams = useSearchParams();
 
   const SignInSchema = Yup.object().shape({
     email: Yup.string()
@@ -92,18 +92,18 @@ export default function SignIn(): React.ReactElement {
   React.useEffect(() => {
     if (userProfileStatus === 'registered') {
       if (searchParams.has('add_feed')) {
-        navigateTo(ADD_FEED_TARGET, { state: { from: 'registration' } });
+        router.push(ADD_FEED_TARGET);
       } else {
-        navigateTo(ACCOUNT_TARGET);
+        router.push(ACCOUNT_TARGET);
       }
     }
     if (userProfileStatus === 'authenticated') {
-      navigateTo(COMPLETE_REGISTRATION_TARGET + '?' + searchParams.toString());
+      router.push(COMPLETE_REGISTRATION_TARGET + '?' + searchParams.toString());
     }
     if (userProfileStatus === 'unverified') {
-      navigateTo(POST_REGISTRATION_TARGET + '?' + searchParams.toString());
+      router.push(POST_REGISTRATION_TARGET + '?' + searchParams.toString());
     }
-  }, [userProfileStatus]);
+  }, [userProfileStatus, router, searchParams]);
 
   const signInWithProvider = (oauthProvider: OauthProvider): void => {
     const auth = getAuth();

@@ -2,7 +2,7 @@
 
 import './App.css';
 import AppRouter from './router/Router';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { anonymousLogin } from './store/profile-reducer';
 import { app } from '../firebase';
@@ -10,18 +10,35 @@ import { Suspense, useEffect, useState } from 'react';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import AppContainer from './AppContainer';
+import { usePathname, useSearchParams } from 'next/navigation';
 
 interface AppProps {
   locale?: string;
+}
+
+// Helper function to construct the full path from Next.js routing
+function buildPathFromNextRouter(
+  pathname: string,
+  searchParams: URLSearchParams,
+  locale?: string,
+): string {
+  const cleanPath =
+    locale != null && locale !== 'en'
+      ? (pathname.replace(`/${locale}`, '') ?? '/')
+      : pathname;
+
+  const searchString = searchParams.toString();
+  return searchString !== '' ? `${cleanPath}?${searchString}` : cleanPath;
 }
 
 function App({ locale }: AppProps): React.ReactElement {
   const dispatch = useDispatch();
   const [isAppReady, setIsAppReady] = useState(false);
 
-  // Determine basename for BrowserRouter based on locale
-  // Non-default locales (e.g., 'fr') need their prefix as basename
-  const basename = locale != null && locale !== 'en' ? `/${locale}` : undefined;
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const initialPath = buildPathFromNextRouter(pathname, searchParams, locale);
 
   useEffect(() => {
     app.auth().onAuthStateChanged((user) => {
@@ -38,10 +55,11 @@ function App({ locale }: AppProps): React.ReactElement {
   return (
     <Suspense>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
-        {/* BrowserRouter will be deprecated in favor of Next AppRouter */}
-        <BrowserRouter basename={basename}>
+        {/* MemoryRouter will be deprecated in favor of Next AppRouter */}
+        {/* MemoryRouter synced with Next.js routing via RouterSync component */}
+        <MemoryRouter initialEntries={[initialPath]}>
           <AppContainer>{isAppReady ? <AppRouter /> : null}</AppContainer>
-        </BrowserRouter>
+        </MemoryRouter>
       </LocalizationProvider>
     </Suspense>
   );

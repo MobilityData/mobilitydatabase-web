@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import SignIn from '../screens/SignIn';
 import SignUp from '../screens/SignUp';
 import Account from '../screens/Account';
@@ -35,7 +36,7 @@ import GbfsValidator from '../screens/GbfsValidator';
 import { GbfsAuthProvider } from '../context/GbfsAuthProvider';
 
 export const AppRouter: React.FC = () => {
-  const navigateTo = useNavigate();
+  const router = useRouter();
   const dispatch = useAppDispatch();
 
   /**
@@ -43,7 +44,13 @@ export const AppRouter: React.FC = () => {
    */
   const logoutUserCallback = (): void => {
     dispatch(
-      logout({ redirectScreen: SIGN_OUT_TARGET, navigateTo, propagate: false }),
+      logout({
+        redirectScreen: SIGN_OUT_TARGET,
+        navigateTo: (path) => {
+          router.push(String(path));
+        },
+        propagate: false,
+      }),
     );
   };
 
