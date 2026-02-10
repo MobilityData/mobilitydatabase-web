@@ -385,6 +385,7 @@ export default function APIAccount(): React.ReactElement {
           <Box sx={{ display: 'flex', justifyContent: 'space-evenly', mt: 2 }}>
             {!signedInWithProvider && (
               <Button
+                data-cy='changePasswordButton'
                 variant='contained'
                 color='primary'
                 sx={{ m: 1, mb: 0 }}
