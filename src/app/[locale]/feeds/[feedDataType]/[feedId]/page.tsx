@@ -24,7 +24,10 @@ import {
 } from '../../../../screens/Feed/Feed.functions';
 import generateFeedStructuredData from '../../../../screens/Feed/StructuredData.functions';
 import { getTranslations } from 'next-intl/server';
-import { getSSRAccessToken, getUserContextJwtFromCookie } from '../../../../utils/auth-server';
+import {
+  getSSRAccessToken,
+  getUserContextJwtFromCookie,
+} from '../../../../utils/auth-server';
 
 interface Props {
   params: Promise<{ feedDataType: string; feedId: string }>;

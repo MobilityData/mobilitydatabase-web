@@ -98,16 +98,18 @@ export default function DrawerAppBar(): React.ReactElement {
   React.useEffect(() => {
     const auth = app.auth();
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      if (user) {
+      if (user != null) {
         setCurrentUser({
-          email: user.email || '',
+          email: user.email ?? '',
           isAuthenticated: !user.isAnonymous,
         });
       } else {
         setCurrentUser(undefined);
       }
     });
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   React.useEffect(() => {
@@ -126,8 +128,7 @@ export default function DrawerAppBar(): React.ReactElement {
 
   const router = useRouter();
 
-  const isAuthenticated =
-    currentUser != null && currentUser.isAuthenticated === true;
+  const isAuthenticated = currentUser != null && currentUser.isAuthenticated;
   const userEmail = currentUser?.email;
 
   const handleDrawerToggle = (): void => {
