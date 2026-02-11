@@ -40,6 +40,11 @@ export const handlers = [
     return HttpResponse.json(feedJson);
   }),
 
+  // Mock GET /v1/feeds/{id} - basic feed info
+  http.get(`*/v1/feeds/*/test-516`, () => {
+    return HttpResponse.json(feedJson);
+  }),
+
   // Mock GET /v1/gtfs_feeds/{id} - GTFS specific feed info
   http.get(`*/v1/gtfs_feeds/test-516`, () => {
     return HttpResponse.json(gtfsFeedJson);

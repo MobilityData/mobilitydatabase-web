@@ -14,7 +14,7 @@ describe('Add Feed Form', () => {
     );
 
     cy.get('[data-cy="accountHeader"]').should('exist'); // assures that the user is signed in
-    cy.visit('/contribute');
+    cy.get('[data-cy="header-add-a-feed"]').click();
     // Assures that the firebase remote config has loaded for the first test
     // Optimizations can be made to make the first test run faster
     // Long timeout is to assure no flakiness

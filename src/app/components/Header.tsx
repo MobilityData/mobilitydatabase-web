@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import dynamic from 'next/dynamic';
 import {
   AppBar,
   Box,
@@ -14,7 +15,6 @@ import {
   MenuItem,
   Select,
   useTheme,
-  Link,
   Alert,
   AlertTitle,
 } from '@mui/material';
@@ -30,8 +30,8 @@ import {
   gbfsMetricsNavItems,
 } from '../constants/Navigation';
 import type NavigationItem from '../interface/Navigation';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import LogoutConfirmModal from './LogoutConfirmModal';
+import { usePathname, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { BikeScooterOutlined, OpenInNew } from '@mui/icons-material';
 import { useRemoteConfig } from '../context/RemoteConfigProvider';
 import { NestedMenuItem } from 'mui-nested-menu';
@@ -40,25 +40,52 @@ import DepartureBoardIcon from '@mui/icons-material/DepartureBoard';
 import { fontFamily } from '../Theme';
 import { defaultRemoteConfigValues } from '../interface/RemoteConfig';
 import { animatedButtonStyling } from './Header.style';
-import DrawerContent from './HeaderMobileDrawer';
 import ThemeToggle from './ThemeToggle';
 import { useTranslations, useLocale } from 'next-intl';
-import { useSelector } from 'react-redux';
-import {
-  selectIsAuthenticated,
-  selectUserEmail,
-} from '../store/profile-selectors';
+import Link from 'next/link';
+import { app } from '../../firebase';
+
+// Lazy load components not needed for initial render
+const LogoutConfirmModal = dynamic(
+  async () => await import('./LogoutConfirmModal'),
+  {
+    ssr: false,
+  },
+);
+const DrawerContent = dynamic(
+  async () => await import('./HeaderMobileDrawer'),
+  {
+    ssr: false,
+  },
+);
+
+// Hook to safely access search params only on client
+function useClientSearchParams(): URLSearchParams | null {
+  const [searchParams, setSearchParams] =
+    React.useState<URLSearchParams | null>(null);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setSearchParams(new URLSearchParams(window.location.search));
+    }
+  }, []);
+
+  return searchParams;
+}
 
 export default function DrawerAppBar(): React.ReactElement {
-  const searchParams = useSearchParams();
+  const [currentUser, setCurrentUser] = React.useState<
+    { email: string; isAuthenticated: boolean } | undefined
+  >(undefined);
+  const clientSearchParams = useClientSearchParams();
   const hasTransitFeedsRedirectParam =
-    searchParams.get('utm_source') === 'transitfeeds';
+    clientSearchParams?.get('utm_source') === 'transitfeeds';
+
   const theme = useTheme();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = React.useState(false);
-  const [hasTransitFeedsRedirect, setHasTransitFeedsRedirect] = React.useState(
-    hasTransitFeedsRedirectParam,
-  );
+  const [hasTransitFeedsRedirect, setHasTransitFeedsRedirect] =
+    React.useState(false);
   const [openDialog, setOpenDialog] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState('');
   const [navigationItems, setNavigationItems] = React.useState<
@@ -69,6 +96,29 @@ export default function DrawerAppBar(): React.ReactElement {
   const t = useTranslations('common');
 
   React.useEffect(() => {
+    const auth = app.auth();
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user != null) {
+        setCurrentUser({
+          email: user.email ?? '',
+          isAuthenticated: !user.isAnonymous,
+        });
+      } else {
+        setCurrentUser(undefined);
+      }
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (hasTransitFeedsRedirectParam) {
+      setHasTransitFeedsRedirect(true);
+    }
+  }, [hasTransitFeedsRedirectParam]);
+
+  React.useEffect(() => {
     setActiveTab(pathname ?? '');
   }, [pathname]);
 
@@ -77,8 +127,9 @@ export default function DrawerAppBar(): React.ReactElement {
   }, [config]);
 
   const router = useRouter();
-  const isAuthenticated = useSelector(selectIsAuthenticated);
-  const userEmail = useSelector(selectUserEmail);
+
+  const isAuthenticated = currentUser != null && currentUser.isAuthenticated;
+  const userEmail = currentUser?.email;
 
   const handleDrawerToggle = (): void => {
     setMobileOpen((prevState) => !prevState);
@@ -100,7 +151,7 @@ export default function DrawerAppBar(): React.ReactElement {
   };
 
   const container =
-    window !== undefined ? () => window.document.body : undefined;
+    typeof window !== 'undefined' ? () => window.document.body : undefined;
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -150,7 +201,7 @@ export default function DrawerAppBar(): React.ReactElement {
             >
               <MenuIcon />
             </IconButton>
-            <a
+            <Link
               href={'/'}
               style={{
                 textDecoration: 'none',
@@ -159,22 +210,14 @@ export default function DrawerAppBar(): React.ReactElement {
               }}
               className='btn-link'
             >
-              <picture style={{ display: 'flex' }}>
-                <source
-                  media='(min-width: 50px)'
-                  srcSet='/assets/MOBILTYDATA_logo_purple_M.webp'
-                  width='50'
-                  height='50'
-                />
-                <source
-                  src='/assets/MOBILTYDATA_logo_purple_M.png'
-                  type='image/png'
-                />
-                <img
-                  alt='MobilityData logo'
-                  src='/assets/MOBILTYDATA_logo_purple_M.png'
-                />
-              </picture>
+              <Image
+                src='/assets/MOBILTYDATA_logo_purple_M.webp'
+                alt='MobilityData logo'
+                width={50}
+                height={50}
+                priority
+                fetchPriority='high'
+              />
               <Typography
                 variant='h5'
                 component='h1'
@@ -187,28 +230,34 @@ export default function DrawerAppBar(): React.ReactElement {
               >
                 Mobility Database
               </Typography>
-            </a>
+            </Link>
           </Box>
 
           <Box sx={{ display: { xs: 'none', md: 'block' } }}>
             {navigationItems.map((item) => (
-              <Button
-                sx={(theme) => ({
-                  ...animatedButtonStyling(theme),
-                  color: theme.palette.text.primary,
-                })}
+              <Link
+                data-cy={
+                  'header-' + item.title.toLowerCase().replace(/\s+/g, '-')
+                }
                 href={item.external === true ? item.target : '/' + item.target}
                 key={item.title}
                 target={item.external === true ? '_blank' : '_self'}
                 rel={item.external === true ? 'noopener noreferrer' : ''}
-                variant={'text'}
-                endIcon={item.external === true ? <OpenInNew /> : null}
-                className={
-                  activeTab.includes('/' + item.target) ? 'active' : ''
-                }
               >
-                {item.title}
-              </Button>
+                <Button
+                  sx={(theme) => ({
+                    ...animatedButtonStyling(theme),
+                    color: theme.palette.text.primary,
+                  })}
+                  variant={'text'}
+                  endIcon={item.external === true ? <OpenInNew /> : null}
+                  className={
+                    activeTab.includes('/' + item.target) ? 'active' : ''
+                  }
+                >
+                  {item.title}
+                </Button>
+              </Link>
             ))}
             {config.gbfsValidator && (
               <>
@@ -357,6 +406,7 @@ export default function DrawerAppBar(): React.ReactElement {
                   onClose={handleMenuClose}
                 >
                   <MenuItem
+                    data-cy='accountDetailsHeader'
                     onClick={() => {
                       handleMenuItemClick(navigationAccountItem);
                     }}
@@ -429,9 +479,9 @@ export default function DrawerAppBar(): React.ReactElement {
             severity='warning'
             onClose={() => {
               setHasTransitFeedsRedirect(false);
-              if (hasTransitFeedsRedirectParam) {
+              if (hasTransitFeedsRedirectParam && clientSearchParams != null) {
                 // Remove utm_source from URL
-                const newSearchParams = new URLSearchParams(searchParams);
+                const newSearchParams = new URLSearchParams(clientSearchParams);
                 newSearchParams.delete('utm_source');
                 const newPath = `${pathname}?${newSearchParams.toString()}`;
                 router.replace(newPath);
@@ -469,6 +519,7 @@ export default function DrawerAppBar(): React.ReactElement {
           }}
         >
           <DrawerContent
+            isAuthenticated={isAuthenticated}
             onLogoutClick={handleLogoutClick}
             navigationItems={navigationItems}
             metricsOptionsEnabled={metricsOptionsEnabled}

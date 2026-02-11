@@ -2,7 +2,7 @@
 
 import './App.css';
 import AppRouter from './router/Router';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { anonymousLogin } from './store/profile-reducer';
 import { app } from '../firebase';
@@ -10,11 +10,35 @@ import { Suspense, useEffect, useState } from 'react';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import AppContainer from './AppContainer';
-import { Helmet, HelmetProvider } from 'react-helmet-async';
+import { usePathname, useSearchParams } from 'next/navigation';
 
-function App(): React.ReactElement {
+interface AppProps {
+  locale?: string;
+}
+
+// Helper function to construct the full path from Next.js routing
+function buildPathFromNextRouter(
+  pathname: string,
+  searchParams: URLSearchParams,
+  locale?: string,
+): string {
+  const cleanPath =
+    locale != null && locale !== 'en'
+      ? (pathname.replace(`/${locale}`, '') ?? '/')
+      : pathname;
+
+  const searchString = searchParams.toString();
+  return searchString !== '' ? `${cleanPath}?${searchString}` : cleanPath;
+}
+
+function App({ locale }: AppProps): React.ReactElement {
   const dispatch = useDispatch();
   const [isAppReady, setIsAppReady] = useState(false);
+
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const initialPath = buildPathFromNextRouter(pathname, searchParams, locale);
 
   useEffect(() => {
     app.auth().onAuthStateChanged((user) => {
@@ -29,24 +53,15 @@ function App(): React.ReactElement {
   }, [dispatch]);
 
   return (
-    <HelmetProvider>
-      <Helmet>
-        <meta
-          name='description'
-          content={
-            "Access GTFS, GTFS Realtime, GBFS transit data with over 4,000 feeds from 70+ countries on the web's leading transit data platform."
-          }
-        />
-      </Helmet>
-      <Suspense>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          {/* BrowserRouter will be deprecated in favor of Next AppRouter */}
-          <BrowserRouter>
-            <AppContainer>{isAppReady ? <AppRouter /> : null}</AppContainer>
-          </BrowserRouter>
-        </LocalizationProvider>
-      </Suspense>
-    </HelmetProvider>
+    <Suspense>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        {/* MemoryRouter will be deprecated in favor of Next AppRouter */}
+        {/* MemoryRouter synced with Next.js routing via RouterSync component */}
+        <MemoryRouter initialEntries={[initialPath]}>
+          <AppContainer>{isAppReady ? <AppRouter /> : null}</AppContainer>
+        </MemoryRouter>
+      </LocalizationProvider>
+    </Suspense>
   );
 }
 

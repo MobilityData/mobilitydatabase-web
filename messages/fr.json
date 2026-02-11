@@ -471,5 +471,37 @@
       "nearby_stations": "Nearby Stations"
     },
     "unableToDetectVersions": "Unable to detect versions within this feed."
+  },
+  "home": {
+    "title": "Explorez et accédez aux données de transport mondiales",
+    "servingOver": "Actuellement plus de",
+    "feeds": "flux de données de transport de plus de",
+    "fromOver": "de plus de",
+    "countries": "pays.",
+    "or": "ou",
+    "browseFeeds": "Parcourir les flux",
+    "addFeed": "Ajouter un flux",
+    "signUpApi": "S'inscrire à l'API",
+    "description": "La Mobility Database est un catalogue de données ouvertes comprenant plus de 4000 flux GTFS, GTFS Realtime et GBFS dans plus de 75 pays. Que vous soyez un opérateur de transport, un chercheur étudiant les tendances du transport public et de la mobilité partagée, ou une application de cartes ayant besoin de données fiables, la Mobility Database a tout ce dont vous avez besoin en un seul endroit.",
+    "validatorIntro": "Notre base de données s'intègre avec",
+    "gtfsValidator": "le validateur canonique GTFS Schedule",
+    "and": "et",
+    "gbfsValidator": "le validateur GBFS",
+    "validatorOutro": "pour fournir des rapports détaillés sur la qualité des données de chaque flux."
+  },
+  "about": {
+    "title": "À propos",
+    "description": "La Mobility Database est un catalogue ouvert comprenant plus de 4000 flux GTFS, GTFS Realtime et GBFS dans plus de 75 pays. Elle s'intègre avec les validateurs canoniques GTFS Schedule et GBFS pour partager des rapports de qualité des données pour chaque flux.\n\nCette base de données est hébergée et maintenue par MobilityData, l'organisation mondiale à but non lucratif dédiée à l'avancement des standards de données de transport ouvertes.",
+    "learnMore": "En savoir plus sur MobilityData",
+    "whyUse": "Pourquoi utiliser la Mobility Database ?",
+    "whyUseAnswer": "La Mobility Database fournit un accès gratuit aux flux GTFS, GTFS Realtime et GBFS historiques et actuels du monde entier. Ces flux sont vérifiés quotidiennement pour les mises à jour, garantissant que les données que vous consultez sont les plus récentes disponibles.",
+    "gtfsValidator": "le validateur canonique GTFS Schedule",
+    "gbfsValidator": "le validateur GBFS.",
+    "benefits": {
+      "mirrored": "Versions miroirs des flux GTFS Schedule hébergés par les opérateurs pour éviter les temps d'arrêt et le blocage géographique",
+      "boundingBoxes": "Boîtes englobantes pour visualiser ou filtrer par région sélectionnée dans l'API",
+      "addFeeds": "Un formulaire simple et facile à utiliser pour ajouter de nouveaux flux",
+      "openSource": "Une communauté open source travaillant activement à améliorer les outils"
+    }
   }
 }

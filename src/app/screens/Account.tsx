@@ -1,6 +1,6 @@
 import * as React from 'react';
 import '../styles/Account.css';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useTheme } from '@mui/material/styles';
 import {
   Typography,
@@ -62,7 +62,7 @@ export default function APIAccount(): React.ReactElement {
   const dispatch = useAppDispatch();
   const theme = useTheme();
   const user = useSelector(selectUserProfile);
-  const navigateTo = useNavigate();
+  const router = useRouter();
 
   const texts = {
     accessTokenHidden: t('accessToken.hidden'),
@@ -247,7 +247,7 @@ export default function APIAccount(): React.ReactElement {
   }
 
   function handleChangePasswordClick(): void {
-    navigateTo('/change-password');
+    router.push('/change-password');
   }
 
   const refreshAccessTokenButtonText = isRefreshingAccessToken
@@ -385,6 +385,7 @@ export default function APIAccount(): React.ReactElement {
           <Box sx={{ display: 'flex', justifyContent: 'space-evenly', mt: 2 }}>
             {!signedInWithProvider && (
               <Button
+                data-cy='changePasswordButton'
                 variant='contained'
                 color='primary'
                 sx={{ m: 1, mb: 0 }}

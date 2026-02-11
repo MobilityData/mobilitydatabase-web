@@ -1,6 +1,6 @@
 import { type ReactElement } from 'react';
 import { cache } from 'react';
-import FeedView from '../../../screens/Feed/FeedView';
+import FeedView from '../../../../screens/Feed/FeedView';
 import {
   getFeed,
   getGtfsFeed,
@@ -9,24 +9,25 @@ import {
   getGtfsFeedDatasets,
   getGtfsFeedRoutes,
   getGtfsFeedAssociatedGtfsRtFeeds,
-} from '../../../services/feeds';
+} from '../../../../services/feeds';
 import { notFound } from 'next/navigation';
 import type { Metadata, ResolvingMetadata } from 'next';
-import {
-  getSSRAccessToken,
-  getUserContextJwtFromCookie,
-} from '../../../utils/auth-server';
+
 import {
   type GTFSFeedType,
   type GTFSRTFeedType,
-} from '../../../services/feeds/utils';
+} from '../../../../services/feeds/utils';
 import {
   formatProvidersSorted,
   generatePageTitle,
   generateDescriptionMetaTag,
-} from '../../../screens/Feed/Feed.functions';
-import generateFeedStructuredData from '../../../screens/Feed/StructuredData.functions';
+} from '../../../../screens/Feed/Feed.functions';
+import generateFeedStructuredData from '../../../../screens/Feed/StructuredData.functions';
 import { getTranslations } from 'next-intl/server';
+import {
+  getSSRAccessToken,
+  getUserContextJwtFromCookie,
+} from '../../../../utils/auth-server';
 
 interface Props {
   params: Promise<{ feedDataType: string; feedId: string }>;

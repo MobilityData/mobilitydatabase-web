@@ -41,7 +41,6 @@
     "react-draggable": "^4.5.0",
     "react-ga4": "^2.1.0",
     "react-google-recaptcha": "^3.1.0",
-    "react-helmet-async": "^2.0.5",
     "react-hook-form": "^7.52.1",
     "react-leaflet": "^4.2.1",
     "react-map-gl": "^8.0.4",
@@ -56,6 +55,7 @@
   },
   "scripts": {
     "build:prod": "next build",
+    "build:analyze": "next experimental-analyze",
     "start:dev": "next dev",
     "start:dev:mock": "NEXT_PUBLIC_API_MOCKING=enabled next dev -p 3001",
     "start:prod": "next build && next start",
@@ -72,6 +72,9 @@
     "generate:api-types": "npm run generate:api-types:output -- --output-file=src/app/services/feeds/types.ts",
     "generate:gbfs-validator-types:output": "npm exec -- openapi-typescript ./external_types/GbfsValidator.yaml -o $npm_config_output_path && eslint $npm_config_output_path --fix",
     "generate:gbfs-validator-types": "npm run generate:gbfs-validator-types:output -- --output-file=src/app/services/feeds/gbfs-validator-types.ts"
+  },
+  "resolutions": {
+    "tar": "^7.5.7"
   },
   "eslintConfig": {
     "extends": [

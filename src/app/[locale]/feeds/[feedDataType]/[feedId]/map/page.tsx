@@ -1,4 +1,4 @@
-import FullMapView from '../../../../screens/Feed/components/FullMapView';
+import FullMapView from '../../../../../screens/Feed/components/FullMapView';
 import { type ReactElement } from 'react';
 
 export default function FullMapViewPage(): ReactElement {

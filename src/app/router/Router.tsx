@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import SignIn from '../screens/SignIn';
 import SignUp from '../screens/SignUp';
 import Account from '../screens/Account';
@@ -7,7 +8,6 @@ import ContactInformation from '../screens/ContactInformation';
 import { ProtectedRoute } from './ProtectedRoute';
 import CompleteRegistration from '../screens/CompleteRegistration';
 import ChangePassword from '../screens/ChangePassword';
-import Home from '../screens/Home';
 import ForgotPassword from '../screens/ForgotPassword';
 import FAQ from '../screens/FAQ';
 import PostRegistration from '../screens/PostRegistration';
@@ -36,7 +36,7 @@ import GbfsValidator from '../screens/GbfsValidator';
 import { GbfsAuthProvider } from '../context/GbfsAuthProvider';
 
 export const AppRouter: React.FC = () => {
-  const navigateTo = useNavigate();
+  const router = useRouter();
   const dispatch = useAppDispatch();
 
   /**
@@ -44,7 +44,13 @@ export const AppRouter: React.FC = () => {
    */
   const logoutUserCallback = (): void => {
     dispatch(
-      logout({ redirectScreen: SIGN_OUT_TARGET, navigateTo, propagate: false }),
+      logout({
+        redirectScreen: SIGN_OUT_TARGET,
+        navigateTo: (path) => {
+          router.push(String(path));
+        },
+        propagate: false,
+      }),
     );
   };
 
@@ -67,7 +73,6 @@ export const AppRouter: React.FC = () => {
 
   return (
     <Routes>
-      <Route path='/' element={<Home />} />
       <Route path='sign-in' element={<SignIn />} />
       <Route path='sign-up' element={<SignUp />} />
       <Route element={<ProtectedRoute targetStatus='authenticated' />}>
