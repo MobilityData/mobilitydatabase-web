@@ -6,7 +6,6 @@ import {
   Button,
   Chip,
   useTheme,
-  Skeleton,
   Alert,
   AlertTitle,
   Stack,
@@ -17,7 +16,7 @@ import {
   ToggleButtonGroup,
   ToggleButton,
 } from '@mui/material';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { GtfsVisualizationMap } from '../../../components/GtfsVisualizationMap';
 import CloseIcon from '@mui/icons-material/Close';
 import NestedCheckboxList, {
@@ -32,28 +31,21 @@ import {
   StyledChipFilterContainer,
   StyledMapControlPanel,
 } from '../Map.styles';
-import {
-  selectFeedData,
-  selectFeedLoadingStatus,
-  selectGtfsDatasetRoutesJson,
-  selectGtfsDatasetRoutesLoadingStatus,
-  selectGtfsDatasetRouteTypes,
-  selectFeedBoundingBox,
-  selectIsAnonymous,
-  selectIsAuthenticated,
-  selectUserProfile,
-} from '../../../store/selectors';
-import { useSelector } from 'react-redux';
 import { useParams, useRouter } from 'next/navigation';
-import { clearDataset } from '../../../store/dataset-reducer';
-import { useAppDispatch } from '../../../hooks';
 import { useRemoteConfig } from '../../../context/RemoteConfigProvider';
 import { getRouteTypeTranslatedName } from '../../../constants/RouteTypes';
-import { loadingFeed } from '../../../store/feed-reducer';
 import type { GTFSFeedType } from '../../../services/feeds/utils';
 import RouteSelector from '../../../components/RouteSelector';
+import type { FeedData } from '../../../[locale]/feeds/[feedDataType]/[feedId]/lib/feed-data';
+import { getBoundingBox } from '../Feed.functions';
 
-export default function FullMapView(): React.ReactElement {
+interface FullMapViewProps {
+  feedData: FeedData;
+}
+
+export default function FullMapView({
+  feedData,
+}: FullMapViewProps): React.ReactElement {
   const t = useTranslations('feeds');
   const tCommon = useTranslations('common');
   const { config } = useRemoteConfig();
@@ -63,28 +55,14 @@ export default function FullMapView(): React.ReactElement {
   const feedId = params.feedId as string;
 
   const theme = useTheme();
-  const dispatch = useAppDispatch();
 
-  const user = useSelector(selectUserProfile);
-  const feed = useSelector(selectFeedData);
-  const needsToLoadFeed =
-    feed === undefined || (feed?.id != null && feed?.id !== feedId);
-  const feedLoadingStatus = useSelector(selectFeedLoadingStatus);
-  const routesJsonLoadingStatus = useSelector(
-    selectGtfsDatasetRoutesLoadingStatus,
-  );
-
-  const isAuthenticatedOrAnonymous =
-    useSelector(selectIsAuthenticated) || useSelector(selectIsAnonymous);
-
-  const gtfsFeed = useSelector(selectFeedData) as GTFSFeedType | undefined;
+  const { feed, routes, routeTypes } = feedData;
+  const gtfsFeed = feed as GTFSFeedType;
   const latestDatasetLite = {
     hosted_url: gtfsFeed?.latest_dataset?.hosted_url,
     id: gtfsFeed?.latest_dataset?.id,
   };
-  const boundingBox = useSelector(selectFeedBoundingBox);
-  const routes = useSelector(selectGtfsDatasetRoutesJson);
-  const routeTypes = useSelector(selectGtfsDatasetRouteTypes);
+  const boundingBox = getBoundingBox(gtfsFeed);
 
   const [filteredRoutes, setFilteredRoutes] = useState<string[]>([]);
   const [filteredRouteTypeIds, setFilteredRouteTypeIds] = useState<string[]>(
@@ -97,7 +75,6 @@ export default function FullMapView(): React.ReactElement {
 
   /* style panel state */
   const [stylePanelOpen, setStylePanelOpen] = useState<boolean>(false);
-  // Presets: small=3, medium=5, large=7 (works nicely with your current map defaults)
   const [stopPreset, setStopPreset] = useState<
     'small' | 'medium' | 'large' | 'custom'
   >('small');
@@ -110,15 +87,7 @@ export default function FullMapView(): React.ReactElement {
         ? 5
         : stopPreset === 'large'
           ? 7
-          : customStopRadius; // 'custom'
-
-  // kick off feed loading when user or feedId changes and we need to load the feed
-  useEffect(() => {
-    if (isAuthenticatedOrAnonymous && feedId != null && needsToLoadFeed) {
-      dispatch(clearDataset());
-      dispatch(loadingFeed({ feedId }));
-    }
-  }, [dispatch, isAuthenticatedOrAnonymous, user, feedId, needsToLoadFeed]);
+          : customStopRadius;
 
   const clearAllFilters = (): void => {
     setFilteredRoutes([]);
@@ -147,37 +116,21 @@ export default function FullMapView(): React.ReactElement {
       };
     }) as CheckboxStructure[];
 
-  const isFetchingFeed = needsToLoadFeed || feedLoadingStatus === 'loading';
-
-  const isFetchingRoutes = routesJsonLoadingStatus === 'loading';
-
-  const isGtfsFeed = (feed as GTFSFeedType)?.data_type === 'gtfs';
-  const feedError = feedLoadingStatus === 'error';
-  const routesError = routesJsonLoadingStatus === 'failed';
-  const hasLoadingError = feedError || routesError;
-  const isLoading = !hasLoadingError && (isFetchingFeed || isFetchingRoutes);
-  const missingBboxAfterLoad =
-    boundingBox == null &&
-    !isLoading &&
-    feedLoadingStatus === 'loaded' &&
-    routesJsonLoadingStatus === 'loaded';
-
-  const hasError =
-    feedError ||
-    routesError ||
-    (!isGtfsFeed && feed == null) ||
-    missingBboxAfterLoad;
+  const isGtfsFeed = feed?.data_type === 'gtfs';
+  const hasError = !isGtfsFeed || feed == null || boundingBox == null;
 
   const errorDetails = useMemo(() => {
     const messages: string[] = [];
-    if (feedError) messages.push(t('visualizationMapErrors.noFeedMetadata'));
-    if (routesError) messages.push(t('visualizationMapErrors.noRoutesData'));
-    if (feed != null && !isGtfsFeed)
+    if (feed == null) {
+      messages.push(t('visualizationMapErrors.noFeedMetadata'));
+    } else if (!isGtfsFeed) {
       messages.push(t('visualizationMapErrors.invalidDataType'));
-    if (missingBboxAfterLoad)
+    }
+    if (boundingBox == null) {
       messages.push(t('visualizationMapErrors.noBoundingBox'));
+    }
     return messages;
-  }, [feedError, routesError, isGtfsFeed, feed, missingBboxAfterLoad, t]);
+  }, [feed, isGtfsFeed, boundingBox, t]);
 
   const renderFilterChips = (): React.ReactElement => (
     <StyledChipFilterContainer id='map-filters'>
@@ -240,39 +193,6 @@ export default function FullMapView(): React.ReactElement {
     </StyledChipFilterContainer>
   );
 
-  const renderPanelSkeleton = (): React.ReactElement => (
-    <Box sx={{ p: { xs: 1, md: 0 } }}>
-      <Skeleton variant='text' width='60%' height={28} sx={{ mb: 1 }} />
-      {[...Array(5)].map((_, i) => (
-        <Skeleton
-          key={i}
-          variant='rectangular'
-          height={28}
-          sx={{ mb: 1, borderRadius: 1 }}
-        />
-      ))}
-      <Skeleton variant='text' width='40%' height={28} sx={{ mt: 2, mb: 1 }} />
-      <Skeleton
-        variant='rectangular'
-        height={28}
-        sx={{ mb: 1, borderRadius: 1 }}
-      />
-      <Skeleton variant='text' width='50%' height={28} sx={{ mt: 2, mb: 1 }} />
-      {[...Array(3)].map((_, i) => (
-        <Skeleton
-          key={`r-${i}`}
-          variant='rectangular'
-          height={36}
-          sx={{ mb: 1, borderRadius: 1 }}
-        />
-      ))}
-    </Box>
-  );
-
-  const renderMapSkeleton = (): React.ReactElement => (
-    <Skeleton variant='rectangular' width='100%' height='100%' />
-  );
-
   const renderError = (): React.ReactElement => (
     <Box
       sx={{
@@ -298,17 +218,6 @@ export default function FullMapView(): React.ReactElement {
       </Stack>
     </Box>
   );
-
-  if (!config.enableGtfsVisualizationMap) {
-    return (
-      <Box>
-        <Alert severity='error' sx={{ m: 2 }}>
-          <AlertTitle>{t('fullMapView.disabledTitle')}</AlertTitle>
-          {t('fullMapView.disabledDescription')}
-        </Alert>
-      </Box>
-    );
-  }
 
   return (
     <>
@@ -371,91 +280,85 @@ export default function FullMapView(): React.ReactElement {
             {t('fullMapView.headers.routeTypes')}
           </SearchHeader>
 
-          {isLoading ? (
-            renderPanelSkeleton()
-          ) : (
-            <>
-              <NestedCheckboxList
-                checkboxData={getUniqueRouteTypesCheckboxData()}
-                onCheckboxChange={(checkboxData: CheckboxStructure[]) => {
-                  const nextTypeIds = checkboxData
-                    .map((item) =>
-                      item.checked ? (item?.props?.routeTypeId ?? '') : '',
-                    )
-                    .filter((item) => item !== '');
+          <NestedCheckboxList
+            checkboxData={getUniqueRouteTypesCheckboxData()}
+            onCheckboxChange={(checkboxData: CheckboxStructure[]) => {
+              const nextTypeIds = checkboxData
+                .map((item) =>
+                  item.checked ? (item?.props?.routeTypeId ?? '') : '',
+                )
+                .filter((item) => item !== '');
 
-                  setFilteredRouteTypeIds(nextTypeIds);
+              setFilteredRouteTypeIds(nextTypeIds);
 
-                  // Keep only route IDs that match the newly selected route types.
-                  // If no type is selected, allow any route (don't force-clear).
-                  if (nextTypeIds.length > 0) {
-                    setFilteredRoutes((prev) =>
-                      prev.filter((rid) =>
-                        nextTypeIds.includes(getRouteType(rid) ?? ''),
-                      ),
-                    );
-                  }
-                }}
-              />
+              // Keep only route IDs that match the newly selected route types.
+              // If no type is selected, allow any route (don't force-clear).
+              if (nextTypeIds.length > 0) {
+                setFilteredRoutes((prev) =>
+                  prev.filter((rid) =>
+                    nextTypeIds.includes(getRouteType(rid) ?? ''),
+                  ),
+                );
+              }
+            }}
+          />
 
-              <SearchHeader variant='h6' className='no-collapse'>
-                {t('fullMapView.headers.visibility')}
-              </SearchHeader>
-              <NestedCheckboxList
-                checkboxData={[
-                  {
-                    title: t('fullMapView.hideStops'),
-                    checked: hideStops,
-                    type: 'checkbox',
-                  },
-                ]}
-                onCheckboxChange={(checkboxData: CheckboxStructure[]) => {
-                  setHideStops(checkboxData[0].checked);
-                }}
-              />
+          <SearchHeader variant='h6' className='no-collapse'>
+            {t('fullMapView.headers.visibility')}
+          </SearchHeader>
+          <NestedCheckboxList
+            checkboxData={[
+              {
+                title: t('fullMapView.hideStops'),
+                checked: hideStops,
+                type: 'checkbox',
+              },
+            ]}
+            onCheckboxChange={(checkboxData: CheckboxStructure[]) => {
+              setHideStops(checkboxData[0].checked);
+            }}
+          />
 
-              <SearchHeader variant='h6' className='no-collapse'>
-                {t('fullMapView.headers.routes')}
-              </SearchHeader>
-              <RouteSelector
-                routes={
-                  routes?.filter(
-                    (r) =>
-                      filteredRouteTypeIds.length === 0 ||
-                      filteredRouteTypeIds.includes(r.routeType ?? ''),
-                  ) ?? []
-                }
-                selectedRouteIds={filteredRoutes}
-                onSelectionChange={(val) => {
-                  // Ensure selections remain valid under the current type filter.
-                  const filteredVal = val.filter(
-                    (v) =>
-                      filteredRouteTypeIds.length === 0 ||
-                      filteredRouteTypeIds.includes(getRouteType(v) ?? ''),
-                  );
-                  setFilteredRoutes(filteredVal);
-                }}
-              />
-              <Box
-                id='mobile-control-action'
-                sx={{
-                  display: { xs: 'block', md: 'none' },
-                  position: 'sticky',
-                  bottom: '10px',
-                }}
-              >
-                <Button
-                  variant='contained'
-                  fullWidth
-                  onClick={() => {
-                    setShowMapControlMobile(!showMapControlMobile);
-                  }}
-                >
-                  {t('fullMapView.backToMap')}
-                </Button>
-              </Box>
-            </>
-          )}
+          <SearchHeader variant='h6' className='no-collapse'>
+            {t('fullMapView.headers.routes')}
+          </SearchHeader>
+          <RouteSelector
+            routes={
+              routes?.filter(
+                (r) =>
+                  filteredRouteTypeIds.length === 0 ||
+                  filteredRouteTypeIds.includes(r.routeType ?? ''),
+              ) ?? []
+            }
+            selectedRouteIds={filteredRoutes}
+            onSelectionChange={(val) => {
+              // Ensure selections remain valid under the current type filter.
+              const filteredVal = val.filter(
+                (v) =>
+                  filteredRouteTypeIds.length === 0 ||
+                  filteredRouteTypeIds.includes(getRouteType(v) ?? ''),
+              );
+              setFilteredRoutes(filteredVal);
+            }}
+          />
+          <Box
+            id='mobile-control-action'
+            sx={{
+              display: { xs: 'block', md: 'none' },
+              position: 'sticky',
+              bottom: '10px',
+            }}
+          >
+            <Button
+              variant='contained'
+              fullWidth
+              onClick={() => {
+                setShowMapControlMobile(!showMapControlMobile);
+              }}
+            >
+              {t('fullMapView.backToMap')}
+            </Button>
+          </Box>
         </StyledMapControlPanel>
 
         <Box
@@ -647,32 +550,27 @@ export default function FullMapView(): React.ReactElement {
               <FilterAltIcon />
             </Fab>
 
-            {isLoading && renderMapSkeleton()}
+            {hasError && renderError()}
 
-            {!isLoading && hasError && renderError()}
-
-            {!isLoading &&
-              !hasError &&
-              config.enableGtfsVisualizationMap &&
-              boundingBox != null && (
-                <GtfsVisualizationMap
-                  polygon={boundingBox}
-                  latestDataset={latestDatasetLite}
-                  visualizationId={
-                    (feed as GTFSFeedType)?.visualization_dataset_id ??
-                    latestDatasetLite?.id ??
-                    ''
-                  }
-                  filteredRouteTypeIds={filteredRouteTypeIds}
-                  filteredRoutes={filteredRoutes}
-                  hideStops={hideStops}
-                  dataDisplayLimit={config.visualizationMapFullDataLimit}
-                  routes={routes}
-                  refocusTrigger={refocusTrigger}
-                  stopRadius={currentStopRadius}
-                  preview={false}
-                />
-              )}
+            {!hasError && boundingBox != null && (
+              <GtfsVisualizationMap
+                polygon={boundingBox}
+                latestDataset={latestDatasetLite}
+                visualizationId={
+                  gtfsFeed?.visualization_dataset_id ??
+                  latestDatasetLite?.id ??
+                  ''
+                }
+                filteredRouteTypeIds={filteredRouteTypeIds}
+                filteredRoutes={filteredRoutes}
+                hideStops={hideStops}
+                dataDisplayLimit={config.visualizationMapFullDataLimit}
+                routes={routes}
+                refocusTrigger={refocusTrigger}
+                stopRadius={currentStopRadius}
+                preview={false}
+              />
+            )}
           </Box>
         </Box>
       </Box>
