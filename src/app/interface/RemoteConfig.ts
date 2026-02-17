@@ -17,7 +17,6 @@ export interface RemoteConfigValues {
   featureFlagBypass: string;
   enableFeedStatusBadge: boolean;
   gbfsVersions: string;
-  enableGtfsVisualizationMap: boolean;
 
   /** Max number of data stuff to display on top of the map to avoid overflow */
   visualizationMapPreviewDataLimit: number;
@@ -43,7 +42,6 @@ export const defaultRemoteConfigValues: RemoteConfigValues = {
   featureFlagBypass: '',
   enableFeedStatusBadge: false,
   gbfsVersions: JSON.stringify(gbfsVersionsDefault),
-  enableGtfsVisualizationMap: false,
   visualizationMapFullDataLimit: 5,
   visualizationMapPreviewDataLimit: 3,
   enableDetailedCoveredArea: false,

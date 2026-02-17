@@ -165,7 +165,6 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
     // for gtfs feeds
     if (
       feed?.data_type === 'gtfs' &&
-      config.enableGtfsVisualizationMap &&
       routesJsonLoadingStatus != 'failed' &&
       boundingBox != undefined
     ) {
@@ -278,17 +277,11 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
   const latestAutodiscoveryUrl = getGbfsLatestVersionVisualizationUrl();
   const enableGtfsVisualizationView = useMemo(() => {
     return (
-      config.enableGtfsVisualizationMap &&
       feed?.data_type === 'gtfs' &&
       routesJsonLoadingStatus != 'failed' &&
       boundingBox != undefined
     );
-  }, [
-    feed?.data_type,
-    config.enableGtfsVisualizationMap,
-    routesJsonLoadingStatus,
-    boundingBox,
-  ]);
+  }, [feed?.data_type, routesJsonLoadingStatus, boundingBox]);
 
   return (
     <Box
@@ -341,19 +334,18 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
         )}
         {feed?.data_type === 'gtfs' && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-            {view === 'gtfsVisualizationView' &&
-              config.enableGtfsVisualizationMap && (
-                <Button
-                  variant='text'
-                  disableElevation
-                  component={Link}
-                  href='./map'
-                  onClick={handleOpenDetailedMapClick}
-                  endIcon={<OpenInNewIcon></OpenInNewIcon>}
-                >
-                  {t('openDetailedMap')}
-                </Button>
-              )}
+            {view === 'gtfsVisualizationView' && (
+              <Button
+                variant='text'
+                disableElevation
+                component={Link}
+                href='./map'
+                onClick={handleOpenDetailedMapClick}
+                endIcon={<OpenInNewIcon></OpenInNewIcon>}
+              >
+                {t('openDetailedMap')}
+              </Button>
+            )}
             <ToggleButtonGroup
               value={view}
               color='primary'
@@ -362,17 +354,15 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
               onChange={handleViewChange}
               size='small'
             >
-              {config.enableGtfsVisualizationMap && (
-                <Tooltip title={t('gtfsVisualizationTooltip')}>
-                  <ToggleButton
-                    value='gtfsVisualizationView'
-                    disabled={!enableGtfsVisualizationView}
-                    aria-label={t('gtfsVisualizationViewLabel')}
-                  >
-                    <ModeOfTravelIcon />
-                  </ToggleButton>
-                </Tooltip>
-              )}
+              <Tooltip title={t('gtfsVisualizationTooltip')}>
+                <ToggleButton
+                  value='gtfsVisualizationView'
+                  disabled={!enableGtfsVisualizationView}
+                  aria-label={t('gtfsVisualizationViewLabel')}
+                >
+                  <ModeOfTravelIcon />
+                </ToggleButton>
+              </Tooltip>
               {config.enableDetailedCoveredArea && (
                 <Tooltip title={t('detailedCoveredAreaViewTooltip')}>
                   <ToggleButton

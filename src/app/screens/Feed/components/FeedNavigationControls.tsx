@@ -1,17 +1,21 @@
+'use client';
+
 import { Button, Grid, Typography } from '@mui/material';
 import { ChevronLeft } from '@mui/icons-material';
-import { getTranslations } from 'next-intl/server';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '../../../../i18n/navigation';
 
 interface Props {
   feedDataType: string;
   feedId: string;
 }
 
-export default async function FeedNavigationControls({
+export default function FeedNavigationControls({
   feedDataType,
   feedId,
-}: Props): Promise<React.ReactElement> {
-  const t = await getTranslations('common');
+}: Props): React.ReactElement {
+  const t = useTranslations('common');
+  const router = useRouter();
 
   return (
     <Grid container spacing={3} alignItems='flex-end'>
@@ -20,8 +24,9 @@ export default async function FeedNavigationControls({
         size='large'
         startIcon={<ChevronLeft />}
         color={'inherit'}
-        component={'a'}
-        href='/feeds'
+        onClick={() => {
+          router.back();
+        }}
       >
         {t('back')}
       </Button>
