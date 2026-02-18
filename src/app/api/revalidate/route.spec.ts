@@ -2,11 +2,12 @@
  * @jest-environment node
  */
 import { POST } from './route';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 // Mock Next.js cache
 jest.mock('next/cache', () => ({
   revalidatePath: jest.fn(),
+  revalidateTag: jest.fn(),
 }));
 
 // Mock i18n routing
@@ -17,6 +18,9 @@ jest.mock('../../../i18n/routing', () => ({
 describe('POST /api/revalidate', () => {
   const mockRevalidatePath = revalidatePath as jest.MockedFunction<
     typeof revalidatePath
+  >;
+  const mockRevalidateTag = revalidateTag as jest.MockedFunction<
+    typeof revalidateTag
   >;
   const originalEnv = process.env;
 
@@ -157,6 +161,7 @@ describe('POST /api/revalidate', () => {
 
       expect(response.status).toBe(200);
       expect(json.ok).toBe(true);
+      expect(mockRevalidateTag).toHaveBeenCalledWith('guest-feeds', 'max');
       expect(mockRevalidatePath).toHaveBeenCalledWith(
         '/[locale]/feeds/[feedDataType]/[feedId]',
         'layout',
@@ -180,6 +185,7 @@ describe('POST /api/revalidate', () => {
 
       expect(response.status).toBe(200);
       expect(json.ok).toBe(true);
+      expect(mockRevalidateTag).toHaveBeenCalledWith('feed-type-gbfs', 'max');
       expect(mockRevalidatePath).toHaveBeenCalledWith(
         '/[locale]/feeds/gbfs/[feedId]',
         'layout',
@@ -203,6 +209,7 @@ describe('POST /api/revalidate', () => {
 
       expect(response.status).toBe(200);
       expect(json.ok).toBe(true);
+      expect(mockRevalidateTag).toHaveBeenCalledWith('feed-type-gtfs', 'max');
       expect(mockRevalidatePath).toHaveBeenCalledWith(
         '/[locale]/feeds/gtfs/[feedId]',
         'layout',
@@ -226,6 +233,10 @@ describe('POST /api/revalidate', () => {
 
       expect(response.status).toBe(200);
       expect(json.ok).toBe(true);
+      expect(mockRevalidateTag).toHaveBeenCalledWith(
+        'feed-type-gtfs_rt',
+        'max',
+      );
       expect(mockRevalidatePath).toHaveBeenCalledWith(
         '/[locale]/feeds/gtfs_rt/[feedId]',
         'layout',
@@ -252,6 +263,10 @@ describe('POST /api/revalidate', () => {
 
       expect(response.status).toBe(200);
       expect(json.ok).toBe(true);
+
+      // Should invalidate cache tags for each feed
+      expect(mockRevalidateTag).toHaveBeenCalledWith('feed-feed-1', 'max');
+      expect(mockRevalidateTag).toHaveBeenCalledWith('feed-feed-2', 'max');
 
       // Each feed should revalidate base path + map path + localized versions
       expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gtfs/feed-1');
@@ -293,9 +308,16 @@ describe('POST /api/revalidate', () => {
       expect(response.status).toBe(200);
       expect(json.ok).toBe(true);
 
-      expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gtfs_rt/rt-feed-1');
-      expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gtfs_rt/rt-feed-1/map');
-      expect(mockRevalidatePath).toHaveBeenCalledWith('/fr/feeds/gtfs_rt/rt-feed-1');
+      expect(mockRevalidateTag).toHaveBeenCalledWith('feed-rt-feed-1', 'max');
+      expect(mockRevalidatePath).toHaveBeenCalledWith(
+        '/feeds/gtfs_rt/rt-feed-1',
+      );
+      expect(mockRevalidatePath).toHaveBeenCalledWith(
+        '/feeds/gtfs_rt/rt-feed-1/map',
+      );
+      expect(mockRevalidatePath).toHaveBeenCalledWith(
+        '/fr/feeds/gtfs_rt/rt-feed-1',
+      );
       expect(mockRevalidatePath).toHaveBeenCalledWith(
         '/fr/feeds/gtfs_rt/rt-feed-1/map',
       );
@@ -323,9 +345,16 @@ describe('POST /api/revalidate', () => {
       expect(response.status).toBe(200);
       expect(json.ok).toBe(true);
 
-      expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gbfs/gbfs-feed-1');
-      expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gbfs/gbfs-feed-1/map');
-      expect(mockRevalidatePath).toHaveBeenCalledWith('/fr/feeds/gbfs/gbfs-feed-1');
+      expect(mockRevalidateTag).toHaveBeenCalledWith('feed-gbfs-feed-1', 'max');
+      expect(mockRevalidatePath).toHaveBeenCalledWith(
+        '/feeds/gbfs/gbfs-feed-1',
+      );
+      expect(mockRevalidatePath).toHaveBeenCalledWith(
+        '/feeds/gbfs/gbfs-feed-1/map',
+      );
+      expect(mockRevalidatePath).toHaveBeenCalledWith(
+        '/fr/feeds/gbfs/gbfs-feed-1',
+      );
       expect(mockRevalidatePath).toHaveBeenCalledWith(
         '/fr/feeds/gbfs/gbfs-feed-1/map',
       );
@@ -352,6 +381,11 @@ describe('POST /api/revalidate', () => {
 
       expect(response.status).toBe(200);
       expect(json.ok).toBe(true);
+
+      // Should invalidate cache tags for each feed
+      expect(mockRevalidateTag).toHaveBeenCalledWith('feed-gtfs-1', 'max');
+      expect(mockRevalidateTag).toHaveBeenCalledWith('feed-rt-1', 'max');
+      expect(mockRevalidateTag).toHaveBeenCalledWith('feed-gbfs-1', 'max');
 
       // Should revalidate all three feed types
       expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gtfs/gtfs-1');
@@ -382,6 +416,7 @@ describe('POST /api/revalidate', () => {
 
       expect(response.status).toBe(200);
       expect(json.ok).toBe(true);
+      expect(mockRevalidateTag).not.toHaveBeenCalled();
       expect(mockRevalidatePath).not.toHaveBeenCalled();
     });
   });
@@ -444,6 +479,7 @@ describe('POST /api/revalidate', () => {
 
       expect(response.status).toBe(200);
       expect(json.ok).toBe(true);
+      expect(mockRevalidateTag).toHaveBeenCalledWith('guest-feeds', 'max');
       expect(mockRevalidatePath).toHaveBeenCalledWith(
         '/[locale]/feeds/[feedDataType]/[feedId]',
         'layout',

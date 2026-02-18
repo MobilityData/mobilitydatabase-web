@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { AVAILABLE_LOCALES } from '../../../i18n/routing';
 
 type RevalidateTypes =
@@ -47,9 +47,12 @@ export async function POST(req: Request) {
   try {
     payload = (await req.json()) as RevalidateBody;
   } catch {
-    // Body is optional; allow empty/invalid JSON to keep endpoint robust
     payload = { ...defaultRevalidateOptions };
   }
+
+  // NOTE
+  // revalidatePath = triggers revalidation for entire page cache
+  // revalidateTag = triggers revalidation for API calls using `unstable_cache` with matching tags (e.g., feed-123, guest-feeds)
 
   try {
     // clears cache for entire site
@@ -59,21 +62,25 @@ export async function POST(req: Request) {
 
     // clears cache for all feed pages (ISR-cached layout)
     if (payload.type === 'all-feeds') {
+      revalidateTag('guest-feeds', 'max');
       revalidatePath('/[locale]/feeds/[feedDataType]/[feedId]', 'layout');
     }
 
     // clears cache for all GBFS feed pages (ISR-cached layout)
     if (payload.type === 'all-gbfs-feeds') {
+      revalidateTag('feed-type-gbfs', 'max');
       revalidatePath('/[locale]/feeds/gbfs/[feedId]', 'layout');
     }
 
     // clears cache for all GTFS feed pages (ISR-cached layout)
     if (payload.type === 'all-gtfs-feeds') {
+      revalidateTag('feed-type-gtfs', 'max');
       revalidatePath('/[locale]/feeds/gtfs/[feedId]', 'layout');
     }
 
     // clears cache for all GTFS RT feed pages (ISR-cached layout)
     if (payload.type === 'all-gtfs-rt-feeds') {
+      revalidateTag('feed-type-gtfs_rt', 'max');
       revalidatePath('/[locale]/feeds/gtfs_rt/[feedId]', 'layout');
     }
 
@@ -83,14 +90,17 @@ export async function POST(req: Request) {
       const pathsToRevalidate: string[] = [];
 
       payload.gtfsFeedIds.forEach((id) => {
+        revalidateTag(`feed-${id}`, 'max');
         pathsToRevalidate.push(`/feeds/gtfs/${id}`);
       });
 
       payload.gtfsRtFeedIds.forEach((id) => {
+        revalidateTag(`feed-${id}`, 'max');
         pathsToRevalidate.push(`/feeds/gtfs_rt/${id}`);
       });
 
       payload.gbfsFeedIds.forEach((id) => {
+        revalidateTag(`feed-${id}`, 'max');
         pathsToRevalidate.push(`/feeds/gbfs/${id}`);
       });
 
