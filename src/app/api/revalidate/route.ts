@@ -26,8 +26,8 @@ const defaultRevalidateOptions: RevalidateBody = {
 };
 
 export async function POST(req: Request): Promise<NextResponse> {
-  const expectedSecret = process.env.REVALIDATE_SECRET;
-  if (expectedSecret == null) {
+  const expectedSecret = String(process.env.REVALIDATE_SECRET);
+  if (expectedSecret === '') {
     return NextResponse.json(
       { ok: false, error: 'Server misconfigured: REVALIDATE_SECRET missing' },
       { status: 500 },

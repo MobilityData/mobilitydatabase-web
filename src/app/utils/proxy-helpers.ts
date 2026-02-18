@@ -57,7 +57,7 @@ export function isFeedDetailPage(pathname: string): FeedDetailPageInfo {
 export function isAuthenticatedNotGuest(request: NextRequest): boolean {
   const sessionCookie = request.cookies.get('md_session');
   const userData = verifySessionToken(sessionCookie?.value ?? '');
-  const isAuthenticated = !(userData?.isGuest === true);
+  const isAuthenticated = userData?.isGuest === false;
 
   return isAuthenticated;
 }
