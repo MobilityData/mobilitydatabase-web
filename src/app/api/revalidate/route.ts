@@ -18,7 +18,7 @@ interface RevalidateBody {
 }
 
 const defaultRevalidateOptions: RevalidateBody = {
-  // By default, revalidate the entire site to ensure consistency across pages
+  // By default it will revalidate nothing
   type: 'specific-feeds',
   gtfsFeedIds: [],
   gtfsRtFeedIds: [],
