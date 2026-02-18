@@ -57,7 +57,7 @@ export function isFeedDetailPage(pathname: string): FeedDetailPageInfo {
 export function isAuthenticatedNotGuest(request: NextRequest): boolean {
   const sessionCookie = request.cookies.get('md_session');
   const userData = verifySessionToken(sessionCookie?.value ?? '');
-  const isAuthenticated = userData != null ? !userData.isGuest : false;
+  const isAuthenticated = !(userData?.isGuest === true);
 
   return isAuthenticated;
 }
@@ -91,10 +91,17 @@ export interface RewriteFeedRequestParams {
  */
 export function rewriteFeedRequest(
   request: NextRequest,
-  { locale, feedDataType, feedId, subPath, routeType }: RewriteFeedRequestParams,
+  {
+    locale,
+    feedDataType,
+    feedId,
+    subPath,
+    routeType,
+  }: RewriteFeedRequestParams,
 ): NextResponse {
   const url = request.nextUrl.clone();
-  const headerName = routeType === 'authed' ? AUTHED_PROXY_HEADER : STATIC_PROXY_HEADER;
+  const headerName =
+    routeType === 'authed' ? AUTHED_PROXY_HEADER : STATIC_PROXY_HEADER;
   url.pathname = `/${locale}/feeds/${feedDataType}/${feedId}/${routeType}${subPath}`;
 
   const headers = createRequestWithHeader(request, headerName);
@@ -113,7 +120,8 @@ export function rewriteFeedRequest(
  */
 export function hasLocaleInPathname(pathname: string): boolean {
   return routing.locales.some(
-    (locale: string) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`,
+    (locale: string) =>
+      pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`,
   );
 }
 

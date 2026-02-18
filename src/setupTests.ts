@@ -57,20 +57,33 @@ jest.mock('next-intl/server', () => ({
 
 // Mock next/server for middleware tests
 jest.mock('next/server', () => {
-  const createMockResponse = (data?: any, init?: any) => ({
-    body: data,
-    status: init?.status || 200,
-    json: jest.fn().mockResolvedValue(data),
-    ok: (init?.status || 200) < 400,
-    headers: new Headers(init?.headers),
-  });
+  const createMockResponse = (
+    data?: unknown,
+    init?: Record<string, unknown>,
+  ): Record<string, unknown> => {
+    const status = typeof init?.status === 'number' ? init.status : 200;
+    const statusValue = typeof init?.status === 'number' ? init.status : 200;
+    return {
+      body: data,
+      status,
+      json: jest.fn().mockResolvedValue(data),
+      ok: statusValue < 400,
+      headers: new Headers(
+        typeof init?.headers === 'object'
+          ? (init.headers as HeadersInit)
+          : undefined,
+      ),
+    };
+  };
 
   return {
     NextResponse: {
       next: jest.fn(() => createMockResponse()),
-      rewrite: jest.fn((url, config) => createMockResponse()),
-      redirect: jest.fn((url) => createMockResponse()),
-      json: jest.fn((data, init) => createMockResponse(data, init)),
+      rewrite: jest.fn((url: unknown, config: unknown) => createMockResponse()),
+      redirect: jest.fn((url: unknown) => createMockResponse()),
+      json: jest.fn((data: unknown, init: unknown) =>
+        createMockResponse(data, init as Record<string, unknown>),
+      ),
     },
     NextRequest: jest.fn(),
   };

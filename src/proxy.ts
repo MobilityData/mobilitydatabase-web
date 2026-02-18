@@ -59,8 +59,10 @@ export default function proxy(request: NextRequest): NextResponse<unknown> {
   const feedDetailPageInfo = isFeedDetailPage(pathname);
   if (
     feedDetailPageInfo.match &&
-    feedDetailPageInfo.feedDataType &&
-    feedDetailPageInfo.feedId
+    feedDetailPageInfo.feedDataType != null &&
+    feedDetailPageInfo.feedDataType !== '' &&
+    feedDetailPageInfo.feedId != null &&
+    feedDetailPageInfo.feedId !== ''
   ) {
     const isAuthenticated = isAuthenticatedNotGuest(request);
     const locale = feedDetailPageInfo.locale ?? DEFAULT_LOCALE;

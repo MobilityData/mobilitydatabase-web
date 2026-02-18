@@ -25,22 +25,21 @@ const defaultRevalidateOptions: RevalidateBody = {
   gbfsFeedIds: [],
 };
 
-function json(status: number, body: Record<string, unknown>) {
-  return NextResponse.json(body, { status });
-}
-
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<NextResponse> {
   const expectedSecret = process.env.REVALIDATE_SECRET;
-  if (!expectedSecret) {
-    return json(500, {
-      ok: false,
-      error: 'Server misconfigured: REVALIDATE_SECRET missing',
-    });
+  if (expectedSecret == null) {
+    return NextResponse.json(
+      { ok: false, error: 'Server misconfigured: REVALIDATE_SECRET missing' },
+      { status: 500 },
+    );
   }
 
   const providedSecret = req.headers.get('x-revalidate-secret');
-  if (!providedSecret || providedSecret !== expectedSecret) {
-    return json(401, { ok: false, error: 'Unauthorized' });
+  if (providedSecret == null || providedSecret !== expectedSecret) {
+    return NextResponse.json(
+      { ok: false, error: 'Unauthorized' },
+      { status: 401 },
+    );
   }
 
   let payload: RevalidateBody = { ...defaultRevalidateOptions }; // default to full revalidation if body is missing/invalid
@@ -114,15 +113,18 @@ export async function POST(req: Request) {
       });
     }
 
-    return json(200, {
+    return NextResponse.json({
       ok: true,
       message: 'Revalidation triggered successfully',
     });
   } catch (error) {
     console.error('Revalidation failed:', error);
-    return json(500, {
-      ok: false,
-      error: 'Failed to revalidate',
-    });
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'Failed to revalidate',
+      },
+      { status: 500 },
+    );
   }
 }

@@ -1,7 +1,5 @@
-import type { NextRequest, NextResponse as NextResponseType } from 'next/server';
 import {
   isFeedDetailPage,
-  isAuthenticatedNotGuest,
   rewriteFeedRequest,
   hasLocaleInPathname,
   rewriteWithDefaultLocale,
@@ -9,28 +7,32 @@ import {
   AUTHED_PROXY_HEADER,
   STATIC_PROXY_HEADER,
 } from './proxy-helpers';
-import * as sessionJwt from './session-jwt';
 
 // Mock the session-jwt module
 jest.mock('./session-jwt');
 
 // Helper to create mock NextRequest
-function createMockNextRequest(overrides: Partial<any> = {}): any {
+/* eslint-disable @typescript-eslint/consistent-type-assertions */
+function createMockNextRequest(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
   return {
     nextUrl: {
-      clone: jest.fn(function (this: any) {
+      clone: jest.fn(function (this: Record<string, unknown>) {
         const url = new URL('http://localhost');
         url.pathname = '/original';
         return url;
       }),
-    } as any,
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    } as Record<string, unknown>,
     headers: new Headers(),
     cookies: {
       get: jest.fn(),
-    } as any,
+    } as Record<string, unknown>,
     ...overrides,
   };
 }
+/* eslint-enable @typescript-eslint/consistent-type-assertions */
 
 // Mock routing module
 jest.mock('../../i18n/routing', () => ({
@@ -41,14 +43,17 @@ jest.mock('../../i18n/routing', () => ({
 }));
 
 // Spy on NextResponse.rewrite
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 let rewriteSpy: jest.SpyInstance;
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 let NextResponse: any;
 
 describe('proxy-helpers', () => {
   beforeAll(async () => {
     // Dynamically import NextResponse to avoid module loading issues
     const nextServer = await import('next/server');
-    NextResponse = nextServer.NextResponse;
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    NextResponse = nextServer.NextResponse as any;
     rewriteSpy = jest.spyOn(NextResponse, 'rewrite');
   });
 
@@ -135,6 +140,7 @@ describe('proxy-helpers', () => {
   // ============================================================================
 
   describe('rewriteFeedRequest', () => {
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     let mockRequest: any;
 
     beforeEach(() => {
@@ -278,7 +284,9 @@ describe('proxy-helpers', () => {
     it('should handle paths with multiple segments', () => {
       mockUrl = new URL('http://localhost/feeds/gbfs/test-456/map/details');
       rewriteWithDefaultLocale(mockUrl);
-      expect(mockUrl.pathname).toBe(`/${DEFAULT_LOCALE}/feeds/gbfs/test-456/map/details`);
+      expect(mockUrl.pathname).toBe(
+        `/${DEFAULT_LOCALE}/feeds/gbfs/test-456/map/details`,
+      );
     });
 
     it('should return NextResponse', () => {

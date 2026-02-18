@@ -27,7 +27,7 @@ export type FeedData = FeedDataResult;
  *
  * Each user gets their own cached version that persists across page navigations
  * (e.g., /feeds/gtfs/mdb-123 → /feeds/gtfs/mdb-123/map)
- * 
+ *
  * Revalidation is short due to the per-user-per-feed cache, but can be adjusted based on needs.
  */
 export const fetchCompleteFeedData = cache(
