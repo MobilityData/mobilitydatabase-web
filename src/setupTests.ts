@@ -56,11 +56,22 @@ jest.mock('next-intl/server', () => ({
 }));
 
 // Mock next/server for middleware tests
-jest.mock('next/server', () => ({
-  NextResponse: {
-    next: jest.fn(() => ({})),
-    rewrite: jest.fn((url, config) => ({})),
-    redirect: jest.fn((url) => ({})),
-  },
-  NextRequest: jest.fn(),
-}));
+jest.mock('next/server', () => {
+  const createMockResponse = (data?: any, init?: any) => ({
+    body: data,
+    status: init?.status || 200,
+    json: jest.fn().mockResolvedValue(data),
+    ok: (init?.status || 200) < 400,
+    headers: new Headers(init?.headers),
+  });
+
+  return {
+    NextResponse: {
+      next: jest.fn(() => createMockResponse()),
+      rewrite: jest.fn((url, config) => createMockResponse()),
+      redirect: jest.fn((url) => createMockResponse()),
+      json: jest.fn((data, init) => createMockResponse(data, init)),
+    },
+    NextRequest: jest.fn(),
+  };
+});
