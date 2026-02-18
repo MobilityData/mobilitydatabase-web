@@ -54,3 +54,13 @@ jest.mock('next-intl/server', () => ({
   }),
   getLocale: jest.fn().mockResolvedValue('en'),
 }));
+
+// Mock next/server for middleware tests
+jest.mock('next/server', () => ({
+  NextResponse: {
+    next: jest.fn(() => ({})),
+    rewrite: jest.fn((url, config) => ({})),
+    redirect: jest.fn((url) => ({})),
+  },
+  NextRequest: jest.fn(),
+}));
