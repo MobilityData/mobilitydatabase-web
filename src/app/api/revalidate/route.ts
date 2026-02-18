@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { AVAILABLE_LOCALES } from '../../../i18n/routing';
+import { nonEmpty } from '../../utils/config';
 
 type RevalidateTypes =
   | 'full'
@@ -26,8 +27,8 @@ const defaultRevalidateOptions: RevalidateBody = {
 };
 
 export async function POST(req: Request): Promise<NextResponse> {
-  const expectedSecret = String(process.env.REVALIDATE_SECRET);
-  if (expectedSecret === '') {
+  const expectedSecret = nonEmpty(process.env.REVALIDATE_SECRET);
+  if (expectedSecret == null) {
     return NextResponse.json(
       { ok: false, error: 'Server misconfigured: REVALIDATE_SECRET missing' },
       { status: 500 },
