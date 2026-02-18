@@ -64,6 +64,7 @@ export default function proxy(request: NextRequest): NextResponse<unknown> {
     feedDetailPageInfo.feedId != null &&
     feedDetailPageInfo.feedId !== ''
   ) {
+    // NOTE: For extra performance gain we could set a cookie 'isGuest' so we don't need to parse and read the session
     const isAuthenticated = isAuthenticatedNotGuest(request);
     const locale = feedDetailPageInfo.locale ?? DEFAULT_LOCALE;
     const { feedDataType, feedId, subPath = '' } = feedDetailPageInfo;

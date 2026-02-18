@@ -89,9 +89,15 @@ export async function POST(req: Request): Promise<NextResponse> {
       const localPaths = AVAILABLE_LOCALES.filter((loc) => loc !== 'en');
       const pathsToRevalidate: string[] = [];
 
-      const gtfsFeedIds = Array.isArray(payload.gtfsFeedIds) ? payload.gtfsFeedIds : [];
-      const gtfsRtFeedIds = Array.isArray(payload.gtfsRtFeedIds) ? payload.gtfsRtFeedIds : [];
-      const gbfsFeedIds = Array.isArray(payload.gbfsFeedIds) ? payload.gbfsFeedIds : [];
+      const gtfsFeedIds = Array.isArray(payload.gtfsFeedIds)
+        ? payload.gtfsFeedIds
+        : [];
+      const gtfsRtFeedIds = Array.isArray(payload.gtfsRtFeedIds)
+        ? payload.gtfsRtFeedIds
+        : [];
+      const gbfsFeedIds = Array.isArray(payload.gbfsFeedIds)
+        ? payload.gbfsFeedIds
+        : [];
 
       gtfsFeedIds.forEach((id) => {
         revalidateTag(`feed-${id}`, 'max');
