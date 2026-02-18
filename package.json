@@ -64,7 +64,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:ci": "CI=true jest",
-    "e2e:setup": "concurrently -k -n \"next,firebase\" -c \"cyan,magenta\" \"NEXT_PUBLIC_API_MOCKING=enabled next dev -p 3001\" \"firebase emulators:start --only auth --project mobility-feeds-dev\"",
+    "e2e:setup": "next build && concurrently -k -n \"next,firebase\" -c \"cyan,magenta\" \"NEXT_PUBLIC_API_MOCKING=enabled next start -p 3001\" \"firebase emulators:start --only auth --project mobility-feeds-dev\"",
     "e2e:run": "CYPRESS_BASE_URL=http://localhost:3001 cypress run",
     "e2e:open": "CYPRESS_BASE_URL=http://localhost:3001 cypress open",
     "firebase:auth:emulator:dev": "firebase emulators:start --only auth --project mobility-feeds-dev",
