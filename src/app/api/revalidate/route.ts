@@ -57,6 +57,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   try {
     // clears cache for entire site
     if (payload.type === 'full') {
+      revalidateTag('guest-feeds', 'max');
       revalidatePath('/', 'layout');
     }
 
