@@ -41,9 +41,7 @@ function revalidateTestFeed(): void {
     },
     body: {
       type: 'specific-feeds',
-      gtfsFeedIds: [TEST_FEED_ID],
-      gtfsRtFeedIds: [],
-      gbfsFeedIds: [],
+      feedIds: [TEST_FEED_ID],
     },
   })
     .its('status')
