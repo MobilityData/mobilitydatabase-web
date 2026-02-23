@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { AVAILABLE_LOCALES } from '../../../i18n/routing';
 import { nonEmpty } from '../../utils/config';
@@ -22,7 +22,7 @@ const defaultRevalidateOptions: RevalidateBody = {
   feedIds: [],
 };
 
-export async function POST(req: Request): Promise<NextResponse> {
+export async function POST(req: NextRequest): Promise<NextResponse> {
   const expectedSecret = nonEmpty(process.env.REVALIDATE_SECRET);
   if (expectedSecret == null) {
     return NextResponse.json(
@@ -41,13 +41,24 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   let payload: RevalidateBody = { ...defaultRevalidateOptions }; // default to full revalidation if body is missing/invalid
   try {
+    const body = (await req.json()) as RevalidateBody;
+    console.log('Parsed request body:', JSON.stringify(body));
     payload = {
       ...defaultRevalidateOptions,
-      ...((await req.json()) as RevalidateBody),
+      ...body,
     };
-  } catch {
+  } catch (parseError) {
+    console.error(
+      'Failed to parse request body, falling back to defaults:',
+      parseError,
+    );
     payload = { ...defaultRevalidateOptions };
   }
+
+  console.log('Resolved payload:', JSON.stringify(payload));
+
+  // For debugging: log the type of revalidation being performed
+  console.log(`Performing revalidation of type: ${payload.type}`);
 
   // NOTE
   // revalidatePath = triggers revalidation for entire page cache
@@ -96,6 +107,8 @@ export async function POST(req: Request): Promise<NextResponse> {
         pathsToRevalidate.push(`/feeds/gtfs_rt/${id}`);
         pathsToRevalidate.push(`/feeds/gbfs/${id}`);
       });
+
+      console.log('Revalidating paths:', pathsToRevalidate);
 
       pathsToRevalidate.forEach((path) => {
         revalidatePath(path);
