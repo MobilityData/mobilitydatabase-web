@@ -42,7 +42,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   let payload: RevalidateBody = { ...defaultRevalidateOptions }; // default to full revalidation if body is missing/invalid
   try {
     const body = (await req.json()) as RevalidateBody;
-    console.log('Parsed request body:', JSON.stringify(body));
     payload = {
       ...defaultRevalidateOptions,
       ...body,
@@ -54,11 +53,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
     payload = { ...defaultRevalidateOptions };
   }
-
-  console.log('Resolved payload:', JSON.stringify(payload));
-
-  // For debugging: log the type of revalidation being performed
-  console.log(`Performing revalidation of type: ${payload.type}`);
 
   // NOTE
   // revalidatePath = triggers revalidation for entire page cache
