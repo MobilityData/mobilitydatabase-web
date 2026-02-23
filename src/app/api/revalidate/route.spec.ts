@@ -243,7 +243,7 @@ describe('POST /api/revalidate', () => {
       );
     });
 
-    it('revalidates specific GTFS feeds with localized paths', async () => {
+    it('revalidates specific feeds with all type paths and localized paths', async () => {
       const request = new Request('http://localhost:3000/api/revalidate', {
         method: 'POST',
         headers: {
@@ -252,9 +252,7 @@ describe('POST /api/revalidate', () => {
         },
         body: JSON.stringify({
           type: 'specific-feeds',
-          gtfsFeedIds: ['feed-1', 'feed-2'],
-          gtfsRtFeedIds: [],
-          gbfsFeedIds: [],
+          feedIds: ['feed-1', 'feed-2'],
         }),
       });
 
@@ -268,26 +266,37 @@ describe('POST /api/revalidate', () => {
       expect(mockRevalidateTag).toHaveBeenCalledWith('feed-feed-1', 'max');
       expect(mockRevalidateTag).toHaveBeenCalledWith('feed-feed-2', 'max');
 
-      // Each feed should revalidate base path + map path + localized versions
+      // Each feed revalidates all 3 feed types (gtfs, gtfs_rt, gbfs) × base + map + /fr + /fr/map
       expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gtfs/feed-1');
       expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gtfs/feed-1/map');
       expect(mockRevalidatePath).toHaveBeenCalledWith('/fr/feeds/gtfs/feed-1');
       expect(mockRevalidatePath).toHaveBeenCalledWith(
         '/fr/feeds/gtfs/feed-1/map',
       );
-
-      expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gtfs/feed-2');
-      expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gtfs/feed-2/map');
-      expect(mockRevalidatePath).toHaveBeenCalledWith('/fr/feeds/gtfs/feed-2');
       expect(mockRevalidatePath).toHaveBeenCalledWith(
-        '/fr/feeds/gtfs/feed-2/map',
+        '/feeds/gtfs_rt/feed-1',
+      );
+      expect(mockRevalidatePath).toHaveBeenCalledWith(
+        '/feeds/gtfs_rt/feed-1/map',
+      );
+      expect(mockRevalidatePath).toHaveBeenCalledWith(
+        '/fr/feeds/gtfs_rt/feed-1',
+      );
+      expect(mockRevalidatePath).toHaveBeenCalledWith(
+        '/fr/feeds/gtfs_rt/feed-1/map',
+      );
+      expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gbfs/feed-1');
+      expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gbfs/feed-1/map');
+      expect(mockRevalidatePath).toHaveBeenCalledWith('/fr/feeds/gbfs/feed-1');
+      expect(mockRevalidatePath).toHaveBeenCalledWith(
+        '/fr/feeds/gbfs/feed-1/map',
       );
 
-      // Should be called 8 times total (2 feeds × 4 paths each)
-      expect(mockRevalidatePath).toHaveBeenCalledTimes(8);
+      // 2 feeds × 3 types × 4 paths = 24 total calls
+      expect(mockRevalidatePath).toHaveBeenCalledTimes(24);
     });
 
-    it('revalidates specific GTFS-RT feeds with localized paths', async () => {
+    it('revalidates a single feed across all feed type paths', async () => {
       const request = new Request('http://localhost:3000/api/revalidate', {
         method: 'POST',
         headers: {
@@ -296,9 +305,7 @@ describe('POST /api/revalidate', () => {
         },
         body: JSON.stringify({
           type: 'specific-feeds',
-          gtfsFeedIds: [],
-          gtfsRtFeedIds: ['rt-feed-1'],
-          gbfsFeedIds: [],
+          feedIds: ['rt-feed-1'],
         }),
       });
 
@@ -309,22 +316,19 @@ describe('POST /api/revalidate', () => {
       expect(json.ok).toBe(true);
 
       expect(mockRevalidateTag).toHaveBeenCalledWith('feed-rt-feed-1', 'max');
+
+      // All 3 feed type paths
+      expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gtfs/rt-feed-1');
       expect(mockRevalidatePath).toHaveBeenCalledWith(
         '/feeds/gtfs_rt/rt-feed-1',
       );
-      expect(mockRevalidatePath).toHaveBeenCalledWith(
-        '/feeds/gtfs_rt/rt-feed-1/map',
-      );
-      expect(mockRevalidatePath).toHaveBeenCalledWith(
-        '/fr/feeds/gtfs_rt/rt-feed-1',
-      );
-      expect(mockRevalidatePath).toHaveBeenCalledWith(
-        '/fr/feeds/gtfs_rt/rt-feed-1/map',
-      );
-      expect(mockRevalidatePath).toHaveBeenCalledTimes(4);
+      expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gbfs/rt-feed-1');
+
+      // 1 feed × 3 types × 4 paths = 12 total calls
+      expect(mockRevalidatePath).toHaveBeenCalledTimes(12);
     });
 
-    it('revalidates specific GBFS feeds with localized paths', async () => {
+    it('revalidates multiple feeds simultaneously', async () => {
       const request = new Request('http://localhost:3000/api/revalidate', {
         method: 'POST',
         headers: {
@@ -333,46 +337,7 @@ describe('POST /api/revalidate', () => {
         },
         body: JSON.stringify({
           type: 'specific-feeds',
-          gtfsFeedIds: [],
-          gtfsRtFeedIds: [],
-          gbfsFeedIds: ['gbfs-feed-1'],
-        }),
-      });
-
-      const response = await POST(request);
-      const json = await response.json();
-
-      expect(response.status).toBe(200);
-      expect(json.ok).toBe(true);
-
-      expect(mockRevalidateTag).toHaveBeenCalledWith('feed-gbfs-feed-1', 'max');
-      expect(mockRevalidatePath).toHaveBeenCalledWith(
-        '/feeds/gbfs/gbfs-feed-1',
-      );
-      expect(mockRevalidatePath).toHaveBeenCalledWith(
-        '/feeds/gbfs/gbfs-feed-1/map',
-      );
-      expect(mockRevalidatePath).toHaveBeenCalledWith(
-        '/fr/feeds/gbfs/gbfs-feed-1',
-      );
-      expect(mockRevalidatePath).toHaveBeenCalledWith(
-        '/fr/feeds/gbfs/gbfs-feed-1/map',
-      );
-      expect(mockRevalidatePath).toHaveBeenCalledTimes(4);
-    });
-
-    it('revalidates multiple feed types simultaneously', async () => {
-      const request = new Request('http://localhost:3000/api/revalidate', {
-        method: 'POST',
-        headers: {
-          'x-revalidate-secret': 'test-secret',
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'specific-feeds',
-          gtfsFeedIds: ['gtfs-1'],
-          gtfsRtFeedIds: ['rt-1'],
-          gbfsFeedIds: ['gbfs-1'],
+          feedIds: ['feed-a', 'feed-b', 'feed-c'],
         }),
       });
 
@@ -383,20 +348,20 @@ describe('POST /api/revalidate', () => {
       expect(json.ok).toBe(true);
 
       // Should invalidate cache tags for each feed
-      expect(mockRevalidateTag).toHaveBeenCalledWith('feed-gtfs-1', 'max');
-      expect(mockRevalidateTag).toHaveBeenCalledWith('feed-rt-1', 'max');
-      expect(mockRevalidateTag).toHaveBeenCalledWith('feed-gbfs-1', 'max');
+      expect(mockRevalidateTag).toHaveBeenCalledWith('feed-feed-a', 'max');
+      expect(mockRevalidateTag).toHaveBeenCalledWith('feed-feed-b', 'max');
+      expect(mockRevalidateTag).toHaveBeenCalledWith('feed-feed-c', 'max');
 
-      // Should revalidate all three feed types
-      expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gtfs/gtfs-1');
-      expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gtfs_rt/rt-1');
-      expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gbfs/gbfs-1');
+      // Each feed revalidates all 3 type paths
+      expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gtfs/feed-a');
+      expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gtfs_rt/feed-a');
+      expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gbfs/feed-a');
 
-      // 3 feeds × 4 paths each = 12 total calls
-      expect(mockRevalidatePath).toHaveBeenCalledTimes(12);
+      // 3 feeds × 3 types × 4 paths = 36 total calls
+      expect(mockRevalidatePath).toHaveBeenCalledTimes(36);
     });
 
-    it('handles specific-feeds with empty arrays', async () => {
+    it('handles specific-feeds with empty feedIds', async () => {
       const request = new Request('http://localhost:3000/api/revalidate', {
         method: 'POST',
         headers: {
@@ -405,9 +370,7 @@ describe('POST /api/revalidate', () => {
         },
         body: JSON.stringify({
           type: 'specific-feeds',
-          gtfsFeedIds: [],
-          gtfsRtFeedIds: [],
-          gbfsFeedIds: [],
+          feedIds: [],
         }),
       });
 

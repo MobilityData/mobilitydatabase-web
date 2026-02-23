@@ -12,18 +12,14 @@ type RevalidateTypes =
   | 'specific-feeds';
 
 interface RevalidateBody {
-  gtfsFeedIds: string[]; // optional list of specific feed IDs to revalidate
-  gtfsRtFeedIds: string[]; // optional list of specific GTFS-RT feed IDs to revalidate
-  gbfsFeedIds: string[]; // optional list of specific GBFS feed IDs to revalidate
-  type: RevalidateTypes; // optional, controls scope of revalidation
+  feedIds: string[]; // only for 'specific-feeds' revalidation type
+  type: RevalidateTypes;
 }
 
 const defaultRevalidateOptions: RevalidateBody = {
   // By default it will revalidate nothing
   type: 'specific-feeds',
-  gtfsFeedIds: [],
-  gtfsRtFeedIds: [],
-  gbfsFeedIds: [],
+  feedIds: [],
 };
 
 export async function POST(req: Request): Promise<NextResponse> {
@@ -45,7 +41,7 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   let payload: RevalidateBody = { ...defaultRevalidateOptions }; // default to full revalidation if body is missing/invalid
   try {
-    payload = (await req.json()) as RevalidateBody;
+    payload = { ...defaultRevalidateOptions, ...(await req.json()) as RevalidateBody };
   } catch {
     payload = { ...defaultRevalidateOptions };
   }
@@ -90,30 +86,14 @@ export async function POST(req: Request): Promise<NextResponse> {
       const localPaths = AVAILABLE_LOCALES.filter((loc) => loc !== 'en');
       const pathsToRevalidate: string[] = [];
 
-      const gtfsFeedIds = Array.isArray(payload.gtfsFeedIds)
-        ? payload.gtfsFeedIds
-        : [];
-      const gtfsRtFeedIds = Array.isArray(payload.gtfsRtFeedIds)
-        ? payload.gtfsRtFeedIds
-        : [];
-      const gbfsFeedIds = Array.isArray(payload.gbfsFeedIds)
-        ? payload.gbfsFeedIds
-        : [];
-
-      gtfsFeedIds.forEach((id) => {
+      payload.feedIds.forEach((id) => {
         revalidateTag(`feed-${id}`, 'max');
+        // The id will try to revalidate all feed types with that id, but that's necessary since we don't know the feed type here and it's not a big deal if we revalidate some non-existent pages
         pathsToRevalidate.push(`/feeds/gtfs/${id}`);
-      });
-
-      gtfsRtFeedIds.forEach((id) => {
-        revalidateTag(`feed-${id}`, 'max');
         pathsToRevalidate.push(`/feeds/gtfs_rt/${id}`);
-      });
-
-      gbfsFeedIds.forEach((id) => {
-        revalidateTag(`feed-${id}`, 'max');
         pathsToRevalidate.push(`/feeds/gbfs/${id}`);
       });
+
 
       pathsToRevalidate.forEach((path) => {
         revalidatePath(path);
