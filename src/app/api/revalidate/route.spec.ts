@@ -273,9 +273,7 @@ describe('POST /api/revalidate', () => {
       expect(mockRevalidatePath).toHaveBeenCalledWith(
         '/fr/feeds/gtfs/feed-1/map',
       );
-      expect(mockRevalidatePath).toHaveBeenCalledWith(
-        '/feeds/gtfs_rt/feed-1',
-      );
+      expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gtfs_rt/feed-1');
       expect(mockRevalidatePath).toHaveBeenCalledWith(
         '/feeds/gtfs_rt/feed-1/map',
       );

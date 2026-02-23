@@ -41,7 +41,10 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   let payload: RevalidateBody = { ...defaultRevalidateOptions }; // default to full revalidation if body is missing/invalid
   try {
-    payload = { ...defaultRevalidateOptions, ...(await req.json()) as RevalidateBody };
+    payload = {
+      ...defaultRevalidateOptions,
+      ...((await req.json()) as RevalidateBody),
+    };
   } catch {
     payload = { ...defaultRevalidateOptions };
   }
@@ -93,7 +96,6 @@ export async function POST(req: Request): Promise<NextResponse> {
         pathsToRevalidate.push(`/feeds/gtfs_rt/${id}`);
         pathsToRevalidate.push(`/feeds/gbfs/${id}`);
       });
-
 
       pathsToRevalidate.forEach((path) => {
         revalidatePath(path);
