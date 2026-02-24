@@ -262,6 +262,12 @@
       "viewReport": "View Validation Report",
       "viewJsonReport": "View Validation Report in JSON format"
     },
+    "datasetHistoryColumns": {
+      "downloadedAt": "Téléchargé le",
+      "serviceDateRange": "Plage de dates de service",
+      "validationReport": "Rapport de validation",
+      "actions": "Actions"
+    },
     "viewRealtimeVisualization": "View real-time visualization",
     "versions": "Versions",
     "dataAttribution": "Transit data provided by",
@@ -368,7 +374,9 @@
       "producerUrl": "Producer URL",
       "providerUrl": "Provider URL",
       "systemId": "System ID",
-      "feedAuthentication": "Feed Authentication"
+      "feedAuthentication": "Feed Authentication",
+      "openAutoDiscoveryUrl": "Ouvrir l'URL de découverte automatique dans un nouvel onglet",
+      "downloadProducerUrl": "Télécharger l'URL du producteur"
     }
   },
   "account": {
