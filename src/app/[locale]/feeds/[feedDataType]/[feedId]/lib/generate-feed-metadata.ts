@@ -30,6 +30,7 @@ function getBasicStructuredData(
   const structuredData: StructureDataInterface = {
     '@context': 'https://schema.org',
     '@type': 'Dataset',
+    isAccessibleForFree: true,
     name: `${dataTypeNaming ?? ''} Feed for ${feed?.provider}`,
     description,
     url: `https://mobilitydatabase.org/feeds/${feed?.data_type}/${feed?.id}`,
@@ -213,6 +214,8 @@ function getGtfsRtStructuredData(
     (structuredGtfsRtData.hasPart as unknown[]).push({
       '@type': 'Dataset',
       name: `GTFS Static Feed for ${feed?.provider}`,
+      description: `The GTFS static feed associated with this GTFS Realtime feed, if available.`,
+      isAccessibleForFree: true,
       url: `https://mobilitydatabase.org/feeds/gtfs/${associatedGtfsFeed.id}`,
       distribution: {
         '@type': 'DataDownload',
@@ -237,6 +240,8 @@ function getGtfsRtStructuredData(
 
       (structuredGtfsRtData.hasPart as unknown[]).push({
         '@type': 'Dataset',
+        isAccessibleForFree: true,
+        description: `A related GTFS Realtime feed for the same provider, with entity types ${relatedFeed?.entity_types?.join(', ')}`,
         name,
         url: `https://mobilitydatabase.org/feeds/gtfs_rt/${relatedFeed?.id}`,
         distribution: {
@@ -278,23 +283,17 @@ export default function generateFeedStructuredData(
 interface GenerateFeedMetadataParams {
   feed: AllFeedType | undefined;
   t: (key: string) => string;
-  gtfsFeeds?: GTFSFeedType[];
-  gtfsRtFeeds?: GTFSRTFeedType[];
 }
 
 /**
  * Shared metadata generation logic for feed pages (authed and static).
  *
- * @param feed - The feed data\
+ * @param feed - The feed data
  * @param t - Translation function
- * @param gtfsFeeds - Related GTFS feeds (for GTFS-RT)
- * @param gtfsRtFeeds - Related GTFS-RT feeds
  */
 export function generateFeedMetadata({
   feed,
   t,
-  gtfsFeeds = [],
-  gtfsRtFeeds = [],
 }: GenerateFeedMetadataParams): Metadata {
   if (feed == null) {
     return {
@@ -316,14 +315,6 @@ export function generateFeedMetadata({
     (feed as { feed_name?: string })?.feed_name,
   );
 
-  // Generate structured data for SEO
-  const structuredData = generateFeedStructuredData(
-    feed,
-    description,
-    gtfsFeeds,
-    gtfsRtFeeds,
-  );
-
   return {
     title,
     description,
@@ -340,13 +331,7 @@ export function generateFeedMetadata({
       description,
     },
     alternates: {
-      canonical: `/feeds/${feedDataType}/${feedId}`,
-    },
-    other: {
-      // Structured data for JSON-LD
-      ...(structuredData != null && {
-        'script:ld+json': JSON.stringify(structuredData),
-      }),
+      canonical: `https://mobilitydatabase.org/feeds/${feedDataType}/${feedId}`,
     },
   };
 }
