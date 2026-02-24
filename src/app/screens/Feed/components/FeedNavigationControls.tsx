@@ -25,7 +25,11 @@ export default function FeedNavigationControls({
         startIcon={<ChevronLeft />}
         color={'inherit'}
         onClick={() => {
-          router.back();
+          if (window.history.length > 1) {
+            router.back();
+          } else {
+            router.push('/feeds');
+          }
         }}
       >
         {t('back')}
