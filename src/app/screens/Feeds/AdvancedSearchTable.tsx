@@ -24,6 +24,7 @@ import OfficialChip from '../../components/OfficialChip';
 import { getFeatureComponentDecorators } from '../../utils/consts';
 import PopoverList from './PopoverList';
 import ProviderTitle from './ProviderTitle';
+import Link from 'next/link';
 
 export interface AdvancedSearchTableProps {
   feedsData: AllFeedsType | undefined;
@@ -162,7 +163,7 @@ export default function AdvancedSearchTable({
           >
             <CardActionArea
               sx={{ p: 1 }}
-              component={'a'}
+              component={Link}
               href={`/feeds/${feed.data_type}/${feed.id}`}
             >
               <Box
