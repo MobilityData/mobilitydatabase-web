@@ -1,6 +1,5 @@
 'use client';
 
-// TODO: needs to be a server friendly component
 import { useMemo, useState } from 'react';
 import { type components } from '../../../services/feeds/types';
 import LicenseDialog from './LicenseDialog';
@@ -112,12 +111,18 @@ export default function FeedSummary({
   return (
     <>
       <GroupCard variant='outlined'>
-        <GroupHeader variant='body1'>
-          <BusinessIcon fontSize='inherit' />
+        <GroupHeader variant='body1' component='h3'>
+          <BusinessIcon fontSize='inherit' aria-hidden />
           {feed?.data_type === 'gbfs' ? t('producer') : t('agency')}
         </GroupHeader>
         <Box sx={{ ml: 2 }}>
-          <Typography variant='h6' fontWeight={700} mt={1} mb={0.5}>
+          <Typography
+            variant='h6'
+            component='p'
+            fontWeight={700}
+            mt={1}
+            mb={0.5}
+          >
             {sortedProviders.length > 0
               ? sortedProviders.slice(0, 4).join(', ')
               : t('noAgencyProvided')}
@@ -175,8 +180,8 @@ export default function FeedSummary({
             mb: 1,
           }}
         >
-          <GroupHeader variant='body1' sx={{ mb: 0 }}>
-            <DatasetIcon fontSize='inherit' />
+          <GroupHeader variant='body1' component='h3' sx={{ mb: 0 }}>
+            <DatasetIcon fontSize='inherit' aria-hidden />
             {t('feedSummary.routes')}
           </GroupHeader>
           <Chip
@@ -190,6 +195,7 @@ export default function FeedSummary({
         <Box sx={{ ml: 2, mt: 2, mr: 2 }}>
           <Typography
             variant='subtitle2'
+            component='h4'
             sx={{ fontWeight: 700, color: 'text.secondary' }}
           >
             {t('locations')}
@@ -215,6 +221,7 @@ export default function FeedSummary({
                 feed?.locations?.length === 1 && (
                   <Typography
                     variant='h6'
+                    component='p'
                     sx={{ whiteSpace: 'nowrap', fontWeight: 700, mr: 1, mb: 0 }}
                   >
                     {getLocationName(feed?.locations)}
@@ -273,6 +280,7 @@ export default function FeedSummary({
             <>
               <Typography
                 variant='subtitle2'
+                component='h4'
                 sx={{ fontWeight: 700, color: 'text.secondary' }}
               >
                 {t('feedSummary.routes')}
@@ -335,6 +343,7 @@ export default function FeedSummary({
               <Box sx={{ ml: 2 }}>
                 <Typography
                   variant='subtitle2'
+                  component='h4'
                   sx={{ fontWeight: 700, color: 'text.secondary' }}
                 >
                   {feed?.data_type === 'gbfs' && autoDiscoveryUrl != undefined
@@ -381,12 +390,16 @@ export default function FeedSummary({
                     target='_blank'
                     rel='noreferrer'
                     color='secondary'
-                    aria-label='download producer URL'
+                    aria-label={
+                      feed.data_type === 'gbfs'
+                        ? t('feedSummary.openAutoDiscoveryUrl')
+                        : t('feedSummary.downloadProducerUrl')
+                    }
                   >
                     {feed.data_type === 'gbfs' ? (
-                      <OpenInNewIcon />
+                      <OpenInNewIcon aria-hidden />
                     ) : (
-                      <DownloadIcon />
+                      <DownloadIcon aria-hidden />
                     )}
                   </IconButton>
                 </Box>
@@ -400,6 +413,7 @@ export default function FeedSummary({
               <Box sx={{ ml: 2, mt: 2 }}>
                 <Typography
                   variant='subtitle2'
+                  component='h4'
                   sx={{ fontWeight: 700, color: 'text.secondary' }}
                 >
                   {feed?.data_type === 'gbfs'
@@ -421,6 +435,7 @@ export default function FeedSummary({
           <Box sx={{ ml: 2, mt: 2 }}>
             <Typography
               variant='subtitle2'
+              component='h4'
               sx={{ fontWeight: 700, color: 'text.secondary' }}
             >
               {t('feedSummary.systemId')}
@@ -435,6 +450,7 @@ export default function FeedSummary({
             <Box sx={{ ml: 2, mt: 3 }}>
               <Typography
                 variant='subtitle2'
+                component='h4'
                 sx={{ fontWeight: 700, color: 'text.secondary' }}
               >
                 {t('feedContactEmail')}
@@ -458,12 +474,12 @@ export default function FeedSummary({
         feed.source_info.authentication_type !== 0 &&
         feed?.source_info.authentication_info_url.trim() !== '' && (
           <GroupCard variant='outlined'>
-            <GroupHeader variant='body1'>
-              <LockIcon fontSize='inherit' />
+            <GroupHeader variant='body1' component='h3'>
+              <LockIcon fontSize='inherit' aria-hidden />
               {t('feedSummary.feedAuthentication')}
             </GroupHeader>
             <Box sx={{ ml: 2 }}>
-              <Typography variant='h6' sx={{ fontWeight: 700 }}>
+              <Typography variant='h6' component='p' sx={{ fontWeight: 700 }}>
                 {feed?.source_info?.authentication_type === 1 &&
                   tCommon('apiKey')}
                 {feed?.source_info?.authentication_type === 2 &&
@@ -490,8 +506,8 @@ export default function FeedSummary({
       {latestDataset?.service_date_range_start != undefined &&
         latestDataset.service_date_range_end != undefined && (
           <GroupCard variant='outlined'>
-            <GroupHeader variant='body1'>
-              <CalendarTodayIcon fontSize='inherit' />
+            <GroupHeader variant='body1' component='h3'>
+              <CalendarTodayIcon fontSize='inherit' aria-hidden />
               {t('serviceDateRange')}
               <Tooltip title={t('serviceDateRangeTooltip')} placement='top'>
                 <IconButton size='small'>
@@ -511,7 +527,11 @@ export default function FeedSummary({
               }}
             >
               <Box>
-                <Typography variant='subtitle2' sx={{ lineHeight: 1.5 }}>
+                <Typography
+                  variant='subtitle2'
+                  component='h4'
+                  sx={{ lineHeight: 1.5 }}
+                >
                   {tCommon('start')}
                 </Typography>
                 <Typography variant='body1' sx={{ fontWeight: 700 }}>
@@ -576,7 +596,11 @@ export default function FeedSummary({
               </Tooltip>
 
               <Box>
-                <Typography variant='subtitle2' sx={{ lineHeight: 1.5 }}>
+                <Typography
+                  variant='subtitle2'
+                  component='h4'
+                  sx={{ lineHeight: 1.5 }}
+                >
                   {tCommon('end')}
                 </Typography>
                 <Typography variant='body1' sx={{ fontWeight: 700 }}>
@@ -593,8 +617,8 @@ export default function FeedSummary({
       {latestDataset?.validation_report?.features != undefined &&
         latestDataset?.validation_report?.features.length > 0 && (
           <GroupCard variant='outlined'>
-            <GroupHeader variant='body1'>
-              <LayersIcon fontSize='inherit' />
+            <GroupHeader variant='body1' component='h3'>
+              <LayersIcon fontSize='inherit' aria-hidden />
               {t('features')}
               <Tooltip title={tCommon('moreInfo')} placement='top'>
                 <IconButton
@@ -683,8 +707,8 @@ export default function FeedSummary({
                 mb: 1,
               }}
             >
-              <GroupHeader variant='body1' sx={{ mb: 0 }}>
-                <GavelIcon fontSize='inherit' />
+              <GroupHeader variant='body1' component='h3' sx={{ mb: 0 }}>
+                <GavelIcon fontSize='inherit' aria-hidden />
                 {tCommon('license')}
               </GroupHeader>
               {feed?.source_info?.license_is_spdx != undefined &&
@@ -726,8 +750,9 @@ export default function FeedSummary({
                 href={feed?.source_info?.license_url ?? ''}
                 target='_blank'
                 rel='noopener noreferrer'
-                sx={{ wordBreak: 'break-word' }}
+                sx={{ wordBreak: 'break-word', ml: 2, display: 'flex' }}
                 variant='body1'
+                aria-label={`License URL for feed ${feed?.id ?? ''}`}
               >
                 {feed?.source_info?.license_url}
               </MuiLink>
@@ -737,8 +762,8 @@ export default function FeedSummary({
 
       {hasRelatedLinks() && (
         <GroupCard variant='outlined'>
-          <GroupHeader variant='body1'>
-            <LinkIcon fontSize='inherit' />
+          <GroupHeader variant='body1' component='h3'>
+            <LinkIcon fontSize='inherit' aria-hidden />
             {t('relatedLinks')}
           </GroupHeader>
 
