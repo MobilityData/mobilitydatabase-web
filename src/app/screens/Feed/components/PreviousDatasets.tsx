@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { ContentBox } from '../../../components/ContentBox';
 import {
   Box,
   Button,
@@ -16,7 +15,6 @@ import {
   TableRow,
   Tooltip,
   Typography,
-  useTheme,
 } from '@mui/material';
 import {
   DownloadOutlined,
@@ -44,7 +42,6 @@ export default function PreviousDatasets({
   initialDatasets,
   feedId,
 }: PreviousDatasetsProps): React.ReactElement {
-  const theme = useTheme();
   const t = useTranslations('feeds');
   const tCommon = useTranslations('common');
   const [datasets, setDatasets] = React.useState(initialDatasets ?? []);
@@ -143,9 +140,7 @@ export default function PreviousDatasets({
         {t('datasetHistory')}
       </Typography>
       <Typography sx={{ mb: 2 }}>{t('datasetHistoryDescription')}</Typography>
-      <Box
-      sx={{backgroundColor: 'background.default'}}
-      >
+      <Box sx={{ backgroundColor: 'background.default' }}>
         <TableContainer
           sx={{ maxHeight: 'min(600px, 60vh)', pb: '5px' }}
           ref={listRef}
@@ -153,16 +148,34 @@ export default function PreviousDatasets({
           <Table aria-label={t('datasetHistory')} stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell component='th' scope='col' sx={{fontWeight: 'bold'}}>
+                <TableCell
+                  component='th'
+                  scope='col'
+                  sx={{ fontWeight: 'bold' }}
+                >
                   {t('datasetHistoryColumns.downloadedAt')}
                 </TableCell>
-                <TableCell component='th' scope='col' sx={{fontWeight: 'bold'}}>
+                <TableCell
+                  component='th'
+                  scope='col'
+                  sx={{ fontWeight: 'bold' }}
+                >
                   {t('datasetHistoryColumns.serviceDateRange')}
                 </TableCell>
-                <TableCell component='th' scope='col' sx={{fontWeight: 'bold'}} align='center'>
+                <TableCell
+                  component='th'
+                  scope='col'
+                  sx={{ fontWeight: 'bold' }}
+                  align='center'
+                >
                   {t('datasetHistoryColumns.validationReport')}
                 </TableCell>
-                <TableCell component='th' scope='col' sx={{fontWeight: 'bold'}} align='center'>
+                <TableCell
+                  component='th'
+                  scope='col'
+                  sx={{ fontWeight: 'bold' }}
+                  align='center'
+                >
                   {t('datasetHistoryColumns.actions')}
                 </TableCell>
               </TableRow>
