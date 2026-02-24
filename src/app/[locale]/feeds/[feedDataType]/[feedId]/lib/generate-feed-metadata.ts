@@ -1,9 +1,15 @@
+import type { Metadata } from 'next';
+import type {
+  AllFeedType,
+  GBFSFeedType,
+  GTFSFeedType,
+  GTFSRTFeedType,
+} from '../../../../../services/feeds/utils';
 import {
-  type AllFeedType,
-  type GBFSFeedType,
-  type GTFSFeedType,
-  type GTFSRTFeedType,
-} from '../../services/feeds/utils';
+  formatProvidersSorted,
+  generatePageTitle,
+  generateDescriptionMetaTag,
+} from '../../../../../screens/Feed/Feed.functions';
 
 /**
  * Structured data is purely for SEO purposes.
@@ -267,4 +273,80 @@ export default function generateFeedStructuredData(
   }
 
   return structuredData;
+}
+
+interface GenerateFeedMetadataParams {
+  feed: AllFeedType | undefined;
+  t: (key: string) => string;
+  gtfsFeeds?: GTFSFeedType[];
+  gtfsRtFeeds?: GTFSRTFeedType[];
+}
+
+/**
+ * Shared metadata generation logic for feed pages (authed and static).
+ *
+ * @param feed - The feed data\
+ * @param t - Translation function
+ * @param gtfsFeeds - Related GTFS feeds (for GTFS-RT)
+ * @param gtfsRtFeeds - Related GTFS-RT feeds
+ */
+export function generateFeedMetadata({
+  feed,
+  t,
+  gtfsFeeds = [],
+  gtfsRtFeeds = [],
+}: GenerateFeedMetadataParams): Metadata {
+  if (feed == null) {
+    return {
+      title: 'Feed Not Found | Mobility Database',
+    };
+  }
+  const feedDataType = feed.data_type;
+  const feedId = feed.id;
+  const sortedProviders = formatProvidersSorted(feed?.provider ?? '');
+  const title = generatePageTitle(
+    sortedProviders,
+    feedDataType as 'gtfs' | 'gtfs_rt' | 'gbfs',
+    (feed as { feed_name?: string })?.feed_name,
+  );
+  const description = generateDescriptionMetaTag(
+    t,
+    sortedProviders,
+    feedDataType as 'gtfs' | 'gtfs_rt' | 'gbfs',
+    (feed as { feed_name?: string })?.feed_name,
+  );
+
+  // Generate structured data for SEO
+  const structuredData = generateFeedStructuredData(
+    feed,
+    description,
+    gtfsFeeds,
+    gtfsRtFeeds,
+  );
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `https://mobilitydatabase.org/feeds/${feedDataType}/${feedId}`,
+      siteName: 'Mobility Database',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary',
+      title,
+      description,
+    },
+    alternates: {
+      canonical: `/feeds/${feedDataType}/${feedId}`,
+    },
+    other: {
+      // Structured data for JSON-LD
+      ...(structuredData != null && {
+        'script:ld+json': JSON.stringify(structuredData),
+      }),
+    },
+  };
 }

@@ -122,6 +122,8 @@ export default async function FeedView({
       sx={{ width: '100%', m: 'auto', px: 0 }}
       maxWidth='xl'
     >
+      {/* TODO: remove this timestamp after confirming ISR is working in production and providing real value to users (e.g. helps with debugging feed updates) */}
+      <div>Generated at: {new Date().toISOString()}</div>
       <CssBaseline />
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         <Box

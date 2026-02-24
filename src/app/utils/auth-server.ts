@@ -98,7 +98,10 @@ export async function getGcipIdToken(
     nonEmpty(getEnvConfig('GCIP_SERVICE_UID')) ??
     nonEmpty(getEnvConfig('NEXT_GCIP_SERVICE_UID')) ??
     'iap-service-caller';
-  const customClaims: Record<string, unknown> = { service: true };
+  const customClaims: Record<string, unknown> = {
+    service: true,
+    isGuest: true,
+  };
   if (userInfo?.uid != undefined) {
     // Attach the end-user session information as metadata so downstream
     // services can attribute calls without changing API signatures.
@@ -123,6 +126,10 @@ export async function getGcipIdToken(
   };
   cachedByKey.set(cacheKey, entry);
   return idToken;
+}
+
+export async function getGuestGcipIdToken(): Promise<string> {
+  return await getGcipIdToken(undefined);
 }
 
 /**

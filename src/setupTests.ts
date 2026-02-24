@@ -54,3 +54,37 @@ jest.mock('next-intl/server', () => ({
   }),
   getLocale: jest.fn().mockResolvedValue('en'),
 }));
+
+// Mock next/server for middleware tests
+jest.mock('next/server', () => {
+  const createMockResponse = (
+    data?: unknown,
+    init?: Record<string, unknown>,
+  ): Record<string, unknown> => {
+    const status = typeof init?.status === 'number' ? init.status : 200;
+    const statusValue = typeof init?.status === 'number' ? init.status : 200;
+    return {
+      body: data,
+      status,
+      json: jest.fn().mockResolvedValue(data),
+      ok: statusValue < 400,
+      headers: new Headers(
+        typeof init?.headers === 'object'
+          ? (init.headers as HeadersInit)
+          : undefined,
+      ),
+    };
+  };
+
+  return {
+    NextResponse: {
+      next: jest.fn(() => createMockResponse()),
+      rewrite: jest.fn((url: unknown, config: unknown) => createMockResponse()),
+      redirect: jest.fn((url: unknown) => createMockResponse()),
+      json: jest.fn((data: unknown, init: unknown) =>
+        createMockResponse(data, init as Record<string, unknown>),
+      ),
+    },
+    NextRequest: jest.fn(),
+  };
+});

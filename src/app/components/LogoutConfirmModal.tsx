@@ -10,7 +10,7 @@ import {
   Dialog,
 } from '@mui/material';
 import React from 'react';
-import { useAppDispatch, useRehydrated } from '../hooks';
+import { useAppDispatch } from '../hooks';
 import { logout } from '../store/profile-reducer';
 import { SIGN_OUT_TARGET } from '../constants/Navigation';
 import { useRouter } from 'next/navigation';
@@ -26,7 +26,6 @@ export default function ConfirmModal({
 }: ConfirmModalProps): React.ReactElement {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const isRehydrated = useRehydrated();
   const confirmLogout = (): void => {
     dispatch(
       logout({
@@ -66,7 +65,6 @@ export default function ConfirmModal({
             color='primary'
             variant='contained'
             data-cy='confirmSignOutButton'
-            disabled={!isRehydrated}
           >
             Confirm
           </Button>
