@@ -11,7 +11,6 @@ global.TextEncoder = TextEncoder;
 // Mock fetch for Jest environment
 global.fetch = jest.fn();
 
-jest.mock('leaflet/dist/leaflet.css', () => ({}));
 jest.mock('react-leaflet', () => ({}));
 
 // Mock Firebase Auth
