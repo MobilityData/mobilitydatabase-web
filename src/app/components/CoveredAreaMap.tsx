@@ -232,7 +232,8 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
             size='small'
             sx={{ position: 'absolute', top: 16, right: 16 }}
             component={Link}
-            href='./map'
+            href={`/feeds/${feed.data_type}/${feed.id}/map`}
+            aria-label={t('openDetailedMap')}
           >
             <ZoomOutMapIcon></ZoomOutMapIcon>
           </Fab>
@@ -339,7 +340,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
                 variant='text'
                 disableElevation
                 component={Link}
-                href='./map'
+                href={`/feeds/${feed.data_type}/${feed.id}/map`}
                 onClick={handleOpenDetailedMapClick}
                 endIcon={<OpenInNewIcon></OpenInNewIcon>}
               >
