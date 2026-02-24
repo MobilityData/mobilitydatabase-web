@@ -1,4 +1,5 @@
 'use client';
+// For this component to become server we will need 'cssVariables' support in MUI
 
 import { Chip, Tooltip } from '@mui/material';
 import { useTranslations } from 'next-intl';

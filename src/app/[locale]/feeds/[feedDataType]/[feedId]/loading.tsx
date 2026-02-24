@@ -1,5 +1,12 @@
 import { Box, Container, Skeleton } from '@mui/material';
 
+/**
+ *  Loading page streams content as it becomes available, providing a faster time-to-interactive and better user experience.
+ *  NextJs automatically automatically detects user agents to choose between blocking and streaming behavior.
+ *  Since streaming is server-rendered, it does not impact SEO
+ *  ref: https://nextjs.org/docs/app/api-reference/file-conventions/loading
+ */
+
 export default function Loading(): React.ReactElement {
   return (
     <Container
