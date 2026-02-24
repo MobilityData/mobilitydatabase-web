@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 import {
   MaterialReactTable,
@@ -36,10 +36,9 @@ import { WEB_VALIDATOR_LINK } from '../../../constants/Navigation';
 import { useRemoteConfig } from '../../../context/RemoteConfigProvider';
 
 export default function GTFSNoticeAnalytics(): React.ReactElement {
-  const navigateTo = useNavigate();
-  const { search } = useLocation();
-  const params = new URLSearchParams(search);
-  const noticeCode = params.get('noticeCode');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const noticeCode = searchParams.get('noticeCode');
   const [data, setData] = useState<NoticeMetrics[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -251,7 +250,7 @@ export default function GTFSNoticeAnalytics(): React.ReactElement {
                 sx={{ mb: 2 }}
                 startIcon={<ListAltOutlined />}
                 onClick={() => {
-                  navigateTo(
+                  router.push(
                     `/metrics/gtfs/feeds?severity=${metrics.severity}&noticeCode=${metrics.notice}`,
                   );
                 }}

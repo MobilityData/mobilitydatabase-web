@@ -11,15 +11,15 @@ import {
 import CheckIcon from '@mui/icons-material/Check';
 import { selectIsAuthenticated } from '../../store/profile-selectors';
 import { useTranslations } from 'next-intl';
-import { useLocation } from 'react-router-dom';
+import { useSearchParams } from 'next/navigation';
 import FeedSubmissionForm from './Form';
 import { ColoredContainer } from '../../styles/PageLayout.style';
 
 function Component(): React.ReactElement {
   const t = useTranslations('feeds');
-  const location = useLocation();
+  const searchParams = useSearchParams();
   const [showLoginSuccess, setShowLoginSuccess] = React.useState(
-    location.state?.from === 'registration',
+    searchParams.get('from') === 'registration',
   );
   const isAuthenticated = useSelector(selectIsAuthenticated);
 

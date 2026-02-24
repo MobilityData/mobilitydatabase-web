@@ -2,7 +2,7 @@ import { OpenInNew } from '@mui/icons-material';
 import { Box, Button, Link, Typography, useTheme } from '@mui/material';
 import React, { useEffect } from 'react';
 import GbfsFeedSearchInput from './GbfsFeedSearchInput';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'next/navigation';
 import {
   gbfsValidatorHeroBg,
   PromotionRow,
@@ -14,7 +14,7 @@ import { useGbfsAuth } from '../../context/GbfsAuthProvider';
 export default function GbfsValidator(): React.ReactElement {
   const theme = useTheme();
   const { clearAuth } = useGbfsAuth();
-  const [searchParams] = useSearchParams();
+  const searchParams = useSearchParams();
   const isInSearchState = searchParams.has('AutoDiscoveryUrl');
 
   useEffect(() => {

@@ -32,7 +32,6 @@ import {
   anonymousLoginFailed,
   anonymousLoginSkipped,
 } from '../profile-reducer';
-import { type NavigateFunction } from 'react-router-dom';
 import {
   getUserFromSession,
   populateUserWithAdditionalInfo,
@@ -88,7 +87,7 @@ function* logoutSaga({
   payload: { redirectScreen, navigateTo, propagate },
 }: PayloadAction<{
   redirectScreen: string;
-  navigateTo: NavigateFunction;
+  navigateTo: (path: string) => void;
   propagate: boolean;
 }>): Generator {
   try {

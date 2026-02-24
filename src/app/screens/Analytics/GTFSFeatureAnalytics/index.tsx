@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   MaterialReactTable,
   type MRT_ColumnDef,
@@ -38,10 +38,9 @@ import {
 } from '../../../utils/consts';
 
 export default function GTFSFeatureAnalytics(): React.ReactElement {
-  const navigateTo = useNavigate();
-  const { search } = useLocation();
-  const params = new URLSearchParams(search);
-  const featureName = params.get('featureName');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const featureName = searchParams.get('featureName');
   const [data, setData] = useState<FeatureMetrics[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -281,7 +280,7 @@ export default function GTFSFeatureAnalytics(): React.ReactElement {
                 sx={{ mb: 2 }}
                 startIcon={<ListAltOutlined />}
                 onClick={() => {
-                  navigateTo(
+                  router.push(
                     `/metrics/gtfs/feeds?featureName=${metrics.feature}`,
                   );
                 }}

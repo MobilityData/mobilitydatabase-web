@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 import {
   MaterialReactTable,
@@ -36,13 +36,13 @@ import MUITooltip from '@mui/material/Tooltip';
 import { GBFS_LINK } from '../../../constants/Navigation';
 
 export default function GBFSVersionAnalytics(): React.ReactElement {
-  const navigateTo = useNavigate();
+  const router = useRouter();
   const [data, setData] = useState<GBFSVersionMetrics[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { config } = useRemoteConfig();
-  const params = new URLSearchParams(useLocation().search);
-  const versionFilter = params.get('version');
+  const searchParams = useSearchParams();
+  const versionFilter = searchParams.get('version');
   const initialFilter = useMemo(() => {
     if (versionFilter != null) {
       return [{ id: 'version', value: versionFilter }];
@@ -131,7 +131,7 @@ export default function GBFSVersionAnalytics(): React.ReactElement {
         },
       },
     ],
-    [data, navigateTo],
+    [data, router],
   );
 
   const table = useMaterialReactTable({
@@ -214,7 +214,7 @@ export default function GBFSVersionAnalytics(): React.ReactElement {
                 sx={{ mb: 2 }}
                 startIcon={<ListAltOutlined />}
                 onClick={() => {
-                  navigateTo(`/metrics/gbfs/feeds?version=${metrics.version}`);
+                  router.push(`/metrics/gbfs/feeds?version=${metrics.version}`);
                 }}
               >
                 Show Feeds

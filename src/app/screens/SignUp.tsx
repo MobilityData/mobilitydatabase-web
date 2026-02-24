@@ -11,7 +11,7 @@ import Container from '@mui/material/Container';
 import GoogleIcon from '@mui/icons-material/Google';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import AppleIcon from '@mui/icons-material/Apple';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useRouter } from 'next/navigation';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useAppDispatch } from '../hooks';
@@ -51,9 +51,9 @@ export default function SignUp(): React.ReactElement {
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [showNoEmailSnackbar, setShowNoEmailSnackbar] = React.useState(false);
-  const [searchParams] = useSearchParams();
+  const searchParams = useSearchParams();
 
-  const navigateTo = useNavigate();
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const signUpError = useSelector(selectSignUpError);
   const userProfileStatus = useSelector(selectUserProfileStatus);
@@ -105,16 +105,16 @@ export default function SignUp(): React.ReactElement {
   React.useEffect(() => {
     if (userProfileStatus === 'registered') {
       if (searchParams.has('add_feed')) {
-        navigateTo(ADD_FEED_TARGET, { state: { from: 'registration' } });
+        router.push(ADD_FEED_TARGET + '?from=registration');
       } else {
-        navigateTo(ACCOUNT_TARGET);
+        router.push(ACCOUNT_TARGET);
       }
     }
     if (userProfileStatus === 'authenticated') {
-      navigateTo(COMPLETE_REGISTRATION_TARGET + '?' + searchParams.toString());
+      router.push(COMPLETE_REGISTRATION_TARGET + '?' + searchParams.toString());
     }
     if (userProfileStatus === 'unverified') {
-      navigateTo(POST_REGISTRATION_TARGET + '?' + searchParams.toString());
+      router.push(POST_REGISTRATION_TARGET + '?' + searchParams.toString());
     }
   }, [userProfileStatus]);
 

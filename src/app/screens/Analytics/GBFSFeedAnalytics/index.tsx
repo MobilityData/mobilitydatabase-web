@@ -25,7 +25,7 @@ import {
 } from '@mui/material';
 
 import '../analytics.css';
-import { useLocation } from 'react-router-dom';
+import { useSearchParams } from 'next/navigation';
 import {
   fetchAvailableFilesStart,
   selectFile,
@@ -46,16 +46,15 @@ export const getAnalyticsBucketEndpoint = (): string | undefined =>
   globalAnalyticsBucketEndpoint;
 
 export default function GBFSFeedAnalytics(): React.ReactElement {
-  const { search } = useLocation();
-  const params = new URLSearchParams(search);
+  const searchParams = useSearchParams();
   const { config } = useRemoteConfig();
   const [schemaPathFilters, setSchemaPathFilters] = React.useState<string[]>(
     [],
   );
 
-  const versionFilter = params.get('version');
+  const versionFilter = searchParams.get('version');
   const schemaPathInitFilter = decodeURIComponent(
-    params.get('schemaPath') ?? '',
+    searchParams.get('schemaPath') ?? '',
   );
 
   const dispatch = useDispatch();

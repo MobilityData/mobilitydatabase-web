@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import { useAppDispatch } from '../hooks';
 import { refreshUserInformation } from '../store/profile-reducer';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   selectUserProfileStatus,
   selectRegistrationError,
@@ -28,13 +28,13 @@ export default function CompleteRegistration(): React.ReactElement {
   const auth = getAuth();
   const user = auth.currentUser;
   const dispatch = useAppDispatch();
-  const navigateTo = useNavigate();
+  const router = useRouter();
 
   const userProfileStatus = useSelector(selectUserProfileStatus);
   const registrationError = useSelector(selectRegistrationError);
 
   const [isSubmitted, setIsSubmitted] = React.useState(false);
-  const [searchParams] = useSearchParams();
+  const searchParams = useSearchParams();
 
   const termsAndConditionsElement = (
     <span>
@@ -67,9 +67,9 @@ export default function CompleteRegistration(): React.ReactElement {
   React.useEffect(() => {
     if (userProfileStatus === 'registered') {
       if (searchParams.has('add_feed')) {
-        navigateTo(ADD_FEED_TARGET, { state: { from: 'registration' } });
+        router.push(ADD_FEED_TARGET + '?from=registration');
       } else {
-        navigateTo(ACCOUNT_TARGET);
+        router.push(ACCOUNT_TARGET);
       }
     }
   }, [userProfileStatus]);

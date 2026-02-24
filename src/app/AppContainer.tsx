@@ -3,17 +3,17 @@
 import * as React from 'react';
 import { Box, LinearProgress } from '@mui/material';
 import type ContextProviderProps from './interface/ContextProviderProps';
-import { useLocation } from 'react-router-dom';
+import { usePathname } from 'next/navigation';
 import { selectLoadingApp } from './store/selectors';
 import { useSelector } from 'react-redux';
 
 const AppContainer: React.FC<ContextProviderProps> = ({ children }) => {
   const isAppLoading = useSelector(selectLoadingApp);
-  const location = useLocation();
+  const pathname = usePathname();
 
   React.useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  }, [location.pathname]);
+  }, [pathname]);
 
   return (
     <>

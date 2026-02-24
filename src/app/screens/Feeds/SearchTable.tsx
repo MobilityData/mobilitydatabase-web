@@ -20,7 +20,7 @@ import {
 } from '../../services/feeds/utils';
 import { useTranslations } from 'next-intl';
 import GtfsRtEntities from './GtfsRtEntities';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { getEmojiFlag, type TCountryCode } from 'countries-list';
 import OfficialChip from '../../components/OfficialChip';
 import ProviderTitle from './ProviderTitle';
@@ -138,7 +138,7 @@ export default function SearchTable({
           <TableRow
             className='feed-row'
             component={Link}
-            to={`/feeds/${feed.data_type}/${feed.id}`}
+            href={`/feeds/${feed.data_type}/${feed.id}`}
             key={feed.id}
             sx={{
               textDecoration: 'none',

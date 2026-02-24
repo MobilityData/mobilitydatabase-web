@@ -15,7 +15,7 @@ import { gbfsValidatorHeroBg } from './ValidationReport.styles';
 import ValidationReport from './ValidationReport';
 import { useSelector, useDispatch } from 'react-redux';
 import { validateStart } from '../../store/gbfs-validator-reducer';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   selectGbfsValidationError,
   selectGbfsValidationLoading,
@@ -27,8 +27,8 @@ import { groupErrorsByFile } from './errorGrouping';
 
 export default function ValidationState(): ReactElement {
   const theme = useTheme();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [longLoadingState, setLongLoadingState] = useState(false);
   const { auth } = useGbfsAuth();
   const loadingState = useSelector(selectGbfsValidationLoading);
@@ -80,7 +80,7 @@ export default function ValidationState(): ReactElement {
     if (feedUrl !== null && feedUrl !== '') {
       dispatch(validateStart({ feedUrl, auth }));
     } else {
-      navigate('/gbfs-validator');
+      router.push('/gbfs-validator');
     }
   };
 

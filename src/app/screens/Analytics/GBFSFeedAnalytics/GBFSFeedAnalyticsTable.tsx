@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { type MRT_Cell, type MRT_ColumnDef } from 'material-react-table';
 import { format } from 'date-fns';
 import { type GBFSFeedMetrics } from '../types';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Box } from '@mui/material';
 import { OpenInNew } from '@mui/icons-material';
 
@@ -13,7 +13,7 @@ import { OpenInNew } from '@mui/icons-material';
 export const useTableColumns = (): Array<
   MRT_ColumnDef<GBFSFeedMetrics & { error_count: number }>
 > => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   return useMemo<
     Array<MRT_ColumnDef<GBFSFeedMetrics & { error_count: number }>>
@@ -98,7 +98,7 @@ export const useTableColumns = (): Array<
                 }}
                 className={'navigable-list-item'}
                 onClick={() => {
-                  navigate(`/metrics/gbfs/versions?version=${version}`);
+                  router.push(`/metrics/gbfs/versions?version=${version}`);
                 }}
               >
                 {version}
@@ -147,6 +147,6 @@ export const useTableColumns = (): Array<
         size: 200,
       },
     ],
-    [navigate],
+    [router],
   );
 };
