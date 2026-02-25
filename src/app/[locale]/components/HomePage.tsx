@@ -102,7 +102,7 @@ export default async function HomePage(): Promise<ReactElement> {
             sx={{ fontSize: 30, color: 'primary.main', mx: 1 }}
             itemProp='spatialCoverage'
           >
-            75
+            99
           </Box>
           {t('countries')}
         </Typography>
