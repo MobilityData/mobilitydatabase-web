@@ -5,127 +5,319 @@
 
 export interface paths {
   '/v1/feeds': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
     /** @description Get some (or all) feeds from the Mobility Database. The items are sorted by provider in alphabetical ascending order. */
     get: operations['getFeeds'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
   };
   '/v1/feeds/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The feed ID of the requested feed. */
+        id: components['parameters']['feed_id_path_param'];
+      };
+      cookie?: never;
+    };
     /** @description Get the specified feed from the Mobility Database. */
     get: operations['getFeed'];
-    parameters: {
-      path: {
-        id: components['parameters']['feed_id_path_param'];
-      };
-    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
   };
   '/v1/gtfs_feeds': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
     /** @description Get some (or all) GTFS feeds from the Mobility Database. */
     get: operations['getGtfsFeeds'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
   };
   '/v1/gtfs_rt_feeds': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
     /** @description Get some (or all) GTFS Realtime feeds from the Mobility Database. */
     get: operations['getGtfsRtFeeds'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
   };
   '/v1/gbfs_feeds': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
     /** @description Get GBFS feeds from the Mobility Database. */
     get: operations['getGbfsFeeds'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
   };
   '/v1/gtfs_feeds/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The feed ID of the requested feed. */
+        id: components['parameters']['feed_id_path_param'];
+      };
+      cookie?: never;
+    };
     /** @description Get the specified GTFS feed from the Mobility Database. Once a week, we check if the latest dataset has been updated and, if so, we update it in our system accordingly. */
     get: operations['getGtfsFeed'];
-    parameters: {
-      path: {
-        id: components['parameters']['feed_id_path_param'];
-      };
-    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
   };
   '/v1/gtfs_rt_feeds/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The feed ID of the requested feed. */
+        id: components['parameters']['feed_id_path_param'];
+      };
+      cookie?: never;
+    };
     /** @description Get the specified GTFS Realtime feed from the Mobility Database. */
     get: operations['getGtfsRtFeed'];
-    parameters: {
-      path: {
-        id: components['parameters']['feed_id_path_param'];
-      };
-    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
   };
   '/v1/gbfs_feeds/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The feed ID of the requested feed. */
+        id: components['parameters']['feed_id_path_param'];
+      };
+      cookie?: never;
+    };
     /** @description Get the specified GBFS feed from the Mobility Database. */
     get: operations['getGbfsFeed'];
-    parameters: {
-      path: {
-        id: components['parameters']['feed_id_path_param'];
-      };
-    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
   };
   '/v1/gtfs_feeds/{id}/datasets': {
-    /** @description Get a list of datasets associated with a GTFS feed. Once a day, we check whether the latest dataset has changed; if it has, we update it in our system. The list is sorted from newest to oldest. */
-    get: operations['getGtfsFeedDatasets'];
     parameters: {
+      query?: never;
+      header?: never;
       path: {
+        /** @description The ID of the feed for which to obtain datasets. */
         id: components['parameters']['feed_id_of_datasets_path_param'];
       };
+      cookie?: never;
     };
+    /** @description Get a list of datasets associated with a GTFS feed. Once a day, we check whether the latest dataset has changed; if it has, we update it in our system. The list is sorted from newest to oldest. */
+    get: operations['getGtfsFeedDatasets'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
   };
   '/v1/gtfs_feeds/{id}/gtfs_rt_feeds': {
-    /** @description Get a list of GTFS Realtime related to a GTFS feed. */
-    get: operations['getGtfsFeedGtfsRtFeeds'];
     parameters: {
+      query?: never;
+      header?: never;
       path: {
+        /** @description The feed ID of the requested feed. */
         id: components['parameters']['feed_id_path_param'];
       };
+      cookie?: never;
     };
+    /** @description Get a list of GTFS Realtime related to a GTFS feed. */
+    get: operations['getGtfsFeedGtfsRtFeeds'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
   };
   '/v1/datasets/gtfs/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
     /** @description Get the specified dataset from the Mobility Database. */
     get: operations['getDatasetGtfs'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
   };
   '/v1/metadata': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
     /** @description Get metadata about this API. */
     get: operations['getMetadata'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
   };
   '/v1/search': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
     /**
      * @description Search feeds on feed name, location and provider's information.
-     * <br>
-     * The current implementation leverages the text search functionalities from [PostgreSQL](https://www.postgresql.org/docs/current/textsearch-controls.html), in particulary `plainto_tsquery`.
-     * <br><br>
-     * Points to consider while using search endpoint:
-     * <br>
-     * - Operators are not currently supported. Operators are ignored as stop-words.
-     * - Search is based on lexemes(English) and case insensitive. The search_text_query_param is parsed and normalized much as for to_tsvector, then the & (AND) tsquery operator is inserted between surviving words.
-     * - The search will match all the lexemes with an AND operator. So, all lexemes must be present in the document.
-     * - Our current implementation only creates English lexemes. We are currently considering adding support to more languages.
-     * - The order of the words is not relevant for matching. The query __New York__ should give you the same results as __York New__.
-     * <br><br>
-     * Example:
-     * <br>
-     * Query: New York Transit
-     * <br>
-     * Search Executed: 'new' & york & 'transit'
-     * <br>
+     *     <br>
+     *     The current implementation leverages the text search functionalities from [PostgreSQL](https://www.postgresql.org/docs/current/textsearch-controls.html), in particulary `plainto_tsquery`.
+     *     <br><br>
+     *     Points to consider while using search endpoint:
+     *     <br>
+     *     - Operators are not currently supported. Operators are ignored as stop-words.
+     *     - Search is based on lexemes(English) and case insensitive. The search_text_query_param is parsed and normalized much as for to_tsvector, then the & (AND) tsquery operator is inserted between surviving words.
+     *     - The search will match all the lexemes with an AND operator. So, all lexemes must be present in the document.
+     *     - Our current implementation only creates English lexemes. We are currently considering adding support to more languages.
+     *     - The order of the words is not relevant for matching. The query __New York__ should give you the same results as __York New__.
+     *     <br><br>
+     *     Example:
+     *     <br>
+     *     Query: New York Transit
+     *     <br>
+     *     Search Executed: 'new' & york & 'transit'
+     *     <br>
      */
     get: operations['searchFeeds'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
   };
   '/v1/licenses': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
     /** @description Get the list of all licenses in the DB. */
     get: operations['getLicenses'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
   };
   '/v1/licenses/{id}': {
-    /** @description Get the specified license from the Mobility Database, including the license rules. */
-    get: operations['getLicense'];
     parameters: {
+      query?: never;
+      header?: never;
       path: {
+        /** @description The license ID of the requested license. */
         id: components['parameters']['license_id_path_param'];
       };
+      cookie?: never;
     };
+    /** @description Get the specified license from the Mobility Database, including the license rules. */
+    get: operations['getLicense'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
   };
   '/v1/licenses:match': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
     /** @description Get the list of matching licenses based on the provided license URL */
     post: operations['getMatchingLicenses'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
   };
 }
-
 export type webhooks = Record<string, never>;
-
 export interface components {
   schemas: {
     Redirect: {
@@ -154,18 +346,18 @@ export interface components {
       /**
        * Format: date-time
        * @description The date and time the feed was added to the database, in ISO 8601 date-time format.
-       * @example "2023-07-10T22:06:00.000Z"
+       * @example 2023-07-10T22:06:00Z
        */
       created_at?: string;
       /**
        * @description The ID that can be use to find the feed data in an external or legacy database.
-       * <ul>
-       *   <li><b>JBDA</b>: Automatically imported from http://docs.gtfs-data.jp/api.v2.html. Pattern is jbda-<organisation_id>-<feed_id>.</li>
-       *   <li><b>TDG</b>: Automatically imported from https://doc.transport.data.gouv.fr/outils/outils-disponibles-sur-le-pan/api. Pattern is tdg-<resource_id>.</li>
-       *   <li><b>NTD</b>: Automatically imported from https://www.transit.dot.gov/ntd/data-product/2023-annual-database-general-transit-feed-specification-gtfs-weblinks. Pattern is ntd-<ntd_id>.</li>
-       *   <li><b>TransitFeeds</b>: Automatically imported from old TransitFeeds website. Pattern is tfs-<feed_id>.</li>
-       *   <li><b>Transit.land</b>: Imported from https://www.transit.land/documentation/rest-api/feeds. Pattern is tld-<feed_id>.</li>
-       * </ul>
+       *     <ul>
+       *       <li><b>JBDA</b>: Automatically imported from http://docs.gtfs-data.jp/api.v2.html. Pattern is jbda-<organisation_id>-<feed_id>.</li>
+       *       <li><b>TDG</b>: Automatically imported from https://doc.transport.data.gouv.fr/outils/outils-disponibles-sur-le-pan/api. Pattern is tdg-<resource_id>.</li>
+       *       <li><b>NTD</b>: Automatically imported from https://www.transit.dot.gov/ntd/data-product/2023-annual-database-general-transit-feed-specification-gtfs-weblinks. Pattern is ntd-<ntd_id>.</li>
+       *       <li><b>TransitFeeds</b>: Automatically imported from old TransitFeeds website. Pattern is tfs-<feed_id>.</li>
+       *       <li><b>Transit.land</b>: Imported from https://www.transit.land/documentation/rest-api/feeds. Pattern is tld-<feed_id>.</li>
+       *     </ul>
        */
       external_ids?: components['schemas']['ExternalIds'];
       /**
@@ -181,53 +373,56 @@ export interface components {
       source_info?: components['schemas']['SourceInfo'];
       redirects?: Array<components['schemas']['Redirect']>;
     };
-    Feed: components['schemas']['BasicFeed'] & {
-      /**
-       * @description Describes status of the Feed. Should be one of
-       *   * `active` Feed should be used in public trip planners.
-       *   * `deprecated` Feed is explicitly deprecated and should not be used in public trip planners.
-       *   * `inactive` Feed hasn't been recently updated and should be used at risk of providing outdated information.
-       *   * `development` Feed is being used for development purposes and should not be used in public trip planners.
-       *   * `future` Feed is not yet active but will be in the future.
-       *
-       * @example deprecated
-       * @enum {string}
-       */
-      status?: 'active' | 'deprecated' | 'inactive' | 'development' | 'future';
-      /**
-       * @description A boolean value indicating if the feed is official or not.  Official feeds are provided by the transit agency or a trusted source.
-       *
-       * @example true
-       */
-      official?: boolean;
-      /**
-       * Format: date-time
-       * @description The date and time the official status was last updated, in ISO 8601 date-time format.
-       *
-       * @example "2023-07-10T22:06:00.000Z"
-       */
-      official_updated_at?: string;
-      /**
-       * @description An optional description of the data feed, e.g to specify if the data feed is an aggregate of  multiple providers, or which network is represented by the feed.
-       *
-       * @example Bus
-       */
-      feed_name?: string;
-      /** @description A note to clarify complex use cases for consumers. */
-      note?: string;
-      /** @description A list of related links for the feed. */
-      related_links?: Array<components['schemas']['FeedRelatedLink']>;
-    };
+    Feed: components['schemas']['BasicFeed'] &
+      Omit<
+        {
+          /**
+           * @description Describes status of the Feed. Should be one of
+           *       * `active` Feed should be used in public trip planners.
+           *       * `deprecated` Feed is explicitly deprecated and should not be used in public trip planners.
+           *       * `inactive` Feed hasn't been recently updated and should be used at risk of providing outdated information.
+           *       * `development` Feed is being used for development purposes and should not be used in public trip planners.
+           *       * `future` Feed is not yet active but will be in the future.
+           * @example deprecated
+           * @enum {string}
+           */
+          status?:
+            | 'active'
+            | 'deprecated'
+            | 'inactive'
+            | 'development'
+            | 'future';
+          /**
+           * @description A boolean value indicating if the feed is official or not.  Official feeds are provided by the transit agency or a trusted source.
+           * @example true
+           */
+          official?: boolean;
+          /**
+           * Format: date-time
+           * @description The date and time the official status was last updated, in ISO 8601 date-time format.
+           * @example 2023-07-10T22:06:00Z
+           */
+          official_updated_at?: string;
+          /**
+           * @description An optional description of the data feed, e.g to specify if the data feed is an aggregate of  multiple providers, or which network is represented by the feed.
+           * @example Bus
+           */
+          feed_name?: string;
+          /** @description A note to clarify complex use cases for consumers. */
+          note?: string;
+          /** @description A list of related links for the feed. */
+          related_links?: Array<components['schemas']['FeedRelatedLink']>;
+        },
+        'data_type'
+      >;
     FeedRelatedLink: {
       /**
        * @description A short code to identify the type of link.
-       *
        * @example next_1
        */
       code?: string;
       /**
        * @description A description of the link.
-       *
        * @example The URL for a future feed version with an upcoming service period.
        */
       description?: string;
@@ -239,8 +434,7 @@ export interface components {
       /**
        * Format: date-time
        * @description The date and time the related link was created, in ISO 8601 date-time format.
-       *
-       * @example "2023-07-10T22:06:00.000Z"
+       * @example 2023-07-10T22:06:00Z
        */
       created_at?: string;
     };
@@ -255,7 +449,6 @@ export interface components {
       bounding_box?: components['schemas']['BoundingBox'];
       /**
        * @description The dataset ID of the dataset used to compute the visualization files.
-       *
        * @example mdb-1210-202402121801
        */
       visualization_dataset_id?: string;
@@ -269,14 +462,12 @@ export interface components {
       locations?: components['schemas']['Locations'];
       /**
        * @description The system ID of the feed. This is a unique identifier for the system that the feed belongs to.
-       *
        * @example system-1234
        */
       system_id?: string;
       /**
        * Format: url
        * @description The URL of the provider's website. This is the website of the organization that operates the system that the feed belongs to.
-       *
        * @example https://www.citybikenyc.com/
        */
       provider_url?: string;
@@ -286,36 +477,32 @@ export interface components {
       /**
        * Format: date-time
        * @description The date and time the bounding box was generated, in ISO 8601 date-time format.
-       * @example "2023-07-10T22:06:00.000Z"
+       * @example 2023-07-10T22:06:00Z
        */
       bounding_box_generated_at?: string;
     };
     GbfsVersion: {
       /**
        * @description The version of the GBFS specification that the feed is using.  This is a string that follows the semantic versioning format.
-       *
        * @example 2.3
        */
       version?: string;
       /**
        * Format: date-time
        * @description The date when the GBFS version was saved to the database.
-       *
-       * @example "2023-07-10T22:06:00.000Z"
+       * @example 2023-07-10T22:06:00Z
        */
       created_at?: string;
       /**
        * Format: date-time
        * @description The date when the GBFS version was last updated in the database.
-       *
-       * @example "2023-07-10T22:06:00.000Z"
+       * @example 2023-07-10T22:06:00Z
        */
       last_updated_at?: string;
       /**
        * @description Indicates the origin of the version information. Possible values are:
-       *   * `autodiscovery`: Retrieved directly from the main GBFS autodiscovery URL.
-       *   * `gbfs_versions`: Retrieved from the `gbfs_versions` endpoint.
-       *
+       *       * `autodiscovery`: Retrieved directly from the main GBFS autodiscovery URL.
+       *       * `gbfs_versions`: Retrieved from the `gbfs_versions` endpoint.
        * @enum {string}
        */
       source?: 'autodiscovery' | 'gbfs_versions';
@@ -328,8 +515,7 @@ export interface components {
       /**
        * Format: date-time
        * @description The date and time the GBFS feed was validated, in ISO 8601 date-time format.
-       *
-       * @example "2023-07-10T22:06:00.000Z"
+       * @example 2023-07-10T22:06:00Z
        */
       validated_at?: string;
       /** @example 10 */
@@ -337,13 +523,11 @@ export interface components {
       /**
        * Format: url
        * @description The URL of the JSON report of the validation summary.
-       *
        * @example https://storage.googleapis.com/mobilitydata-datasets-prod/validation-reports/gbfs-1234-202402121801.json
        */
       report_summary_url?: string;
       /**
        * @description The version of the validator used to validate the GBFS feed.
-       *
        * @example 1.0.13
        */
       validator_version?: string;
@@ -351,26 +535,22 @@ export interface components {
     GbfsEndpoint: {
       /**
        * @description The name of the endpoint. This is a human-readable name for the endpoint.
-       *
        * @example system_information
        */
       name?: string;
       /**
        * Format: url
        * @description The URL of the endpoint. This is the URL where the endpoint can be accessed.
-       *
        * @example https://gbfs.citibikenyc.com/gbfs/system_information.json
        */
       url?: string;
       /**
        * @description The language of the endpoint. This is the language that the endpoint is available in for versions 2.3  and prior.
-       *
        * @example en
        */
       language?: string;
       /**
        * @description A boolean value indicating if the endpoint is a feature. A feature is defined as an optionnal endpoint.
-       *
        * @example false
        */
       is_feature?: boolean;
@@ -400,12 +580,11 @@ export interface components {
       data_type: 'gtfs' | 'gtfs_rt' | 'gbfs';
       /**
        * @description Describes status of the Feed. Should be one of
-       *   * `active` Feed should be used in public trip planners.
-       *   * `deprecated` Feed is explicitly deprecated and should not be used in public trip planners.
-       *   * `inactive` Feed hasn't been recently updated and should be used at risk of providing outdated information.
-       *   * `development` Feed is being used for development purposes and should not be used in public trip planners.
-       *   * `future` Feed is not yet active but will be in the future.
-       *
+       *       * `active` Feed should be used in public trip planners.
+       *       * `deprecated` Feed is explicitly deprecated and should not be used in public trip planners.
+       *       * `inactive` Feed hasn't been recently updated and should be used at risk of providing outdated information.
+       *       * `development` Feed is being used for development purposes and should not be used in public trip planners.
+       *       * `future` Feed is not yet active but will be in the future.
        * @example deprecated
        * @enum {string}
        */
@@ -413,24 +592,23 @@ export interface components {
       /**
        * Format: date-time
        * @description The date and time the feed was added to the database, in ISO 8601 date-time format.
-       * @example "2023-07-10T22:06:00.000Z"
+       * @example 2023-07-10T22:06:00Z
        */
       created_at?: string;
       /**
        * @description A boolean value indicating if the feed is official or not.  Official feeds are provided by the transit agency or a trusted source.
-       *
        * @example true
        */
       official?: boolean;
       /**
        * @description The ID that can be use to find the feed data in an external or legacy database.
-       * <ul>
-       *   <li><b>JBDA</b>: Automatically imported from http://docs.gtfs-data.jp/api.v2.html. Pattern is jbda-<organisation_id>-<feed_id>.</li>
-       *   <li><b>TDG</b>: Automatically imported from https://doc.transport.data.gouv.fr/outils/outils-disponibles-sur-le-pan/api. Pattern is tdg-<resource_id>.</li>
-       *   <li><b>NTD</b>: Automatically imported from https://www.transit.dot.gov/ntd/data-product/2023-annual-database-general-transit-feed-specification-gtfs-weblinks. Pattern is ntd-<ntd_id>.</li>
-       *   <li><b>TransitFeeds</b>: Automatically imported from old TransitFeeds website. Pattern is tfs-<feed_id>.</li>
-       *   <li><b>Transit.land</b>: Imported from https://www.transit.land/documentation/rest-api/feeds. Pattern is tld-<feed_id>.</li>
-       * </ul>
+       *     <ul>
+       *       <li><b>JBDA</b>: Automatically imported from http://docs.gtfs-data.jp/api.v2.html. Pattern is jbda-<organisation_id>-<feed_id>.</li>
+       *       <li><b>TDG</b>: Automatically imported from https://doc.transport.data.gouv.fr/outils/outils-disponibles-sur-le-pan/api. Pattern is tdg-<resource_id>.</li>
+       *       <li><b>NTD</b>: Automatically imported from https://www.transit.dot.gov/ntd/data-product/2023-annual-database-general-transit-feed-specification-gtfs-weblinks. Pattern is ntd-<ntd_id>.</li>
+       *       <li><b>TransitFeeds</b>: Automatically imported from old TransitFeeds website. Pattern is tfs-<feed_id>.</li>
+       *       <li><b>Transit.land</b>: Imported from https://www.transit.land/documentation/rest-api/feeds. Pattern is tld-<feed_id>.</li>
+       *     </ul>
        */
       external_ids?: components['schemas']['ExternalIds'];
       /**
@@ -440,7 +618,6 @@ export interface components {
       provider?: string;
       /**
        * @description An optional description of the data feed, e.g to specify if the data feed is an aggregate of  multiple providers, or which network is represented by the feed.
-       *
        * @example Bus
        */
       feed_name?: string;
@@ -473,7 +650,6 @@ export interface components {
       /**
        * Format: url
        * @description As a convenience, the URL of the latest uploaded dataset hosted by MobilityData.  It should be the same URL as the one found in the latest dataset id dataset. An alternative way to find this is to use the latest dataset id to obtain the dataset and then use its hosted_url.
-       *
        * @example https://storage.googleapis.com/mobilitydata-datasets-prod/mdb-1210/mdb-1210-202402121801/mdb-1210-202402121801.zip
        */
       hosted_url?: string;
@@ -481,7 +657,7 @@ export interface components {
       /**
        * Format: date-time
        * @description The date and time the dataset was downloaded from the producer, in ISO 8601 date-time format.
-       * @example "2023-07-10T22:06:00.000Z"
+       * @example 2023-07-10T22:06:00Z
        */
       downloaded_at?: string;
       /**
@@ -492,7 +668,7 @@ export interface components {
       /**
        * Format: date-time
        * @description The start date of the service date range for the dataset in UTC. Timing starts at 00:00:00 of the day.
-       * @example "2023-07-10T06:00:00.000Z"
+       * @example 2023-07-10T06:00:00Z
        */
       service_date_range_start?: string;
       /**
@@ -520,10 +696,10 @@ export interface components {
         /**
          * @description List of GTFS features associated to the dataset. More information, https://gtfs.org/getting-started/features/overview
          * @example [
-         *   "Shapes",
-         *   "Headsigns",
-         *   "Wheelchair Accessibility"
-         * ]
+         *       "Shapes",
+         *       "Headsigns",
+         *       "Wheelchair Accessibility"
+         *     ]
          */
         features?: string[];
         /** @example 10 */
@@ -542,26 +718,25 @@ export interface components {
     };
     /**
      * @description The ID that can be use to find the feed data in an external or legacy database.
-     * <ul>
-     *   <li><b>JBDA</b>: Automatically imported from http://docs.gtfs-data.jp/api.v2.html. Pattern is jbda-<organisation_id>-<feed_id>.</li>
-     *   <li><b>TDG</b>: Automatically imported from https://doc.transport.data.gouv.fr/outils/outils-disponibles-sur-le-pan/api. Pattern is tdg-<resource_id>.</li>
-     *   <li><b>NTD</b>: Automatically imported from https://www.transit.dot.gov/ntd/data-product/2023-annual-database-general-transit-feed-specification-gtfs-weblinks. Pattern is ntd-<ntd_id>.</li>
-     *   <li><b>TransitFeeds</b>: Automatically imported from old TransitFeeds website. Pattern is tfs-<feed_id>.</li>
-     *   <li><b>Transit.land</b>: Imported from https://www.transit.land/documentation/rest-api/feeds. Pattern is tld-<feed_id>.</li>
-     * </ul>
+     *     <ul>
+     *       <li><b>JBDA</b>: Automatically imported from http://docs.gtfs-data.jp/api.v2.html. Pattern is jbda-<organisation_id>-<feed_id>.</li>
+     *       <li><b>TDG</b>: Automatically imported from https://doc.transport.data.gouv.fr/outils/outils-disponibles-sur-le-pan/api. Pattern is tdg-<resource_id>.</li>
+     *       <li><b>NTD</b>: Automatically imported from https://www.transit.dot.gov/ntd/data-product/2023-annual-database-general-transit-feed-specification-gtfs-weblinks. Pattern is ntd-<ntd_id>.</li>
+     *       <li><b>TransitFeeds</b>: Automatically imported from old TransitFeeds website. Pattern is tfs-<feed_id>.</li>
+     *       <li><b>Transit.land</b>: Imported from https://www.transit.land/documentation/rest-api/feeds. Pattern is tld-<feed_id>.</li>
+     *     </ul>
      */
     ExternalIds: Array<components['schemas']['ExternalId']>;
     ExternalId: {
       /**
        * @description The ID that can be used to find the feed data in an external or legacy database.
-       * <ul>
-       *   <li><b>JBDA</b>: Automatically imported from http://docs.gtfs-data.jp/api.v2.html. Pattern is jbda-<organisation_id>-<feed_id>.</li>
-       *   <li><b>TDG</b>: Automatically imported from https://doc.transport.data.gouv.fr/outils/outils-disponibles-sur-le-pan/api. Pattern is tdg-<resource_id>.</li>
-       *   <li><b>NTD</b>: Automatically imported from https://www.transit.dot.gov/ntd/data-product/2023-annual-database-general-transit-feed-specification-gtfs-weblinks. Pattern is ntd-<ntd_id>.</li>
-       *   <li><b>TransitFeeds</b>: Automatically imported from old TransitFeeds website. Pattern is tfs-<feed_id>.</li>
-       *   <li><b>Transit.land</b>: Imported from https://www.transit.land/documentation/rest-api/feeds. Pattern is tld-<feed_id>.</li>
-       * </ul>
-       *
+       *     <ul>
+       *       <li><b>JBDA</b>: Automatically imported from http://docs.gtfs-data.jp/api.v2.html. Pattern is jbda-<organisation_id>-<feed_id>.</li>
+       *       <li><b>TDG</b>: Automatically imported from https://doc.transport.data.gouv.fr/outils/outils-disponibles-sur-le-pan/api. Pattern is tdg-<resource_id>.</li>
+       *       <li><b>NTD</b>: Automatically imported from https://www.transit.dot.gov/ntd/data-product/2023-annual-database-general-transit-feed-specification-gtfs-weblinks. Pattern is ntd-<ntd_id>.</li>
+       *       <li><b>TransitFeeds</b>: Automatically imported from old TransitFeeds website. Pattern is tfs-<feed_id>.</li>
+       *       <li><b>Transit.land</b>: Imported from https://www.transit.land/documentation/rest-api/feeds. Pattern is tld-<feed_id>.</li>
+       *     </ul>
        * @example 1210
        */
       external_id?: string;
@@ -575,17 +750,15 @@ export interface components {
       /**
        * Format: url
        * @description URL where the producer is providing the dataset.  Refer to the authentication information to know how to access this URL.
-       *
        * @example https://ladotbus.com/gtfs
        */
       producer_url?: string;
       /**
        * @description Defines the type of authentication required to access the `producer_url`. Valid values for this field are:
-       *   * 0 or (empty) - No authentication required.
-       *   * 1 - The authentication requires an API key, which should be passed as value of the parameter api_key_parameter_name in the URL. Please visit URL in authentication_info_url for more information.
-       *   * 2 - The authentication requires an HTTP header, which should be passed as the value of the header api_key_parameter_name in the HTTP request.
-       * When not provided, the authentication type is assumed to be 0.
-       *
+       *       * 0 or (empty) - No authentication required.
+       *       * 1 - The authentication requires an API key, which should be passed as value of the parameter api_key_parameter_name in the URL. Please visit URL in authentication_info_url for more information.
+       *       * 2 - The authentication requires an HTTP header, which should be passed as the value of the header api_key_parameter_name in the HTTP request.
+       *     When not provided, the authentication type is assumed to be 0.
        * @example 2
        * @enum {integer}
        */
@@ -593,13 +766,11 @@ export interface components {
       /**
        * Format: url
        * @description Contains a URL to a human-readable page describing how the authentication should be performed and how credentials can be created.  This field is required for `authentication_type=1` and `authentication_type=2`.
-       *
        * @example https://apidevelopers.ladottransit.com
        */
       authentication_info_url?: string;
       /**
        * @description Defines the name of the parameter to pass in the URL to provide the API key. This field is required for `authentication_type=1` and `authentication_type=2`.
-       *
        * @example Ocp-Apim-Subscription-Key
        */
       api_key_parameter_name?: string;
@@ -629,7 +800,6 @@ export interface components {
     Location: {
       /**
        * @description ISO 3166-1 alpha-2 code designating the country where the system is located.  For a list of valid codes [see here](https://unece.org/trade/uncefact/unlocode-country-subdivisions-iso-3166-2).
-       *
        * @example US
        */
       country_code?: string;
@@ -640,7 +810,6 @@ export interface components {
       country?: string;
       /**
        * @description ISO 3166-2 english subdivision name designating the subdivision (e.g province, state, region) where the system is located.  For a list of valid names [see here](https://unece.org/trade/uncefact/unlocode-country-subdivisions-iso-3166-2).
-       *
        * @example California
        */
       subdivision_name?: string;
@@ -673,7 +842,7 @@ export interface components {
       /**
        * Format: date-time
        * @description The date and time the dataset was downloaded from the producer, in ISO 8601 date-time format.
-       * @example "2023-07-10T22:06:00.000Z"
+       * @example 2023-07-10T22:06:00Z
        */
       downloaded_at?: string;
       /**
@@ -686,7 +855,7 @@ export interface components {
       /**
        * Format: date-time
        * @description The start date of the service date range for the dataset in UTC. Timing starts at 00:00:00 of the day.
-       * @example "2023-07-10T06:00:00.000Z"
+       * @example 2023-07-10T06:00:00Z
        */
       service_date_range_start?: string;
       /**
@@ -746,16 +915,16 @@ export interface components {
       /**
        * Format: date-time
        * @description The date and time the report was generated, in ISO 8601 date-time format.
-       * @example "2023-07-10T22:06:00.000Z"
+       * @example 2023-07-10T22:06:00Z
        */
       validated_at?: string;
       /**
        * @description List of GTFS features associated to the dataset. More information, https://gtfs.org/getting-started/features/overview
        * @example [
-       *   "Shapes",
-       *   "Headsigns",
-       *   "Wheelchair Accessibility"
-       * ]
+       *       "Shapes",
+       *       "Headsigns",
+       *       "Wheelchair Accessibility"
+       *     ]
        */
       features?: string[];
       /** @example 4.2.0 */
@@ -839,13 +1008,13 @@ export interface components {
       /**
        * Format: date-time
        * @description The date and time the license was added to the database, in ISO 8601 date-time format.
-       * @example "2023-07-10T22:06:00.000Z"
+       * @example 2023-07-10T22:06:00Z
        */
       created_at?: string;
       /**
        * Format: date-time
        * @description The last date and time the license was updated in the database, in ISO 8601 date-time format.
-       * @example "2023-07-10T22:06:00.000Z"
+       * @example 2023-07-10T22:06:00Z
        */
       updated_at?: string;
     };
@@ -856,18 +1025,18 @@ export interface components {
     /**
      * @description Matching a license
      * @example {
-     *   "license_id": "CC-BY-4.0",
-     *   "license_url": "https://creativecommons.org/licenses/by/4.0/deed.nl",
-     *   "normalized_url": "creativecommons.org/licenses/by/4.0",
-     *   "match_type": "heuristic",
-     *   "confidence": 0.99,
-     *   "spdx_id": "CC-BY-4.0",
-     *   "matched_name": "Creative Commons Attribution 4.0 International",
-     *   "matched_catalog_url": "https://creativecommons.org/licenses/by/4.0/legalcode",
-     *   "matched_source": "cc-resolver",
-     *   "notes": "Detected locale/jurisdiction port 'nl'. SPDX does not list ported CC licenses; using canonical ID.",
-     *   "regional_id": "CC-BY-4.0-nl"
-     * }
+     *       "license_id": "CC-BY-4.0",
+     *       "license_url": "https://creativecommons.org/licenses/by/4.0/deed.nl",
+     *       "normalized_url": "creativecommons.org/licenses/by/4.0",
+     *       "match_type": "heuristic",
+     *       "confidence": 0.99,
+     *       "spdx_id": "CC-BY-4.0",
+     *       "matched_name": "Creative Commons Attribution 4.0 International",
+     *       "matched_catalog_url": "https://creativecommons.org/licenses/by/4.0/legalcode",
+     *       "matched_source": "cc-resolver",
+     *       "notes": "Detected locale/jurisdiction port 'nl'. SPDX does not list ported CC licenses; using canonical ID.",
+     *       "regional_id": "CC-BY-4.0-nl"
+     *     }
      */
     MatchingLicense: {
       /**
@@ -887,20 +1056,18 @@ export interface components {
       normalized_url?: string;
       /**
        * @description Type of match performed. One of:
-       *   - 'exact': Direct match found in database
-       *   - 'heuristic': Matched via pattern-based rules (CC resolver, common patterns)
-       *   - 'fuzzy': Similarity-based match against same-host licenses
-       *
+       *       - 'exact': Direct match found in database
+       *       - 'heuristic': Matched via pattern-based rules (CC resolver, common patterns)
+       *       - 'fuzzy': Similarity-based match against same-host licenses
        * @example heuristic
        */
       match_type?: string;
       /**
        * @description Match confidence score (0.0-1.0), examples:
-       *   - 1.0: Exact match
-       *   - 0.99: Creative Commons resolved
-       *   - 0.95: Pattern heuristic match
-       *   - 0.0-1.0: Fuzzy match score based on string similarity
-       *
+       *       - 1.0: Exact match
+       *       - 0.99: Creative Commons resolved
+       *       - 0.95: Pattern heuristic match
+       *       - 0.0-1.0: Fuzzy match score based on string similarity
        * @example 0.99
        */
       confidence?: number;
@@ -921,10 +1088,9 @@ export interface components {
       matched_catalog_url?: string;
       /**
        * @description Source of the match. Examples:
-       *   - 'db.license': Exact match from database
-       *   - 'cc-resolver': Creative Commons license resolver
-       *   - 'pattern-heuristics': Generic pattern matching
-       *
+       *       - 'db.license': Exact match from database
+       *       - 'cc-resolver': Creative Commons license resolver
+       *       - 'pattern-heuristics': Generic pattern matching
        * @example cc-resolver
        */
       matched_source?: string;
@@ -935,8 +1101,7 @@ export interface components {
       notes?: string;
       /**
        * @description Regional/jurisdictional variant identifier for ported licenses
-       *   (e.g., 'CC-BY-2.1-jp' for Japan-ported Creative Commons)
-       *
+       *       (e.g., 'CC-BY-2.1-jp' for Japan-ported Creative Commons)
        * @example CC-BY-4.0-nl
        */
       regional_id?: string;
@@ -947,77 +1112,76 @@ export interface components {
   responses: never;
   parameters: {
     /** @description Filter feeds by their status. [Status definitions defined here](https://github.com/MobilityData/mobility-database-catalogs?tab=readme-ov-file#gtfs-schedule-schema) */
-    status?: 'active' | 'deprecated' | 'inactive' | 'development' | 'future';
+    status: 'active' | 'deprecated' | 'inactive' | 'development' | 'future';
     /** @description Filter feeds by their status. [Status definitions defined here](https://github.com/MobilityData/mobility-database-catalogs?tab=readme-ov-file#gtfs-schedule-schema) */
-    statuses?: Array<
+    statuses: Array<
       'active' | 'deprecated' | 'inactive' | 'development' | 'future'
     >;
     /** @description Filter feeds by their GTFS features. [GTFS features definitions defined here](https://gtfs.org/getting-started/features/overview) */
-    feature?: string[];
+    feature: string[];
     /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
-    provider?: string;
+    provider: string;
     /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
-    producer_url?: string;
+    producer_url: string;
     /** @description Filter feeds by their entity type. Expects a comma separated list of all types to fetch. */
-    entity_types?: string;
+    entity_types: string;
     /** @description Filter feeds by their exact country code. */
-    country_code?: string;
+    country_code: string;
     /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
-    subdivision_name?: string;
+    subdivision_name: string;
     /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
-    municipality?: string;
+    municipality: string;
     /** @description Filter feed datasets with downloaded date greater or equal to given date. Date should be in ISO 8601 date-time format. */
-    downloaded_after?: string;
+    downloaded_after: string;
     /** @description Filter feed datasets with downloaded date less or equal to given date. Date should be in ISO 8601 date-time format. */
-    downloaded_before?: string;
+    downloaded_before: string;
     /**
      * @description Specify the minimum and maximum latitudes of the bounding box to use for filtering.
-     *  <br>Filters by the bounding box of the `LatestDataset` for a feed.
-     *  <br>Must be specified alongside `dataset_longitudes`.
+     *      <br>Filters by the bounding box of the `LatestDataset` for a feed.
+     *      <br>Must be specified alongside `dataset_longitudes`.
      */
-    dataset_latitudes?: string;
+    dataset_latitudes: string;
     /** @description Specify the minimum and maximum longitudes of the bounding box to use for filtering. <br>Filters by the bounding box of the `LatestDataset` for a feed. <br>Must be specified alongside `dataset_latitudes`. */
-    dataset_longitudes?: string;
+    dataset_longitudes: string;
     /**
      * @description Specify the filtering method to use with the dataset_latitudes and dataset_longitudes parameters.
-     *  * `completely_enclosed` - Get resources that are completely enclosed in the specified bounding box.
-     *  * `partially_enclosed` - Get resources that are partially enclosed in the specified bounding box.
-     *  * `disjoint` - Get resources that are completely outside the specified bounding box.
-     *
+     *      * `completely_enclosed` - Get resources that are completely enclosed in the specified bounding box.
+     *      * `partially_enclosed` - Get resources that are partially enclosed in the specified bounding box.
+     *      * `disjoint` - Get resources that are completely outside the specified bounding box.
      * @example completely_enclosed
      */
-    bounding_filter_method?:
+    bounding_filter_method:
       | 'completely_enclosed'
       | 'partially_enclosed'
       | 'disjoint';
     /** @description If true, only return the latest dataset. */
-    latest_query_param?: boolean;
+    latest_query_param: boolean;
     /** @description If true, only return official feeds. */
-    is_official_query_param?: boolean;
+    is_official_query_param: boolean;
     /** @description The number of items to be returned. */
-    limit_query_param_feeds_endpoint?: number;
+    limit_query_param_feeds_endpoint: number;
     /** @description The number of items to be returned. */
-    limit_query_param_gtfs_feeds_endpoint?: number;
+    limit_query_param_gtfs_feeds_endpoint: number;
     /** @description The number of items to be returned. */
-    limit_query_param_gtfs_rt_feeds_endpoint?: number;
+    limit_query_param_gtfs_rt_feeds_endpoint: number;
     /** @description The number of items to be returned. */
-    limit_query_param_datasets_endpoint?: number;
+    limit_query_param_datasets_endpoint: number;
     /** @description The number of items to be returned. */
-    limit_query_param_search_endpoint?: number;
+    limit_query_param_search_endpoint: number;
     /** @description The number of items to be returned. */
-    limit_query_param_gbfs_feeds_endpoint?: number;
+    limit_query_param_gbfs_feeds_endpoint: number;
     /** @description The number of items to be returned. */
-    limit_query_param_licenses_endpoint?: number;
+    limit_query_param_licenses_endpoint: number;
     /** @description Offset of the first item to return. */
-    offset?: number;
+    offset: number;
     /** @description General search query to match against transit provider, location, and feed name. */
-    search_text_query_param?: string;
+    search_text_query_param: string;
     /** @description Comma separated list of GBFS versions to filter by. */
-    version_query_param?: string;
+    version_query_param: string;
     /** @description Comma separated list of data types to filter by. Valid values are gtfs, gtfs_rt and gbfs. */
-    data_type_query_param?: string;
+    data_type_query_param: string;
     /** @description The feed ID of the requested feed. */
-    feed_id_query_param?: string;
+    feed_id_query_param: string;
     /** @description The feed ID of the requested feed. */
     feed_id_path_param: string;
     /** @description The license ID of the requested license. */
@@ -1027,296 +1191,383 @@ export interface components {
     /** @description The ID of the requested dataset. */
     dataset_id_path_param: string;
     /** @description Filter feeds by their system ID. This is a unique identifier for the system that the feed belongs to. */
-    system_id_param?: string;
+    system_id_param: string;
     /** @description Filter feeds by their supported GBFS version. This is a string that follows the semantic versioning format. */
-    version_param?: string;
+    version_param: string;
+    /** @description Comma separated list of license IDs to filter by. */
+    license_ids_query_param: string;
   };
   requestBodies: never;
   headers: never;
   pathItems: never;
 }
-
 export type $defs = Record<string, never>;
-
-export interface external {
-  'BearerTokenSchema.yaml': {
-    paths: Record<string, never>;
-    webhooks: Record<string, never>;
-    components: {
-      schemas: never;
-      responses: never;
-      parameters: never;
-      requestBodies: never;
-      headers: never;
-      pathItems: never;
-    };
-    $defs: Record<string, never>;
-  };
-}
-
 export interface operations {
-  /** @description Get some (or all) feeds from the Mobility Database. The items are sorted by provider in alphabetical ascending order. */
   getFeeds: {
     parameters: {
       query?: {
+        /** @description The number of items to be returned. */
         limit?: components['parameters']['limit_query_param_feeds_endpoint'];
+        /** @description Offset of the first item to return. */
         offset?: components['parameters']['offset'];
+        /** @description Filter feeds by their status. [Status definitions defined here](https://github.com/MobilityData/mobility-database-catalogs?tab=readme-ov-file#gtfs-schedule-schema) */
         status?: components['parameters']['status'];
+        /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
         provider?: components['parameters']['provider'];
+        /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
         producer_url?: components['parameters']['producer_url'];
+        /** @description If true, only return official feeds. */
         is_official?: components['parameters']['is_official_query_param'];
       };
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    requestBody?: never;
     responses: {
       /** @description Successful pull of the feeds common info.  This info has a reduced set of fields that are common to all types of feeds. */
       200: {
+        headers: Record<string, unknown>;
         content: {
           'application/json': components['schemas']['Feeds'];
         };
       };
     };
   };
-  /** @description Get the specified feed from the Mobility Database. */
   getFeed: {
     parameters: {
+      query?: never;
+      header?: never;
       path: {
+        /** @description The feed ID of the requested feed. */
         id: components['parameters']['feed_id_path_param'];
       };
+      cookie?: never;
     };
+    requestBody?: never;
     responses: {
       /** @description Successful pull of the feeds common info for the provided ID. This info has a reduced set of fields that are common to all types of feeds. */
       200: {
+        headers: Record<string, unknown>;
         content: {
           'application/json': components['schemas']['Feed'];
         };
       };
     };
   };
-  /** @description Get some (or all) GTFS feeds from the Mobility Database. */
   getGtfsFeeds: {
     parameters: {
       query?: {
+        /** @description The number of items to be returned. */
         limit?: components['parameters']['limit_query_param_gtfs_feeds_endpoint'];
+        /** @description Offset of the first item to return. */
         offset?: components['parameters']['offset'];
+        /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
         provider?: components['parameters']['provider'];
+        /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
         producer_url?: components['parameters']['producer_url'];
+        /** @description Filter feeds by their exact country code. */
         country_code?: components['parameters']['country_code'];
+        /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
         subdivision_name?: components['parameters']['subdivision_name'];
+        /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
         municipality?: components['parameters']['municipality'];
+        /**
+         * @description Specify the minimum and maximum latitudes of the bounding box to use for filtering.
+         *      <br>Filters by the bounding box of the `LatestDataset` for a feed.
+         *      <br>Must be specified alongside `dataset_longitudes`.
+         */
         dataset_latitudes?: components['parameters']['dataset_latitudes'];
+        /** @description Specify the minimum and maximum longitudes of the bounding box to use for filtering. <br>Filters by the bounding box of the `LatestDataset` for a feed. <br>Must be specified alongside `dataset_latitudes`. */
         dataset_longitudes?: components['parameters']['dataset_longitudes'];
+        /**
+         * @description Specify the filtering method to use with the dataset_latitudes and dataset_longitudes parameters.
+         *      * `completely_enclosed` - Get resources that are completely enclosed in the specified bounding box.
+         *      * `partially_enclosed` - Get resources that are partially enclosed in the specified bounding box.
+         *      * `disjoint` - Get resources that are completely outside the specified bounding box.
+         * @example completely_enclosed
+         */
         bounding_filter_method?: components['parameters']['bounding_filter_method'];
+        /** @description If true, only return official feeds. */
         is_official?: components['parameters']['is_official_query_param'];
       };
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    requestBody?: never;
     responses: {
       /** @description Successful pull of the GTFS feeds info. */
       200: {
+        headers: Record<string, unknown>;
         content: {
           'application/json': components['schemas']['GtfsFeeds'];
         };
       };
     };
   };
-  /** @description Get some (or all) GTFS Realtime feeds from the Mobility Database. */
   getGtfsRtFeeds: {
     parameters: {
       query?: {
+        /** @description The number of items to be returned. */
         limit?: components['parameters']['limit_query_param_gtfs_rt_feeds_endpoint'];
+        /** @description Offset of the first item to return. */
         offset?: components['parameters']['offset'];
+        /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
         provider?: components['parameters']['provider'];
+        /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
         producer_url?: components['parameters']['producer_url'];
+        /** @description Filter feeds by their entity type. Expects a comma separated list of all types to fetch. */
         entity_types?: components['parameters']['entity_types'];
+        /** @description Filter feeds by their exact country code. */
         country_code?: components['parameters']['country_code'];
+        /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
         subdivision_name?: components['parameters']['subdivision_name'];
+        /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
         municipality?: components['parameters']['municipality'];
+        /** @description If true, only return official feeds. */
         is_official?: components['parameters']['is_official_query_param'];
       };
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    requestBody?: never;
     responses: {
       /** @description Successful pull of the GTFS Realtime feeds info. */
       200: {
+        headers: Record<string, unknown>;
         content: {
           'application/json': components['schemas']['GtfsRTFeeds'];
         };
       };
     };
   };
-  /** @description Get GBFS feeds from the Mobility Database. */
   getGbfsFeeds: {
     parameters: {
       query?: {
+        /** @description The number of items to be returned. */
         limit?: components['parameters']['limit_query_param_gbfs_feeds_endpoint'];
+        /** @description Offset of the first item to return. */
         offset?: components['parameters']['offset'];
+        /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
         provider?: components['parameters']['provider'];
+        /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
         producer_url?: components['parameters']['producer_url'];
+        /** @description Filter feeds by their exact country code. */
         country_code?: components['parameters']['country_code'];
+        /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
         subdivision_name?: components['parameters']['subdivision_name'];
+        /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
         municipality?: components['parameters']['municipality'];
+        /** @description Filter feeds by their system ID. This is a unique identifier for the system that the feed belongs to. */
         system_id?: components['parameters']['system_id_param'];
+        /** @description Filter feeds by their supported GBFS version. This is a string that follows the semantic versioning format. */
         version?: components['parameters']['version_param'];
       };
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    requestBody?: never;
     responses: {
       /** @description Successful pull of the GBFS feeds info. */
       200: {
+        headers: Record<string, unknown>;
         content: {
           'application/json': components['schemas']['GbfsFeeds'];
         };
       };
     };
   };
-  /** @description Get the specified GTFS feed from the Mobility Database. Once a week, we check if the latest dataset has been updated and, if so, we update it in our system accordingly. */
   getGtfsFeed: {
     parameters: {
+      query?: never;
+      header?: never;
       path: {
+        /** @description The feed ID of the requested feed. */
         id: components['parameters']['feed_id_path_param'];
       };
+      cookie?: never;
     };
+    requestBody?: never;
     responses: {
       /** @description Successful pull of the requested feed. */
       200: {
+        headers: Record<string, unknown>;
         content: {
           'application/json': components['schemas']['GtfsFeed'];
         };
       };
     };
   };
-  /** @description Get the specified GTFS Realtime feed from the Mobility Database. */
   getGtfsRtFeed: {
     parameters: {
+      query?: never;
+      header?: never;
       path: {
+        /** @description The feed ID of the requested feed. */
         id: components['parameters']['feed_id_path_param'];
       };
+      cookie?: never;
     };
+    requestBody?: never;
     responses: {
       /** @description Successful pull of the requested feed. */
       200: {
+        headers: Record<string, unknown>;
         content: {
           'application/json': components['schemas']['GtfsRTFeed'];
         };
       };
     };
   };
-  /** @description Get the specified GBFS feed from the Mobility Database. */
   getGbfsFeed: {
     parameters: {
+      query?: never;
+      header?: never;
       path: {
+        /** @description The feed ID of the requested feed. */
         id: components['parameters']['feed_id_path_param'];
       };
+      cookie?: never;
     };
+    requestBody?: never;
     responses: {
       /** @description Successful pull of the requested feed. */
       200: {
+        headers: Record<string, unknown>;
         content: {
           'application/json': components['schemas']['GbfsFeed'];
         };
       };
     };
   };
-  /** @description Get a list of datasets associated with a GTFS feed. Once a day, we check whether the latest dataset has changed; if it has, we update it in our system. The list is sorted from newest to oldest. */
   getGtfsFeedDatasets: {
     parameters: {
       query?: {
+        /** @description If true, only return the latest dataset. */
         latest?: components['parameters']['latest_query_param'];
+        /** @description The number of items to be returned. */
         limit?: components['parameters']['limit_query_param_datasets_endpoint'];
+        /** @description Offset of the first item to return. */
         offset?: components['parameters']['offset'];
+        /** @description Filter feed datasets with downloaded date greater or equal to given date. Date should be in ISO 8601 date-time format. */
         downloaded_after?: components['parameters']['downloaded_after'];
+        /** @description Filter feed datasets with downloaded date less or equal to given date. Date should be in ISO 8601 date-time format. */
         downloaded_before?: components['parameters']['downloaded_before'];
       };
+      header?: never;
       path: {
+        /** @description The ID of the feed for which to obtain datasets. */
         id: components['parameters']['feed_id_of_datasets_path_param'];
       };
+      cookie?: never;
     };
+    requestBody?: never;
     responses: {
       /** @description Successful pull of the requested datasets. */
       200: {
+        headers: Record<string, unknown>;
         content: {
           'application/json': components['schemas']['GtfsDatasets'];
         };
       };
     };
   };
-  /** @description Get a list of GTFS Realtime related to a GTFS feed. */
   getGtfsFeedGtfsRtFeeds: {
     parameters: {
+      query?: never;
+      header?: never;
       path: {
+        /** @description The feed ID of the requested feed. */
         id: components['parameters']['feed_id_path_param'];
       };
+      cookie?: never;
     };
+    requestBody?: never;
     responses: {
       /** @description Successful pull of the GTFS Realtime feeds info related to a GTFS feed. */
       200: {
+        headers: Record<string, unknown>;
         content: {
           'application/json': components['schemas']['GtfsRTFeeds'];
         };
       };
     };
   };
-  /** @description Get the specified dataset from the Mobility Database. */
   getDatasetGtfs: {
     parameters: {
+      query?: never;
+      header?: never;
       path: {
+        /** @description The ID of the requested dataset. */
         id: components['parameters']['dataset_id_path_param'];
       };
+      cookie?: never;
     };
+    requestBody?: never;
     responses: {
       /** @description Successful pull of the requested dataset. */
       200: {
+        headers: Record<string, unknown>;
         content: {
           'application/json': components['schemas']['GtfsDataset'];
         };
       };
     };
   };
-  /** @description Get metadata about this API. */
   getMetadata: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
     responses: {
       /** @description Successful pull of the metadata. */
       200: {
+        headers: Record<string, unknown>;
         content: {
           'application/json': components['schemas']['Metadata'];
         };
       };
     };
   };
-  /**
-   * @description Search feeds on feed name, location and provider's information.
-   * <br>
-   * The current implementation leverages the text search functionalities from [PostgreSQL](https://www.postgresql.org/docs/current/textsearch-controls.html), in particulary `plainto_tsquery`.
-   * <br><br>
-   * Points to consider while using search endpoint:
-   * <br>
-   * - Operators are not currently supported. Operators are ignored as stop-words.
-   * - Search is based on lexemes(English) and case insensitive. The search_text_query_param is parsed and normalized much as for to_tsvector, then the & (AND) tsquery operator is inserted between surviving words.
-   * - The search will match all the lexemes with an AND operator. So, all lexemes must be present in the document.
-   * - Our current implementation only creates English lexemes. We are currently considering adding support to more languages.
-   * - The order of the words is not relevant for matching. The query __New York__ should give you the same results as __York New__.
-   * <br><br>
-   * Example:
-   * <br>
-   * Query: New York Transit
-   * <br>
-   * Search Executed: 'new' & york & 'transit'
-   * <br>
-   */
   searchFeeds: {
     parameters: {
       query?: {
+        /** @description The number of items to be returned. */
         limit?: components['parameters']['limit_query_param_search_endpoint'];
+        /** @description Offset of the first item to return. */
         offset?: components['parameters']['offset'];
+        /** @description Filter feeds by their status. [Status definitions defined here](https://github.com/MobilityData/mobility-database-catalogs?tab=readme-ov-file#gtfs-schedule-schema) */
         status?: components['parameters']['statuses'];
+        /** @description The feed ID of the requested feed. */
         feed_id?: components['parameters']['feed_id_query_param'];
+        /** @description Comma separated list of data types to filter by. Valid values are gtfs, gtfs_rt and gbfs. */
         data_type?: components['parameters']['data_type_query_param'];
+        /** @description If true, only return official feeds. */
         is_official?: components['parameters']['is_official_query_param'];
+        /** @description Comma separated list of GBFS versions to filter by. */
         version?: components['parameters']['version_query_param'];
+        /** @description General search query to match against transit provider, location, and feed name. */
         search_query?: components['parameters']['search_text_query_param'];
+        /** @description Filter feeds by their GTFS features. [GTFS features definitions defined here](https://gtfs.org/getting-started/features/overview) */
         feature?: components['parameters']['feature'];
+        /** @description Comma separated list of license IDs to filter by. */
+        license_ids?: components['parameters']['license_ids_query_param'];
       };
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    requestBody?: never;
     responses: {
       /** @description Successful search feeds using full-text search on feed, location and provider's information, potentially returning a mixed array of different entity types. */
       200: {
+        headers: Record<string, unknown>;
         content: {
           'application/json': {
             /** @description The total number of matching entities found regardless the limit and offset parameters. */
@@ -1327,41 +1578,57 @@ export interface operations {
       };
     };
   };
-  /** @description Get the list of all licenses in the DB. */
   getLicenses: {
     parameters: {
       query?: {
+        /** @description The number of items to be returned. */
         limit?: components['parameters']['limit_query_param_licenses_endpoint'];
+        /** @description Offset of the first item to return. */
         offset?: components['parameters']['offset'];
       };
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    requestBody?: never;
     responses: {
       /** @description Successful pull of the licenses info. */
       200: {
+        headers: Record<string, unknown>;
         content: {
           'application/json': components['schemas']['Licenses'];
         };
       };
     };
   };
-  /** @description Get the specified license from the Mobility Database, including the license rules. */
   getLicense: {
     parameters: {
+      query?: never;
+      header?: never;
       path: {
+        /** @description The license ID of the requested license. */
         id: components['parameters']['license_id_path_param'];
       };
+      cookie?: never;
     };
+    requestBody?: never;
     responses: {
       /** @description Successful pull of the license info for the provided ID. */
       200: {
+        headers: Record<string, unknown>;
         content: {
           'application/json': components['schemas']['LicenseWithRules'];
         };
       };
     };
   };
-  /** @description Get the list of matching licenses based on the provided license URL */
   getMatchingLicenses: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
     /** @description Payload containing the license URL to match against the database. */
     requestBody: {
       content: {
@@ -1378,6 +1645,7 @@ export interface operations {
     responses: {
       /** @description The list of matching licenses if any. */
       200: {
+        headers: Record<string, unknown>;
         content: {
           'application/json': components['schemas']['MatchingLicenses'];
         };

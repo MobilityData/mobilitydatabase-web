@@ -69,6 +69,9 @@ export default function Feed(): React.ReactElement {
   const [selectGbfsVersions, setSelectGbfsVersions] = useState<string[]>(
     searchParams.get('gbfs_versions')?.split(',') ?? [],
   );
+  const [selectedLicenses, setSelectedLicenses] = useState<string[]>(
+    searchParams.get('licenses')?.split(',') ?? [],
+  );
   const [activePagination, setActivePagination] = useState(
     searchParams.get('o') !== null ? Number(searchParams.get('o')) : 1,
   );
@@ -130,6 +133,10 @@ export default function Feed(): React.ReactElement {
             version: areGBFSFiltersEnabled
               ? selectGbfsVersions.join(',').replaceAll('v', '')
               : undefined,
+            license_ids:
+              selectedLicenses.length > 0
+                ? selectedLicenses.join(',')
+                : undefined,
           },
         },
       }),
@@ -143,6 +150,7 @@ export default function Feed(): React.ReactElement {
     isOfficialFeedSearch,
     selectedFeatures,
     selectGbfsVersions,
+    selectedLicenses,
   ]);
 
   useEffect(() => {
@@ -169,6 +177,9 @@ export default function Feed(): React.ReactElement {
     if (selectGbfsVersions.length > 0) {
       newSearchParams.set('gbfs_versions', selectGbfsVersions.join(','));
     }
+    if (selectedLicenses.length > 0) {
+      newSearchParams.set('licenses', selectedLicenses.join(','));
+    }
     if (isOfficialFeedSearch) {
       newSearchParams.set('official', 'true');
     }
@@ -187,6 +198,7 @@ export default function Feed(): React.ReactElement {
     selectedFeedTypes,
     selectedFeatures,
     selectGbfsVersions,
+    selectedLicenses,
     isOfficialFeedSearch,
   ]);
 
@@ -212,6 +224,11 @@ export default function Feed(): React.ReactElement {
     const newGbfsVersions = searchParams.get('gbfs_versions')?.split(',') ?? [];
     if (newGbfsVersions.join(',') !== selectGbfsVersions.join(',')) {
       setSelectGbfsVersions([...newGbfsVersions]);
+    }
+
+    const newLicenses = searchParams.get('licenses')?.split(',') ?? [];
+    if (newLicenses.join(',') !== selectedLicenses.join(',')) {
+      setSelectedLicenses([...newLicenses]);
     }
 
     const newSearchOfficial = Boolean(searchParams.get('official')) ?? false;
@@ -265,6 +282,7 @@ export default function Feed(): React.ReactElement {
     });
     setSelectedFeatures([]);
     setSelectGbfsVersions([]);
+    setSelectedLicenses([]);
     setIsOfficialFeedSearch(false);
   }
 
@@ -400,6 +418,7 @@ export default function Feed(): React.ReactElement {
                 isOfficialFeedSearch={isOfficialFeedSearch}
                 selectedFeatures={selectedFeatures}
                 selectedGbfsVersions={selectGbfsVersions}
+                selectedLicenses={selectedLicenses}
                 setSelectedFeedTypes={(feedTypes) => {
                   setActivePagination(1);
                   setSelectedFeedTypes({ ...feedTypes });
@@ -415,6 +434,10 @@ export default function Feed(): React.ReactElement {
                 setSelectedGbfsVerions={(versions) => {
                   setSelectGbfsVersions(versions);
                   setActivePagination(1);
+                }}
+                setSelectedLicenses={(licenses) => {
+                  setActivePagination(1);
+                  setSelectedLicenses(licenses);
                 }}
                 isOfficialTagFilterEnabled={isOfficialTagFilterEnabled}
                 areFeatureFiltersEnabled={areFeatureFiltersEnabled}
@@ -515,8 +538,24 @@ export default function Feed(): React.ReactElement {
                     />
                   ))}
 
+                {selectedLicenses.map((license) => (
+                  <Chip
+                    color='primary'
+                    variant='outlined'
+                    size='small'
+                    label={license}
+                    key={license}
+                    onDelete={() => {
+                      setSelectedLicenses([
+                        ...selectedLicenses.filter((sl) => sl !== license),
+                      ]);
+                    }}
+                  />
+                ))}
+
                 {(selectedFeatures.length > 0 ||
                   selectGbfsVersions.length > 0 ||
+                  selectedLicenses.length > 0 ||
                   isOfficialFeedSearch ||
                   selectedFeedTypes.gtfs_rt ||
                   selectedFeedTypes.gtfs ||

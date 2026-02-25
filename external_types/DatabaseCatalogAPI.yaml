@@ -338,6 +338,7 @@ paths:
         - $ref: "#/components/parameters/version_query_param"
         - $ref: "#/components/parameters/search_text_query_param"
         - $ref: "#/components/parameters/feature"
+        - $ref: "#/components/parameters/license_ids_query_param"
       security:
         - Authentication: []
       responses:
@@ -1792,6 +1793,15 @@ components:
       schema:
         type: string
         example: 2.3
+
+    license_ids_query_param:
+      name: license_ids
+      in: query
+      description: Comma separated list of license IDs to filter by.
+      required: False
+      schema:
+        type: string
+        example: CC-BY-4.0,CC0-1.0
 
   securitySchemes:
     Authentication:
