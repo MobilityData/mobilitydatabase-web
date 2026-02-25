@@ -14,7 +14,7 @@ module.exports = {
       numberOfRuns: 1, // 1 to speed up the CI process but can be increased for more reliable results
       settings: {
         formFactor: 'desktop',
-        throttlingMethod: 'simulate',
+        throttlingMethod: 'provided',
         skipAudits: ['robots-txt', 'is-crawlable'],
         screenEmulation: {
           mobile: false,
