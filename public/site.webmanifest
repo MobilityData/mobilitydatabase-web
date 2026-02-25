@@ -1,7 +1,7 @@
 {
   "name": "Mobility Database",
   "short_name": "MobilityDB",
-  "description": "Access GTFS, GTFS Realtime, GBFS transit data with over 4,000 feeds from 70+ countries.",
+  "description": "Access GTFS, GTFS Realtime, GBFS transit data with over 6,000 feeds from 70+ countries.",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
