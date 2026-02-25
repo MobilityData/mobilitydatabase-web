@@ -228,7 +228,8 @@ export default function DrawerAppBar(): React.ReactElement {
                 sx={{
                   ml: 1,
                   fontWeight: 700,
-                  display: { xs: 'none', md: 'block', fontSize: '1.6rem' },
+                  fontSize: '1.6rem',
+                  display: { xs: 'none', md: 'block' },
                 }}
               >
                 MobilityDatabase

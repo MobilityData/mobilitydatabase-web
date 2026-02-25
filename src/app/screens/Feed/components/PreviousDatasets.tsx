@@ -205,7 +205,7 @@ export default function PreviousDatasets({
                             title={t('datasetHistoryTooltip.serviceDateRange')}
                             placement='top'
                           >
-                            <DateRangeIcon aria-hidden></DateRangeIcon>
+                            <DateRangeIcon aria-hidden />
                           </Tooltip>
 
                           {formatServiceDateRange(
@@ -343,7 +343,7 @@ export default function PreviousDatasets({
                         >
                           <Button
                             variant='text'
-                            aria-label={`${t('datasetHistoryTooltip.downloadReport')}${dataset.downloaded_at != null ? ` – ${new Date(dataset.downloaded_at).toDateString()}` : ''}`}
+                            aria-label={`${t('datasetHistoryTooltip.downloadReport')}${dataset.downloaded_at != null ? ` - ${new Date(dataset.downloaded_at).toDateString()}` : ''}`}
                             startIcon={<DownloadOutlined aria-hidden />}
                             size='medium'
                             href={dataset.hosted_url}

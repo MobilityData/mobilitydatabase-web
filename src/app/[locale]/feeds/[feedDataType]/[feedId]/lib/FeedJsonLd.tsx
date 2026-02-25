@@ -2,7 +2,6 @@ import { type ReactElement } from 'react';
 import { getTranslations } from 'next-intl/server';
 import type {
   AllFeedType,
-  GTFSFeedType,
   GTFSRTFeedType,
 } from '../../../../../services/feeds/utils';
 import {
@@ -44,8 +43,8 @@ export default async function FeedJsonLd({
   const structuredData = generateFeedStructuredData(
     feed,
     description,
+    relatedGtfsRtFeeds,
     relatedFeeds,
-    relatedGtfsRtFeeds as GTFSFeedType[],
   );
 
   if (structuredData == null) return null;
