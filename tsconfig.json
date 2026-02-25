@@ -37,6 +37,7 @@
     ]
   },
   "include": [
+    "next-env.d.ts",
     "src",
     "cypress/**/*.ts",
     "jest-global-setup.ts",

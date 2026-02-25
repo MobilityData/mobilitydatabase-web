@@ -1,5 +1,6 @@
 import { type ReactElement } from 'react';
 import FeedView from '../../../../../screens/Feed/FeedView';
+import FeedJsonLd from '../lib/FeedJsonLd';
 import type { Metadata, ResolvingMetadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { fetchCompleteFeedData } from '../lib/feed-data';
@@ -22,8 +23,6 @@ export async function generateMetadata(
   return generateFeedMetadata({
     feed: feedData?.feed,
     t,
-    gtfsFeeds: feedData?.relatedFeeds ?? [],
-    gtfsRtFeeds: feedData?.relatedGtfsRtFeeds ?? [],
   });
 }
 
@@ -57,14 +56,20 @@ export default async function AuthedFeedPage({
   } = feedData;
 
   return (
-    <FeedView
-      feed={feed}
-      feedDataType={feedDataType}
-      initialDatasets={initialDatasets}
-      relatedFeeds={relatedFeeds}
-      relatedGtfsRtFeeds={relatedGtfsRtFeeds}
-      totalRoutes={totalRoutes}
-      routeTypes={routeTypes}
-    />
+    <>
+      <FeedJsonLd
+        feed={feed}
+        relatedFeeds={relatedFeeds}
+        relatedGtfsRtFeeds={relatedGtfsRtFeeds}
+      />
+      <FeedView
+        feed={feed}
+        initialDatasets={initialDatasets}
+        relatedFeeds={relatedFeeds}
+        relatedGtfsRtFeeds={relatedGtfsRtFeeds}
+        totalRoutes={totalRoutes}
+        routeTypes={routeTypes}
+      />
+    </>
   );
 }

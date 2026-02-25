@@ -209,26 +209,30 @@ export default function DrawerAppBar(): React.ReactElement {
                 alignItems: 'center',
               }}
               className='btn-link'
+              aria-label='Mobility Database home'
             >
               <Image
-                src='/assets/MOBILTYDATA_logo_purple_M.webp'
+                src={
+                  theme.palette.mode === 'light'
+                    ? '/assets/MOBILTYDATA_logo_light_blue_M.png'
+                    : '/assets/MOBILTYDATA_logo_purple_M.png'
+                }
                 alt='MobilityData logo'
-                width={50}
-                height={50}
+                width={45}
+                height={45}
                 priority
                 fetchPriority='high'
               />
               <Typography
-                variant='h5'
-                component='h1'
                 color={'primary'}
                 sx={{
                   ml: 1,
                   fontWeight: 700,
+                  fontSize: '1.6rem',
                   display: { xs: 'none', md: 'block' },
                 }}
               >
-                Mobility Database
+                MobilityDatabase
               </Typography>
             </Link>
           </Box>

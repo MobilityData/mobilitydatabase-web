@@ -262,6 +262,12 @@
       "viewReport": "View Validation Report",
       "viewJsonReport": "View Validation Report in JSON format"
     },
+    "datasetHistoryColumns": {
+      "downloadedAt": "Téléchargé le",
+      "serviceDateRange": "Plage de dates de service",
+      "validationReport": "Rapport de validation",
+      "actions": "Actions"
+    },
     "viewRealtimeVisualization": "View real-time visualization",
     "versions": "Versions",
     "dataAttribution": "Transit data provided by",
@@ -368,7 +374,9 @@
       "producerUrl": "Producer URL",
       "providerUrl": "Provider URL",
       "systemId": "System ID",
-      "feedAuthentication": "Feed Authentication"
+      "feedAuthentication": "Feed Authentication",
+      "openAutoDiscoveryUrl": "Ouvrir l'URL de découverte automatique dans un nouvel onglet",
+      "downloadProducerUrl": "Télécharger l'URL du producteur"
     }
   },
   "account": {
@@ -480,7 +488,7 @@
     "browseFeeds": "Parcourir les flux",
     "addFeed": "Ajouter un flux",
     "signUpApi": "S'inscrire à l'API",
-    "description": "La Mobility Database est un catalogue de données ouvertes comprenant plus de 4000 flux GTFS, GTFS Realtime et GBFS dans plus de 75 pays. Que vous soyez un opérateur de transport, un chercheur étudiant les tendances du transport public et de la mobilité partagée, ou une application de cartes ayant besoin de données fiables, la Mobility Database a tout ce dont vous avez besoin en un seul endroit.",
+    "description": "La Mobility Database est un catalogue de données ouvertes comprenant plus de 6000 flux GTFS, GTFS Realtime et GBFS dans plus de 99 pays. Que vous soyez un opérateur de transport, un chercheur étudiant les tendances du transport public et de la mobilité partagée, ou une application de cartes ayant besoin de données fiables, la Mobility Database a tout ce dont vous avez besoin en un seul endroit.",
     "validatorIntro": "Notre base de données s'intègre avec",
     "gtfsValidator": "le validateur canonique GTFS Schedule",
     "and": "et",
@@ -489,7 +497,7 @@
   },
   "about": {
     "title": "À propos",
-    "description": "La Mobility Database est un catalogue ouvert comprenant plus de 4000 flux GTFS, GTFS Realtime et GBFS dans plus de 75 pays. Elle s'intègre avec les validateurs canoniques GTFS Schedule et GBFS pour partager des rapports de qualité des données pour chaque flux.\n\nCette base de données est hébergée et maintenue par MobilityData, l'organisation mondiale à but non lucratif dédiée à l'avancement des standards de données de transport ouvertes.",
+    "description": "La Mobility Database est un catalogue ouvert comprenant plus de 6000 flux GTFS, GTFS Realtime et GBFS dans plus de 99 pays. Elle s'intègre avec les validateurs canoniques GTFS Schedule et GBFS pour partager des rapports de qualité des données pour chaque flux.\n\nCette base de données est hébergée et maintenue par MobilityData, l'organisation mondiale à but non lucratif dédiée à l'avancement des standards de données de transport ouvertes.",
     "learnMore": "En savoir plus sur MobilityData",
     "whyUse": "Pourquoi utiliser la Mobility Database ?",
     "whyUseAnswer": "La Mobility Database fournit un accès gratuit aux flux GTFS, GTFS Realtime et GBFS historiques et actuels du monde entier. Ces flux sont vérifiés quotidiennement pour les mises à jour, garantissant que les données que vous consultez sont les plus récentes disponibles.",

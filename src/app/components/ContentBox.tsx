@@ -1,6 +1,5 @@
-'use client';
 import * as React from 'react';
-import { Box, Typography, useTheme, type SxProps } from '@mui/material';
+import { Box, Typography, type SxProps } from '@mui/material';
 
 export interface ContentBoxProps {
   title: string;
@@ -15,13 +14,12 @@ export interface ContentBoxProps {
 export const ContentBox = (
   props: React.PropsWithChildren<ContentBoxProps>,
 ): React.ReactElement => {
-  const theme = useTheme();
   return (
     <Box
       width={props.width ?? { xs: '100%', sm: '100%', md: '100%' }}
       sx={{
-        background: theme.palette.background.default,
-        color: theme.palette.text.primary,
+        backgroundColor: 'background.default',
+        color: 'text.primary',
         borderRadius: '6px',
         border: `2px solid ${props.outlineColor}`,
         p: props.padding ?? 5,

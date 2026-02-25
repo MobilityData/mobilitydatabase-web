@@ -14,13 +14,23 @@ import { Container } from '@mui/material';
 import { type Locale, routing } from '../../i18n/routing';
 
 export const metadata = {
-  title: 'Mobility Database',
+  title:
+    'MobilityDatabase | The Global Catalog of GTFS, GTFS-Realtime & GBFS Feeds',
   description:
-    "Access GTFS, GTFS Realtime, GBFS transit data with over 4,000 feeds from 70+ countries on the web's leading transit data platform.",
+    "Access GTFS, GTFS Realtime, GBFS transit data with over 6,000 feeds from 99+ countries on the web's leading transit data platform.",
   robots:
     process.env.VERCEL_ENV === 'production'
       ? 'index, follow'
       : 'noindex, nofollow',
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: [{ url: '/apple-touch-icon.png' }],
+  },
+  manifest: '/site.webmanifest',
 };
 
 export const viewport = {

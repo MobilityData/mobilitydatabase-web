@@ -262,6 +262,12 @@
       "viewReport": "View Validation Report",
       "viewJsonReport": "View Validation Report in JSON format"
     },
+    "datasetHistoryColumns": {
+      "downloadedAt": "Downloaded At",
+      "serviceDateRange": "Service Date Range",
+      "validationReport": "Validation Report",
+      "actions": "Actions"
+    },
     "viewRealtimeVisualization": "View real-time visualization",
     "versions": "Versions",
     "dataAttribution": "Transit data provided by",
@@ -368,7 +374,9 @@
       "producerUrl": "Producer URL",
       "providerUrl": "Provider URL",
       "systemId": "System ID",
-      "feedAuthentication": "Feed Authentication"
+      "feedAuthentication": "Feed Authentication",
+      "openAutoDiscoveryUrl": "Open auto-discovery URL in new tab",
+      "downloadProducerUrl": "Download producer URL"
     }
   },
   "account": {
@@ -480,7 +488,7 @@
     "browseFeeds": "Browse Feeds",
     "addFeed": "Add a feed",
     "signUpApi": "Sign up for the API",
-    "description": "The Mobility Database is an open data catalog including over 4000 GTFS, GTFS Realtime, and GBFS feeds in over 75 countries. Whether you're a transportation operator, a researcher studying public transit and shared mobility trends, or a maps app needing reliable data to use with your application, the Mobility Database has everything you need in one central location.",
+    "description": "The Mobility Database is an open data catalog including over 6000 GTFS, GTFS Realtime, and GBFS feeds in over 99 countries. Whether you're a transportation operator, a researcher studying public transit and shared mobility trends, or a maps app needing reliable data to use with your application, the Mobility Database has everything you need in one central location.",
     "validatorIntro": "Our database integrates with",
     "gtfsValidator": "the Canonical GTFS Schedule Validator",
     "and": "and",
@@ -489,7 +497,7 @@
   },
   "about": {
     "title": "About",
-    "description": "The Mobility Database is an open catalog including over 4000 GTFS, GTFS Realtime, and GBFS feeds in over 75 countries. It integrates with the Canonical GTFS Schedule and GBFS Validators to share data quality reports for each feed.\n\nThis database is hosted and maintained by MobilityData, the global non-profit organization dedicated to the advancement of open transportation data standards.",
+    "description": "The Mobility Database is an open catalog including over 6000 GTFS, GTFS Realtime, and GBFS feeds in over 99 countries. It integrates with the Canonical GTFS Schedule and GBFS Validators to share data quality reports for each feed.\n\nThis database is hosted and maintained by MobilityData, the global non-profit organization dedicated to the advancement of open transportation data standards.",
     "learnMore": "Learn more about MobilityData",
     "whyUse": "Why Use the Mobility Database?",
     "whyUseAnswer": "The Mobility Database provides free access to historical and current GTFS, GTFS Realtime, and GBFS feeds from around the world. These feeds are checked for updates every day, ensuring that the data you're looking at is the most recent data available.",

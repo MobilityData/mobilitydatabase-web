@@ -1,29 +1,19 @@
-import {
-  Box,
-  Button,
-  Container,
-  CssBaseline,
-  Grid,
-  Typography,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Container from '@mui/material/Container';
+import CssBaseline from '@mui/material/CssBaseline';
+import Grid from '@mui/material/Grid';
+import Typography from '@mui/material/Typography';
 
 // Components
 import FeedTitle from './components/FeedTitle';
 import OfficialChip from '../../components/OfficialChip';
 import DataQualitySummary from './components/DataQualitySummary';
-import CoveredAreaMap from '../../components/CoveredAreaMap';
 import FeedSummary from './components/FeedSummary';
-import AssociatedFeeds from './components/AssociatedFeeds';
-import GbfsVersions from './components/GbfsVersions';
-import PreviousDatasets from './components/PreviousDatasets';
-import { WarningContentBox } from '../../components/WarningContentBox';
 import FeedNavigationControls from './components/FeedNavigationControls';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-
 import { getTranslations } from 'next-intl/server';
-
-// Styles
-import { ctaContainerStyle } from './Feed.styles';
+import { notFound } from 'next/navigation';
 
 // Utils
 import {
@@ -36,10 +26,42 @@ import ClientDownloadButton from './components/ClientDownloadButton';
 import { type components } from '../../services/feeds/types';
 import ClientQualityReportButton from './components/ClientQualityReportButton';
 import { getBoundingBox } from './Feed.functions';
+import dynamic from 'next/dynamic';
+
+const CoveredAreaMap = dynamic(
+  async () =>
+    await import('../../components/CoveredAreaMap').then((mod) => mod.default),
+  {},
+);
+
+const WarningContentBox = dynamic(
+  async () =>
+    await import('../../components/WarningContentBox').then(
+      (mod) => mod.WarningContentBox,
+    ),
+  {},
+);
+
+const AssociatedFeeds = dynamic(
+  async () =>
+    await import('./components/AssociatedFeeds').then((mod) => mod.default),
+  {},
+);
+
+const GbfsVersions = dynamic(
+  async () =>
+    await import('./components/GbfsVersions').then((mod) => mod.default),
+  {},
+);
+
+const PreviousDatasets = dynamic(
+  async () =>
+    await import('./components/PreviousDatasets').then((mod) => mod.default),
+  {},
+);
 
 interface Props {
   feed: BasicFeedType;
-  feedDataType: string;
   initialDatasets?: Array<components['schemas']['GtfsDataset']>;
   relatedFeeds?: GTFSFeedType[];
   relatedGtfsRtFeeds?: GTFSRTFeedType[];
@@ -51,17 +73,19 @@ type LatestDatasetFull = components['schemas']['GtfsDataset'] | undefined;
 
 export default async function FeedView({
   feed,
-  feedDataType,
   initialDatasets,
   relatedFeeds = [],
   relatedGtfsRtFeeds = [],
   totalRoutes,
   routeTypes,
 }: Props): Promise<React.ReactElement> {
-  const t = await getTranslations('feeds');
-  const tGbfs = await getTranslations('gbfs');
-  const tCommon = await getTranslations('common');
-  if (feed == undefined) return <Box>Feed not found</Box>;
+  if (feed == undefined) notFound();
+
+  const [t, tGbfs, tCommon] = await Promise.all([
+    getTranslations('feeds'),
+    getTranslations('gbfs'),
+    getTranslations('common'),
+  ]);
 
   // Basic derived data
   const sortedProviders =
@@ -151,6 +175,7 @@ export default async function FeedView({
             {feed?.feed_name !== '' && feed?.data_type === 'gtfs' && (
               <Grid size={12}>
                 <Typography
+                  component={'h2'}
                   sx={{
                     fontWeight: 'bold',
                     fontSize: { xs: 18, sm: 24 },
@@ -166,7 +191,7 @@ export default async function FeedView({
               <DataQualitySummary
                 feedStatus={feed?.status}
                 isOfficialFeed={feed.official === true}
-                latestDataset={(feed as GTFSFeedType)?.latest_dataset}
+                latestDataset={latestDataset}
               />
             )}
 
@@ -264,7 +289,7 @@ export default async function FeedView({
               )}
 
             {/* Warnings */}
-            {feedDataType === 'gtfs' && !hasDatasets && !hasFeedRedirect && (
+            {feed.data_type === 'gtfs' && !hasDatasets && !hasFeedRedirect && (
               <WarningContentBox>
                 {t.rich('unableToDownloadFeed', {
                   link: (chunks) => (
@@ -298,7 +323,18 @@ export default async function FeedView({
             )}
 
             {/* CTA Buttons */}
-            <Box sx={ctaContainerStyle}>
+            <Box
+              sx={{
+                my: 3,
+                width: '100%',
+                display: 'flex',
+                flexWrap: { xs: 'wrap', sm: 'nowrap' },
+                gap: 1,
+                borderTop: `1px solid`,
+                borderColor: 'divider',
+                pt: 3,
+              }}
+            >
               {feed.data_type === 'gtfs' &&
                 downloadLatestUrl != null &&
                 downloadLatestUrl.length > 0 && (

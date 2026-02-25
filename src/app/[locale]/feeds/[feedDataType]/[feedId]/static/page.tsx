@@ -1,6 +1,8 @@
 import { type ReactElement } from 'react';
 import FeedView from '../../../../../screens/Feed/FeedView';
+import FeedJsonLd from '../lib/FeedJsonLd';
 import type { Metadata, ResolvingMetadata } from 'next';
+import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { fetchGuestFeedData } from '../lib/guest-feed-data';
 import { generateFeedMetadata } from '../lib/generate-feed-metadata';
@@ -15,16 +17,15 @@ export async function generateMetadata(
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
   const { feedId, feedDataType } = await params;
-  const t = await getTranslations();
 
-  // Use guest (ISR-safe) fetcher - same cache as page component
-  const feedData = await fetchGuestFeedData(feedDataType, feedId);
+  const [t, feedData] = await Promise.all([
+    getTranslations(),
+    fetchGuestFeedData(feedDataType, feedId),
+  ]);
 
   return generateFeedMetadata({
     feed: feedData.feed,
     t,
-    gtfsFeeds: feedData.relatedFeeds,
-    gtfsRtFeeds: feedData.relatedGtfsRtFeeds,
   });
 }
 
@@ -40,7 +41,7 @@ export default async function StaticFeedPage({
   } catch (e) {
     // Layout should have caught non-existent feeds, but handle edge case
     console.error(`[StaticFeedPage] Failed to fetch feed ${feedId}:`, e);
-    return <div>Feed not found</div>;
+    notFound();
   }
 
   const {
@@ -53,14 +54,20 @@ export default async function StaticFeedPage({
   } = feedData;
 
   return (
-    <FeedView
-      feed={feed}
-      feedDataType={feedDataType}
-      initialDatasets={initialDatasets}
-      relatedFeeds={relatedFeeds}
-      relatedGtfsRtFeeds={relatedGtfsRtFeeds}
-      totalRoutes={totalRoutes}
-      routeTypes={routeTypes}
-    />
+    <>
+      <FeedJsonLd
+        feed={feed}
+        relatedFeeds={relatedFeeds}
+        relatedGtfsRtFeeds={relatedGtfsRtFeeds}
+      />
+      <FeedView
+        feed={feed}
+        initialDatasets={initialDatasets}
+        relatedFeeds={relatedFeeds}
+        relatedGtfsRtFeeds={relatedGtfsRtFeeds}
+        totalRoutes={totalRoutes}
+        routeTypes={routeTypes}
+      />
+    </>
   );
 }

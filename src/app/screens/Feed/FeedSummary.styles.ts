@@ -1,4 +1,5 @@
 import { Box, Card, styled, Typography } from '@mui/material';
+import type { ElementType } from 'react';
 
 export const GroupCard = styled(Card)(({ theme }) => ({
   background: theme.palette.background.default,
@@ -10,13 +11,15 @@ export const GroupCard = styled(Card)(({ theme }) => ({
   },
 }));
 
-export const GroupHeader = styled(Typography)(({ theme }) => ({
-  display: 'flex',
-  gap: theme.spacing(1),
-  marginBottom: theme.spacing(1),
-  alignItems: 'center',
-  color: theme.palette.text.secondary,
-}));
+export const GroupHeader = styled(Typography)<{ component?: ElementType }>(
+  ({ theme }) => ({
+    display: 'flex',
+    gap: theme.spacing(1),
+    marginBottom: theme.spacing(1),
+    alignItems: 'center',
+    color: theme.palette.text.secondary,
+  }),
+);
 
 export const FeedLinkElement = styled(Box)(({ theme }) => ({
   width: 'calc(100% - 16px)',
