@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 
 import '../analytics.css';
-import { useLocation } from 'react-router-dom';
+import { useSearchParams } from 'next/navigation';
 import {
   fetchAvailableFilesStart,
   selectFile,
@@ -42,13 +42,12 @@ export const getAnalyticsBucketEndpoint = (): string | undefined =>
   globalAnalyticsBucketEndpoint;
 
 export default function GTFSFeedAnalytics(): React.ReactElement {
-  const { search } = useLocation();
-  const params = new URLSearchParams(search);
+  const searchParams = useSearchParams();
   const { config } = useRemoteConfig();
 
-  const severity = params.get('severity');
-  const noticeCode = params.get('noticeCode');
-  const featureName = params.get('featureName');
+  const severity = searchParams.get('severity');
+  const noticeCode = searchParams.get('noticeCode');
+  const featureName = searchParams.get('featureName');
 
   const dispatch = useDispatch();
   const data = useSelector(selectGTFSFeedMetrics);

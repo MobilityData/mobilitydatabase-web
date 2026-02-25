@@ -6,7 +6,7 @@ import Link from '@mui/material/Link';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '../hooks';
 import { resetPassword } from '../store/profile-reducer';
 import { useSelector } from 'react-redux';
@@ -26,7 +26,7 @@ import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function ForgotPassword(): React.ReactElement {
   const dispatch = useAppDispatch();
-  const navigateTo = useNavigate();
+  const router = useRouter();
   const userProfileStatus = useSelector(selectUserProfileStatus);
   const resetPasswordError = useSelector(selectResetPasswordError);
   const resetPasswordSuccess = useSelector(selectIsRecoveryEmailSent);
@@ -54,10 +54,10 @@ export default function ForgotPassword(): React.ReactElement {
 
   React.useEffect(() => {
     if (userProfileStatus === 'registered') {
-      navigateTo(ACCOUNT_TARGET);
+      router.push(ACCOUNT_TARGET);
     }
     if (userProfileStatus === 'authenticated') {
-      navigateTo(COMPLETE_REGISTRATION_TARGET);
+      router.push(COMPLETE_REGISTRATION_TARGET);
     }
   }, [userProfileStatus]);
 

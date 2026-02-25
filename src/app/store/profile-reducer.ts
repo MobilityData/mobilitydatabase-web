@@ -6,7 +6,6 @@ import {
   type OauthProvider,
   type ProfileErrors,
 } from '../types';
-import { type NavigateFunction } from 'react-router-dom';
 import { type UserCredential } from 'firebase/auth';
 
 interface UserProfileState {
@@ -83,7 +82,7 @@ export const userProfileSlice = createSlice({
       state,
       action: PayloadAction<{
         redirectScreen: string;
-        navigateTo: NavigateFunction;
+        navigateTo: (path: string) => void;
         propagate: boolean;
       }>,
     ) => {

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { type MRT_Cell, type MRT_ColumnDef } from 'material-react-table';
 import { format } from 'date-fns';
 import { type GTFSFeedMetrics } from '../types';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Box, IconButton, MenuItem, Stack, Tooltip } from '@mui/material';
 import { OpenInNew } from '@mui/icons-material';
 import {
@@ -30,7 +30,7 @@ export const useTableColumns = (
   avgWarnings: number,
   avgInfos: number,
 ): Array<MRT_ColumnDef<GTFSFeedMetrics>> => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   return useMemo<Array<MRT_ColumnDef<GTFSFeedMetrics>>>(
     () => [
@@ -166,7 +166,7 @@ export const useTableColumns = (
                 }}
                 className={'navigable-list-item'}
                 onClick={() => {
-                  navigate(`/metrics/gtfs/notices?noticeCode=${error}`);
+                  router.push(`/metrics/gtfs/notices?noticeCode=${error}`);
                 }}
               >
                 {error}
@@ -208,7 +208,7 @@ export const useTableColumns = (
                 }}
                 className={'navigable-list-item'}
                 onClick={() => {
-                  navigate(`/metrics/gtfs/notices?noticeCode=${warning}`);
+                  router.push(`/metrics/gtfs/notices?noticeCode=${warning}`);
                 }}
               >
                 {warning}
@@ -258,7 +258,7 @@ export const useTableColumns = (
                 }}
                 className={'navigable-list-item'}
                 onClick={() => {
-                  navigate(`/metrics/gtfs/notices?noticeCode=${info}`);
+                  router.push(`/metrics/gtfs/notices?noticeCode=${info}`);
                 }}
               >
                 {info}
@@ -318,7 +318,7 @@ export const useTableColumns = (
                           style={{ cursor: 'pointer', marginLeft: '10px' }}
                           className={'navigable-list-item'}
                           onClick={() => {
-                            navigate(
+                            router.push(
                               `/metrics/gtfs/features?featureName=${featureData.feature}`,
                             );
                           }}
@@ -349,7 +349,7 @@ export const useTableColumns = (
       },
     ],
     [
-      navigate,
+      router,
       uniqueErrors,
       uniqueWarnings,
       uniqueInfos,

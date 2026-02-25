@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { AuthTypeEnum, useGbfsAuth } from '../../context/GbfsAuthProvider';
 import { useSelector } from 'react-redux';
 import { selectGbfsValidationParams } from '../../store/gbfs-validator-selectors';
@@ -31,7 +31,7 @@ export default function GbfsFeedSearchInput({
 }: GbfsFeedSearchInputProps): React.ReactElement {
   const lastSearchParams = useSelector(selectGbfsValidationParams);
   const theme = useTheme();
-  const navigate = useNavigate();
+  const router = useRouter();
   const { auth, setAuth } = useGbfsAuth();
   const [autoDiscoveryUrlInput, setAutoDiscoveryUrlInput] = useState<string>(
     initialFeedUrl ?? '',
@@ -144,7 +144,7 @@ export default function GbfsFeedSearchInput({
       triggerDataFetch();
       return;
     }
-    navigate(
+    router.push(
       `/gbfs-validator?AutoDiscoveryUrl=${encodeURIComponent(
         autoDiscoveryUrlInput,
       )}`,

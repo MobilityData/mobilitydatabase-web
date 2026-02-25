@@ -16,15 +16,15 @@ import { type ProfileError } from '../types';
 import { app } from '../../firebase';
 import { useEffect } from 'react';
 import { ACCOUNT_TARGET, ADD_FEED_TARGET } from '../constants/Navigation';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useRouter, useSearchParams } from 'next/navigation';
 export default function PostRegistration(): React.ReactElement {
   const dispatch = useDispatch();
-  const navigateTo = useNavigate();
+  const router = useRouter();
   const selectResendEmailSuccess = useSelector(selectIsVerificationEmailSent);
   const selectResendEmailError = useSelector(selectEmailVerificationError);
   const userProfileStatus = useSelector(selectUserProfileStatus);
   const [resendEmailSuccess, setResendEmailSuccess] = React.useState(false);
-  const [searchParams] = useSearchParams();
+  const searchParams = useSearchParams();
   const [resendEmailError, setResendEmailError] =
     React.useState<ProfileError | null>(null);
   React.useEffect(() => {
@@ -60,9 +60,9 @@ export default function PostRegistration(): React.ReactElement {
       userProfileStatus === 'authenticated'
     ) {
       if (searchParams.has('add_feed')) {
-        navigateTo(ADD_FEED_TARGET, { state: { from: 'registration' } });
+        router.push(ADD_FEED_TARGET + '?from=registration');
       } else {
-        navigateTo(ACCOUNT_TARGET);
+        router.push(ACCOUNT_TARGET);
       }
     }
   }, [userProfileStatus]);
