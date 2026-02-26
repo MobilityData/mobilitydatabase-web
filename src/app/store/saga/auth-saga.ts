@@ -22,6 +22,7 @@ import {
   changePasswordSuccess,
   loginFail,
   loginSuccess,
+  logoutFail,
   logoutSuccess,
   signUpFail,
   signUpSuccess,
@@ -91,17 +92,22 @@ function* logoutSaga({
   propagate: boolean;
 }>): Generator {
   try {
-    navigateTo(redirectScreen);
     yield app.auth().signOut();
     // Clear the HTTP-only md_session cookie on logout so that
     // server-side requests immediately see the user as logged out.
     yield call(clearUserCookieSession);
     yield put(logoutSuccess());
     if (propagate) {
-      broadcastMessage(LOGOUT_CHANNEL);
+      try {
+        broadcastMessage(LOGOUT_CHANNEL);
+      } catch {
+        // Broadcast channels may not be initialised if no
+        // legacy [...slug] page has been rendered yet.
+      }
     }
+    navigateTo(redirectScreen);
   } catch (error) {
-    yield put(loginFail(getAppError(error) as ProfileError));
+    yield put(logoutFail());
   }
 }
 
