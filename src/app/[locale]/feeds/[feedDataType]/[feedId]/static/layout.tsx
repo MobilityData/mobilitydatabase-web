@@ -31,18 +31,6 @@ export default async function StaticFeedLayout({
   children,
   params,
 }: Props): Promise<React.ReactElement> {
-  const { feedId, feedDataType } = await params;
-
-  let feedData;
-  try {
-    feedData = await fetchGuestFeedData(feedDataType, feedId);
-  } catch {
-    notFound();
-  }
-
-  if (feedData == null) {
-    notFound();
-  }
 
   return <>{children}</>;
 }
