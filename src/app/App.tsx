@@ -41,7 +41,7 @@ function App({ locale }: AppProps): React.ReactElement {
   const initialPath = buildPathFromNextRouter(pathname, searchParams, locale);
 
   useEffect(() => {
-    app.auth().onAuthStateChanged((user) => {
+    const unsubscribe = app.auth().onAuthStateChanged((user) => {
       if (user != null) {
         setIsAppReady(true);
       } else {
@@ -50,6 +50,9 @@ function App({ locale }: AppProps): React.ReactElement {
       }
     });
     dispatch(anonymousLogin());
+    return () => {
+      unsubscribe();
+    };
   }, [dispatch]);
 
   return (
