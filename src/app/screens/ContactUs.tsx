@@ -107,7 +107,7 @@ export default function ContactUs(): React.ReactElement {
           <Button
             variant={'contained'}
             className='action-button'
-            href='https://github.com/MobilityData/mobility-feed-api'
+            href='https://github.com/MobilityData/mobilitydatabase-web'
             target='_blank'
             rel='noopener noreferrer'
           >
