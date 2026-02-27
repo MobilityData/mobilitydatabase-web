@@ -13,7 +13,6 @@ import FAQ from '../screens/FAQ';
 import PostRegistration from '../screens/PostRegistration';
 import TermsAndConditions from '../screens/TermsAndConditions';
 import PrivacyPolicy from '../screens/PrivacyPolicy';
-import Feeds from '../screens/Feeds';
 import { SIGN_OUT_TARGET } from '../constants/Navigation';
 import {
   LOGIN_CHANNEL,
