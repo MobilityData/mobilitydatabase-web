@@ -3,7 +3,9 @@ import {
   Card,
   CardActionArea,
   Chip,
+  CircularProgress,
   type SxProps,
+  Theme,
   Tooltip,
   Typography,
   useTheme,
@@ -24,12 +26,14 @@ import OfficialChip from '../../components/OfficialChip';
 import { getFeatureComponentDecorators } from '../../utils/consts';
 import PopoverList from './PopoverList';
 import ProviderTitle from './ProviderTitle';
-import Link from 'next/link';
+import NextLinkComposed from 'next/link';
+import { useRouter } from '../../../i18n/navigation';
 
 export interface AdvancedSearchTableProps {
   feedsData: AllFeedsType | undefined;
   selectedFeatures: string[] | undefined;
   selectedGbfsVersions: string[] | undefined;
+  isLoadingFeeds: boolean;
 }
 
 interface DetailsContainerProps {
@@ -72,8 +76,8 @@ const DetailsContainer = ({
 const renderGTFSDetails = (
   gtfsFeed: SearchFeedItem,
   selectedFeatures: string[],
+  theme: Theme
 ): React.ReactElement => {
-  const theme = useTheme();
   const feedFeatures =
     gtfsFeed?.latest_dataset?.validation_report?.features ?? [];
   return (
@@ -133,8 +137,8 @@ const renderGTFSRTDetails = (
 const renderGBFSDetails = (
   gbfsFeedSearchElement: SearchFeedItem,
   selectedGbfsVersions: string[],
+  theme: Theme
 ): React.ReactElement => {
-  const theme = useTheme();
   return (
     <DetailsContainer feedSearchItem={gbfsFeedSearchElement}>
       {gbfsFeedSearchElement.versions?.map((version: string, index: number) => (
@@ -160,6 +164,7 @@ export default function AdvancedSearchTable({
   feedsData,
   selectedFeatures,
   selectedGbfsVersions,
+  isLoadingFeeds
 }: AdvancedSearchTableProps): React.ReactElement {
   const t = useTranslations('feeds');
   const tCommon = useTranslations('common');
@@ -168,6 +173,8 @@ export default function AdvancedSearchTable({
     undefined,
   );
   const [popoverTitle, setPopoverTitle] = React.useState<string | undefined>();
+  const router = useRouter();
+  const [isPending, startTransition] = React.useTransition();
   const theme = useTheme();
 
   const descriptionDividerStyle: SxProps = {
@@ -181,6 +188,21 @@ export default function AdvancedSearchTable({
 
   return (
     <>
+      {(isPending) && (
+        <Box
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1300,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'rgba(255,255,255,0.2)',
+          }}
+        >
+          <CircularProgress variant='indeterminate' />
+        </Box>
+      )}
       {feedsData?.results?.map((feed, index) => {
         if (feed == null) {
           return <></>;
@@ -201,9 +223,21 @@ export default function AdvancedSearchTable({
             }}
           >
             <CardActionArea
-              sx={{ p: 1 }}
-              component={Link}
+              sx={{ p: 1, opacity: (isPending || isLoadingFeeds) ? 0.7 : 1 }}
+              component={NextLinkComposed}
               href={`/feeds/${feed.data_type}/${feed.id}`}
+              prefetch={false}
+              onClick={(e) => {
+                // Navigation to Feed Detail Page can have a delay
+                // Show loading state to ease transition
+                // This will be further reviewed
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1)
+                  return;
+                e.preventDefault();
+                startTransition(() =>
+                  router.push(`/feeds/${feed.data_type}/${feed.id}`),
+                );
+              }}
             >
               <Box
                 sx={{
@@ -341,7 +375,7 @@ export default function AdvancedSearchTable({
                         : {}
                     }
                   >
-                    {renderGTFSDetails(feed, selectedFeatures ?? [])}
+                    {renderGTFSDetails(feed, selectedFeatures ?? [], theme)}
                   </Box>
                 )}
                 {feed.data_type === 'gtfs_rt' && (
@@ -352,7 +386,7 @@ export default function AdvancedSearchTable({
 
                 {feed.data_type === 'gbfs' && (
                   <Box sx={hasGbfsVersions ? descriptionDividerStyle : {}}>
-                    {renderGBFSDetails(feed, selectedGbfsVersions ?? [])}
+                    {renderGBFSDetails(feed, selectedGbfsVersions ?? [], theme)}
                   </Box>
                 )}
               </Box>

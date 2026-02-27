@@ -2,6 +2,7 @@ import * as React from 'react';
 import {
   Box,
   Chip,
+  CircularProgress,
   Popper,
   Table,
   TableBody,
@@ -20,7 +21,8 @@ import {
 } from '../../services/feeds/utils';
 import { useTranslations } from 'next-intl';
 import GtfsRtEntities from './GtfsRtEntities';
-import Link from 'next/link';
+import NextLinkComposed from 'next/link';
+import { useRouter } from '../../../i18n/navigation';
 import { getEmojiFlag, type TCountryCode } from 'countries-list';
 import OfficialChip from '../../components/OfficialChip';
 import ProviderTitle from './ProviderTitle';
@@ -69,6 +71,8 @@ export default function SearchTable({
   feedsData,
 }: SearchTableProps): React.ReactElement {
   const theme = useTheme();
+  const router = useRouter();
+  const [isPending, startTransition] = React.useTransition();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [providersPopoverData, setProvidersPopoverData] = React.useState<
     string[] | undefined
@@ -78,6 +82,22 @@ export default function SearchTable({
 
   // Reason for all component overrite is for SEO purposes.
   return (
+    <>
+      {isPending && (
+        <Box
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1300,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'rgba(255,255,255,0.2)',
+          }}
+        >
+          <CircularProgress variant='indeterminate' />
+        </Box>
+      )}
     <Table
       component={Box}
       size='small'
@@ -137,9 +157,18 @@ export default function SearchTable({
         {feedsData?.results?.map((feed) => (
           <TableRow
             className='feed-row'
-            component={Link}
+            component={NextLinkComposed}
             href={`/feeds/${feed.data_type}/${feed.id}`}
+            prefetch={false}
             key={feed.id}
+            onClick={(e: React.MouseEvent) => {
+              // Navigation to Feed Detail Page can have a delay
+              // Show loading state to ease transition
+              // This will be further reviewed
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+              e.preventDefault();
+              startTransition(() => router.push(`/feeds/${feed.data_type}/${feed.id}`));
+            }}
             sx={{
               textDecoration: 'none',
               backgroundColor: theme.palette.background.default,
@@ -275,5 +304,6 @@ export default function SearchTable({
         </Popper>
       )}
     </Table>
+    </>
   );
 }
