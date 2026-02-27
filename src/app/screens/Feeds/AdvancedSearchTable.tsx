@@ -5,7 +5,7 @@ import {
   Chip,
   CircularProgress,
   type SxProps,
-  Theme,
+  type Theme,
   Tooltip,
   Typography,
   useTheme,
@@ -76,7 +76,7 @@ const DetailsContainer = ({
 const renderGTFSDetails = (
   gtfsFeed: SearchFeedItem,
   selectedFeatures: string[],
-  theme: Theme
+  theme: Theme,
 ): React.ReactElement => {
   const feedFeatures =
     gtfsFeed?.latest_dataset?.validation_report?.features ?? [];
@@ -137,7 +137,7 @@ const renderGTFSRTDetails = (
 const renderGBFSDetails = (
   gbfsFeedSearchElement: SearchFeedItem,
   selectedGbfsVersions: string[],
-  theme: Theme
+  theme: Theme,
 ): React.ReactElement => {
   return (
     <DetailsContainer feedSearchItem={gbfsFeedSearchElement}>
@@ -164,7 +164,7 @@ export default function AdvancedSearchTable({
   feedsData,
   selectedFeatures,
   selectedGbfsVersions,
-  isLoadingFeeds
+  isLoadingFeeds,
 }: AdvancedSearchTableProps): React.ReactElement {
   const t = useTranslations('feeds');
   const tCommon = useTranslations('common');
@@ -184,8 +184,12 @@ export default function AdvancedSearchTable({
       setShowLoading(false);
       return;
     }
-    const timer = setTimeout(() => setShowLoading(true), 300);
-    return () => clearTimeout(timer);
+    const timer = setTimeout(() => {
+      setShowLoading(true);
+    }, 300);
+    return () => {
+      clearTimeout(timer);
+    };
   }, [isPending]);
 
   const descriptionDividerStyle: SxProps = {
@@ -234,7 +238,7 @@ export default function AdvancedSearchTable({
             }}
           >
             <CardActionArea
-              sx={{ p: 1, opacity: (showLoading || isLoadingFeeds) ? 0.7 : 1 }}
+              sx={{ p: 1, opacity: showLoading || isLoadingFeeds ? 0.7 : 1 }}
               component={NextLinkComposed}
               href={`/feeds/${feed.data_type}/${feed.id}`}
               prefetch={false}
@@ -245,9 +249,9 @@ export default function AdvancedSearchTable({
                 if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1)
                   return;
                 e.preventDefault();
-                startTransition(() =>
-                  router.push(`/feeds/${feed.data_type}/${feed.id}`),
-                );
+                startTransition(() => {
+                  router.push(`/feeds/${feed.data_type}/${feed.id}`);
+                });
               }}
             >
               <Box

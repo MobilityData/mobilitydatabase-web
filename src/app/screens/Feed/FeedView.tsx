@@ -227,12 +227,12 @@ export default async function FeedView({
                 </Typography>
               )}
               <Typography
-                  data-testid='page-generated'
-                  variant={'caption'}
-                  width={'100%'}
-                  component={'div'}
-                >
-                  {`Page generated at: ${new Date().toUTCString().replace(' GMT', ' UTC')}`}
+                data-testid='page-generated'
+                variant={'caption'}
+                width={'100%'}
+                component={'div'}
+              >
+                {`Page generated at: ${new Date().toUTCString().replace(' GMT', ' UTC')}`}
               </Typography>
               {feed.external_ids?.some((eId) => eId.source === 'tld') ===
                 true && (

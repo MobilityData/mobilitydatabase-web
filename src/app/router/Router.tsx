@@ -27,7 +27,6 @@ import GBFSFeedAnalytics from '../screens/Analytics/GBFSFeedAnalytics';
 import GBFSNoticeAnalytics from '../screens/Analytics/GBFSNoticeAnalytics';
 import GBFSVersionAnalytics from '../screens/Analytics/GBFSVersionAnalytics';
 
-
 export const AppRouter: React.FC = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();

@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import useSWR from 'swr';
-import { useSWRConfig } from 'swr';
+import useSWR, { useSWRConfig } from 'swr';
 import { searchFeeds } from '../../../services/feeds';
 import {
   type AllFeedsType,
@@ -24,7 +23,7 @@ const CACHE_TTL_MS = 60 * 30 * 1000; // 30 minutes - controls how long search re
  * SWR attempts to fetch. If no user is signed in, triggers anonymous
  * sign-in — the same thing App.tsx does for legacy React Router pages.
  * This is needed for the access token
- * 
+ *
  * TODO: Revisit this logic to be used at a more global level without slowing down the initial load of all pages that don't require auth (e.g. about, contact). For example, we could move this logic to a context provider that's used only on the feeds page and its children.
  */
 function useFirebaseAuthReady(): boolean {
@@ -37,10 +36,13 @@ function useFirebaseAuthReady(): boolean {
       } else {
         // No user — trigger anonymous sign-in (mirrors App.tsx behavior)
         setIsReady(false);
-        app.auth().signInAnonymously().catch(() => {
-          // Auth listener will handle the state update on success;
-          // if sign-in fails, isReady stays false and SWR won't fetch.
-        });
+        app
+          .auth()
+          .signInAnonymously()
+          .catch(() => {
+            // Auth listener will handle the state update on success;
+            // if sign-in fails, isReady stays false and SWR won't fetch.
+          });
       }
     });
     return unsubscribe;
@@ -48,8 +50,6 @@ function useFirebaseAuthReady(): boolean {
 
   return isReady;
 }
-
-
 
 /**
  * Derives all API query params from the URL search params.
@@ -73,7 +73,8 @@ export function deriveSearchParams(searchParams: URLSearchParams): {
     feedTypes,
     isOfficial: searchParams.get('official') === 'true',
     features: searchParams.get('features')?.split(',').filter(Boolean) ?? [],
-    gbfsVersions: searchParams.get('gbfs_versions')?.split(',').filter(Boolean) ?? [],
+    gbfsVersions:
+      searchParams.get('gbfs_versions')?.split(',').filter(Boolean) ?? [],
     licenses: searchParams.get('licenses')?.split(',').filter(Boolean) ?? [],
     hasTransitFeedsRedirect: searchParams.get('utm_source') === 'transitfeeds',
   };
@@ -173,8 +174,7 @@ async function feedsFetcher(
       version: flags.areGBFSFiltersEnabled
         ? gbfsVersions.join(',').replaceAll('v', '')
         : undefined,
-      license_ids:
-        licenses.length > 0 ? licenses.join(',') : undefined,
+      license_ids: licenses.length > 0 ? licenses.join(',') : undefined,
     },
   };
 
@@ -254,34 +254,34 @@ export function buildSearchUrl(
 ): string {
   const params = new URLSearchParams();
 
-  if (filters.searchQuery) {
+  if (filters.searchQuery != null && filters.searchQuery !== '') {
     params.set('q', filters.searchQuery);
   }
   if (filters.page !== undefined && filters.page !== 1) {
     params.set('o', String(filters.page));
   }
-  if (filters.feedTypes?.gtfs) {
+  if (filters.feedTypes?.gtfs === true) {
     params.set('gtfs', 'true');
   }
-  if (filters.feedTypes?.gtfs_rt) {
+  if (filters.feedTypes?.gtfs_rt === true) {
     params.set('gtfs_rt', 'true');
   }
-  if (filters.feedTypes?.gbfs) {
+  if (filters.feedTypes?.gbfs === true) {
     params.set('gbfs', 'true');
   }
-  if (filters.features && filters.features.length > 0) {
+  if (filters.features != null && filters.features.length > 0) {
     params.set('features', filters.features.join(','));
   }
-  if (filters.gbfsVersions && filters.gbfsVersions.length > 0) {
+  if (filters.gbfsVersions != null && filters.gbfsVersions.length > 0) {
     params.set('gbfs_versions', filters.gbfsVersions.join(','));
   }
-  if (filters.licenses && filters.licenses.length > 0) {
+  if (filters.licenses != null && filters.licenses.length > 0) {
     params.set('licenses', filters.licenses.join(','));
   }
-  if (filters.isOfficial) {
+  if (filters.isOfficial === true) {
     params.set('official', 'true');
   }
-  if (filters.utmSource) {
+  if (filters.utmSource != null && filters.utmSource !== '') {
     params.set('utm_source', filters.utmSource);
   }
 

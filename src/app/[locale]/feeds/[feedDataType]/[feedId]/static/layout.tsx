@@ -1,6 +1,4 @@
 import { type ReactNode } from 'react';
-import { notFound } from 'next/navigation';
-import { fetchGuestFeedData } from '../lib/guest-feed-data';
 
 /**
  * ISR caching: revalidate cached HTML every 14 days.
@@ -31,6 +29,5 @@ export default async function StaticFeedLayout({
   children,
   params,
 }: Props): Promise<React.ReactElement> {
-
   return <>{children}</>;
 }
