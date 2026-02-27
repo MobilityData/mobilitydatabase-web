@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { useRouter } from 'next/navigation';
 import SignIn from '../screens/SignIn';
 import SignUp from '../screens/SignUp';
@@ -94,7 +94,6 @@ export const AppRouter: React.FC = () => {
       <Route path='forgot-password' element={<ForgotPassword />} />
       <Route path='faq' element={<FAQ />} />
       <Route path='contact-us' element={<ContactUs />} />
-      <Route path='feeds' element={<Feeds />} />
       <Route
         path='gbfs-validator'
         element={
@@ -102,14 +101,6 @@ export const AppRouter: React.FC = () => {
             <GbfsValidator />
           </GbfsAuthProvider>
         }
-      />
-      <Route
-        path='feeds/gtfs'
-        element={<Navigate to='/feeds?gtfs=true' replace />}
-      />
-      <Route
-        path='feeds/gtfs_rt'
-        element={<Navigate to='/feeds?gtfs_rt=true' replace />}
       />
       <Route path='contribute' element={<FeedSubmission />} />
       <Route path='contribute/submitted' element={<FeedSubmitted />} />
