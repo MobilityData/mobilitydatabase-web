@@ -27,7 +27,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useRemoteConfig } from '../context/RemoteConfigProvider';
 import { useTranslations } from 'next-intl';
 
-const websiteTile = 'Mobility Database';
+const websiteTile = 'MobilityDatabase';
 
 interface DrawerContentProps {
   isAuthenticated: boolean;
@@ -50,27 +50,43 @@ export default function DrawerContent({
   return (
     <Box>
       <Box
-        sx={{ display: 'flex', alignItems: 'center' }}
+        sx={{ display: 'flex', alignItems: 'center', gap: 0.5, pl: 1 }}
         onClick={() => {
           router.push('/');
         }}
       >
-        <picture style={{ display: 'flex' }}>
-          <source
-            media='(min-width: 50px)'
-            srcSet='/assets/MOBILTYDATA_logo_purple_M.webp'
-            width='50'
-            height='50'
-          />
-          <source
-            src='/assets/MOBILTYDATA_logo_purple_M.png'
-            type='image/png'
-          />
-          <img
-            alt='MobilityData logo'
-            src='/assets/MOBILTYDATA_logo_purple_M.png'
-          />
-        </picture>
+        {theme.palette.mode === 'light' ? (
+          <picture style={{ display: 'flex' }}>
+            <source
+              src='/assets/MOBILTYDATA_logo_light_blue_M.png'
+              type='image/png'
+              height={40}
+              width={40}
+            />
+            <img
+              alt='MobilityData logo'
+              src='/assets/MOBILTYDATA_logo_light_blue_M.png'
+              height={40}
+              width={40}
+            />
+          </picture>
+        ) : (
+          <picture style={{ display: 'flex' }}>
+            <source
+              src='/assets/MOBILTYDATA_logo_purple_M.png'
+              type='image/png'
+              height={40}
+              width={40}
+            />
+            <img
+              alt='MobilityData logo'
+              src='/assets/MOBILTYDATA_logo_purple_M.png'
+              height={40}
+              width={40}
+            />
+          </picture>
+        )}
+
         <Typography
           component={'h2'}
           variant='h6'
@@ -102,7 +118,7 @@ export default function DrawerContent({
           </Button>
         ))}
 
-        <Divider sx={{ mt: 2 }} />
+        <Divider sx={{ my: 2 }} />
         {config.gbfsValidator && (
           <Accordion disableGutters={true} sx={{ boxShadow: 'none' }}>
             <AccordionSummary
