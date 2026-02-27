@@ -113,10 +113,8 @@ export default function GbfsVersions({
             (endpoint) => endpoint.name === 'gbfs',
           )?.url;
           return (
-            <ContentBox
+            <Box
               key={index}
-              title={``}
-              outlineColor={theme.palette.secondary.main}
               padding={2}
               sx={{
                 my: 0,
@@ -311,7 +309,7 @@ export default function GbfsVersions({
                   </Button>
                 </Box>
               )}
-            </ContentBox>
+            </Box>
           );
         })}
       </Box>
