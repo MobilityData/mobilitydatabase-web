@@ -73,7 +73,17 @@ export default function SearchTable({
   const theme = useTheme();
   const router = useRouter();
   const [isPending, startTransition] = React.useTransition();
+  const [showLoading, setShowLoading] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+  React.useEffect(() => {
+    if (!isPending) {
+      setShowLoading(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowLoading(true), 300);
+    return () => clearTimeout(timer);
+  }, [isPending]);
   const [providersPopoverData, setProvidersPopoverData] = React.useState<
     string[] | undefined
   >(undefined);
@@ -83,7 +93,7 @@ export default function SearchTable({
   // Reason for all component overrite is for SEO purposes.
   return (
     <>
-      {isPending && (
+      {showLoading && (
         <Box
           sx={{
             position: 'fixed',

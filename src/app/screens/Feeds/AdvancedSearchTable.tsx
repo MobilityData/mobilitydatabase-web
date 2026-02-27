@@ -175,7 +175,18 @@ export default function AdvancedSearchTable({
   const [popoverTitle, setPopoverTitle] = React.useState<string | undefined>();
   const router = useRouter();
   const [isPending, startTransition] = React.useTransition();
+  const [showLoading, setShowLoading] = React.useState(false);
   const theme = useTheme();
+
+  // Show loading state if navigation or feed loading is taking longer than 300ms to avoid flashing effect for fast transitions
+  React.useEffect(() => {
+    if (!isPending) {
+      setShowLoading(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowLoading(true), 300);
+    return () => clearTimeout(timer);
+  }, [isPending]);
 
   const descriptionDividerStyle: SxProps = {
     py: 1,
@@ -188,7 +199,7 @@ export default function AdvancedSearchTable({
 
   return (
     <>
-      {(isPending) && (
+      {showLoading && (
         <Box
           sx={{
             position: 'fixed',
@@ -223,7 +234,7 @@ export default function AdvancedSearchTable({
             }}
           >
             <CardActionArea
-              sx={{ p: 1, opacity: (isPending || isLoadingFeeds) ? 0.7 : 1 }}
+              sx={{ p: 1, opacity: (showLoading || isLoadingFeeds) ? 0.7 : 1 }}
               component={NextLinkComposed}
               href={`/feeds/${feed.data_type}/${feed.id}`}
               prefetch={false}
