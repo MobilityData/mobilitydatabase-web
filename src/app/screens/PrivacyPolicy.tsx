@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Box, Container, Typography, useTheme } from '@mui/material';
 export default function PrivacyPolicy(): React.ReactElement {
