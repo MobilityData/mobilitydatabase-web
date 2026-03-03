@@ -225,8 +225,8 @@ export function useFeedsSearch(searchParams: URLSearchParams): {
 
   return {
     feedsData: data,
-    // True only on first load (no cached data yet)
-    isLoading: isLoading && data === undefined,
+    // True on first load (no cached data yet) OR while waiting for Firebase Auth to initialize
+    isLoading: !authReady || (isLoading && data === undefined),
     // True when SWR is fetching and this key has no cached data yet.
     // This avoids showing loading UI when navigating back/forward to a cached search.
     isValidating: swrIsValidating && !hasCachedDataForKey,
