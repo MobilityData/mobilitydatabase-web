@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { ContentBox } from '../../../components/ContentBox';
 import {
   Box,
   Button,
@@ -113,16 +112,15 @@ export default function GbfsVersions({
             (endpoint) => endpoint.name === 'gbfs',
           )?.url;
           return (
-            <ContentBox
+            <Box
               key={index}
-              title={``}
-              outlineColor={theme.palette.secondary.main}
               padding={2}
               sx={{
                 my: 0,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
+                backgroundColor: theme.palette.background.default,
               }}
               width={{ xs: '100%' }}
             >
@@ -311,7 +309,7 @@ export default function GbfsVersions({
                   </Button>
                 </Box>
               )}
-            </ContentBox>
+            </Box>
           );
         })}
       </Box>

@@ -11,6 +11,7 @@ import OfficialChip from '../../components/OfficialChip';
 import DataQualitySummary from './components/DataQualitySummary';
 import FeedSummary from './components/FeedSummary';
 import FeedNavigationControls from './components/FeedNavigationControls';
+import ScrollToTop from './components/ScrollToTop';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -146,8 +147,7 @@ export default async function FeedView({
       sx={{ width: '100%', m: 'auto', px: 0 }}
       maxWidth='xl'
     >
-      {/* TODO: remove this timestamp after confirming ISR is working in production and providing real value to users (e.g. helps with debugging feed updates) */}
-      <div>Generated at: {new Date().toISOString()}</div>
+      <ScrollToTop />
       <CssBaseline />
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         <Box
@@ -226,6 +226,14 @@ export default async function FeedView({
                   ).toDateString()}`}
                 </Typography>
               )}
+              <Typography
+                data-testid='page-generated'
+                variant={'caption'}
+                width={'100%'}
+                component={'div'}
+              >
+                {`Page generated at: ${new Date().toUTCString().replace(' GMT', ' UTC')}`}
+              </Typography>
               {feed.external_ids?.some((eId) => eId.source === 'tld') ===
                 true && (
                 <Typography

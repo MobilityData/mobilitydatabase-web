@@ -1,3 +1,5 @@
+'use client';
+
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
@@ -54,6 +56,7 @@ export default function ContactUs(): React.ReactElement {
           mt: 2,
           display: 'flex',
           flexWrap: 'wrap',
+          justifyContent: 'center',
         }}
       >
         <ContactUsItem variant='outlined'>
@@ -107,7 +110,7 @@ export default function ContactUs(): React.ReactElement {
           <Button
             variant={'contained'}
             className='action-button'
-            href='https://github.com/MobilityData/mobility-feed-api'
+            href='https://github.com/MobilityData/mobilitydatabase-web'
             target='_blank'
             rel='noopener noreferrer'
           >

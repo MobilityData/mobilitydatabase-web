@@ -1,5 +1,6 @@
 import FullMapView from '../../../../../../screens/Feed/components/FullMapView';
 import { type ReactElement } from 'react';
+import { notFound } from 'next/navigation';
 import { fetchCompleteFeedData } from '../../lib/feed-data';
 
 interface Props {
@@ -31,7 +32,7 @@ export default async function AuthedFullMapViewPage({
   const feedData = await fetchCompleteFeedData(feedDataType, feedId);
 
   if (feedData == null) {
-    return <div>Feed not found</div>;
+    notFound();
   }
 
   return <FullMapView feedData={feedData} />;

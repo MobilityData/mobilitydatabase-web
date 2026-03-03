@@ -1,3 +1,5 @@
+'use client';
+
 import { OpenInNew } from '@mui/icons-material';
 import { Box, Button, Link, Typography, useTheme } from '@mui/material';
 import React, { useEffect } from 'react';

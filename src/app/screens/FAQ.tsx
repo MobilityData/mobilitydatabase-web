@@ -1,8 +1,11 @@
+'use client';
+
 import * as React from 'react';
 import Container from '@mui/material/Container';
 import { Button, Typography } from '@mui/material';
 import { ColoredContainer } from '../styles/PageLayout.style';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import Link from 'next/link';
 
 export default function FAQ(): React.ReactElement {
   return (
@@ -52,6 +55,7 @@ export default function FAQ(): React.ReactElement {
             variant='text'
             className='line-start inline'
             href={'/contribute'}
+            component={Link}
           >
             add a feed
           </Button>
@@ -70,6 +74,7 @@ export default function FAQ(): React.ReactElement {
             variant='text'
             className='line-start inline'
             href={'/sign-up'}
+            component={Link}
           >
             create an account.
           </Button>

@@ -6,7 +6,7 @@ describe('Sign In page', () => {
   it('should render page header', () => {
     cy.get('[data-testid=websiteTile]')
       .should('exist')
-      .contains('Mobility Database');
+      .contains('MobilityDatabase');
   });
 
   it('should render signin', () => {

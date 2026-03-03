@@ -6,7 +6,7 @@ describe('Home page', () => {
   it('should render page header', () => {
     cy.get('[data-testid=websiteTile]')
       .should('exist')
-      .contains('Mobility Database');
+      .contains('MobilityDatabase');
   });
 
   it('should render home page title', () => {

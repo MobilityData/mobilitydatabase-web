@@ -5,4 +5,5 @@ export const ColoredContainer = styled(Container)(({ theme }) => ({
   borderRadius: '6px',
   paddingTop: theme.spacing(3),
   paddingBottom: theme.spacing(3),
+  position: 'relative',
 }));

@@ -10,6 +10,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SearchBox from './SearchBox';
 import { getTranslations } from 'next-intl/server';
 import '../../styles/TextShimmer.css';
+import Link from 'next/link';
 
 interface ActionBoxProps {
   IconComponent: React.ElementType;
@@ -35,9 +36,11 @@ const ActionBox = ({
     }}
   >
     <IconComponent sx={{ width: '100%', height: iconHeight }} />
-    <Button variant='contained' href={buttonHref} sx={{ m: 2, px: 2 }}>
-      {buttonText}
-    </Button>
+    <Link href={buttonHref}>
+      <Button variant='contained' sx={{ m: 2, px: 2 }}>
+        {buttonText}
+      </Button>
+    </Link>
   </Box>
 );
 

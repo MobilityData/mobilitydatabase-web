@@ -3,6 +3,11 @@ import { render, cleanup, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { type AllFeedsType } from '../../services/feeds/utils';
 
+jest.mock('../../../i18n/navigation', () => ({
+  useRouter: () => ({ push: jest.fn() }),
+  usePathname: () => '/',
+}));
+
 const mockFeedsData: AllFeedsType = {
   total: 2004,
   results: [

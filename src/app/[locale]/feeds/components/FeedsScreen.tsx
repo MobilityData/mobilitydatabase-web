@@ -1,7 +1,6 @@
 'use client';
 import * as React from 'react';
-import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useCallback, useRef, useEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -10,6 +9,7 @@ import {
   CssBaseline,
   Grid,
   InputAdornment,
+  LinearProgress,
   Pagination,
   Skeleton,
   TableContainer,
@@ -20,273 +20,126 @@ import {
   useTheme,
 } from '@mui/material';
 import { Search } from '@mui/icons-material';
-import { selectUserProfile } from '../../store/profile-selectors';
-import { useAppDispatch } from '../../hooks';
-import { loadingFeeds } from '../../store/feeds-reducer';
-import {
-  selectFeedsData,
-  selectFeedsStatus,
-} from '../../store/feeds-selectors';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import SearchTable from './SearchTable';
+import SearchTable from '../../../screens/Feeds/SearchTable';
 import { useTranslations } from 'next-intl';
-import {
-  getDataTypeParamFromSelectedFeedTypes,
-  getInitialSelectedFeedTypes,
-} from './utility';
 import {
   chipHolderStyles,
   searchBarStyles,
   stickyHeaderStyles,
-} from './Feeds.styles';
-import { ColoredContainer } from '../../styles/PageLayout.style';
-import AdvancedSearchTable from './AdvancedSearchTable';
+} from '../../../screens/Feeds/Feeds.styles';
+import { ColoredContainer } from '../../../styles/PageLayout.style';
+import AdvancedSearchTable from '../../../screens/Feeds/AdvancedSearchTable';
 import ViewHeadlineIcon from '@mui/icons-material/ViewHeadline';
 import GridViewIcon from '@mui/icons-material/GridView';
-import { SearchFilters } from './SearchFilters';
+import { SearchFilters } from '../../../screens/Feeds/SearchFilters';
+import {
+  useFeedsSearch,
+  deriveSearchParams,
+  deriveFilterFlags,
+  buildSearchUrl,
+} from '../lib/useFeedsSearch';
 
-export default function Feed(): React.ReactElement {
+export default function FeedsScreen(): React.ReactElement {
   const theme = useTheme();
   const t = useTranslations('feeds');
   const tCommon = useTranslations('common');
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const [searchLimit] = useState(20); // leaving possibility to edit in future
-  const [selectedFeedTypes, setSelectedFeedTypes] = useState(
-    getInitialSelectedFeedTypes(searchParams),
-  );
-  const [isSticky, setIsSticky] = useState(false);
-  const [activeSearch, setActiveSearch] = useState(searchParams.get('q') ?? '');
-  const [isOfficialFeedSearch, setIsOfficialFeedSearch] = useState(
-    Boolean(searchParams.get('official')) ?? false,
-  );
-  const [searchQuery, setSearchQuery] = useState(activeSearch);
 
-  const [selectedFeatures, setSelectedFeatures] = useState<string[]>(
-    searchParams.get('features')?.split(',') ?? [],
-  );
-  const [selectGbfsVersions, setSelectGbfsVersions] = useState<string[]>(
-    searchParams.get('gbfs_versions')?.split(',') ?? [],
-  );
-  const [selectedLicenses, setSelectedLicenses] = useState<string[]>(
-    searchParams.get('licenses')?.split(',') ?? [],
-  );
-  const [activePagination, setActivePagination] = useState(
-    searchParams.get('o') !== null ? Number(searchParams.get('o')) : 1,
-  );
+  // Derive all state from URL - single source of truth
+  const derivedPageState = deriveSearchParams(searchParams);
+  const {
+    searchQuery: activeSearch,
+    page: activePagination,
+    feedTypes: selectedFeedTypes,
+    isOfficial: isOfficialFeedSearch,
+    features: selectedFeatures,
+    gbfsVersions: selectedGbfsVersions,
+    licenses: selectedLicenses,
+    hasTransitFeedsRedirect: hasTransitFeedsRedirectParam,
+  } = derivedPageState;
+
+  const {
+    isOfficialTagFilterEnabled,
+    areFeatureFiltersEnabled,
+    areGBFSFiltersEnabled,
+  } = deriveFilterFlags(selectedFeedTypes);
+
+  // SWR-powered data fetching - keyed off URL params
+  const { feedsData, isLoading, isValidating, isError, searchLimit } =
+    useFeedsSearch(searchParams);
+
+  // Local state only for the text input (not committed to URL until submit)
+  const [searchInputValue, setSearchInputValue] = useState(activeSearch);
   const [searchView, setSearchView] = useState<'simple' | 'advanced'>(
     'advanced',
   );
-  const user = useSelector(selectUserProfile);
-  const dispatch = useAppDispatch();
-  const feedsData = useSelector(selectFeedsData);
-  const feedStatus = useSelector(selectFeedsStatus);
+  const [isSticky, setIsSticky] = useState(false);
 
-  const hasTransitFeedsRedirectParam =
-    searchParams.get('utm_source') === 'transitfeeds';
-
-  // features i/o
-  const areNoDataTypesSelected =
-    !selectedFeedTypes.gtfs &&
-    !selectedFeedTypes.gtfs_rt &&
-    !selectedFeedTypes.gbfs;
-  const isOfficialTagFilterEnabled =
-    selectedFeedTypes.gtfs ||
-    selectedFeedTypes.gtfs_rt ||
-    areNoDataTypesSelected;
-  const areFeatureFiltersEnabled =
-    (!selectedFeedTypes.gtfs_rt && !selectedFeedTypes.gbfs) ||
-    selectedFeedTypes.gtfs;
-  const areGBFSFiltersEnabled =
-    selectedFeedTypes.gbfs &&
-    !selectedFeedTypes.gtfs_rt &&
-    !selectedFeedTypes.gtfs;
-
-  const getPaginationOffset = (activePagination?: number): number => {
-    const paginationParam =
-      searchParams.get('o') !== null ? Number(searchParams.get('o')) : 1;
-    const pagination = activePagination ?? paginationParam;
-    const paginationOffset = (pagination - 1) * searchLimit;
-    return paginationOffset;
-  };
-
+  // Keep the text input in sync when URL changes (e.g. browser back)
   useEffect(() => {
-    if (user == null) return;
+    setSearchInputValue(activeSearch);
+  }, [activeSearch]);
 
-    const paginationOffset = getPaginationOffset(activePagination);
-    dispatch(
-      loadingFeeds({
-        params: {
-          query: {
-            limit: searchLimit,
-            offset: paginationOffset,
-            search_query: activeSearch,
-            data_type: getDataTypeParamFromSelectedFeedTypes(selectedFeedTypes),
-            is_official: isOfficialTagFilterEnabled
-              ? isOfficialFeedSearch || undefined
-              : undefined,
-            // Fixed status values for now, until a status filter is implemented
-            // Filtering out deprecated feeds
-            status: ['active', 'inactive', 'development', 'future'],
-            feature: areFeatureFiltersEnabled ? selectedFeatures : undefined,
-            version: areGBFSFiltersEnabled
-              ? selectGbfsVersions.join(',').replaceAll('v', '')
-              : undefined,
-            license_ids:
-              selectedLicenses.length > 0
-                ? selectedLicenses.join(',')
-                : undefined,
-          },
-        },
-      }),
-    );
-  }, [
-    user,
-    activeSearch,
-    activePagination,
-    selectedFeedTypes,
-    searchLimit,
-    isOfficialFeedSearch,
-    selectedFeatures,
-    selectGbfsVersions,
-    selectedLicenses,
-  ]);
-
-  useEffect(() => {
-    const newSearchParams = new URLSearchParams();
-    if (activeSearch !== '') {
-      newSearchParams.set('q', activeSearch);
-    }
-
-    if (activePagination !== 1) {
-      newSearchParams.set('o', activePagination.toString());
-    }
-    if (selectedFeedTypes.gtfs) {
-      newSearchParams.set('gtfs', 'true');
-    }
-    if (selectedFeedTypes.gtfs_rt) {
-      newSearchParams.set('gtfs_rt', 'true');
-    }
-    if (selectedFeedTypes.gbfs) {
-      newSearchParams.set('gbfs', 'true');
-    }
-    if (selectedFeatures.length > 0) {
-      newSearchParams.set('features', selectedFeatures.join(','));
-    }
-    if (selectGbfsVersions.length > 0) {
-      newSearchParams.set('gbfs_versions', selectGbfsVersions.join(','));
-    }
-    if (selectedLicenses.length > 0) {
-      newSearchParams.set('licenses', selectedLicenses.join(','));
-    }
-    if (isOfficialFeedSearch) {
-      newSearchParams.set('official', 'true');
-    }
-    if (searchParams.get('utm_source') === 'transitfeeds') {
-      newSearchParams.set('utm_source', 'transitfeeds');
-    }
-    if (searchParams.toString() !== newSearchParams.toString()) {
-      const queryString = newSearchParams.toString();
-      router.push(
-        `${pathname}${queryString.length > 0 ? `?${queryString}` : ''}`,
-      );
-    }
-  }, [
-    activeSearch,
-    activePagination,
-    selectedFeedTypes,
-    selectedFeatures,
-    selectGbfsVersions,
-    selectedLicenses,
-    isOfficialFeedSearch,
-  ]);
-
-  // When url updates, it will update the state of the search page
-  // This is to ensure that the search page is in sync with the url
-  useEffect(() => {
-    const newQuery = searchParams.get('q') ?? '';
-    if (newQuery !== searchQuery) {
-      setSearchQuery(newQuery);
-      setActiveSearch(newQuery);
-    }
-    const newOffset =
-      searchParams.get('o') !== null ? Number(searchParams.get('o')) : 1;
-    if (newOffset !== activePagination) {
-      setActivePagination(newOffset);
-    }
-
-    const newFeatures = searchParams.get('features')?.split(',') ?? [];
-    if (newFeatures.join(',') !== selectedFeatures.join(',')) {
-      setSelectedFeatures([...newFeatures]);
-    }
-
-    const newGbfsVersions = searchParams.get('gbfs_versions')?.split(',') ?? [];
-    if (newGbfsVersions.join(',') !== selectGbfsVersions.join(',')) {
-      setSelectGbfsVersions([...newGbfsVersions]);
-    }
-
-    const newLicenses = searchParams.get('licenses')?.split(',') ?? [];
-    if (newLicenses.join(',') !== selectedLicenses.join(',')) {
-      setSelectedLicenses([...newLicenses]);
-    }
-
-    const newSearchOfficial = Boolean(searchParams.get('official')) ?? false;
-    if (newSearchOfficial !== isOfficialFeedSearch) {
-      setIsOfficialFeedSearch(newSearchOfficial);
-    }
-
-    const newFeedTypes = getInitialSelectedFeedTypes(searchParams);
-    if (newFeedTypes.gtfs !== selectedFeedTypes.gtfs) {
-      setSelectedFeedTypes({
-        ...selectedFeedTypes,
-        gtfs: newFeedTypes.gtfs,
+  // --- Navigation helper: push new URL with updated filters ---
+  const utmSource = searchParams.get('utm_source');
+  const navigate = useCallback(
+    (overrides: Parameters<typeof buildSearchUrl>[1]) => {
+      const url = buildSearchUrl(pathname, {
+        searchQuery: activeSearch,
+        page: activePagination,
+        feedTypes: selectedFeedTypes,
+        isOfficial: isOfficialFeedSearch,
+        features: selectedFeatures,
+        gbfsVersions: selectedGbfsVersions,
+        licenses: selectedLicenses,
+        utmSource,
+        ...overrides,
       });
-    }
-
-    if (newFeedTypes.gtfs_rt !== selectedFeedTypes.gtfs_rt) {
-      setSelectedFeedTypes({
-        ...selectedFeedTypes,
-        gtfs_rt: newFeedTypes.gtfs_rt,
-      });
-    }
-
-    if (newFeedTypes.gbfs !== selectedFeedTypes.gbfs) {
-      setSelectedFeedTypes({
-        ...selectedFeedTypes,
-        gbfs: newFeedTypes.gbfs,
-      });
-    }
-  }, [searchParams]);
+      router.push(url);
+    },
+    [
+      pathname,
+      activeSearch,
+      activePagination,
+      selectedFeedTypes,
+      isOfficialFeedSearch,
+      selectedFeatures,
+      selectedGbfsVersions,
+      selectedLicenses,
+      utmSource,
+      router,
+    ],
+  );
 
   const getSearchResultNumbers = (): string => {
-    if (feedsData?.total !== undefined && feedsData?.total > 0) {
-      const offset = getPaginationOffset(activePagination);
+    if (feedsData?.total !== undefined && feedsData.total > 0) {
+      const paginationOffset = (activePagination - 1) * searchLimit;
+      const offset = paginationOffset;
       const limit = offset + searchLimit;
-
       const startResult = 1 + offset;
-      const endResult = limit > feedsData?.total ? feedsData.total : limit;
-      const totalResults = feedsData?.total ?? '';
+      const endResult = limit > feedsData.total ? feedsData.total : limit;
+      const totalResults = feedsData.total ?? '';
       return t('resultsFor', { startResult, endResult, totalResults });
-    } else {
-      return '';
     }
+    return '';
   };
 
   function clearAllFilters(): void {
-    setActivePagination(1);
-    setSelectedFeedTypes({
-      gtfs: false,
-      gtfs_rt: false,
-      gbfs: false,
+    navigate({
+      page: 1,
+      feedTypes: { gtfs: false, gtfs_rt: false, gbfs: false },
+      features: [],
+      gbfsVersions: [],
+      licenses: [],
+      isOfficial: false,
     });
-    setSelectedFeatures([]);
-    setSelectGbfsVersions([]);
-    setSelectedLicenses([]);
-    setIsOfficialFeedSearch(false);
   }
 
-  const containerRef = React.useRef(null);
+  // --- Sticky header observer ---
+  const containerRef = useRef(null);
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -305,7 +158,7 @@ export default function Feed(): React.ReactElement {
   }, []);
 
   const handleViewChange = (
-    event: React.MouseEvent<HTMLElement>,
+    _event: React.MouseEvent<HTMLElement>,
     newSearchView: 'simple' | 'advanced' | null,
   ): void => {
     if (newSearchView != null) {
@@ -319,6 +172,7 @@ export default function Feed(): React.ReactElement {
       maxWidth={false}
       sx={{
         overflowX: 'initial',
+        position: 'relative',
       }}
     >
       <CssBaseline />
@@ -355,8 +209,10 @@ export default function Feed(): React.ReactElement {
             component='form'
             onSubmit={(event) => {
               event.preventDefault();
-              setActivePagination(1);
-              setActiveSearch(searchQuery.trim());
+              navigate({
+                searchQuery: searchInputValue.trim(),
+                page: 1,
+              });
             }}
             sx={searchBarStyles}
           >
@@ -364,10 +220,10 @@ export default function Feed(): React.ReactElement {
               sx={{
                 width: 'calc(100% - 85px)',
               }}
-              value={searchQuery}
+              value={searchInputValue}
               placeholder={t('searchPlaceholder')}
               onChange={(e) => {
-                setSearchQuery(e.target.value);
+                setSearchInputValue(e.target.value);
               }}
               InputProps={{
                 startAdornment: (
@@ -376,8 +232,10 @@ export default function Feed(): React.ReactElement {
                       cursor: 'pointer',
                     }}
                     onClick={() => {
-                      setActivePagination(1);
-                      setActiveSearch(searchQuery.trim());
+                      navigate({
+                        searchQuery: searchInputValue.trim(),
+                        page: 1,
+                      });
                     }}
                     position='start'
                   >
@@ -395,8 +253,19 @@ export default function Feed(): React.ReactElement {
             </Button>
           </Container>
         </Box>
-
         <ColoredContainer maxWidth={'xl'} sx={{ pt: 2 }}>
+          {isValidating && !isLoading && (
+            <LinearProgress
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 2,
+                zIndex: 2,
+              }}
+            />
+          )}
           <Grid
             container
             spacing={1}
@@ -417,32 +286,27 @@ export default function Feed(): React.ReactElement {
                 selectedFeedTypes={selectedFeedTypes}
                 isOfficialFeedSearch={isOfficialFeedSearch}
                 selectedFeatures={selectedFeatures}
-                selectedGbfsVersions={selectGbfsVersions}
+                selectedGbfsVersions={selectedGbfsVersions}
                 selectedLicenses={selectedLicenses}
                 setSelectedFeedTypes={(feedTypes) => {
-                  setActivePagination(1);
-                  setSelectedFeedTypes({ ...feedTypes });
+                  navigate({ feedTypes: { ...feedTypes }, page: 1 });
                 }}
                 setIsOfficialFeedSearch={(isOfficial) => {
-                  setActivePagination(1);
-                  setIsOfficialFeedSearch(isOfficial);
+                  navigate({ isOfficial, page: 1 });
                 }}
                 setSelectedFeatures={(features) => {
-                  setActivePagination(1);
-                  setSelectedFeatures(features);
+                  navigate({ features, page: 1 });
                 }}
                 setSelectedGbfsVerions={(versions) => {
-                  setSelectGbfsVersions(versions);
-                  setActivePagination(1);
+                  navigate({ gbfsVersions: versions, page: 1 });
                 }}
                 setSelectedLicenses={(licenses) => {
-                  setActivePagination(1);
-                  setSelectedLicenses(licenses);
+                  navigate({ licenses, page: 1 });
                 }}
                 isOfficialTagFilterEnabled={isOfficialTagFilterEnabled}
                 areFeatureFiltersEnabled={areFeatureFiltersEnabled}
                 areGBFSFiltersEnabled={areGBFSFiltersEnabled}
-              ></SearchFilters>
+              />
             </Grid>
 
             <Grid size={{ xs: 12, md: 10 }}>
@@ -454,10 +318,9 @@ export default function Feed(): React.ReactElement {
                     size='small'
                     label={tCommon('gtfsSchedule')}
                     onDelete={() => {
-                      setActivePagination(1);
-                      setSelectedFeedTypes({
-                        ...selectedFeedTypes,
-                        gtfs: false,
+                      navigate({
+                        feedTypes: { ...selectedFeedTypes, gtfs: false },
+                        page: 1,
                       });
                     }}
                   />
@@ -469,10 +332,9 @@ export default function Feed(): React.ReactElement {
                     size='small'
                     label={tCommon('gtfsRealtime')}
                     onDelete={() => {
-                      setActivePagination(1);
-                      setSelectedFeedTypes({
-                        ...selectedFeedTypes,
-                        gtfs_rt: false,
+                      navigate({
+                        feedTypes: { ...selectedFeedTypes, gtfs_rt: false },
+                        page: 1,
                       });
                     }}
                   />
@@ -484,10 +346,9 @@ export default function Feed(): React.ReactElement {
                     size='small'
                     label={tCommon('gbfs')}
                     onDelete={() => {
-                      setActivePagination(1);
-                      setSelectedFeedTypes({
-                        ...selectedFeedTypes,
-                        gbfs: false,
+                      navigate({
+                        feedTypes: { ...selectedFeedTypes, gbfs: false },
+                        page: 1,
                       });
                     }}
                   />
@@ -499,8 +360,7 @@ export default function Feed(): React.ReactElement {
                     size='small'
                     label={'Official Feeds'}
                     onDelete={() => {
-                      setActivePagination(1);
-                      setIsOfficialFeedSearch(false);
+                      navigate({ isOfficial: false, page: 1 });
                     }}
                   />
                 )}
@@ -513,15 +373,17 @@ export default function Feed(): React.ReactElement {
                       label={feature}
                       key={feature}
                       onDelete={() => {
-                        setSelectedFeatures([
-                          ...selectedFeatures.filter((sf) => sf !== feature),
-                        ]);
+                        navigate({
+                          features: selectedFeatures.filter(
+                            (sf) => sf !== feature,
+                          ),
+                        });
                       }}
                     />
                   ))}
 
                 {areGBFSFiltersEnabled &&
-                  selectGbfsVersions.map((gbfsVersion) => (
+                  selectedGbfsVersions.map((gbfsVersion) => (
                     <Chip
                       color='primary'
                       variant='outlined'
@@ -529,11 +391,11 @@ export default function Feed(): React.ReactElement {
                       label={gbfsVersion}
                       key={gbfsVersion}
                       onDelete={() => {
-                        setSelectGbfsVersions([
-                          ...selectGbfsVersions.filter(
+                        navigate({
+                          gbfsVersions: selectedGbfsVersions.filter(
                             (sv) => sv !== gbfsVersion,
                           ),
-                        ]);
+                        });
                       }}
                     />
                   ))}
@@ -546,15 +408,17 @@ export default function Feed(): React.ReactElement {
                     label={license}
                     key={license}
                     onDelete={() => {
-                      setSelectedLicenses([
-                        ...selectedLicenses.filter((sl) => sl !== license),
-                      ]);
+                      navigate({
+                        licenses: selectedLicenses.filter(
+                          (sl) => sl !== license,
+                        ),
+                      });
                     }}
                   />
                 ))}
 
                 {(selectedFeatures.length > 0 ||
-                  selectGbfsVersions.length > 0 ||
+                  selectedGbfsVersions.length > 0 ||
                   selectedLicenses.length > 0 ||
                   isOfficialFeedSearch ||
                   selectedFeedTypes.gtfs_rt ||
@@ -570,7 +434,7 @@ export default function Feed(): React.ReactElement {
                   </Button>
                 )}
               </Box>
-              {feedStatus === 'loading' && (
+              {isLoading && (
                 <Grid size={12}>
                   <Skeleton
                     animation='wave'
@@ -596,7 +460,7 @@ export default function Feed(): React.ReactElement {
                 </Grid>
               )}
 
-              {feedStatus === 'error' && (
+              {isError && (
                 <Grid size={12}>
                   <h3>{tCommon('errors.generic')}</h3>
                   <Typography>
@@ -615,7 +479,7 @@ export default function Feed(): React.ReactElement {
                 </Grid>
               )}
 
-              {feedsData !== undefined && feedStatus === 'loaded' && (
+              {feedsData !== undefined && !isLoading && (
                 <>
                   {feedsData?.results?.length === 0 && (
                     <Grid size={12}>
@@ -688,7 +552,8 @@ export default function Feed(): React.ReactElement {
                           <AdvancedSearchTable
                             feedsData={feedsData}
                             selectedFeatures={selectedFeatures}
-                            selectedGbfsVersions={selectGbfsVersions}
+                            selectedGbfsVersions={selectedGbfsVersions}
+                            isLoadingFeeds={isLoading || isValidating}
                           />
                         )}
 
@@ -712,9 +577,8 @@ export default function Feed(): React.ReactElement {
                               ? Math.ceil(feedsData.total / searchLimit)
                               : 1
                           }
-                          onChange={(event, value) => {
-                            event.preventDefault();
-                            setActivePagination(value);
+                          onChange={(_event, value) => {
+                            navigate({ page: value });
                           }}
                         />
                       </TableContainer>
