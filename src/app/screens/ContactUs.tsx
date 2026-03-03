@@ -56,6 +56,7 @@ export default function ContactUs(): React.ReactElement {
           mt: 2,
           display: 'flex',
           flexWrap: 'wrap',
+          justifyContent: 'center',
         }}
       >
         <ContactUsItem variant='outlined'>
