@@ -120,6 +120,7 @@ export default function GbfsVersions({
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
+                backgroundColor: theme.palette.background.default,
               }}
               width={{ xs: '100%' }}
             >
