@@ -2,6 +2,7 @@ import { Container, Typography, Button } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { type ReactElement } from 'react';
 import { getTranslations } from 'next-intl/server';
+import Link from 'next/link';
 
 export default async function AboutPage(): Promise<ReactElement> {
   const t = await getTranslations('about');
@@ -72,15 +73,11 @@ export default async function AboutPage(): Promise<ReactElement> {
             <li>{t('benefits.mirrored')}</li>
             <li>{t('benefits.boundingBoxes')}</li>
             <li>
-              <Button
-                variant='text'
-                className='line-start inline'
-                href='/contribute'
-                rel='noreferrer'
-                target='_blank'
-              >
-                {t('benefits.addFeeds')}
-              </Button>
+              <Link href='/contribute' rel='noreferrer' target='_blank'>
+                <Button variant='text' className='line-start inline'>
+                  {t('benefits.addFeeds')}
+                </Button>
+              </Link>
             </li>
             <li>{t('benefits.openSource')}</li>
           </ul>
