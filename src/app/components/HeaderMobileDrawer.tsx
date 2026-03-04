@@ -26,6 +26,7 @@ import { mobileNavElementStyle } from './Header.style';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useRemoteConfig } from '../context/RemoteConfigProvider';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 
 const websiteTile = 'MobilityDatabase';
 
@@ -55,37 +56,18 @@ export default function DrawerContent({
           router.push('/');
         }}
       >
-        {theme.palette.mode === 'light' ? (
-          <picture style={{ display: 'flex' }}>
-            <source
-              src='/assets/MOBILTYDATA_logo_light_blue_M.png'
-              type='image/png'
-              height={40}
-              width={40}
-            />
-            <img
-              alt='MobilityData logo'
-              src='/assets/MOBILTYDATA_logo_light_blue_M.png'
-              height={40}
-              width={40}
-            />
-          </picture>
-        ) : (
-          <picture style={{ display: 'flex' }}>
-            <source
-              src='/assets/MOBILTYDATA_logo_purple_M.png'
-              type='image/png'
-              height={40}
-              width={40}
-            />
-            <img
-              alt='MobilityData logo'
-              src='/assets/MOBILTYDATA_logo_purple_M.png'
-              height={40}
-              width={40}
-            />
-          </picture>
-        )}
+        <Image
+          src={
+            theme.palette.mode === 'light'
+              ? '/assets/MOBILTYDATA_logo_light_blue_M.png'
+              : '/assets/MOBILTYDATA_logo_purple_M.png'
+          }
+          alt='MobilityData logo'
+          width={40 * 1.05} // aspect ratio of the logo is slightly off, adjust width to prevent layout shift between themes
+          height={40}
+          priority
+          fetchPriority='high'
+        />
 
         <Typography
           component={'h2'}

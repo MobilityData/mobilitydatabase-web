@@ -218,7 +218,7 @@ export default function DrawerAppBar(): React.ReactElement {
                     : '/assets/MOBILTYDATA_logo_purple_M.png'
                 }
                 alt='MobilityData logo'
-                width={45}
+                width={45 * 1.05} // aspect ratio of the logo is slightly off, adjust width to prevent layout shift between themes
                 height={45}
                 priority
                 fetchPriority='high'
