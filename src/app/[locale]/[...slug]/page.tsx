@@ -5,14 +5,11 @@
 import { type ReactNode, use, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { PersistGate } from 'redux-persist/integration/react';
-import { persistStore } from 'redux-persist';
-import { store } from '../../store/store';
+import { persistor } from '../../store/store';
 import { useAppDispatch } from '../../hooks';
 import { resetProfileErrors } from '../../store/profile-reducer';
 
 const App = dynamic(async () => await import('../../App'), { ssr: false });
-
-const persistor = persistStore(store);
 
 interface PageProps {
   params: Promise<{

@@ -1,5 +1,6 @@
 import {
   persistReducer,
+  persistStore,
   FLUSH,
   REHYDRATE,
   PAUSE,
@@ -82,6 +83,11 @@ if (typeof window !== 'undefined' && (window as any).Cypress) {
 /* eslint-enable */
 
 sagaMiddleware.run(rootSaga);
+
+// Create the persistor at the store level so rehydration and
+// state-persistence happen on every page load, not just on the
+// legacy catch-all route.
+export const persistor = persistStore(store);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
