@@ -9,7 +9,7 @@ module.exports = {
         `${previewBaseUrl}/feeds`,
         `${previewBaseUrl}/feeds/gtfs/mdb-2126`,
         `${previewBaseUrl}/feeds/gtfs_rt/mdb-2585`,
-        `${previewBaseUrl}/gbfs/gbfs-flamingo_porirua`
+        `${previewBaseUrl}/feeds/gbfs/gbfs-flamingo_porirua`
       ],
       numberOfRuns: 1, // 1 to speed up the CI process but can be increased for more reliable results
       settings: {
