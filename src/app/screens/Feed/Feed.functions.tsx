@@ -3,6 +3,7 @@ import { Box, Typography } from '@mui/material';
 import {
   type GTFSFeedType,
   type GBFSVersionType,
+  type GBFSFeedType,
 } from '../../services/feeds/utils';
 import { type LatLngTuple } from 'leaflet';
 import { type GeoJSONData, type GeoJSONDataGBFS } from '../../types';
@@ -192,36 +193,35 @@ export function computeBoundingBox(
 }
 
 export const getBoundingBox = (
-  feed: GTFSFeedType,
+  feed: GTFSFeedType | GBFSFeedType ,
 ): LatLngTuple[] | undefined => {
-  if (feed == undefined || feed.data_type !== 'gtfs') {
+  if (feed == undefined || feed.data_type === 'gtfs_rt') {
     return undefined;
-  }
-  const gtfsFeed: GTFSFeedType = feed;
+  };
   if (
-    gtfsFeed.bounding_box?.maximum_latitude == undefined ||
-    gtfsFeed.bounding_box?.maximum_longitude == undefined ||
-    gtfsFeed.bounding_box?.minimum_latitude == undefined ||
-    gtfsFeed.bounding_box?.minimum_longitude == undefined
+    feed.bounding_box?.maximum_latitude == undefined ||
+    feed.bounding_box?.maximum_longitude == undefined ||
+    feed.bounding_box?.minimum_latitude == undefined ||
+    feed.bounding_box?.minimum_longitude == undefined
   ) {
     return undefined;
   }
   return [
     [
-      gtfsFeed.bounding_box.minimum_latitude,
-      gtfsFeed.bounding_box.minimum_longitude,
+      feed.bounding_box.minimum_latitude,
+      feed.bounding_box.minimum_longitude,
     ],
     [
-      gtfsFeed.bounding_box.minimum_latitude,
-      gtfsFeed.bounding_box.maximum_longitude,
+      feed.bounding_box.minimum_latitude,
+      feed.bounding_box.maximum_longitude,
     ],
     [
-      gtfsFeed.bounding_box.maximum_latitude,
-      gtfsFeed.bounding_box.maximum_longitude,
+      feed.bounding_box.maximum_latitude,
+      feed.bounding_box.maximum_longitude,
     ],
     [
-      gtfsFeed.bounding_box.maximum_latitude,
-      gtfsFeed.bounding_box.minimum_longitude,
+      feed.bounding_box.maximum_latitude,
+      feed.bounding_box.minimum_longitude,
     ],
   ];
 };

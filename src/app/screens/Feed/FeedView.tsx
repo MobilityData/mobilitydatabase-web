@@ -128,7 +128,7 @@ export default async function FeedView({
       ? (feed as GBFSFeedType)?.source_info?.producer_url
       : undefined; // Simplified
 
-  const boundingBox = getBoundingBox(feed as GTFSFeedType);
+  const boundingBox = getBoundingBox(feed);
 
   let latestDataset: LatestDatasetFull;
   if (feed.data_type === 'gtfs') {
