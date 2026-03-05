@@ -1,12 +1,9 @@
-import * as Sentry from '@sentry/react';
-import packageJson from '../package.json';
-import * as React from 'react';
-import {
-  createRoutesFromChildren,
-  matchRoutes,
-  useLocation,
-  useNavigationType,
-} from 'react-router-dom';
+// This file configures the initialization of Sentry on the client.
+// The config you add here will be used whenever a user loads a page in their browser.
+// https://docs.sentry.io/platforms/javascript/guides/nextjs/
+
+import * as Sentry from '@sentry/nextjs';
+import packageJson from './package.json';
 
 // Helper to safely parse Sentry sample rates from environment variables
 const parseSampleRate = (
@@ -40,35 +37,28 @@ const replaysOnErrorSampleRate = parseSampleRate(
 );
 
 if (dsn.length > 0) {
-  const routerTracingIntegration =
-    Sentry.reactRouterV6BrowserTracingIntegration({
-      useEffect: React.useEffect,
-      useLocation,
-      useNavigationType,
-      createRoutesFromChildren,
-      matchRoutes,
-    });
-
-  const integrations = [];
-  if (routerTracingIntegration != null) {
-    integrations.push(routerTracingIntegration);
-  }
-  const replayIntegration = Sentry.replayIntegration?.();
-  if (replayIntegration != null) {
-    integrations.push(replayIntegration);
-  }
-
   Sentry.init({
     dsn,
     environment,
     release,
-    integrations,
+
+    // Adjust this value in production, or use tracesSampler for greater control
     tracesSampleRate,
-    replaysSessionSampleRate,
+
+    // Setting this option to true will print useful information to the console while you're setting up Sentry.
+    debug: false,
+
     replaysOnErrorSampleRate,
+    replaysSessionSampleRate,
+
+    // You can add integrations below. The Replay integration is enabled by
+    // default when replaysSessionSampleRate or replaysOnErrorSampleRate > 0.
+    integrations: [Sentry.replayIntegration()],
+
     ignoreErrors: [/ResizeObserver loop limit exceeded/i],
+
     beforeSend(event) {
-      // remove user IP and geo context
+      // Remove user IP and geo context for privacy
       if (event.user != null) {
         delete event.user.ip_address;
       }
@@ -80,5 +70,4 @@ if (dsn.length > 0) {
   });
 }
 
-export const SentryErrorBoundary = Sentry.ErrorBoundary;
-export const captureException = Sentry.captureException;
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
