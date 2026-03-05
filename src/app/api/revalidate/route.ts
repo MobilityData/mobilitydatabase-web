@@ -22,6 +22,51 @@ const defaultRevalidateOptions: RevalidateBody = {
   feedIds: [],
 };
 
+/**
+ * GET handler for the Vercel cron job that revalidates all feed pages once a day.
+ * Vercel automatically passes Authorization: Bearer <CRON_SECRET> with each invocation.
+ * Configured in vercel.json under "crons" (schedule: 0 9 * * * = 4am EST / 9am UTC).
+ */
+export async function GET(req: Request): Promise<NextResponse> {
+  const authHeader = req.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (cronSecret == null) {
+    return NextResponse.json(
+      { ok: false, error: 'Server misconfigured: CRON_SECRET missing' },
+      { status: 500 },
+    );
+  }
+
+  if (authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json(
+      { ok: false, error: 'Unauthorized' },
+      { status: 401 },
+    );
+  }
+
+  try {
+    revalidateTag('guest-feeds', 'max');
+    revalidatePath('/[locale]/feeds/[feedDataType]/[feedId]', 'layout');
+    console.log(
+      '[cron] revalidate /api/revalidate: all-feeds revalidation triggered',
+    );
+    return NextResponse.json({
+      ok: true,
+      message: 'All feeds revalidated successfully',
+    });
+  } catch (error) {
+    console.error(
+      '[cron] revalidate /api/revalidate: revalidation failed:',
+      error,
+    );
+    return NextResponse.json(
+      { ok: false, error: 'Revalidation failed' },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(req: Request): Promise<NextResponse> {
   const expectedSecret = nonEmpty(process.env.REVALIDATE_SECRET);
   if (expectedSecret == null) {
