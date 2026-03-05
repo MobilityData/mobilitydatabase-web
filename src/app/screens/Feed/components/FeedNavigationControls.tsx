@@ -3,7 +3,7 @@
 import { Button, Grid, Typography } from '@mui/material';
 import { ChevronLeft } from '@mui/icons-material';
 import { useTranslations } from 'next-intl';
-import { useRouter } from '../../../../i18n/navigation';
+import { Link, useRouter } from '../../../../i18n/navigation';
 
 interface Props {
   feedDataType: string;
@@ -43,12 +43,18 @@ export default function FeedNavigationControls({
             },
           }}
         >
-          <Button variant='text' href='/feeds' className='inline'>
+          <Button
+            variant='text'
+            component={Link}
+            href='/feeds'
+            className='inline'
+          >
             {t('feeds')}
           </Button>
           /
           <Button
             variant='text'
+            component={Link}
             href={`/feeds?${feedDataType}=true`}
             className='inline'
           >

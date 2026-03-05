@@ -438,6 +438,7 @@ export default function DrawerAppBar(): React.ReactElement {
               <Button
                 sx={{ fontFamily: fontFamily.secondary }}
                 href={SIGN_IN_TARGET}
+                component={Link}
               >
                 Login
               </Button>
