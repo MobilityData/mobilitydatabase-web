@@ -4994,6 +4994,11 @@ countries-list@^3.1.1:
   resolved "https://registry.yarnpkg.com/countries-list/-/countries-list-3.2.2.tgz#34ded4d3c8ebe715306cb5658c34f73a0c8f01cb"
   integrity sha512-ABJ/RWQBrPWy+hRuZoW+0ooK8p65Eo3WmUZwHm6v4wmfSPznNAKzjy3+UUYrJK2v3182BVsgWxdB6ROidj39kw==
 
+country-flag-emoji-polyfill@^0.1.8:
+  version "0.1.8"
+  resolved "https://registry.yarnpkg.com/country-flag-emoji-polyfill/-/country-flag-emoji-polyfill-0.1.8.tgz#d2cfb23dd2f949b80d83eb9822b613bf62957173"
+  integrity sha512-Mbah52sADS3gshUYhK5142gtUuJpHYOXlXtLFI3Ly4RqgkmPMvhX9kMZSTqDM8P7UqtSW99eHKFphhQSGXA3Cg==
+
 crc-32@^1.2.0:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/crc-32/-/crc-32-1.2.2.tgz#3cad35a934b8bf71f25ca524b6da51fb7eace2ff"
