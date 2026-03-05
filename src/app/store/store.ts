@@ -18,7 +18,7 @@ import createSagaMiddleware from '@redux-saga/core';
 import rootSaga from './saga/root-saga';
 
 import rootReducer from './reducers';
-import { createReduxEnhancer } from '@sentry/react';
+import { createReduxEnhancer } from '@sentry/nextjs';
 
 const persistConfig = {
   key: 'root',
