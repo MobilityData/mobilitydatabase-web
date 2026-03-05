@@ -56,7 +56,10 @@ export enum ThemeModeEnum {
 }
 
 export const fontFamily = {
-  primary: 'var(--font-mulish)',
+  // "Twemoji Country Flags" is loaded via a polyfill (polyfillCountryFlagEmojis in providers.tsx)
+  // and uses unicode-range: U+1F1E6-1F1FF, so it only applies to flag emoji code points
+  // and does not affect any other text rendering.
+  primary: '"Twemoji Country Flags", var(--font-mulish)',
   secondary: 'var(--font-ibm-plex-mono)',
 };
 
