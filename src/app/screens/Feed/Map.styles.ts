@@ -29,6 +29,7 @@ export const StyledMapControlPanel = styled(Box, {
     top: 'unset',
     paddingTop: 0,
     margin: theme.spacing(2),
+    zIndex: 'auto',
   },
 }));
 
