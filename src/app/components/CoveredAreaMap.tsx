@@ -36,7 +36,7 @@ import ModeOfTravelIcon from '@mui/icons-material/ModeOfTravel';
 import { GtfsVisualizationMap } from './GtfsVisualizationMap';
 import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
 import { useRemoteConfig } from '../context/RemoteConfigProvider';
-import ReactGA from 'react-ga4';
+import { sendGAEvent } from '@next/third-parties/google';
 import { selectGtfsDatasetRoutesLoadingStatus } from '../store/supporting-files-selectors';
 import {
   getLatestGbfsVersion,
@@ -190,10 +190,9 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
   };
 
   const handleOpenDetailedMapClick = (): void => {
-    ReactGA.event({
-      category: 'engagement',
-      action: 'gtfs_visualization_open_detailed_map',
-      label: 'Open Detailed Map',
+    sendGAEvent('event', 'gtfs_visualization_open_detailed_map', {
+      event_category: 'engagement',
+      event_label: 'Open Detailed Map',
     });
   };
 

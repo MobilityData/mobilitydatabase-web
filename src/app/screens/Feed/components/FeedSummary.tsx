@@ -43,7 +43,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import GavelIcon from '@mui/icons-material/Gavel';
 import { getFeedStatusData } from '../../../utils/feedStatusConsts';
 import Link from 'next/link';
-import ReactGA from 'react-ga4';
+import { sendGAEvent } from '@next/third-parties/google';
 import { getRouteTypeTranslatedName } from '../../../constants/RouteTypes';
 import {
   featureChipsStyle,
@@ -95,10 +95,9 @@ export default function FeedSummary({
   }, [feed]);
 
   const handleOpenDetailedMapClick = (): void => {
-    ReactGA.event({
-      category: 'engagement',
-      action: 'gtfs_visualization_open_detailed_map',
-      label: 'Open Detailed Map',
+    sendGAEvent('event', 'gtfs_visualization_open_detailed_map', {
+      event_category: 'engagement',
+      event_label: 'Open Detailed Map',
     });
   };
 

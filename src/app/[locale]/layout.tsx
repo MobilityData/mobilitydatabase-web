@@ -1,5 +1,6 @@
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
+import { GoogleAnalytics } from '@next/third-parties/google';
 import ThemeRegistry from '../registry';
 import { Providers } from '../providers';
 import { type ReactElement } from 'react';
@@ -12,6 +13,7 @@ import Footer from '../components/Footer';
 import Header from '../components/Header';
 import { Container } from '@mui/material';
 import { type Locale, routing } from '../../i18n/routing';
+import { getEnvConfig } from '../utils/config';
 
 export const metadata = {
   title:
@@ -125,6 +127,11 @@ export default async function LocaleLayout({
           </NextIntlClientProvider>
         </ThemeRegistry>
       </body>
+      {getEnvConfig('NEXT_PUBLIC_GOOGLE_ANALYTICS_ID') !== '' && (
+        <GoogleAnalytics
+          gaId={getEnvConfig('NEXT_PUBLIC_GOOGLE_ANALYTICS_ID')}
+        />
+      )}
     </html>
   );
 }
