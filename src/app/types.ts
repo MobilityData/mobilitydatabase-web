@@ -170,6 +170,12 @@ export interface GtfsRoute {
   routeType?: string;
 }
 
+/**
+ * A coordinate tuple in [longitude, latitude] order, following the GeoJSON / MapLibre GL convention.
+ * This replaces the Leaflet LatLngTuple ([lat, lng]) that was previously used.
+ */
+export type LngLatTuple = [number, number];
+
 export type LoadStatus = 'uninitialized' | 'loading' | 'loaded' | 'failed';
 export type SupportingFileKey =
   | 'gtfsGeolocationGeojson'

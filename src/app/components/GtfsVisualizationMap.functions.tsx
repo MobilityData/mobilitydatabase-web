@@ -9,7 +9,7 @@ import {
   type ExpressionSpecification,
   type LngLatBoundsLike,
 } from 'maplibre-gl';
-import { type LatLngTuple } from 'leaflet';
+import { type LngLatTuple } from '../types';
 
 export interface LatestDatasetLite {
   hosted_url?: string;
@@ -69,14 +69,14 @@ export function generateStopColorExpression(
 }
 
 export const getBoundsFromCoordinates = (
-  coordinates: LatLngTuple[],
+  coordinates: LngLatTuple[],
 ): LngLatBoundsLike => {
   let minLng = Number.POSITIVE_INFINITY;
   let minLat = Number.POSITIVE_INFINITY;
   let maxLng = Number.NEGATIVE_INFINITY;
   let maxLat = Number.NEGATIVE_INFINITY;
 
-  coordinates.forEach(([lat, lng]) => {
+  coordinates.forEach(([lng, lat]) => {
     minLat = Math.min(minLat, lat);
     maxLat = Math.max(maxLat, lat);
     minLng = Math.min(minLng, lng);

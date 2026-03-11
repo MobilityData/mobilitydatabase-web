@@ -1,4 +1,4 @@
-import { type LatLngExpression } from 'leaflet';
+import { type LngLatTuple } from '../types';
 import { type components, type paths } from '../services/feeds/types';
 import { type RootState } from './store';
 import { createSelector } from '@reduxjs/toolkit';
@@ -29,7 +29,7 @@ export const selectHasLoadedAllDatasets = (
 
 export const selectBoundingBoxFromLatestDataset = createSelector(
   [selectLatestDatasetsData],
-  (latestDataset): LatLngExpression[] | undefined => {
+  (latestDataset): LngLatTuple[] | undefined => {
     if (latestDataset === undefined) return undefined;
     return latestDataset.bounding_box?.minimum_latitude !== undefined &&
       latestDataset.bounding_box?.maximum_latitude !== undefined &&
@@ -37,20 +37,20 @@ export const selectBoundingBoxFromLatestDataset = createSelector(
       latestDataset.bounding_box?.maximum_longitude !== undefined
       ? [
           [
-            latestDataset.bounding_box?.minimum_latitude,
             latestDataset.bounding_box?.minimum_longitude,
-          ],
-          [
             latestDataset.bounding_box?.minimum_latitude,
-            latestDataset.bounding_box?.maximum_longitude,
           ],
           [
-            latestDataset.bounding_box?.maximum_latitude,
             latestDataset.bounding_box?.maximum_longitude,
+            latestDataset.bounding_box?.minimum_latitude,
           ],
           [
+            latestDataset.bounding_box?.maximum_longitude,
             latestDataset.bounding_box?.maximum_latitude,
+          ],
+          [
             latestDataset.bounding_box?.minimum_longitude,
+            latestDataset.bounding_box?.maximum_latitude,
           ],
         ]
       : undefined;

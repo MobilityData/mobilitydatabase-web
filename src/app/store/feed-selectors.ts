@@ -10,7 +10,7 @@ import {
   isGtfsRtFeedType,
 } from '../services/feeds/utils';
 import { type RootState } from './store';
-import type { LatLngTuple } from 'leaflet';
+import { type LngLatTuple } from '../types';
 
 export const selectFeedData = (state: RootState): BasicFeedType => {
   return state.feedProfile.data;
@@ -100,7 +100,7 @@ export const selectRelatedGtfsRTFeedsData = (
 
 export const selectFeedBoundingBox = (
   state: RootState,
-): LatLngTuple[] | undefined => {
+): LngLatTuple[] | undefined => {
   if (
     !(
       isGtfsFeedType(state.feedProfile.data) ||
@@ -120,9 +120,9 @@ export const selectFeedBoundingBox = (
     return undefined;
   }
   return [
-    [feed.bounding_box.minimum_latitude, feed.bounding_box.minimum_longitude],
-    [feed.bounding_box.minimum_latitude, feed.bounding_box.maximum_longitude],
-    [feed.bounding_box.maximum_latitude, feed.bounding_box.maximum_longitude],
-    [feed.bounding_box.maximum_latitude, feed.bounding_box.minimum_longitude],
+    [feed.bounding_box.minimum_longitude, feed.bounding_box.minimum_latitude],
+    [feed.bounding_box.maximum_longitude, feed.bounding_box.minimum_latitude],
+    [feed.bounding_box.maximum_longitude, feed.bounding_box.maximum_latitude],
+    [feed.bounding_box.minimum_longitude, feed.bounding_box.maximum_latitude],
   ];
 };
