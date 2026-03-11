@@ -1,7 +1,6 @@
 'use client';
 import React from 'react';
 import '../styles/Footer.css';
-import TwitterIcon from '@mui/icons-material/Twitter';
 import { Button, IconButton, useTheme } from '@mui/material';
 import { GitHub, LinkedIn, OpenInNew } from '@mui/icons-material';
 import { MOBILITY_DATA_LINKS } from '../constants/Navigation';
@@ -45,17 +44,6 @@ const Footer: React.FC = () => {
         </Button>
       </a>
       <div style={{ margin: 0, display: 'flex', justifyContent: 'center' }}>
-        <IconButton
-          aria-label='twitter'
-          className='link-button'
-          color='primary'
-          component='a'
-          href={MOBILITY_DATA_LINKS.twitter}
-          target='_blank'
-          rel='noreferrer'
-        >
-          <TwitterIcon />
-        </IconButton>
         <IconButton
           aria-label='slack'
           className='link-button'
