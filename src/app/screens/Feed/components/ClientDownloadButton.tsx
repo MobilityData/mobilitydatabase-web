@@ -2,6 +2,7 @@
 
 import { Button } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
+import { sendGAEvent } from '@next/third-parties/google';
 import { useTranslations } from 'next-intl';
 
 export default function ClientDownloadButton({
@@ -11,13 +12,10 @@ export default function ClientDownloadButton({
 }): React.ReactElement {
   const t = useTranslations('feeds');
 
-  const handleDownloadLatestClick = async (): Promise<void> => {
-    // Lazy load react-ga4 to avoid loading it unnecessarily
-    const ReactGA = (await import('react-ga4')).default;
-    ReactGA.event({
-      category: 'engagement',
-      action: 'download_latest_dataset',
-      label: 'Download Latest Dataset',
+  const handleDownloadLatestClick = (): void => {
+    sendGAEvent('event', 'download_latest_dataset', {
+      event_category: 'engagement',
+      event_label: 'Download Latest Dataset',
     });
   };
 
@@ -30,9 +28,7 @@ export default function ClientDownloadButton({
       rel='noreferrer nofollow'
       id='download-latest-button'
       endIcon={<DownloadIcon />}
-      onClick={() => {
-        void handleDownloadLatestClick();
-      }}
+      onClick={handleDownloadLatestClick}
     >
       {t('downloadLatest')}
     </Button>

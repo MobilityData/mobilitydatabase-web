@@ -2,6 +2,7 @@
 
 import { Button } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { sendGAEvent } from '@next/third-parties/google';
 import { useTranslations } from 'next-intl';
 
 export default function ClientQualityReportButton({
@@ -11,12 +12,10 @@ export default function ClientQualityReportButton({
 }): React.ReactElement {
   const t = useTranslations('feeds');
 
-  const handleOpenFullQualityReportClick = async (): Promise<void> => {
-    const ReactGA = (await import('react-ga4')).default;
-    ReactGA.event({
-      category: 'engagement',
-      action: 'open_full_quality_report',
-      label: 'Open Full Quality Report',
+  const handleOpenFullQualityReportClick = (): void => {
+    sendGAEvent('event', 'open_full_quality_report', {
+      event_category: 'engagement',
+      event_label: 'Open Full Quality Report',
     });
   };
 
@@ -28,9 +27,7 @@ export default function ClientQualityReportButton({
       target='_blank'
       rel='noreferrer nofollow'
       endIcon={<OpenInNewIcon />}
-      onClick={() => {
-        void handleOpenFullQualityReportClick();
-      }}
+      onClick={handleOpenFullQualityReportClick}
     >
       {t('openFullQualityReport')}
     </Button>
