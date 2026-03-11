@@ -5,8 +5,11 @@ import {
   type GBFSVersionType,
   type GBFSFeedType,
 } from '../../services/feeds/utils';
-import { type LatLngTuple } from 'leaflet';
-import { type GeoJSONData, type GeoJSONDataGBFS } from '../../types';
+import {
+  type LngLatTuple,
+  type GeoJSONData,
+  type GeoJSONDataGBFS,
+} from '../../types';
 
 export function formatProvidersSorted(provider: string): string[] {
   const providers = provider.split(',').filter((n) => n);
@@ -136,7 +139,7 @@ export const sortGbfsVersions = (
 /* eslint-disable */
 export function computeBoundingBox(
   geojson: GeoJSONData | GeoJSONDataGBFS,
-): LatLngTuple[] | undefined {
+): LngLatTuple[] | undefined {
   if (geojson == null) {
     return undefined;
   }
@@ -187,14 +190,14 @@ export function computeBoundingBox(
   }
 
   return [
-    [minY, minX],
-    [maxY, maxX],
+    [minX, minY],
+    [maxX, maxY],
   ];
 }
 
 export const getBoundingBox = (
   feed: GTFSFeedType | GBFSFeedType ,
-): LatLngTuple[] | undefined => {
+): LngLatTuple[] | undefined => {
   if (feed == undefined || feed.data_type === 'gtfs_rt') {
     return undefined;
   };
@@ -208,20 +211,20 @@ export const getBoundingBox = (
   }
   return [
     [
-      feed.bounding_box.minimum_latitude,
       feed.bounding_box.minimum_longitude,
-    ],
-    [
       feed.bounding_box.minimum_latitude,
-      feed.bounding_box.maximum_longitude,
     ],
     [
-      feed.bounding_box.maximum_latitude,
       feed.bounding_box.maximum_longitude,
+      feed.bounding_box.minimum_latitude,
     ],
     [
+      feed.bounding_box.maximum_longitude,
       feed.bounding_box.maximum_latitude,
+    ],
+    [
       feed.bounding_box.minimum_longitude,
+      feed.bounding_box.maximum_latitude,
     ],
   ];
 };

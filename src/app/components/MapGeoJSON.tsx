@@ -8,7 +8,7 @@ import MapGL, {
   Popup,
 } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { type LatLngTuple } from 'leaflet';
+import { type LngLatTuple } from '../types';
 import { useTranslations } from 'next-intl';
 import { PopupTable } from './PopupTable';
 import { useTheme } from '@mui/material/styles';
@@ -35,7 +35,7 @@ export interface GeoJSONDataGBFS extends GeoJSONData {
 
 export interface MapProps {
   geoJSONData: GeoJSONData | null;
-  polygon: LatLngTuple[];
+  polygon: LngLatTuple[];
   displayMapDetails?: boolean;
 }
 

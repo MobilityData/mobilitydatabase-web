@@ -10,7 +10,7 @@ import Map, {
 import maplibregl, { type LngLatBoundsLike } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Protocol } from 'pmtiles';
-import { type LatLngExpression } from 'leaflet';
+import { type LngLatTuple, type GtfsRoute } from '../types';
 import { Box, useTheme } from '@mui/material';
 
 import {
@@ -20,7 +20,6 @@ import {
   type MapElementType,
 } from './MapElement';
 import { MapDataPopup } from './Map/MapDataPopup';
-import type { GtfsRoute } from '../types';
 import { createPrecomputation, extendBBoxes } from '../utils/precompute';
 import { SelectedRoutesStopsPanel } from './Map/SelectedRoutesStopsPanel';
 import { ScanningOverlay } from './Map/ScanningOverlay';
@@ -41,7 +40,7 @@ import {
 } from './GtfsVisualizationMap.layers';
 
 export interface GtfsVisualizationMapProps {
-  polygon: LatLngExpression[];
+  polygon: LngLatTuple[];
   latestDataset?: LatestDatasetLite;
   filteredRoutes?: string[];
   filteredRouteTypeIds?: string[];
@@ -260,9 +259,7 @@ export const GtfsVisualizationMap = ({
     };
   }, []);
 
-  const bounds: LngLatBoundsLike = getBoundsFromCoordinates(
-    polygon as Array<[number, number]>,
-  );
+  const bounds: LngLatBoundsLike = getBoundsFromCoordinates(polygon);
 
   // route IDs coming from selected route types
   const routeIdsFromTypes =

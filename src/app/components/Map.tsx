@@ -8,13 +8,13 @@ import MapGL, {
   MapProvider,
 } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { type LatLngTuple } from 'leaflet';
+import { type LngLatTuple } from '../types';
 import { useTheme } from '@mui/material/styles';
 import { Box } from '@mui/material';
 import { getBoundsFromCoordinates } from './GtfsVisualizationMap.functions';
 
 export interface MapProps {
-  polygon: LatLngTuple[];
+  polygon: LngLatTuple[];
 }
 
 export const Map = (
@@ -26,10 +26,8 @@ export const Map = (
     return getBoundsFromCoordinates(props.polygon);
   }, [props.polygon]);
 
-  // Convert LatLngExpression[] to GeoJSON ring for Source
-  const coordinates = props.polygon.map((p) => {
-    return [p[1], p[0]];
-  });
+  // Polygon is already in [lng, lat] (GeoJSON) format - no conversion needed
+  const coordinates: number[][] = [...props.polygon];
 
   // Ensure it's a closed ring for a polygon
   if (
