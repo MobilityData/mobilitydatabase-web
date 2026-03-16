@@ -3,10 +3,8 @@
 import './App.css';
 import AppRouter from './router/Router';
 import { MemoryRouter } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { anonymousLogin } from './store/profile-reducer';
-import { app } from '../firebase';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense } from 'react';
+import { useAuthReady } from './components/AuthSessionProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import AppContainer from './AppContainer';
@@ -32,28 +30,12 @@ function buildPathFromNextRouter(
 }
 
 function App({ locale }: AppProps): React.ReactElement {
-  const dispatch = useDispatch();
-  const [isAppReady, setIsAppReady] = useState(false);
+  const isAppReady = useAuthReady();
 
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const initialPath = buildPathFromNextRouter(pathname, searchParams, locale);
-
-  useEffect(() => {
-    const unsubscribe = app.auth().onAuthStateChanged((user) => {
-      if (user != null) {
-        setIsAppReady(true);
-      } else {
-        setIsAppReady(false);
-        dispatch(anonymousLogin());
-      }
-    });
-    dispatch(anonymousLogin());
-    return () => {
-      unsubscribe();
-    };
-  }, [dispatch]);
 
   return (
     <Suspense>

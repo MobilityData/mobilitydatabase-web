@@ -8,6 +8,7 @@ import { type RemoteConfigValues } from './interface/RemoteConfig';
 // Look into this provider and see if it's client blocking. Niche provider might be able to isolate for single use
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { AuthSessionProvider } from './components/AuthSessionProvider';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -35,7 +36,7 @@ export function Providers({
     <ContextProviders>
       <RemoteConfigProvider config={remoteConfig}>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
-          {children}
+          <AuthSessionProvider>{children}</AuthSessionProvider>
         </LocalizationProvider>
       </RemoteConfigProvider>
     </ContextProviders>
