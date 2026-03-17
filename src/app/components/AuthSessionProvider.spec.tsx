@@ -7,7 +7,7 @@ import {
 } from '@testing-library/react';
 import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
-import { AuthSessionProvider, useAuthReady } from './AuthSessionProvider';
+import { AuthSessionProvider, useAuthSession } from './AuthSessionProvider';
 import { setUserCookieSession } from '../services/session-service';
 import { anonymousLogin } from '../store/profile-reducer';
 
@@ -97,14 +97,14 @@ afterEach(() => {
 });
 
 describe('AuthSessionProvider', () => {
-  describe('useAuthReady', () => {
+  describe('useAuthSession', () => {
     it('returns false before any auth state change', () => {
-      const { result } = renderHook(() => useAuthReady(), { wrapper });
-      expect(result.current).toBe(false);
+      const { result } = renderHook(() => useAuthSession(), { wrapper });
+      expect(result.current.isAuthReady).toBe(false);
     });
 
     it('returns true after onIdTokenChanged fires with a user', async () => {
-      const { result } = renderHook(() => useAuthReady(), {
+      const { result } = renderHook(() => useAuthSession(), {
         wrapper: wrapperWithAuth,
       });
 
@@ -112,11 +112,11 @@ describe('AuthSessionProvider', () => {
         capturedAuthCallback(mockUser);
       });
 
-      expect(result.current).toBe(true);
+      expect(result.current.isAuthReady).toBe(true);
     });
 
     it('returns false after onIdTokenChanged fires with null', async () => {
-      const { result } = renderHook(() => useAuthReady(), {
+      const { result } = renderHook(() => useAuthSession(), {
         wrapper: wrapperWithAuth,
       });
 
@@ -124,7 +124,7 @@ describe('AuthSessionProvider', () => {
         capturedAuthCallback(null);
       });
 
-      expect(result.current).toBe(false);
+      expect(result.current.isAuthReady).toBe(false);
     });
   });
 

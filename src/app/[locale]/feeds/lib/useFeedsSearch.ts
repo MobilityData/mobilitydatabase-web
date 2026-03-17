@@ -6,7 +6,7 @@ import {
   type AllFeedsParams,
 } from '../../../services/feeds/utils';
 import { getUserAccessToken } from '../../../services/profile-service';
-import { useAuthReady } from '../../../components/AuthSessionProvider';
+import { useAuthSession } from '../../../components/AuthSessionProvider';
 import {
   getDataTypeParamFromSelectedFeedTypes,
   getInitialSelectedFeedTypes,
@@ -158,7 +158,7 @@ export function useFeedsSearch(searchParams: URLSearchParams): {
   isError: boolean;
   searchLimit: number;
 } {
-  const authReady = useAuthReady();
+  const { isAuthReady: authReady } = useAuthSession();
   const { cache } = useSWRConfig();
   const derivedSearchParams = deriveSearchParams(searchParams);
   const key = authReady ? buildSwrKey(derivedSearchParams) : null;

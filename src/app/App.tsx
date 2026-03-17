@@ -4,7 +4,7 @@ import './App.css';
 import AppRouter from './router/Router';
 import { MemoryRouter } from 'react-router-dom';
 import { Suspense } from 'react';
-import { useAuthReady } from './components/AuthSessionProvider';
+import { useAuthSession } from './components/AuthSessionProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import AppContainer from './AppContainer';
@@ -30,7 +30,7 @@ function buildPathFromNextRouter(
 }
 
 function App({ locale }: AppProps): React.ReactElement {
-  const isAppReady = useAuthReady();
+  const { isAuthReady: isAppReady } = useAuthSession();
 
   const pathname = usePathname();
   const searchParams = useSearchParams();

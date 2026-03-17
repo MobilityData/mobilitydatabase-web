@@ -14,14 +14,23 @@ import { app } from '../../firebase';
 import { anonymousLogin } from '../store/profile-reducer';
 import { setUserCookieSession } from '../services/session-service';
 
-const AuthReadyContext = createContext(false);
+interface AuthSession {
+  isAuthReady: boolean;
+  email: string | null;
+  isAuthenticated: boolean;
+}
+
+const AuthReadyContext = createContext<AuthSession>({
+  isAuthReady: false,
+  email: null,
+  isAuthenticated: false,
+});
 
 /**
- * Returns true once a Firebase user (anonymous or authenticated) is
- * available. Use this instead of registering your own
- * `onAuthStateChanged` listener.
+ * Returns the current auth session state once Firebase has resolved.
+ * Use this instead of registering your own `onAuthStateChanged` listener.
  */
-export function useAuthReady(): boolean {
+export function useAuthSession(): AuthSession {
   return useContext(AuthReadyContext);
 }
 
@@ -45,7 +54,11 @@ export function AuthSessionProvider({
   children: ReactNode;
 }): ReactElement {
   const dispatch = useDispatch();
-  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [session, setSession] = useState<AuthSession>({
+    isAuthReady: false,
+    email: null,
+    isAuthenticated: false,
+  });
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -56,7 +69,11 @@ export function AuthSessionProvider({
       }
 
       if (user != null) {
-        setIsAuthReady(true);
+        setSession({
+          isAuthReady: true,
+          email: user.email ?? null,
+          isAuthenticated: !user.isAnonymous,
+        });
         setUserCookieSession().catch(() => {});
 
         // Check every 5 minutes; the cookie lasts 60 minutes, so this ensures renewal well before expiry
@@ -69,7 +86,7 @@ export function AuthSessionProvider({
           5 * 60 * 1000,
         ); // 5 minutes
       } else {
-        setIsAuthReady(false);
+        setSession({ isAuthReady: false, email: null, isAuthenticated: false });
         dispatch(anonymousLogin());
       }
     });
@@ -81,7 +98,7 @@ export function AuthSessionProvider({
   }, [dispatch]);
 
   return (
-    <AuthReadyContext.Provider value={isAuthReady}>
+    <AuthReadyContext.Provider value={session}>
       {children}
     </AuthReadyContext.Provider>
   );
