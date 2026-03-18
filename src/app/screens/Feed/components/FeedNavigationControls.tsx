@@ -18,22 +18,10 @@ export default function FeedNavigationControls({
   const router = useRouter();
 
   const handleBack = (): void => {
-    const hasReferrer = document.referrer !== '';
-    const hasSameOriginReferrer =
-      hasReferrer &&
-      new URL(document.referrer).origin === window.location.origin;
-
-    // checks if the user is coming from an external site (no referrer or different origin) and redirects to /feeds
-    if (!hasSameOriginReferrer) {
-      router.push('/feeds');
-      return;
-    }
-
     if (window.history.length > 1) {
       router.back();
       return;
     }
-
     router.push('/feeds');
   };
 
