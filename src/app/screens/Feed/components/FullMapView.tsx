@@ -388,7 +388,7 @@ export default function FullMapView({
               aria-label={t('fullMapView.aria.close')}
               sx={{ position: 'absolute', top: 10, right: 10, zIndex: 1000 }}
               onClick={() => {
-                if (!hasError && feedId != null) {
+                if (feedId != null) {
                   router.replace(`/feeds/${feed?.data_type}/${feedId}`);
                 } else {
                   router.replace('/');
