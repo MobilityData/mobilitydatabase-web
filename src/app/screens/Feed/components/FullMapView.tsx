@@ -252,10 +252,10 @@ export default function FullMapView({
               color={'inherit'}
               sx={{ pl: 0, display: { xs: 'none', md: 'inline-flex' } }}
               onClick={() => {
-                if (!hasError && feedId != null) {
-                  router.push(`/feeds/gtfs/${feedId}`);
+                if (feedId != null) {
+                  router.replace(`/feeds/gtfs/${feedId}`);
                 } else {
-                  router.push('/');
+                  router.replace('/');
                 }
               }}
             >
@@ -389,9 +389,9 @@ export default function FullMapView({
               sx={{ position: 'absolute', top: 10, right: 10, zIndex: 1000 }}
               onClick={() => {
                 if (!hasError && feedId != null) {
-                  router.push(`/feeds/${feed?.data_type}/${feedId}`);
+                  router.replace(`/feeds/${feed?.data_type}/${feedId}`);
                 } else {
-                  router.push('/');
+                  router.replace('/');
                 }
               }}
             >

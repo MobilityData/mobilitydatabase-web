@@ -17,6 +17,24 @@ export default function FeedNavigationControls({
   const t = useTranslations('common');
   const router = useRouter();
 
+  const handleBack = (): void => {
+    const hasReferrer = document.referrer !== '';
+    const hasSameOriginReferrer =
+      hasReferrer && new URL(document.referrer).origin === window.location.origin;
+
+    if (!hasSameOriginReferrer) {
+      router.push('/feeds');
+      return;
+    }
+
+    if (window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    router.push('/feeds');
+  };
+
   return (
     <Grid container spacing={3} alignItems='flex-end'>
       <Button
@@ -24,13 +42,7 @@ export default function FeedNavigationControls({
         size='large'
         startIcon={<ChevronLeft />}
         color={'inherit'}
-        onClick={() => {
-          if (window.history.length > 1) {
-            router.back();
-          } else {
-            router.push('/feeds');
-          }
-        }}
+        onClick={handleBack}
       >
         {t('back')}
       </Button>
