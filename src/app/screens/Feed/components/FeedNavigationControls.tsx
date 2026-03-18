@@ -20,7 +20,8 @@ export default function FeedNavigationControls({
   const handleBack = (): void => {
     const hasReferrer = document.referrer !== '';
     const hasSameOriginReferrer =
-      hasReferrer && new URL(document.referrer).origin === window.location.origin;
+      hasReferrer &&
+      new URL(document.referrer).origin === window.location.origin;
 
     if (!hasSameOriginReferrer) {
       router.push('/feeds');
