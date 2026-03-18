@@ -119,6 +119,26 @@ export default function FullMapView({
   const isGtfsFeed = feed?.data_type === 'gtfs';
   const hasError = !isGtfsFeed || feed == null || boundingBox == null;
 
+  const handleExitMap = (): void => {
+    const hasReferrer = document.referrer !== '';
+    const hasSameOriginReferrer =
+      hasReferrer &&
+      new URL(document.referrer).origin === window.location.origin;
+
+    // checks if the user is coming from an external site (no referrer or different origin) and redirects to /feeds
+    if (hasSameOriginReferrer && window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    if (feedId != null) {
+      router.replace(`/feeds/${feed?.data_type ?? 'gtfs'}/${feedId}`);
+      return;
+    }
+
+    router.replace('/');
+  };
+
   const errorDetails = useMemo(() => {
     const messages: string[] = [];
     if (feed == null) {
@@ -251,13 +271,7 @@ export default function FullMapView({
               startIcon={<ChevronLeft />}
               color={'inherit'}
               sx={{ pl: 0, display: { xs: 'none', md: 'inline-flex' } }}
-              onClick={() => {
-                if (feedId != null) {
-                  router.replace(`/feeds/gtfs/${feedId}`);
-                } else {
-                  router.replace('/');
-                }
-              }}
+              onClick={handleExitMap}
             >
               {tCommon('back')}
             </Button>
@@ -387,13 +401,7 @@ export default function FullMapView({
               size='small'
               aria-label={t('fullMapView.aria.close')}
               sx={{ position: 'absolute', top: 10, right: 10, zIndex: 1000 }}
-              onClick={() => {
-                if (feedId != null) {
-                  router.replace(`/feeds/${feed?.data_type}/${feedId}`);
-                } else {
-                  router.replace('/');
-                }
-              }}
+              onClick={handleExitMap}
             >
               <CloseIcon />
             </Fab>
