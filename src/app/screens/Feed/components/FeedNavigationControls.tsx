@@ -23,6 +23,7 @@ export default function FeedNavigationControls({
       hasReferrer &&
       new URL(document.referrer).origin === window.location.origin;
 
+    // checks if the user is coming from an external site (no referrer or different origin) and redirects to /feeds
     if (!hasSameOriginReferrer) {
       router.push('/feeds');
       return;
@@ -37,9 +38,8 @@ export default function FeedNavigationControls({
   };
 
   return (
-    <Grid container spacing={3} alignItems='flex-end'>
+    <Grid container spacing={3} alignItems='center'>
       <Button
-        sx={{ py: 0 }}
         size='large'
         startIcon={<ChevronLeft />}
         color={'inherit'}
