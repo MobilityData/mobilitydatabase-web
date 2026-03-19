@@ -120,7 +120,6 @@ export default function FullMapView({
   const hasError = !isGtfsFeed || feed == null || boundingBox == null;
 
   const handleExitMap = (): void => {
-    // checks if the user is coming from an external site (no referrer or different origin) and redirects to /feeds
     if (window.history.length > 1) {
       router.back();
       return;
