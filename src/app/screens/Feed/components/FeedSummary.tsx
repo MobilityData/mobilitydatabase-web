@@ -108,8 +108,6 @@ export default function FeedSummary({
     return hasOtherLinks;
   };
 
-  console.log('FeedSummary render', feed);
-
   return (
     <>
       <GroupCard variant='outlined'>
@@ -770,7 +768,7 @@ export default function FeedSummary({
                       mt: 1,
                     }}
                   >
-                    Tags
+                    {tCommon('tags')}
                   </Typography>
                   <Box
                     sx={{
