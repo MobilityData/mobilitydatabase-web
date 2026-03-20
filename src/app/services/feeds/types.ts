@@ -795,6 +795,14 @@ export interface components {
        * @example Detected locale/jurisdiction port 'nl'. SPDX does not list ported CC licenses; using canonical ID.
        */
       license_notes?: string;
+      /**
+       * @description List of taxonomy tags associated with the feed's license.
+       * @example [
+       *       "family:ODC",
+       *       "license:open-data-commons"
+       *     ]
+       */
+      license_tags?: string[];
     };
     Locations: Array<components['schemas']['Location']>;
     Location: {
@@ -1017,6 +1025,14 @@ export interface components {
        * @example 2023-07-10T22:06:00Z
        */
       updated_at?: string;
+      /**
+       * @description List of taxonomy tags associated with the license.
+       * @example [
+       *       "family:ODC",
+       *       "license:open-data-commons"
+       *     ]
+       */
+      license_tags?: string[];
     };
     LicenseWithRules: components['schemas']['LicenseBase'] & {
       license_rules?: Array<components['schemas']['LicenseRule']>;
@@ -1119,6 +1135,12 @@ export interface components {
     >;
     /** @description Filter feeds by their GTFS features. [GTFS features definitions defined here](https://gtfs.org/getting-started/features/overview) */
     feature: string[];
+    /** @description Comma separated list of license IDs to filter feeds by their license. */
+    license_ids: string;
+    /** @description Filter feeds by whether their license is an SPDX license. */
+    license_is_spdx: boolean;
+    /** @description Comma separated list of tags to filter feeds by their license tags. */
+    license_tags: string;
     /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
     provider: string;
     /** @description List only feeds with the specified value. Can be a partial match. Case insensitive. */
@@ -1194,8 +1216,6 @@ export interface components {
     system_id_param: string;
     /** @description Filter feeds by their supported GBFS version. This is a string that follows the semantic versioning format. */
     version_param: string;
-    /** @description Comma separated list of license IDs to filter by. */
-    license_ids_query_param: string;
   };
   requestBodies: never;
   headers: never;
@@ -1556,8 +1576,12 @@ export interface operations {
         search_query?: components['parameters']['search_text_query_param'];
         /** @description Filter feeds by their GTFS features. [GTFS features definitions defined here](https://gtfs.org/getting-started/features/overview) */
         feature?: components['parameters']['feature'];
-        /** @description Comma separated list of license IDs to filter by. */
-        license_ids?: components['parameters']['license_ids_query_param'];
+        /** @description Comma separated list of license IDs to filter feeds by their license. */
+        license_ids?: components['parameters']['license_ids'];
+        /** @description Filter feeds by whether their license is an SPDX license. */
+        license_is_spdx?: components['parameters']['license_is_spdx'];
+        /** @description Comma separated list of tags to filter feeds by their license tags. */
+        license_tags?: components['parameters']['license_tags'];
       };
       header?: never;
       path?: never;
