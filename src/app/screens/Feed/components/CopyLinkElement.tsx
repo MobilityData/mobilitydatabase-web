@@ -9,6 +9,8 @@ import {
   Snackbar,
   Tooltip,
   Typography,
+  type SxProps,
+  type Theme,
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -22,6 +24,7 @@ export interface CopyLinkElementProps {
   linkType?: 'download' | 'external' | 'email' | 'internal' | 'label';
   titleInfo?: string;
   internalClickAction?: () => void;
+  sx?: SxProps<Theme>;
 }
 
 export default function CopyLinkElement({
@@ -30,6 +33,7 @@ export default function CopyLinkElement({
   linkType,
   titleInfo,
   internalClickAction,
+  sx,
 }: CopyLinkElementProps): ReactElement {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
@@ -52,7 +56,7 @@ export default function CopyLinkElement({
   const formattedUrl = linkType === 'email' ? `mailto:${url}` : url;
 
   return (
-    <FeedLinkElement>
+    <FeedLinkElement sx={sx}>
       {title != null && (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {linkType === 'label' ? (

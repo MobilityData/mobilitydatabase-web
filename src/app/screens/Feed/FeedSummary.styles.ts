@@ -24,8 +24,4 @@ export const GroupHeader = styled(Typography)<{ component?: ElementType }>(
 export const FeedLinkElement = styled(Box)(({ theme }) => ({
   width: 'calc(100% - 16px)',
   marginLeft: '16px',
-  marginBottom: '16px',
-  '&:last-of-type': {
-    marginBottom: 0,
-  },
 }));
