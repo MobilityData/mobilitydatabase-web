@@ -10,9 +10,6 @@ export const metadata: Metadata = {
   title: 'Contact Us | Mobility Database',
   description:
     'Get in touch with the Mobility Database team. Reach out for support, data questions, or to report issues with GTFS, GTFS-RT, and GBFS transit feeds.',
-  alternates: {
-    canonical: '/contact-us',
-  },
   openGraph: {
     title: 'Contact Us | Mobility Database',
     description:

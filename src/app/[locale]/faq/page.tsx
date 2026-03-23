@@ -10,9 +10,6 @@ export const metadata: Metadata = {
   title: 'FAQ | Mobility Database',
   description:
     'Find answers to frequently asked questions about Mobility Database. Learn about GTFS, GTFS-RT, and GBFS transit feeds, data access, and how to use the platform.',
-  alternates: {
-    canonical: '/faq',
-  },
   openGraph: {
     title: 'FAQ | Mobility Database',
     description:

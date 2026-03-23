@@ -10,9 +10,6 @@ export const metadata: Metadata = {
   title: 'Privacy Policy | Mobility Database',
   description:
     'Read the Mobility Database privacy policy to understand how we collect, use, and protect your personal information when you use our transit data platform.',
-  alternates: {
-    canonical: '/privacy-policy',
-  },
   openGraph: {
     title: 'Privacy Policy | Mobility Database',
     description:

@@ -10,9 +10,6 @@ export const metadata: Metadata = {
   title: 'Terms and Conditions | Mobility Database',
   description:
     'Read the Mobility Database terms and conditions governing the use of our platform and access to our global catalog of GTFS, GTFS-RT, and GBFS transit feeds.',
-  alternates: {
-    canonical: '/terms-and-conditions',
-  },
   openGraph: {
     title: 'Terms and Conditions | Mobility Database',
     description:

@@ -11,9 +11,6 @@ export const metadata: Metadata = {
   title: 'GBFS Validator | Mobility Database',
   description:
     'Validate your GBFS (General Bikeshare Feed Specification) feeds with the Mobility Database GBFS Validator. Check compliance and identify errors in your bikeshare or micromobility data.',
-  alternates: {
-    canonical: '/gbfs-validator',
-  },
   openGraph: {
     title: 'GBFS Validator | Mobility Database',
     description:

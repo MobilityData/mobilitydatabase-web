@@ -10,9 +10,6 @@ export const metadata: Metadata = {
   title: 'Feed Submission FAQ | Mobility Database',
   description:
     'Frequently asked questions about submitting transit feeds to Mobility Database. Learn how to contribute GTFS, GTFS-RT, and GBFS feeds to our global catalog.',
-  alternates: {
-    canonical: '/contribute-faq',
-  },
   openGraph: {
     title: 'Feed Submission FAQ | Mobility Database',
     description:

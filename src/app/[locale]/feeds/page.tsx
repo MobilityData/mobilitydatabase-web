@@ -9,9 +9,6 @@ export const metadata: Metadata = {
   title: 'Transit Feeds | Mobility Database',
   description:
     'Browse thousands of GTFS, GTFS-RT, and GBFS transit feeds from agencies around the world. Search and filter open public transit data by location, type, or provider.',
-  alternates: {
-    canonical: '/feeds',
-  },
   openGraph: {
     title: 'Transit Feeds | Mobility Database',
     description:

@@ -10,9 +10,6 @@ export const metadata: Metadata = {
   title: 'About | Mobility Database',
   description:
     'Learn about Mobility Database, the open-source catalog of public transit feeds. Discover our mission to make GTFS, GTFS-RT, and GBFS data accessible to everyone.',
-  alternates: {
-    canonical: '/about',
-  },
   openGraph: {
     title: 'About | Mobility Database',
     description:
