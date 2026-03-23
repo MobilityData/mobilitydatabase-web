@@ -58,6 +58,7 @@ export default function FeedsScreen(): React.ReactElement {
     features: selectedFeatures,
     gbfsVersions: selectedGbfsVersions,
     licenses: selectedLicenses,
+    licenseTags: selectedLicenseTags,
     hasTransitFeedsRedirect: hasTransitFeedsRedirectParam,
   } = derivedPageState;
 
@@ -95,6 +96,7 @@ export default function FeedsScreen(): React.ReactElement {
         features: selectedFeatures,
         gbfsVersions: selectedGbfsVersions,
         licenses: selectedLicenses,
+        licenseTags: selectedLicenseTags,
         utmSource,
         ...overrides,
       });
@@ -109,6 +111,7 @@ export default function FeedsScreen(): React.ReactElement {
       selectedFeatures,
       selectedGbfsVersions,
       selectedLicenses,
+      selectedLicenseTags,
       utmSource,
       router,
     ],
@@ -134,6 +137,7 @@ export default function FeedsScreen(): React.ReactElement {
       features: [],
       gbfsVersions: [],
       licenses: [],
+      licenseTags: [],
       isOfficial: false,
     });
   }
@@ -288,6 +292,7 @@ export default function FeedsScreen(): React.ReactElement {
                 selectedFeatures={selectedFeatures}
                 selectedGbfsVersions={selectedGbfsVersions}
                 selectedLicenses={selectedLicenses}
+                selectedLicenseTags={selectedLicenseTags}
                 setSelectedFeedTypes={(feedTypes) => {
                   navigate({ feedTypes: { ...feedTypes }, page: 1 });
                 }}
@@ -302,6 +307,9 @@ export default function FeedsScreen(): React.ReactElement {
                 }}
                 setSelectedLicenses={(licenses) => {
                   navigate({ licenses, page: 1 });
+                }}
+                setSelectedLicenseTags={(licenseTags) => {
+                  navigate({ licenseTags, page: 1 });
                 }}
                 isOfficialTagFilterEnabled={isOfficialTagFilterEnabled}
                 areFeatureFiltersEnabled={areFeatureFiltersEnabled}
@@ -417,9 +425,27 @@ export default function FeedsScreen(): React.ReactElement {
                   />
                 ))}
 
+                {selectedLicenseTags.map((licenseTag) => (
+                  <Chip
+                    color='primary'
+                    variant='outlined'
+                    size='small'
+                    label={licenseTag}
+                    key={licenseTag}
+                    onDelete={() => {
+                      navigate({
+                        licenseTags: selectedLicenseTags.filter(
+                          (lt) => lt !== licenseTag,
+                        ),
+                      });
+                    }}
+                  />
+                ))}
+
                 {(selectedFeatures.length > 0 ||
                   selectedGbfsVersions.length > 0 ||
                   selectedLicenses.length > 0 ||
+                  selectedLicenseTags.length > 0 ||
                   isOfficialFeedSearch ||
                   selectedFeedTypes.gtfs_rt ||
                   selectedFeedTypes.gtfs ||
@@ -553,6 +579,7 @@ export default function FeedsScreen(): React.ReactElement {
                             feedsData={feedsData}
                             selectedFeatures={selectedFeatures}
                             selectedGbfsVersions={selectedGbfsVersions}
+                            selectedLicenseTags={selectedLicenseTags}
                             isLoadingFeeds={isLoading || isValidating}
                           />
                         )}
