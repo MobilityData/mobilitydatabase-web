@@ -9,6 +9,8 @@ import {
   formatProvidersSorted,
   generatePageTitle,
   generateDescriptionMetaTag,
+  generateMapPageTitle,
+  generateMapDescriptionMetaTag,
 } from '../../../../../screens/Feed/Feed.functions';
 
 /**
@@ -332,6 +334,61 @@ export function generateFeedMetadata({
     },
     alternates: {
       canonical: `https://mobilitydatabase.org/feeds/${feedDataType}/${feedId}`,
+    },
+  };
+}
+
+/**
+ * Shared metadata generation logic for feed map pages (authed and static).
+ *
+ * Produces a unique title and description that reflect the interactive map
+ * view, so that search engines can distinguish the map page from the main
+ * feed detail page.
+ *
+ * @param feed - The feed data
+ * @param t - Translation function
+ */
+export function generateMapFeedMetadata({
+  feed,
+  t,
+}: GenerateFeedMetadataParams): Metadata {
+  if (feed == null) {
+    return {
+      title: 'Feed Not Found | Mobility Database',
+    };
+  }
+  const feedDataType = feed.data_type;
+  const feedId = feed.id;
+  const sortedProviders = formatProvidersSorted(feed?.provider ?? '');
+  const title = generateMapPageTitle(
+    sortedProviders,
+    feedDataType as 'gtfs' | 'gtfs_rt' | 'gbfs',
+    (feed as { feed_name?: string })?.feed_name,
+  );
+  const description = generateMapDescriptionMetaTag(
+    t,
+    sortedProviders,
+    feedDataType as 'gtfs' | 'gtfs_rt' | 'gbfs',
+    (feed as { feed_name?: string })?.feed_name,
+  );
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `https://mobilitydatabase.org/feeds/${feedDataType}/${feedId}/map`,
+      siteName: 'Mobility Database',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary',
+      title,
+      description,
+    },
+    alternates: {
+      canonical: `https://mobilitydatabase.org/feeds/${feedDataType}/${feedId}/map`,
     },
   };
 }
