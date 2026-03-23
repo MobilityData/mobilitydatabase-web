@@ -28,15 +28,26 @@ interface SearchFiltersProps {
   selectedFeatures: string[];
   selectedGbfsVersions: string[];
   selectedLicenses: string[];
+  selectedLicenseTags: string[];
   setSelectedFeedTypes: (selectedFeedTypes: Record<string, boolean>) => void;
   setIsOfficialFeedSearch: (isOfficialFeedSearch: boolean) => void;
   setSelectedFeatures: (selectedFeatures: string[]) => void;
   setSelectedGbfsVerions: (selectedVersions: string[]) => void;
   setSelectedLicenses: (selectedLicenses: string[]) => void;
+  setSelectedLicenseTags: (selectedLicenseTags: string[]) => void;
   isOfficialTagFilterEnabled: boolean;
   areFeatureFiltersEnabled: boolean;
   areGBFSFiltersEnabled: boolean;
 }
+
+const LICENSE_TAGS = [
+  'family:CC',
+  'family:ODC',
+  'notes:attribution-required',
+  'notes:share-alike',
+  'license:public-domain',
+  'license:government-open-license',
+];
 
 export function SearchFilters({
   selectedFeedTypes,
@@ -44,11 +55,13 @@ export function SearchFilters({
   selectedFeatures,
   selectedGbfsVersions,
   selectedLicenses,
+  selectedLicenseTags,
   setSelectedFeedTypes,
   setIsOfficialFeedSearch,
   setSelectedFeatures,
   setSelectedGbfsVerions,
   setSelectedLicenses,
+  setSelectedLicenseTags,
   isOfficialTagFilterEnabled,
   areFeatureFiltersEnabled,
   areGBFSFiltersEnabled,
@@ -66,6 +79,7 @@ export function SearchFilters({
     tags: isOfficialTagFilterEnabled,
     gbfsVersions: true,
     licenses: true,
+    licenseTags: true,
   });
   const [featureCheckboxData, setFeatureCheckboxData] = useState<
     CheckboxStructure[]
@@ -349,6 +363,53 @@ export function SearchFilters({
                 }
               });
               setSelectedLicenses([...selectedLicenseIds]);
+            }}
+          ></NestedCheckboxList>
+        </AccordionDetails>
+      </Accordion>
+
+      <Accordion
+        disableGutters
+        variant={'outlined'}
+        sx={{
+          border: 0,
+          '&::before': {
+            display: 'none',
+          },
+        }}
+        expanded={expandedCategories.licenseTags}
+        onChange={() => {
+          setExpandedCategories({
+            ...expandedCategories,
+            licenseTags: !expandedCategories.licenseTags,
+          });
+        }}
+      >
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls='panel-license-tags-content'
+          sx={{
+            px: 0,
+          }}
+        >
+          <SearchHeader variant='h6'>License Tags</SearchHeader>
+        </AccordionSummary>
+        <AccordionDetails sx={{ p: 0, m: 0, border: 0 }}>
+          <NestedCheckboxList
+            debounceTime={500}
+            checkboxData={LICENSE_TAGS.map((tag) => ({
+              title: tag,
+              checked: selectedLicenseTags.includes(tag),
+              type: 'checkbox',
+            }))}
+            onCheckboxChange={(checkboxData) => {
+              const selectedTagIds: string[] = [];
+              checkboxData.forEach((checkbox) => {
+                if (checkbox.checked) {
+                  selectedTagIds.push(checkbox.title);
+                }
+              });
+              setSelectedLicenseTags([...selectedTagIds]);
             }}
           ></NestedCheckboxList>
         </AccordionDetails>

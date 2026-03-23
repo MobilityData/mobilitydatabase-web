@@ -20,6 +20,7 @@ import * as React from 'react';
 import { FeedStatusIndicator } from '../../components/FeedStatus';
 import { useTranslations } from 'next-intl';
 import LockIcon from '@mui/icons-material/Lock';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import GtfsRtEntities from './GtfsRtEntities';
 import { getEmojiFlag, type TCountryCode } from 'countries-list';
 import OfficialChip from '../../components/OfficialChip';
@@ -33,18 +34,28 @@ export interface AdvancedSearchTableProps {
   feedsData: AllFeedsType | undefined;
   selectedFeatures: string[] | undefined;
   selectedGbfsVersions: string[] | undefined;
+  selectedLicenseTags: string[] | undefined;
   isLoadingFeeds: boolean;
 }
 
 interface DetailsContainerProps {
   children: React.ReactNode;
   feedSearchItem: SearchFeedItem;
+  selectedLicenseTags: string[];
 }
 
 const DetailsContainer = ({
   children,
   feedSearchItem,
+  selectedLicenseTags,
 }: DetailsContainerProps): React.ReactElement => {
+  const licenseTags = feedSearchItem.source_info?.license_tags;
+  const licenseTagsTitle =
+    licenseTags != null && licenseTags.length > 0
+      ? licenseTags.join(', ')
+      : undefined;
+  const matchingTags =
+    licenseTags?.filter((tag) => selectedLicenseTags.includes(tag)) ?? [];
   return (
     <Box
       sx={{
@@ -55,20 +66,52 @@ const DetailsContainer = ({
       }}
     >
       <Box sx={{ width: 'calc(100% - 100px' }}>{children}</Box>
-      <Tooltip title={'Feed License'} placement={'top-end'}>
-        <Typography
-          variant='caption'
-          sx={{
-            opacity: 0.7,
-            ml: { xs: 0, lg: 2 },
-            minWidth: { xs: '100%', lg: '100px' },
-            textAlign: 'right',
-            pt: { xs: 1, lg: 0 },
-          }}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.5,
+          ml: { xs: 0, lg: 2 },
+          minWidth: { xs: '100%', lg: '100px' },
+          justifyContent: 'flex-end',
+          flexWrap: 'wrap',
+          pt: { xs: 1, lg: 0 },
+        }}
+      >
+        {matchingTags.map((tag) => (
+          <Chip
+            key={tag}
+            label={tag}
+            size='small'
+            color='primary'
+            variant='outlined'
+            sx={{ opacity: 0.8 }}
+          />
+        ))}
+        <Tooltip
+          title={licenseTagsTitle ?? ''}
+          placement='top-end'
+          disableTouchListener={licenseTagsTitle == null}
         >
-          {feedSearchItem.source_info?.license_id}
-        </Typography>
-      </Tooltip>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+            }}
+          >
+            {licenseTagsTitle != null && (
+              <InfoOutlinedIcon sx={{ fontSize: 14, opacity: 0.7 }} />
+            )}
+            <Typography
+              variant='caption'
+              sx={{ opacity: 0.7, textAlign: 'right' }}
+            >
+              {feedSearchItem.source_info?.license_id}
+            </Typography>
+          </Box>
+        </Tooltip>
+      </Box>
     </Box>
   );
 };
@@ -77,11 +120,15 @@ const renderGTFSDetails = (
   gtfsFeed: SearchFeedItem,
   selectedFeatures: string[],
   theme: Theme,
+  selectedLicenseTags: string[],
 ): React.ReactElement => {
   const feedFeatures =
     gtfsFeed?.latest_dataset?.validation_report?.features ?? [];
   return (
-    <DetailsContainer feedSearchItem={gtfsFeed}>
+    <DetailsContainer
+      feedSearchItem={gtfsFeed}
+      selectedLicenseTags={selectedLicenseTags}
+    >
       {gtfsFeed?.feed_name != null && (
         <Typography
           variant='body1'
@@ -123,9 +170,13 @@ const renderGTFSDetails = (
 
 const renderGTFSRTDetails = (
   gtfsRtFeed: SearchFeedItem,
+  selectedLicenseTags: string[],
 ): React.ReactElement => {
   return (
-    <DetailsContainer feedSearchItem={gtfsRtFeed}>
+    <DetailsContainer
+      feedSearchItem={gtfsRtFeed}
+      selectedLicenseTags={selectedLicenseTags}
+    >
       <GtfsRtEntities
         entities={gtfsRtFeed?.entity_types}
         includeName={true}
@@ -138,9 +189,13 @@ const renderGBFSDetails = (
   gbfsFeedSearchElement: SearchFeedItem,
   selectedGbfsVersions: string[],
   theme: Theme,
+  selectedLicenseTags: string[],
 ): React.ReactElement => {
   return (
-    <DetailsContainer feedSearchItem={gbfsFeedSearchElement}>
+    <DetailsContainer
+      feedSearchItem={gbfsFeedSearchElement}
+      selectedLicenseTags={selectedLicenseTags}
+    >
       {gbfsFeedSearchElement.versions?.map((version: string, index: number) => (
         <Chip
           label={'v' + version}
@@ -164,6 +219,7 @@ export default function AdvancedSearchTable({
   feedsData,
   selectedFeatures,
   selectedGbfsVersions,
+  selectedLicenseTags,
   isLoadingFeeds,
 }: AdvancedSearchTableProps): React.ReactElement {
   const t = useTranslations('feeds');
@@ -390,18 +446,28 @@ export default function AdvancedSearchTable({
                         : {}
                     }
                   >
-                    {renderGTFSDetails(feed, selectedFeatures ?? [], theme)}
+                    {renderGTFSDetails(
+                      feed,
+                      selectedFeatures ?? [],
+                      theme,
+                      selectedLicenseTags ?? [],
+                    )}
                   </Box>
                 )}
                 {feed.data_type === 'gtfs_rt' && (
                   <Box sx={descriptionDividerStyle}>
-                    {renderGTFSRTDetails(feed)}
+                    {renderGTFSRTDetails(feed, selectedLicenseTags ?? [])}
                   </Box>
                 )}
 
                 {feed.data_type === 'gbfs' && (
                   <Box sx={hasGbfsVersions ? descriptionDividerStyle : {}}>
-                    {renderGBFSDetails(feed, selectedGbfsVersions ?? [], theme)}
+                    {renderGBFSDetails(
+                      feed,
+                      selectedGbfsVersions ?? [],
+                      theme,
+                      selectedLicenseTags ?? [],
+                    )}
                   </Box>
                 )}
               </Box>

@@ -63,6 +63,7 @@ export function deriveSearchParams(searchParams: URLSearchParams): {
   features: string[];
   gbfsVersions: string[];
   licenses: string[];
+  licenseTags: string[];
   hasTransitFeedsRedirect: boolean;
 } {
   const feedTypes = getInitialSelectedFeedTypes(searchParams);
@@ -76,6 +77,8 @@ export function deriveSearchParams(searchParams: URLSearchParams): {
     gbfsVersions:
       searchParams.get('gbfs_versions')?.split(',').filter(Boolean) ?? [],
     licenses: searchParams.get('licenses')?.split(',').filter(Boolean) ?? [],
+    licenseTags:
+      searchParams.get('license_tags')?.split(',').filter(Boolean) ?? [],
     hasTransitFeedsRedirect: searchParams.get('utm_source') === 'transitfeeds',
   };
 }
@@ -116,6 +119,7 @@ function buildSwrKey(derived: ReturnType<typeof deriveSearchParams>): string {
     features,
     gbfsVersions,
     licenses,
+    licenseTags,
   } = derived;
   const flags = deriveFilterFlags(feedTypes);
   const cacheWindow = Math.floor(Date.now() / CACHE_TTL_MS);
@@ -138,6 +142,9 @@ function buildSwrKey(derived: ReturnType<typeof deriveSearchParams>): string {
   if (licenses.length > 0) {
     params.set('licenses', licenses.join(','));
   }
+  if (licenseTags.length > 0) {
+    params.set('license_tags', licenseTags.join(','));
+  }
   return `feeds-search?${params.toString()}`;
 }
 
@@ -156,6 +163,7 @@ async function feedsFetcher(
     features,
     gbfsVersions,
     licenses,
+    licenseTags,
   } = derivedSearchParams;
   const flags = deriveFilterFlags(feedTypes);
   const offset = (page - 1) * SEARCH_LIMIT;
@@ -175,6 +183,7 @@ async function feedsFetcher(
         ? gbfsVersions.join(',').replaceAll('v', '')
         : undefined,
       license_ids: licenses.length > 0 ? licenses.join(',') : undefined,
+      license_tags: licenseTags.length > 0 ? licenseTags.join(',') : undefined,
     },
   };
 
@@ -249,6 +258,7 @@ export function buildSearchUrl(
     features?: string[];
     gbfsVersions?: string[];
     licenses?: string[];
+    licenseTags?: string[];
     utmSource?: string | null;
   },
 ): string {
@@ -277,6 +287,9 @@ export function buildSearchUrl(
   }
   if (filters.licenses != null && filters.licenses.length > 0) {
     params.set('licenses', filters.licenses.join(','));
+  }
+  if (filters.licenseTags != null && filters.licenseTags.length > 0) {
+    params.set('license_tags', filters.licenseTags.join(','));
   }
   if (filters.isOfficial === true) {
     params.set('official', 'true');
