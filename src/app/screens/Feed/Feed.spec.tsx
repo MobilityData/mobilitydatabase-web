@@ -9,6 +9,8 @@ import {
   formatProvidersSorted,
   generatePageTitle,
   generateDescriptionMetaTag,
+  generateMapPageTitle,
+  generateMapDescriptionMetaTag,
 } from './Feed.functions';
 import FeedTitle from './components/FeedTitle';
 
@@ -258,6 +260,77 @@ describe('Feed page', () => {
     );
 
     const descriptionAllEmpty = generateDescriptionMetaTag(
+      mockT,
+      [],
+      'gtfs',
+      '',
+    );
+    expect(descriptionAllEmpty).toEqual('');
+  });
+
+  it('should generate the correct map page title', () => {
+    const titleAllInfo = generateMapPageTitle(
+      ['Department of Transport', 'Public Transport'],
+      'gtfs',
+      'Darwin public bus network',
+    );
+    expect(titleAllInfo).toEqual(
+      'Department of Transport, Darwin public bus network GTFS Schedule Feed Map - Mobility Database',
+    );
+
+    const titleAllInfoRT = generateMapPageTitle(
+      ['Department of Transport', 'Public Transport'],
+      'gtfs_rt',
+      'Darwin public bus network',
+    );
+    expect(titleAllInfoRT).toEqual(
+      'Department of Transport, Darwin public bus network GTFS Realtime Feed Map - Mobility Database',
+    );
+
+    const titleAllEmpty = generateMapPageTitle([], 'gtfs', '');
+    expect(titleAllEmpty).toEqual('Mobility Database');
+
+    const gbfsTitle = generateMapPageTitle(['Flamingo Porirua'], 'gbfs');
+    expect(gbfsTitle).toEqual(
+      'Flamingo Porirua GBFS Feed Map - Mobility Database',
+    );
+  });
+
+  it('should generate the correct map page description', () => {
+    const mockT = jest.fn((key, params) => {
+      switch (key) {
+        case 'common.gtfsSchedule':
+          return 'GTFS schedule';
+        case 'common.gtfsRealtime':
+          return 'GTFS realtime';
+        case 'common.gbfs':
+          return 'GBFS';
+        case 'feeds.mapPageDescription':
+          return `Explore the ${params.formattedName} ${params.dataTypeVerbose} feed on an interactive map showing routes, stops, and transit coverage.`;
+      }
+    }) as unknown as (key: string, options?: Record<string, string>) => string;
+
+    const descriptionAllInfo = generateMapDescriptionMetaTag(
+      mockT,
+      ['Department of Transport', 'Public Transport'],
+      'gtfs',
+      'Darwin public bus network',
+    );
+    expect(descriptionAllInfo).toEqual(
+      'Explore the Department of Transport, Darwin public bus network GTFS schedule feed on an interactive map showing routes, stops, and transit coverage.',
+    );
+
+    const descriptionNoProviders = generateMapDescriptionMetaTag(
+      mockT,
+      [],
+      'gtfs',
+      'Darwin public bus network',
+    );
+    expect(descriptionNoProviders).toEqual(
+      'Explore the Darwin public bus network GTFS schedule feed on an interactive map showing routes, stops, and transit coverage.',
+    );
+
+    const descriptionAllEmpty = generateMapDescriptionMetaTag(
       mockT,
       [],
       'gtfs',
