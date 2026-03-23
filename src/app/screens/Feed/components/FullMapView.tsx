@@ -119,6 +119,20 @@ export default function FullMapView({
   const isGtfsFeed = feed?.data_type === 'gtfs';
   const hasError = !isGtfsFeed || feed == null || boundingBox == null;
 
+  const handleExitMap = (): void => {
+    if (window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    if (feedId != null) {
+      router.replace(`/feeds/${feed?.data_type ?? 'gtfs'}/${feedId}`);
+      return;
+    }
+
+    router.replace('/feeds');
+  };
+
   const errorDetails = useMemo(() => {
     const messages: string[] = [];
     if (feed == null) {
@@ -251,13 +265,7 @@ export default function FullMapView({
               startIcon={<ChevronLeft />}
               color={'inherit'}
               sx={{ pl: 0, display: { xs: 'none', md: 'inline-flex' } }}
-              onClick={() => {
-                if (!hasError && feedId != null) {
-                  router.push(`/feeds/gtfs/${feedId}`);
-                } else {
-                  router.push('/');
-                }
-              }}
+              onClick={handleExitMap}
             >
               {tCommon('back')}
             </Button>
@@ -387,13 +395,7 @@ export default function FullMapView({
               size='small'
               aria-label={t('fullMapView.aria.close')}
               sx={{ position: 'absolute', top: 10, right: 10, zIndex: 1000 }}
-              onClick={() => {
-                if (!hasError && feedId != null) {
-                  router.push(`/feeds/${feed?.data_type}/${feedId}`);
-                } else {
-                  router.push('/');
-                }
-              }}
+              onClick={handleExitMap}
             >
               <CloseIcon />
             </Fab>

@@ -17,20 +17,21 @@ export default function FeedNavigationControls({
   const t = useTranslations('common');
   const router = useRouter();
 
+  const handleBack = (): void => {
+    if (window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.push('/feeds');
+  };
+
   return (
-    <Grid container spacing={3} alignItems='flex-end'>
+    <Grid container spacing={3} alignItems='center'>
       <Button
-        sx={{ py: 0 }}
         size='large'
         startIcon={<ChevronLeft />}
         color={'inherit'}
-        onClick={() => {
-          if (window.history.length > 1) {
-            router.back();
-          } else {
-            router.push('/feeds');
-          }
-        }}
+        onClick={handleBack}
       >
         {t('back')}
       </Button>

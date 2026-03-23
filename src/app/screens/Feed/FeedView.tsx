@@ -168,7 +168,7 @@ export default async function FeedView({
               feedId={feed.id ?? ''}
             />
 
-            <Box sx={{ mt: 2 }}>
+            <Box sx={{ mt: 1 }}>
               <FeedTitle sortedProviders={sortedProviders} feed={feed} />
             </Box>
 
