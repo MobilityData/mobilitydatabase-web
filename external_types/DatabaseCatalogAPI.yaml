@@ -145,7 +145,6 @@ paths:
       description: Get GBFS feeds from the Mobility Database.
       tags:
         - "feeds"
-        - "beta"
       operationId: getGbfsFeeds
       parameters:
         - $ref: "#/components/parameters/limit_query_param_gbfs_feeds_endpoint"
@@ -175,7 +174,6 @@ paths:
       description: Get the specified GTFS feed from the Mobility Database. Once a week, we check if the latest dataset has been updated and, if so, we update it in our system accordingly.
       tags:
         - "feeds"
-        - "beta"
       operationId: getGtfsFeed
 
       security:
@@ -338,7 +336,9 @@ paths:
         - $ref: "#/components/parameters/version_query_param"
         - $ref: "#/components/parameters/search_text_query_param"
         - $ref: "#/components/parameters/feature"
-        - $ref: "#/components/parameters/license_ids_query_param"
+        - $ref: "#/components/parameters/license_ids"
+        - $ref: "#/components/parameters/license_is_spdx"
+        - $ref: "#/components/parameters/license_tags"
       security:
         - Authentication: []
       responses:
@@ -1087,6 +1087,14 @@ components:
           description: Notes concerning the relation between the feed and the license.
           type: string
           example: Detected locale/jurisdiction port 'nl'. SPDX does not list ported CC licenses; using canonical ID.
+        license_tags:
+          description: List of taxonomy tags associated with the feed's license.
+          type: array
+          items:
+            type: string
+          example:
+            - "family:ODC"
+            - "license:open-data-commons"
 
     Locations:
       type: array
@@ -1344,6 +1352,14 @@ components:
           type: string
           example: 2023-07-10T22:06:00Z
           format: date-time
+        license_tags:
+          description: List of taxonomy tags associated with the license.
+          type: array
+          items:
+            type: string
+          example:
+            - "family:ODC"
+            - "license:open-data-commons"
 
     LicenseWithRules:
       allOf:
@@ -1486,6 +1502,29 @@ components:
         type: array
         items:
           type: string
+    license_ids:
+      name: license_ids
+      in: query
+      description: Comma separated list of license IDs to filter feeds by their license.
+      required: false
+      schema:
+        type: string
+        example: CC-BY-4.0,ODbL-1.0
+    license_is_spdx:
+      name: license_is_spdx
+      in: query
+      description: Filter feeds by whether their license is an SPDX license.
+      required: false
+      schema:
+        type: boolean
+    license_tags:
+      name: license_tags
+      in: query
+      description: Comma separated list of tags to filter feeds by their license tags.
+      required: false
+      schema:
+        type: string
+        example: family:ODC,license:open-data-commons
     provider:
       name: provider
       in: query
@@ -1793,15 +1832,6 @@ components:
       schema:
         type: string
         example: 2.3
-
-    license_ids_query_param:
-      name: license_ids
-      in: query
-      description: Comma separated list of license IDs to filter by.
-      required: False
-      schema:
-        type: string
-        example: CC-BY-4.0,CC0-1.0
 
   securitySchemes:
     Authentication:

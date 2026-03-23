@@ -103,7 +103,8 @@
     "showLess": "Show less",
     "showMore": "Show {count} more",
     "moreInfo": "More Info",
-    "license": "License"
+    "license": "License",
+    "tags": "Tags"
   },
   "feeds": {
     "feeds": "Feeds",

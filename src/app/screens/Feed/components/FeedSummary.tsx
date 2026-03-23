@@ -82,6 +82,7 @@ export default function FeedSummary({
   const [openProvidersDetails, setOpenProvidersDetails] = useState(false);
   const [openLicenseDetails, setOpenLicenseDetails] = useState(false);
   const [showAllFeatures, setShowAllFeatures] = useState(false);
+  const [showAllLicenseTags, setShowAllLicenseTags] = useState(false);
 
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -220,8 +221,7 @@ export default function FeedSummary({
                 feed?.locations?.length === 1 && (
                   <Typography
                     variant='h6'
-                    component='p'
-                    sx={{ whiteSpace: 'nowrap', fontWeight: 700, mr: 1, mb: 0 }}
+                    sx={{ fontWeight: 700, mr: 1, mb: 0 }}
                   >
                     {getLocationName(feed?.locations)}
                   </Typography>
@@ -638,7 +638,7 @@ export default function FeedSummary({
                 : allFeatures.slice(0, 6);
               return (
                 <>
-                  <Grid container spacing={1} mt={1}>
+                  <Grid container spacing={1} mt={1} ml={2}>
                     {visible.map((feature, index) => {
                       const featureDecorators =
                         getFeatureComponentDecorators(feature);
@@ -678,7 +678,6 @@ export default function FeedSummary({
                           onClick={() => {
                             setShowAllFeatures((v) => !v);
                           }}
-                          sx={{ ml: 1 }}
                         >
                           {showAllFeatures
                             ? tCommon('showLess')
@@ -756,6 +755,63 @@ export default function FeedSummary({
                 {feed?.source_info?.license_url}
               </MuiLink>
             )}
+            {feed.source_info.license_tags != undefined &&
+              feed.source_info.license_tags.length > 0 && (
+                <>
+                  <Typography
+                    variant='subtitle2'
+                    component='h4'
+                    sx={{
+                      fontWeight: 700,
+                      color: 'text.secondary',
+                      ml: 2,
+                      mt: 1,
+                    }}
+                  >
+                    {tCommon('tags')}
+                  </Typography>
+                  <Box
+                    sx={{
+                      mt: 1,
+                      ml: 2,
+                      gap: 1,
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      alignItems: 'center',
+                    }}
+                  >
+                    {(showAllLicenseTags
+                      ? feed.source_info.license_tags
+                      : feed.source_info.license_tags.slice(0, 3)
+                    ).map((tag, index) => (
+                      <Chip
+                        key={index}
+                        label={tag}
+                        size='small'
+                        color='info'
+                        variant='outlined'
+                        sx={{ opacity: 0.8 }}
+                      />
+                    ))}
+                    {feed.source_info.license_tags.length > 3 && (
+                      <Button
+                        variant='text'
+                        color='secondary'
+                        size='small'
+                        onClick={() => {
+                          setShowAllLicenseTags((v) => !v);
+                        }}
+                      >
+                        {showAllLicenseTags
+                          ? tCommon('showLess')
+                          : tCommon('showMore', {
+                              count: feed.source_info.license_tags.length - 3,
+                            })}
+                      </Button>
+                    )}
+                  </Box>
+                </>
+              )}
           </GroupCard>
         )}
 
@@ -766,15 +822,18 @@ export default function FeedSummary({
             {t('relatedLinks')}
           </GroupHeader>
 
-          {(feed as GTFSFeedType)?.related_links?.map((link, index) => (
-            <CopyLinkElement
-              key={index}
-              title={link.code ?? ''}
-              url={link.url ?? ''}
-              linkType='download'
-              titleInfo={link.description ?? undefined}
-            />
-          ))}
+          {(feed as GTFSFeedType)?.related_links?.map(
+            (link, index, allLinks) => (
+              <CopyLinkElement
+                key={index}
+                title={link.code ?? ''}
+                url={link.url ?? ''}
+                linkType='download'
+                titleInfo={link.description ?? undefined}
+                sx={{ mb: index === allLinks.length - 1 ? 0 : 2 }}
+              />
+            ),
+          )}
         </GroupCard>
       )}
 
