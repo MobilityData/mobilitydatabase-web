@@ -7,15 +7,15 @@ import { type Metadata } from 'next';
 export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | Mobility Database',
+  title: 'Privacy Policy | MobilityDatabase',
   description:
-    'Read the Mobility Database privacy policy to understand how we collect, use, and protect your personal information when you use our transit data platform.',
+    'Read the MobilityDatabase privacy policy to understand how we collect, use, and protect your personal information when you use our transit data platform.',
   openGraph: {
-    title: 'Privacy Policy | Mobility Database',
+    title: 'Privacy Policy | MobilityDatabase',
     description:
-      'Read the Mobility Database privacy policy to understand how we collect, use, and protect your personal information when you use our transit data platform.',
+      'Read the MobilityDatabase privacy policy to understand how we collect, use, and protect your personal information when you use our transit data platform.',
     url: 'https://mobilitydatabase.org/privacy-policy',
-    siteName: 'Mobility Database',
+    siteName: 'MobilityDatabase',
     type: 'website',
   },
 };

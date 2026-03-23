@@ -6,15 +6,15 @@ import FeedsScreenSkeleton from '../../screens/Feeds/FeedsScreenSkeleton';
 import { type Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Transit Feeds | Mobility Database',
+  title: 'Transit Feeds | MobilityDatabase',
   description:
     'Browse thousands of GTFS, GTFS-RT, and GBFS transit feeds from agencies around the world. Search and filter open public transit data by location, type, or provider.',
   openGraph: {
-    title: 'Transit Feeds | Mobility Database',
+    title: 'Transit Feeds | MobilityDatabase',
     description:
       'Browse thousands of GTFS, GTFS-RT, and GBFS transit feeds from agencies around the world. Search and filter open public transit data by location, type, or provider.',
     url: 'https://mobilitydatabase.org/feeds',
-    siteName: 'Mobility Database',
+    siteName: 'MobilityDatabase',
     type: 'website',
   },
 };

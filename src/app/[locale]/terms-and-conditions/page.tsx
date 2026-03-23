@@ -7,15 +7,15 @@ import { type Metadata } from 'next';
 export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
-  title: 'Terms and Conditions | Mobility Database',
+  title: 'Terms and Conditions | MobilityDatabase',
   description:
-    'Read the Mobility Database terms and conditions governing the use of our platform and access to our global catalog of GTFS, GTFS-RT, and GBFS transit feeds.',
+    'Read the MobilityDatabase terms and conditions governing the use of our platform and access to our global catalog of GTFS, GTFS-RT, and GBFS transit feeds.',
   openGraph: {
-    title: 'Terms and Conditions | Mobility Database',
+    title: 'Terms and Conditions | MobilityDatabase',
     description:
-      'Read the Mobility Database terms and conditions governing the use of our platform and access to our global catalog of GTFS, GTFS-RT, and GBFS transit feeds.',
+      'Read the MobilityDatabase terms and conditions governing the use of our platform and access to our global catalog of GTFS, GTFS-RT, and GBFS transit feeds.',
     url: 'https://mobilitydatabase.org/terms-and-conditions',
-    siteName: 'Mobility Database',
+    siteName: 'MobilityDatabase',
     type: 'website',
   },
 };

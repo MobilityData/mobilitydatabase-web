@@ -7,15 +7,15 @@ import { type Metadata } from 'next';
 export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
-  title: 'Feed Submission FAQ | Mobility Database',
+  title: 'Feed Submission FAQ | MobilityDatabase',
   description:
-    'Frequently asked questions about submitting transit feeds to Mobility Database. Learn how to contribute GTFS, GTFS-RT, and GBFS feeds to our global catalog.',
+    'Frequently asked questions about submitting transit feeds to MobilityDatabase. Learn how to contribute GTFS, GTFS-RT, and GBFS feeds to our global catalog.',
   openGraph: {
-    title: 'Feed Submission FAQ | Mobility Database',
+    title: 'Feed Submission FAQ | MobilityDatabase',
     description:
-      'Frequently asked questions about submitting transit feeds to Mobility Database. Learn how to contribute GTFS, GTFS-RT, and GBFS feeds to our global catalog.',
+      'Frequently asked questions about submitting transit feeds to MobilityDatabase. Learn how to contribute GTFS, GTFS-RT, and GBFS feeds to our global catalog.',
     url: 'https://mobilitydatabase.org/contribute-faq',
-    siteName: 'Mobility Database',
+    siteName: 'MobilityDatabase',
     type: 'website',
   },
 };
