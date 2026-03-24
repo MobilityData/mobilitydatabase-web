@@ -66,8 +66,8 @@
     "e2e:run": "CYPRESS_BASE_URL=http://localhost:3001 cypress run",
     "e2e:open": "CYPRESS_BASE_URL=http://localhost:3001 cypress open",
     "firebase:auth:emulator:dev": "firebase emulators:start --only auth --project mobility-feeds-dev",
-    "generate:api-types:output": "npm exec -- openapi-typescript ./external_types/DatabaseCatalogAPI.yaml -o $npm_config_output_path && eslint $npm_config_output_path --fix",
-    "generate:api-types": "npm run generate:api-types:output -- --output-file=src/app/services/feeds/types.ts",
+    "generate:api-types:output": "node scripts/generate-api-types.mjs",
+    "generate:api-types": "node scripts/generate-api-types.mjs src/app/services/feeds/types.ts",
     "generate:gbfs-validator-types:output": "npm exec -- openapi-typescript ./external_types/GbfsValidator.yaml -o $npm_config_output_path && eslint $npm_config_output_path --fix",
     "generate:gbfs-validator-types": "npm run generate:gbfs-validator-types:output -- --output-file=src/app/services/feeds/gbfs-validator-types.ts"
   },

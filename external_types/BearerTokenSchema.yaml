@@ -1,6 +1,0 @@
-components:
-  securitySchemes:
-    Authentication:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
