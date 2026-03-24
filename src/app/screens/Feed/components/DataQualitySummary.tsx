@@ -112,16 +112,29 @@ export default async function DataQualitySummary({
 
               <Chip
                 data-testid='info-count'
-                icon={<InfoOutlinedIcon />}
+                icon={
+                  (latestDataset?.validation_report?.unique_info_count ?? 0) >
+                  0 ? (
+                    <InfoOutlinedIcon />
+                  ) : (
+                    <CheckCircle />
+                  )
+                }
                 clickable
                 component='a'
                 href={latestDataset?.validation_report?.url_html}
                 target='_blank'
                 rel='noopener noreferrer nofollow'
-                label={`${
-                  latestDataset?.validation_report?.unique_info_count ?? '0'
-                } ${tCommon('feedback.infoNotices')}`}
-                color='primary'
+                label={
+                  (latestDataset?.validation_report?.unique_info_count ?? 0) > 0
+                    ? `${latestDataset?.validation_report?.unique_info_count} ${tCommon('feedback.infoNotices')}`
+                    : tCommon('feedback.noInfoNotices')
+                }
+                color={
+                  (latestDataset?.validation_report?.unique_info_count ?? 0) > 0
+                    ? 'primary'
+                    : 'success'
+                }
                 variant='outlined'
               />
             </>

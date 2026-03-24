@@ -47,6 +47,7 @@
       "errors": "errors",
       "noErrors": "No errors",
       "noWarnings": "No warnings",
+      "noInfoNotices": "Aucune notice d'information",
       "warnings": "warnings",
       "infoNotices": "info notices"
     },
@@ -266,6 +267,8 @@
     "datasetHistoryColumns": {
       "downloadedAt": "Téléchargé le",
       "serviceDateRange": "Plage de dates de service",
+      "sizeZipped": "Taille compressée (Mo)",
+      "sizeUnzipped": "Taille décompressée (Mo)",
       "validationReport": "Rapport de validation",
       "actions": "Actions"
     },
