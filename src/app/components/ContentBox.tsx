@@ -3,7 +3,7 @@ import { Box, Typography, type SxProps } from '@mui/material';
 
 export interface ContentBoxProps {
   title: string;
-  subtile?: React.ReactNode;
+  subtitle?: React.ReactNode;
   width?: Record<string, string>;
   outlineColor: string;
   padding?: Partial<SxProps>;
@@ -46,9 +46,9 @@ export const ContentBox = (
           {props.action != null && props.action}
         </Typography>
       )}
-      {props.subtile != null && (
+      {props.subtitle != null && (
         <Typography variant='subtitle1' sx={{ mb: 2 }}>
-          {props.subtile}
+          {props.subtitle}
         </Typography>
       )}
       {props.children}

@@ -425,7 +425,7 @@ export default async function FeedView({
       {isMobilityDatabaseAdmin && (
         <ContentBox
           title={'MobilityDatabase Admin Tools'}
-          subtile={
+          subtitle={
             <>
               This section is only visible to Mobility Data employees with an{' '}
               <code>@mobilitydata.org</code> email address. It contains tools
