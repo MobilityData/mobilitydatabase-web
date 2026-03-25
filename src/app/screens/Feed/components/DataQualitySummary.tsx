@@ -42,9 +42,9 @@ export default async function DataQualitySummary({
             <>
               <Chip
                 data-testid='error-count'
-                clickable
+                clickable={Boolean(latestDataset?.validation_report?.url_html)}
                 component='a'
-                href={latestDataset?.validation_report?.url_html}
+                href={latestDataset?.validation_report?.url_html ?? undefined}
                 target='_blank'
                 rel='noopener noreferrer nofollow'
                 icon={
@@ -77,9 +77,9 @@ export default async function DataQualitySummary({
 
               <Chip
                 data-testid='warning-count'
-                clickable
+                clickable={Boolean(latestDataset?.validation_report?.url_html)}
                 component='a'
-                href={latestDataset?.validation_report?.url_html}
+                href={latestDataset?.validation_report?.url_html ?? undefined}
                 target='_blank'
                 rel='noopener noreferrer nofollow'
                 icon={
@@ -120,9 +120,9 @@ export default async function DataQualitySummary({
                     <CheckCircle />
                   )
                 }
-                clickable
+                clickable={Boolean(latestDataset?.validation_report?.url_html)}
                 component='a'
-                href={latestDataset?.validation_report?.url_html}
+                href={latestDataset?.validation_report?.url_html ?? undefined}
                 target='_blank'
                 rel='noopener noreferrer nofollow'
                 label={

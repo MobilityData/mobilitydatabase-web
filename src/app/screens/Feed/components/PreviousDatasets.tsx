@@ -266,8 +266,12 @@ export default function PreviousDatasets({
                         >
                           <Chip
                             component='a'
-                            clickable
-                            href={`${dataset?.validation_report?.url_html}`}
+                            clickable={Boolean(
+                              dataset?.validation_report?.url_html,
+                            )}
+                            href={
+                              dataset?.validation_report?.url_html ?? undefined
+                            }
                             target='_blank'
                             rel='noreferrer nofollow'
                             sx={{
@@ -336,8 +340,12 @@ export default function PreviousDatasets({
                               },
                             }}
                             component='a'
-                            clickable
-                            href={`${dataset?.validation_report?.url_html}`}
+                            clickable={Boolean(
+                              dataset?.validation_report?.url_html,
+                            )}
+                            href={
+                              dataset?.validation_report?.url_html ?? undefined
+                            }
                             target='_blank'
                             rel='noreferrer nofollow'
                             icon={
@@ -398,8 +406,12 @@ export default function PreviousDatasets({
                               },
                             }}
                             component='a'
-                            clickable
-                            href={`${dataset?.validation_report?.url_html}`}
+                            clickable={Boolean(
+                              dataset?.validation_report?.url_html,
+                            )}
+                            href={
+                              dataset?.validation_report?.url_html ?? undefined
+                            }
                             target='_blank'
                             rel='noreferrer nofollow'
                             icon={
