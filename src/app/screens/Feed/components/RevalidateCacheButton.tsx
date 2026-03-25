@@ -20,9 +20,17 @@ export default function RevalidateCacheButton({
 
   const handleClick = (): void => {
     setResult(null);
+
     startTransition(async () => {
-      const res = await revalidateFeedCache(feedId);
-      setResult(res);
+      try {
+        const res = await revalidateFeedCache(feedId);
+        setResult(res);
+      } catch {
+        setResult({
+          ok: false,
+          message: 'Failed to revalidate the cache. Please try again.',
+        });
+      }
     });
   };
 
