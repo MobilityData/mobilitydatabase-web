@@ -42,9 +42,9 @@ export default async function DataQualitySummary({
             <>
               <Chip
                 data-testid='error-count'
-                clickable
+                clickable={Boolean(latestDataset?.validation_report?.url_html)}
                 component='a'
-                href={latestDataset?.validation_report?.url_html}
+                href={latestDataset?.validation_report?.url_html ?? undefined}
                 target='_blank'
                 rel='noopener noreferrer nofollow'
                 icon={
@@ -77,9 +77,9 @@ export default async function DataQualitySummary({
 
               <Chip
                 data-testid='warning-count'
-                clickable
+                clickable={Boolean(latestDataset?.validation_report?.url_html)}
                 component='a'
-                href={latestDataset?.validation_report?.url_html}
+                href={latestDataset?.validation_report?.url_html ?? undefined}
                 target='_blank'
                 rel='noopener noreferrer nofollow'
                 icon={
@@ -112,16 +112,29 @@ export default async function DataQualitySummary({
 
               <Chip
                 data-testid='info-count'
-                icon={<InfoOutlinedIcon />}
-                clickable
+                icon={
+                  (latestDataset?.validation_report?.unique_info_count ?? 0) >
+                  0 ? (
+                    <InfoOutlinedIcon />
+                  ) : (
+                    <CheckCircle />
+                  )
+                }
+                clickable={Boolean(latestDataset?.validation_report?.url_html)}
                 component='a'
-                href={latestDataset?.validation_report?.url_html}
+                href={latestDataset?.validation_report?.url_html ?? undefined}
                 target='_blank'
                 rel='noopener noreferrer nofollow'
-                label={`${
-                  latestDataset?.validation_report?.unique_info_count ?? '0'
-                } ${tCommon('feedback.infoNotices')}`}
-                color='primary'
+                label={
+                  (latestDataset?.validation_report?.unique_info_count ?? 0) > 0
+                    ? `${latestDataset?.validation_report?.unique_info_count} ${tCommon('feedback.infoNotices')}`
+                    : tCommon('feedback.noInfoNotices')
+                }
+                color={
+                  (latestDataset?.validation_report?.unique_info_count ?? 0) > 0
+                    ? 'primary'
+                    : 'success'
+                }
                 variant='outlined'
               />
             </>
