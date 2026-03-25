@@ -225,3 +225,7 @@ export async function getUserContextJwtFromCookie(): Promise<
     return undefined;
   }
 }
+
+export function isMobilityDatabaseAdmin(email: string | undefined): boolean {
+  return email?.endsWith('@mobilitydata.org') === true;
+}
