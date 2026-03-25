@@ -5,7 +5,7 @@ export interface ContentBoxProps {
   title: string;
   subtitle?: React.ReactNode;
   width?: Record<string, string>;
-  outlineColor: string;
+  outlineColor?: string;
   padding?: Partial<SxProps>;
   margin?: string | number;
   sx?: SxProps;
@@ -22,7 +22,10 @@ export const ContentBox = (
         backgroundColor: 'background.default',
         color: 'text.primary',
         borderRadius: '6px',
-        border: `2px solid ${props.outlineColor}`,
+        border:
+          props.outlineColor != null
+            ? `2px solid ${props.outlineColor}`
+            : 'none',
         p: props.padding ?? 5,
         m: props.margin ?? 0,
         fontSize: '18px',

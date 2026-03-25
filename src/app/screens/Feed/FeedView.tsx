@@ -432,10 +432,11 @@ export default async function FeedView({
               for debugging and managing feed data
             </>
           }
-          outlineColor='background.paper'
           sx={{ mt: 4, backgroundColor: 'background.paper' }}
         >
-          <RevalidateCacheButton feedId={feed.id ?? ''} />
+          {feed?.id != null && feed?.id !== '' && (
+            <RevalidateCacheButton feedId={feed.id} />
+          )}
         </ContentBox>
       )}
     </Container>
