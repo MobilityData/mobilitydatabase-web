@@ -74,14 +74,18 @@ export function AuthSessionProvider({
           email: user.email ?? null,
           isAuthenticated: !user.isAnonymous,
         });
-        setUserCookieSession().catch(() => {});
+        setUserCookieSession().catch(() => {
+          console.error('Failed to establish session cookie');
+        });
 
         // Check every 5 minutes; the cookie lasts 60 minutes, so this ensures renewal well before expiry
         // If the cookie is not expired, it will return early and skip the POST
         // The token will refresh 5 minutes before expiry which is why the 5 minute interval is used here.
         intervalRef.current = setInterval(
           () => {
-            setUserCookieSession().catch(() => {});
+            setUserCookieSession().catch(() => {
+              console.error('Failed to establish session cookie');
+            });
           },
           5 * 60 * 1000,
         ); // 5 minutes
