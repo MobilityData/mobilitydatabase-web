@@ -105,7 +105,16 @@
     "showMore": "Show {count} more",
     "moreInfo": "More Info",
     "license": "License",
-    "tags": "Tags"
+    "tags": "Tags",
+    "openDrawer": "Ouvrir le menu",
+    "mobilityDatabaseHome": "Accueil de Mobility Database",
+    "accountMenu": "Menu du compte",
+    "accountDetails": "Détails du compte",
+    "login": "Connexion",
+    "metricsAdminOnly": "Métriques - Admin uniquement",
+    "languageSelect": "Sélection de la langue",
+    "transitFeedsRedirectTitle": "Vous avez été redirigé depuis TransitFeeds",
+    "transitFeedsRedirectBody": "Cette page se trouve désormais sur MobilityDatabase.org, où vous trouverez les données de transit les plus récentes."
   },
   "feeds": {
     "feeds": "Feeds",
@@ -512,6 +521,37 @@
       "boundingBoxes": "Boîtes englobantes pour visualiser ou filtrer par région sélectionnée dans l'API",
       "addFeeds": "Un formulaire simple et facile à utiliser pour ajouter de nouveaux flux",
       "openSource": "Une communauté open source travaillant activement à améliorer les outils"
+    }
+  },
+  "footer": {
+    "tagline": "Le plus grand catalogue ouvert de flux de données de transit et de mobilité, au service de la communauté mondiale des transports.",
+    "maintainedBy": "Maintenu avec 💙 par MobilityData",
+    "copyright": "© {year} MobilityDatabase. Tous droits réservés.",
+    "columns": {
+      "platform": "Plateforme",
+      "validators": "Validateurs",
+      "company": "Entreprise",
+      "legal": "Légal"
+    },
+    "links": {
+      "feeds": "Flux",
+      "addFeed": "Ajouter un flux",
+      "apiDocs": "Docs API",
+      "gtfsValidator": "Validateur GTFS",
+      "gtfsRtValidator": "Validateur GTFS-RT",
+      "gbfsValidator": "Validateur GBFS",
+      "about": "À propos",
+      "faq": "FAQ",
+      "contactUs": "Contactez-nous",
+      "shareFeedback": "Donner un avis",
+      "privacyPolicy": "Politique de confidentialité",
+      "termsAndConditions": "Conditions d'utilisation"
+    },
+    "aria": {
+      "github": "GitHub",
+      "slack": "Slack",
+      "linkedin": "LinkedIn",
+      "logo": "Logo MobilityDatabase"
     }
   }
 }
