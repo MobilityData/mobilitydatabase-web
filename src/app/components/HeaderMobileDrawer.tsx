@@ -1,6 +1,8 @@
 'use client';
 
+import * as React from 'react';
 import { OpenInNew } from '@mui/icons-material';
+import SearchIcon from '@mui/icons-material/Search';
 import {
   Box,
   Typography,
@@ -12,6 +14,8 @@ import {
   AccordionDetails,
   useTheme,
   Link,
+  InputBase,
+  IconButton,
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import {
@@ -27,6 +31,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useRemoteConfig } from '../context/RemoteConfigProvider';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
+import ThemeToggle from './ThemeToggle';
 
 const websiteTile = 'MobilityDatabase';
 
@@ -35,6 +40,7 @@ interface DrawerContentProps {
   onLogoutClick: React.MouseEventHandler;
   navigationItems: NavigationItem[];
   metricsOptionsEnabled: boolean;
+  onClose?: () => void;
 }
 
 export default function DrawerContent({
@@ -42,11 +48,26 @@ export default function DrawerContent({
   onLogoutClick,
   navigationItems,
   metricsOptionsEnabled,
+  onClose,
 }: DrawerContentProps): React.ReactElement {
   const router = useRouter();
   const { config } = useRemoteConfig();
   const t = useTranslations('common');
+  const tFeeds = useTranslations('feeds');
   const theme = useTheme();
+
+  const [searchValue, setSearchValue] = React.useState('');
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleSearchSubmit = (e: React.FormEvent): void => {
+    e.preventDefault();
+    const trimmed = searchValue.trim();
+    if (trimmed !== '') {
+      router.push(`/feeds?q=${encodeURIComponent(trimmed)}`);
+      onClose?.();
+    }
+    setSearchValue('');
+  };
 
   return (
     <Box>
@@ -84,6 +105,37 @@ export default function DrawerContent({
         </Typography>
       </Box>
       <Divider />
+      <Box
+        component='form'
+        onSubmit={handleSearchSubmit}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          px: 2,
+          py: 1,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <InputBase
+          inputRef={searchInputRef}
+          value={searchValue}
+          onChange={(e) => {
+            setSearchValue(e.target.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setSearchValue('');
+            }
+          }}
+          placeholder={tFeeds('searchPlaceholder')}
+          inputProps={{ 'aria-label': t('search') }}
+          sx={{ flex: 1, fontSize: theme.typography.body2.fontSize }}
+        />
+        <IconButton size='small' type='submit' aria-label={t('search')}>
+          <SearchIcon fontSize='small' />
+        </IconButton>
+      </Box>
       <List>
         {navigationItems.map((item) => (
           <Button
@@ -242,6 +294,10 @@ export default function DrawerContent({
           </Button>
         )}
       </List>
+      <Divider />
+      <Box sx={{ px: 2, py: 1.5 }}>
+        <ThemeToggle />
+      </Box>
     </Box>
   );
 }

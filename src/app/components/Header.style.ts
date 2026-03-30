@@ -16,10 +16,7 @@ export const animatedButtonStyling = (
 ): SystemStyleObject<Theme> => ({
   minWidth: 'fit-content',
   px: 0,
-  mx: {
-    md: 1,
-    lg: 2,
-  },
+  mx: { xs: 1.5, lg: 2 },
   fontFamily: fontFamily.secondary,
   '&:hover, &.active': {
     backgroundColor: 'transparent',

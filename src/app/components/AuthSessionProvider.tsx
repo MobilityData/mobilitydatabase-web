@@ -18,12 +18,14 @@ interface AuthSession {
   isAuthReady: boolean;
   email: string | null;
   isAuthenticated: boolean;
+  displayName?: string | null;
 }
 
 const AuthReadyContext = createContext<AuthSession>({
   isAuthReady: false,
   email: null,
   isAuthenticated: false,
+  displayName: null,
 });
 
 /**
@@ -58,6 +60,7 @@ export function AuthSessionProvider({
     isAuthReady: false,
     email: null,
     isAuthenticated: false,
+    displayName: null,
   });
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -73,6 +76,7 @@ export function AuthSessionProvider({
           isAuthReady: true,
           email: user.email ?? null,
           isAuthenticated: !user.isAnonymous,
+          displayName: user.displayName ?? null,
         });
         setUserCookieSession().catch(() => {
           console.error('Failed to establish session cookie');
@@ -90,7 +94,12 @@ export function AuthSessionProvider({
           5 * 60 * 1000,
         ); // 5 minutes
       } else {
-        setSession({ isAuthReady: false, email: null, isAuthenticated: false });
+        setSession({
+          isAuthReady: false,
+          email: null,
+          isAuthenticated: false,
+          displayName: null,
+        });
         dispatch(anonymousLogin());
       }
     });
