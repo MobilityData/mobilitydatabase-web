@@ -111,7 +111,7 @@ export default async function LocaleLayout({
                 component={'main'}
                 id='next'
                 sx={{
-                  minHeight: 'calc(100vh - 32px - 64px - 232px - 20px)',
+                  minHeight: 'calc(100vh - 32px - 64px - 302px - 48px)',
                 }}
               >
                 {children}
