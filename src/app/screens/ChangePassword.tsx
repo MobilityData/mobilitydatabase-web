@@ -222,6 +222,7 @@ export default function ChangePassword(): React.ReactElement {
             <Alert severity='error'>{passwordValidationError}</Alert>
           ) : null}
           <Button
+            data-cy='changePasswordButton'
             type='submit'
             variant='contained'
             color='primary'
