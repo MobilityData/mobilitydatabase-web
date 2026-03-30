@@ -11,7 +11,7 @@ import { FooterLink, FooterColumnTitle } from './FooterElements';
 const Footer: React.FC = () => {
   const theme = useTheme();
   const t = useTranslations('footer');
-  const FooterColumnWidth = '185px';
+  const FOOTER_COLUMN_WIDTH = '185px';
   const SlackSvg = (
     <svg
       xmlns='http://www.w3.org/2000/svg'
@@ -92,7 +92,7 @@ const Footer: React.FC = () => {
               component='a'
               href={MOBILITY_DATA_LINKS.github}
               target='_blank'
-              rel='noreferrer'
+              rel='noopener noreferrer'
               size='small'
             >
               <GitHub />
@@ -102,7 +102,7 @@ const Footer: React.FC = () => {
               component='a'
               href={MOBILITY_DATA_LINKS.slack}
               target='_blank'
-              rel='noreferrer'
+              rel='noopenernoreferrer'
               size='small'
             >
               {SlackSvg}
@@ -112,7 +112,7 @@ const Footer: React.FC = () => {
               component='a'
               href={MOBILITY_DATA_LINKS.linkedin}
               target='_blank'
-              rel='noreferrer'
+              rel='noopener noreferrer'
               size='small'
             >
               <LinkedIn />
@@ -130,7 +130,7 @@ const Footer: React.FC = () => {
           }}
         >
           {/* Platform column */}
-          <Box sx={{ width: FooterColumnWidth }}>
+          <Box sx={{ width: FOOTER_COLUMN_WIDTH }}>
             <FooterColumnTitle>{t('columns.platform')}</FooterColumnTitle>
             <FooterLink href='/feeds'>{t('links.feeds')}</FooterLink>
             <FooterLink href='/contribute'>{t('links.addFeed')}</FooterLink>
@@ -143,7 +143,7 @@ const Footer: React.FC = () => {
           </Box>
 
           {/* Validators column */}
-          <Box sx={{ width: FooterColumnWidth }}>
+          <Box sx={{ width: FOOTER_COLUMN_WIDTH }}>
             <FooterColumnTitle>{t('columns.validators')}</FooterColumnTitle>
             <FooterLink
               href='https://gtfs-validator.mobilitydata.org/'
@@ -169,7 +169,7 @@ const Footer: React.FC = () => {
           </Box>
 
           {/* Company column */}
-          <Box sx={{ width: FooterColumnWidth }}>
+          <Box sx={{ width: FOOTER_COLUMN_WIDTH }}>
             <FooterColumnTitle>{t('columns.company')}</FooterColumnTitle>
             <FooterLink href='/about'>{t('links.about')}</FooterLink>
             <FooterLink href='/faq'>{t('links.faq')}</FooterLink>
@@ -183,7 +183,7 @@ const Footer: React.FC = () => {
           </Box>
 
           {/* Legal column */}
-          <Box sx={{ width: FooterColumnWidth }}>
+          <Box sx={{ width: FOOTER_COLUMN_WIDTH }}>
             <FooterColumnTitle>{t('columns.legal')}</FooterColumnTitle>
             <FooterLink href='/privacy-policy'>
               {t('links.privacyPolicy')}

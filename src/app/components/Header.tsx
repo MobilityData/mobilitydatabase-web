@@ -161,6 +161,13 @@ export default function DrawerAppBar(): React.ReactElement {
     }, 80);
   };
 
+  React.useEffect(() => {
+    return () => {
+      clearTimeout(validatorCloseTimer.current);
+      clearTimeout(accountCloseTimer.current);
+    };
+  }, []);
+
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
 
   const metricsOptionsEnabled =
@@ -324,7 +331,7 @@ export default function DrawerAppBar(): React.ReactElement {
                   <MenuItem
                     onClick={() => {
                       setValidatorAnchorEl(null);
-                      handleNavigation('gbfs-validator');
+                      handleNavigation('/gbfs-validator');
                     }}
                   >
                     {tCommon('gbfsValidator')}

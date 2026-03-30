@@ -21,7 +21,7 @@ export const FooterLink: React.FC<FooterLinkProps> = ({
       component={NextLink}
       href={href}
       target={external === true ? '_blank' : undefined}
-      rel={external === true ? 'noreferrer' : undefined}
+      rel={external === true ? 'noopener noreferrer' : undefined}
       sx={{
         color: theme.palette.text.secondary,
         textDecoration: 'none',

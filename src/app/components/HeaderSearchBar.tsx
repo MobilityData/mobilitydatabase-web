@@ -112,7 +112,7 @@ export default function HeaderSearchBar({
             width: searchOpen ? 280 : 0,
             opacity: searchOpen ? 1 : 0,
             overflow: 'hidden',
-            transition: 'max-width 0.3s ease, opacity 0.25s ease',
+            transition: 'width 0.3s ease, opacity 0.25s ease',
             '& input': { p: '2px 4px' },
           }}
         />
