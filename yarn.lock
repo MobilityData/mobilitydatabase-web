@@ -10227,11 +10227,6 @@ msw@^2.12.7:
     until-async "^3.0.2"
     yargs "^17.7.2"
 
-mui-nested-menu@3.4.0:
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/mui-nested-menu/-/mui-nested-menu-3.4.0.tgz#e104b1b492e0a9ef95820e97827851310c3a56ba"
-  integrity sha512-QUZqsCKW4tX1GwcbemBvf++ZvKsRXvHdZ+CT6GvnHvusucmEB18WKuJjAZVD8L5trXS98+9psie11Ev3FTez2A==
-
 murmurhash-js@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/murmurhash-js/-/murmurhash-js-1.0.0.tgz#b06278e21fc6c37fa5313732b0412bcb6ae15f51"
