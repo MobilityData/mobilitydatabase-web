@@ -7,10 +7,12 @@ import { fontFamily } from '../Theme';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { FooterLink, FooterColumnTitle } from './FooterElements';
+import { useRemoteConfig } from '../context/RemoteConfigProvider';
 
 const Footer: React.FC = () => {
   const theme = useTheme();
   const t = useTranslations('footer');
+  const { config } = useRemoteConfig();
   const FOOTER_COLUMN_WIDTH = '185px';
   const SlackSvg = (
     <svg
@@ -143,30 +145,28 @@ const Footer: React.FC = () => {
           </Box>
 
           {/* Validators column */}
-          <Box sx={{ width: FOOTER_COLUMN_WIDTH }}>
-            <FooterColumnTitle>{t('columns.validators')}</FooterColumnTitle>
-            <FooterLink
-              href='https://gtfs-validator.mobilitydata.org/'
-              external
-            >
-              {t('links.gtfsValidator')}{' '}
-              <OpenInNew sx={{ fontSize: '1rem', verticalAlign: 'middle' }} />
-            </FooterLink>
-            <FooterLink
-              href='https://github.com/MobilityData/gtfs-realtime-validator'
-              external
-            >
-              {t('links.gtfsRtValidator')}{' '}
-              <OpenInNew sx={{ fontSize: '1rem', verticalAlign: 'middle' }} />
-            </FooterLink>
-            <FooterLink
-              href='https://gbfs-validator.mobilitydata.org/'
-              external
-            >
-              {t('links.gbfsValidator')}{' '}
-              <OpenInNew sx={{ fontSize: '1rem', verticalAlign: 'middle' }} />
-            </FooterLink>
-          </Box>
+          {config.gbfsValidator && (
+            <Box sx={{ width: FOOTER_COLUMN_WIDTH }}>
+              <FooterColumnTitle>{t('columns.validators')}</FooterColumnTitle>
+              <FooterLink
+                href='https://gtfs-validator.mobilitydata.org/'
+                external
+              >
+                {t('links.gtfsValidator')}{' '}
+                <OpenInNew sx={{ fontSize: '1rem', verticalAlign: 'middle' }} />
+              </FooterLink>
+              <FooterLink
+                href='https://github.com/MobilityData/gtfs-realtime-validator'
+                external
+              >
+                {t('links.gtfsRtValidator')}{' '}
+                <OpenInNew sx={{ fontSize: '1rem', verticalAlign: 'middle' }} />
+              </FooterLink>
+              <FooterLink href='/gbfs-validator'>
+                {t('links.gbfsValidator')}{' '}
+              </FooterLink>
+            </Box>
+          )}
 
           {/* Company column */}
           <Box sx={{ width: FOOTER_COLUMN_WIDTH }}>
