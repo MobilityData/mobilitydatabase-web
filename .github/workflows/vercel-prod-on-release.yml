@@ -1,7 +1,6 @@
 name: Deploy to Vercel Production on Release
 
 on:
-  workflow_dispatch:
   release:
     types: [published]
 

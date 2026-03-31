@@ -43,7 +43,7 @@ import { animatedButtonStyling } from './Header.style';
 import ThemeToggle from './ThemeToggle';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
-import { app } from '../../firebase';
+import { useAuthSession } from './AuthSessionProvider';
 
 // Lazy load components not needed for initial render
 const LogoutConfirmModal = dynamic(
@@ -74,9 +74,7 @@ function useClientSearchParams(): URLSearchParams | null {
 }
 
 export default function DrawerAppBar(): React.ReactElement {
-  const [currentUser, setCurrentUser] = React.useState<
-    { email: string; isAuthenticated: boolean } | undefined
-  >(undefined);
+  const { email: userEmail, isAuthenticated } = useAuthSession();
   const clientSearchParams = useClientSearchParams();
   const hasTransitFeedsRedirectParam =
     clientSearchParams?.get('utm_source') === 'transitfeeds';
@@ -96,23 +94,6 @@ export default function DrawerAppBar(): React.ReactElement {
   const t = useTranslations('common');
 
   React.useEffect(() => {
-    const auth = app.auth();
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      if (user != null) {
-        setCurrentUser({
-          email: user.email ?? '',
-          isAuthenticated: !user.isAnonymous,
-        });
-      } else {
-        setCurrentUser(undefined);
-      }
-    });
-    return () => {
-      unsubscribe();
-    };
-  }, []);
-
-  React.useEffect(() => {
     if (hasTransitFeedsRedirectParam) {
       setHasTransitFeedsRedirect(true);
     }
@@ -127,9 +108,6 @@ export default function DrawerAppBar(): React.ReactElement {
   }, [config]);
 
   const router = useRouter();
-
-  const isAuthenticated = currentUser != null && currentUser.isAuthenticated;
-  const userEmail = currentUser?.email;
 
   const handleDrawerToggle = (): void => {
     setMobileOpen((prevState) => !prevState);

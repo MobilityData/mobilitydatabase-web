@@ -91,7 +91,7 @@ export default async function HomePage(): Promise<ReactElement> {
             mt: 4,
           }}
         >
-          {t('servingOver')}
+          {t('servingOver') + ' '}
           <Box
             component='span'
             sx={{ fontSize: 30, color: 'primary.main', mx: 1 }}
@@ -99,7 +99,7 @@ export default async function HomePage(): Promise<ReactElement> {
           >
             6000
           </Box>
-          {t('feeds')}
+          {' ' + t('feeds') + ' '}
           <Box
             component='span'
             sx={{ fontSize: 30, color: 'primary.main', mx: 1 }}
@@ -107,7 +107,7 @@ export default async function HomePage(): Promise<ReactElement> {
           >
             99
           </Box>
-          {t('countries')}
+          {' ' + t('countries')}
         </Typography>
         <SearchBox />
         <Box

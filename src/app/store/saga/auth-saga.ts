@@ -39,10 +39,7 @@ import {
   retrieveUserInformation,
   sendEmailVerification,
 } from '../../services';
-import {
-  setUserCookieSession,
-  clearUserCookieSession,
-} from '../../services/session-service';
+import { clearUserCookieSession } from '../../services/session-service';
 import {
   type AdditionalUserInfo,
   type UserCredential,
@@ -274,11 +271,6 @@ function* anonymousLoginSaga(): Generator {
   }
 }
 
-function* sessionCookieAfterLoginSaga(): Generator {
-  // Establish server-side HTTP-only session cookie after any loginSuccess.
-  yield call(setUserCookieSession);
-}
-
 export function* watchAuth(): Generator {
   yield takeLatest(USER_PROFILE_LOGIN, emailLoginSaga);
   yield takeLatest(USER_PROFILE_LOGOUT, logoutSaga);
@@ -291,6 +283,4 @@ export function* watchAuth(): Generator {
   yield takeLatest(USER_PROFILE_CHANGE_PASSWORD, changePasswordSaga);
   yield takeLatest(USER_PROFILE_RESET_PASSWORD, resetPasswordSaga);
   yield takeLatest(USER_PROFILE_ANONYMOUS_LOGIN, anonymousLoginSaga);
-  // When loginSuccess is dispatched (any login flow), set the session cookie.
-  yield takeLatest(loginSuccess.type, sessionCookieAfterLoginSaga);
 }

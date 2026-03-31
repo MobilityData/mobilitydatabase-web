@@ -1,5 +1,4 @@
 'use client';
-import { useEffect, useState } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 import { searchFeeds } from '../../../services/feeds';
 import {
@@ -7,7 +6,7 @@ import {
   type AllFeedsParams,
 } from '../../../services/feeds/utils';
 import { getUserAccessToken } from '../../../services/profile-service';
-import { app } from '../../../../firebase';
+import { useAuthSession } from '../../../components/AuthSessionProvider';
 import {
   getDataTypeParamFromSelectedFeedTypes,
   getInitialSelectedFeedTypes,
@@ -17,39 +16,6 @@ const SEARCH_LIMIT = 20;
 
 // This is for client-side caching
 const CACHE_TTL_MS = 60 * 30 * 1000; // 30 minutes - controls how long search results are cached in SWR
-
-/**
- * Ensures a Firebase user exists (anonymous or authenticated) before
- * SWR attempts to fetch. If no user is signed in, triggers anonymous
- * sign-in — the same thing App.tsx does for legacy React Router pages.
- * This is needed for the access token
- *
- * TODO: Revisit this logic to be used at a more global level without slowing down the initial load of all pages that don't require auth (e.g. about, contact). For example, we could move this logic to a context provider that's used only on the feeds page and its children.
- */
-function useFirebaseAuthReady(): boolean {
-  const [isReady, setIsReady] = useState(() => app.auth().currentUser !== null);
-
-  useEffect(() => {
-    const unsubscribe = app.auth().onAuthStateChanged((user) => {
-      if (user !== null) {
-        setIsReady(true);
-      } else {
-        // No user — trigger anonymous sign-in (mirrors App.tsx behavior)
-        setIsReady(false);
-        app
-          .auth()
-          .signInAnonymously()
-          .catch(() => {
-            // Auth listener will handle the state update on success;
-            // if sign-in fails, isReady stays false and SWR won't fetch.
-          });
-      }
-    });
-    return unsubscribe;
-  }, []);
-
-  return isReady;
-}
 
 /**
  * Derives all API query params from the URL search params.
@@ -201,7 +167,7 @@ export function useFeedsSearch(searchParams: URLSearchParams): {
   isError: boolean;
   searchLimit: number;
 } {
-  const authReady = useFirebaseAuthReady();
+  const { isAuthReady: authReady } = useAuthSession();
   const { cache } = useSWRConfig();
   const derivedSearchParams = deriveSearchParams(searchParams);
   const key = authReady ? buildSwrKey(derivedSearchParams) : null;
