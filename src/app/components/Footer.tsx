@@ -145,28 +145,37 @@ const Footer: React.FC = () => {
           </Box>
 
           {/* Validators column */}
-          {config.gbfsValidator && (
-            <Box sx={{ width: FOOTER_COLUMN_WIDTH }}>
-              <FooterColumnTitle>{t('columns.validators')}</FooterColumnTitle>
-              <FooterLink
-                href='https://gtfs-validator.mobilitydata.org/'
-                external
-              >
-                {t('links.gtfsValidator')}{' '}
-                <OpenInNew sx={{ fontSize: '1rem', verticalAlign: 'middle' }} />
-              </FooterLink>
-              <FooterLink
-                href='https://github.com/MobilityData/gtfs-realtime-validator'
-                external
-              >
-                {t('links.gtfsRtValidator')}{' '}
-                <OpenInNew sx={{ fontSize: '1rem', verticalAlign: 'middle' }} />
-              </FooterLink>
+
+          <Box sx={{ width: FOOTER_COLUMN_WIDTH }}>
+            <FooterColumnTitle>{t('columns.validators')}</FooterColumnTitle>
+            <FooterLink
+              href='https://gtfs-validator.mobilitydata.org/'
+              external
+            >
+              {t('links.gtfsValidator')}{' '}
+              <OpenInNew sx={{ fontSize: '1rem', verticalAlign: 'middle' }} />
+            </FooterLink>
+            <FooterLink
+              href='https://github.com/MobilityData/gtfs-realtime-validator'
+              external
+            >
+              {t('links.gtfsRtValidator')}{' '}
+              <OpenInNew sx={{ fontSize: '1rem', verticalAlign: 'middle' }} />
+            </FooterLink>
+            {config.gbfsValidator ? (
               <FooterLink href='/gbfs-validator'>
                 {t('links.gbfsValidator')}{' '}
               </FooterLink>
-            </Box>
-          )}
+            ) : (
+              <FooterLink
+                href='https://gbfs-validator.mobilitydata.org/'
+                external
+              >
+                {t('links.gbfsValidator')}{' '}
+                <OpenInNew sx={{ fontSize: '1rem', verticalAlign: 'middle' }} />
+              </FooterLink>
+            )}
+          </Box>
 
           {/* Company column */}
           <Box sx={{ width: FOOTER_COLUMN_WIDTH }}>

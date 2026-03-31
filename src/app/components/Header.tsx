@@ -286,48 +286,67 @@ export default function DrawerAppBar(): React.ReactElement {
                 </Button>
               </Link>
             ))}
-            {config.gbfsValidator && (
-              <Box
-                component='span'
-                onMouseEnter={handleValidatorOpen}
-                onMouseLeave={handleValidatorClose}
-                sx={{ display: 'inline-flex' }}
+
+            <Box
+              component='span'
+              onMouseEnter={handleValidatorOpen}
+              onMouseLeave={handleValidatorClose}
+              sx={{ display: 'inline-flex' }}
+            >
+              <Button
+                aria-controls='validator-menu'
+                aria-haspopup='true'
+                aria-expanded={validatorAnchorEl !== null}
+                endIcon={<ArrowDropDownIcon />}
+                sx={(theme) => ({
+                  ...animatedButtonStyling(theme),
+                  color: theme.palette.text.primary,
+                })}
+                className={
+                  activeTab.includes('validator') ? 'active short' : ''
+                }
               >
-                <Button
-                  aria-controls='validator-menu'
-                  aria-haspopup='true'
-                  aria-expanded={validatorAnchorEl !== null}
-                  endIcon={<ArrowDropDownIcon />}
-                  sx={(theme) => ({
-                    ...animatedButtonStyling(theme),
-                    color: theme.palette.text.primary,
-                  })}
-                  className={
-                    activeTab.includes('validator') ? 'active short' : ''
-                  }
-                >
-                  {tCommon('validators')}
-                </Button>
-                <Menu
-                  id='validator-menu'
-                  anchorEl={validatorAnchorEl}
-                  open={validatorAnchorEl !== null}
-                  onClose={() => {
-                    setValidatorAnchorEl(null);
-                  }}
-                  disableScrollLock
-                  disableRestoreFocus
-                  sx={{ pointerEvents: 'none' }}
-                  slotProps={{
-                    paper: {
-                      onMouseEnter: () => {
-                        clearTimeout(validatorCloseTimer.current);
-                      },
-                      onMouseLeave: handleValidatorClose,
-                      sx: { pointerEvents: 'auto' },
+                {tCommon('validators')}
+              </Button>
+              <Menu
+                id='validator-menu'
+                anchorEl={validatorAnchorEl}
+                open={validatorAnchorEl !== null}
+                onClose={() => {
+                  setValidatorAnchorEl(null);
+                }}
+                disableScrollLock
+                disableRestoreFocus
+                sx={{ pointerEvents: 'none' }}
+                slotProps={{
+                  paper: {
+                    onMouseEnter: () => {
+                      clearTimeout(validatorCloseTimer.current);
                     },
-                  }}
+                    onMouseLeave: handleValidatorClose,
+                    sx: { pointerEvents: 'auto' },
+                  },
+                }}
+              >
+                <MenuItem
+                  component={'a'}
+                  href='https://gtfs-validator.mobilitydata.org/'
+                  target='_blank'
+                  rel='noopener noreferrer'
                 >
+                  {tCommon('gtfsValidator')}
+                  <OpenInNew fontSize='small' sx={{ ml: 0.5 }} />
+                </MenuItem>
+                <MenuItem
+                  component={'a'}
+                  href='https://github.com/MobilityData/gtfs-realtime-validator'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                >
+                  {tCommon('gtfsRtValidator')}
+                  <OpenInNew fontSize='small' sx={{ ml: 0.5 }} />
+                </MenuItem>
+                {config.gbfsValidator ? (
                   <MenuItem
                     onClick={() => {
                       setValidatorAnchorEl(null);
@@ -336,27 +355,20 @@ export default function DrawerAppBar(): React.ReactElement {
                   >
                     {tCommon('gbfsValidator')}
                   </MenuItem>
+                ) : (
                   <MenuItem
                     component={'a'}
-                    href='https://gtfs-validator.mobilitydata.org/'
+                    href='https://gbfs-validator.mobilitydata.org/'
                     target='_blank'
                     rel='noopener noreferrer'
                   >
-                    {tCommon('gtfsValidator')}
+                    {tCommon('gbfsValidator')}
                     <OpenInNew fontSize='small' sx={{ ml: 0.5 }} />
                   </MenuItem>
-                  <MenuItem
-                    component={'a'}
-                    href='https://github.com/MobilityData/gtfs-realtime-validator'
-                    target='_blank'
-                    rel='noopener noreferrer'
-                  >
-                    {tCommon('gtfsRtValidator')}
-                    <OpenInNew fontSize='small' sx={{ ml: 0.5 }} />
-                  </MenuItem>
-                </Menu>
-              </Box>
-            )}
+                )}
+              </Menu>
+            </Box>
+
             {isAuthenticated ? (
               <Box
                 component='span'
