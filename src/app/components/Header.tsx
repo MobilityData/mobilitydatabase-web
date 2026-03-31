@@ -72,7 +72,11 @@ function useClientSearchParams(): URLSearchParams | null {
 }
 
 export default function DrawerAppBar(): React.ReactElement {
-  const { email: userEmail, isAuthenticated, displayName: userDisplayName } = useAuthSession();
+  const {
+    email: userEmail,
+    isAuthenticated,
+    displayName: userDisplayName,
+  } = useAuthSession();
   const clientSearchParams = useClientSearchParams();
   const hasTransitFeedsRedirectParam =
     clientSearchParams?.get('utm_source') === 'transitfeeds';
