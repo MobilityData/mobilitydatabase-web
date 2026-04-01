@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-import { POST } from './route';
+import { GET, POST } from './route';
 import { revalidatePath, revalidateTag } from 'next/cache';
 
 // Mock Next.js cache
@@ -14,6 +14,96 @@ jest.mock('next/cache', () => ({
 jest.mock('../../../i18n/routing', () => ({
   AVAILABLE_LOCALES: ['en', 'fr'],
 }));
+
+describe('GET /api/revalidate', () => {
+  const mockRevalidatePath = revalidatePath as jest.MockedFunction<
+    typeof revalidatePath
+  >;
+  const mockRevalidateTag = revalidateTag as jest.MockedFunction<
+    typeof revalidateTag
+  >;
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env = { ...originalEnv };
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
+  });
+
+  it('returns 500 when CRON_SECRET is not configured', async () => {
+    delete process.env.CRON_SECRET;
+
+    const request = new Request('http://localhost:3000/api/revalidate', {
+      method: 'GET',
+      headers: {
+        authorization: 'Bearer some-secret',
+      },
+    });
+
+    const response = await GET(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(json).toEqual({
+      ok: false,
+      error: 'Server misconfigured: CRON_SECRET missing',
+    });
+    expect(mockRevalidatePath).not.toHaveBeenCalled();
+    expect(mockRevalidateTag).not.toHaveBeenCalled();
+  });
+
+  it('returns 401 when authorization header does not match', async () => {
+    process.env.CRON_SECRET = 'correct-secret';
+
+    const request = new Request('http://localhost:3000/api/revalidate', {
+      method: 'GET',
+      headers: {
+        authorization: 'Bearer wrong-secret',
+      },
+    });
+
+    const response = await GET(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(json).toEqual({
+      ok: false,
+      error: 'Unauthorized',
+    });
+    expect(mockRevalidatePath).not.toHaveBeenCalled();
+    expect(mockRevalidateTag).not.toHaveBeenCalled();
+  });
+
+  it('revalidates only GBFS feed pages for authorized cron requests', async () => {
+    process.env.CRON_SECRET = 'test-secret';
+
+    const request = new Request('http://localhost:3000/api/revalidate', {
+      method: 'GET',
+      headers: {
+        authorization: 'Bearer test-secret',
+      },
+    });
+
+    const response = await GET(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json).toEqual({
+      ok: true,
+      message: 'All GBFS feeds revalidated successfully',
+    });
+    expect(mockRevalidateTag).toHaveBeenCalledWith('feed-type-gbfs', 'max');
+    expect(mockRevalidatePath).toHaveBeenCalledWith(
+      '/[locale]/feeds/gbfs/[feedId]',
+      'layout',
+    );
+    expect(mockRevalidateTag).toHaveBeenCalledTimes(1);
+    expect(mockRevalidatePath).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe('POST /api/revalidate', () => {
   const mockRevalidatePath = revalidatePath as jest.MockedFunction<
