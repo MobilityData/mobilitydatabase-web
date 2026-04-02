@@ -58,35 +58,18 @@ export const gbfsMetricsNavItems: NavigationItem[] = [
 export function buildNavigationItems(
   featureFlags: RemoteConfigValues,
 ): NavigationItem[] {
-  const navigationItems: NavigationItem[] = [
-    {
-      title: 'About',
-      target: 'about',
-      color: 'inherit',
-    },
-  ];
-
-  navigationItems.push({
-    title: 'Feeds',
-    target: 'feeds',
-    color: 'inherit',
-  });
+  const navigationItems: NavigationItem[] = [];
 
   navigationItems.push(
     ...[
       {
-        title: 'FAQ',
-        target: 'faq',
+        title: 'Feeds',
+        target: 'feeds',
         color: 'inherit',
       },
       {
         title: 'Add a Feed',
         target: 'contribute',
-        color: 'inherit',
-      },
-      {
-        title: 'Contact Us',
-        target: 'contact-us',
         color: 'inherit',
       },
       {

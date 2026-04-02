@@ -22,7 +22,7 @@ describe('Change Password Screen', () => {
     cy.get('input[id="currentPassword"]').type('wrong');
     cy.get('input[id="newPassword"]').type(newPassword);
     cy.get('input[id="confirmNewPassword"]').type(newPassword);
-    cy.get('button[type="submit"]').click();
+    cy.get('[data-cy="changePasswordButton"]').click();
     cy.contains(
       'The password is invalid or the user does not have a password. (auth/wrong-password).',
     ).should('exist');
@@ -44,7 +44,7 @@ describe('Change Password Screen', () => {
     cy.get('input[id="currentPassword"]').type(currentPassword);
     cy.get('input[id="newPassword"]').type(newPassword);
     cy.get('input[id="confirmNewPassword"]').type(newPassword);
-    cy.get('button[type="submit"]').click();
+    cy.get('[data-cy="changePasswordButton"]').click();
 
     cy.contains('Change Password Succeeded').should('exist');
     cy.get('[cy-data="goToAccount"]').click();

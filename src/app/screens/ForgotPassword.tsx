@@ -130,6 +130,7 @@ export default function ForgotPassword(): React.ReactElement {
             </Alert>
           ) : null}
           <Button
+            data-cy='submitResetPasswordButton'
             type='submit'
             variant='contained'
             sx={{ mt: 3, mb: 2 }}

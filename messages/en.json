@@ -105,7 +105,16 @@
     "showMore": "Show {count} more",
     "moreInfo": "More Info",
     "license": "License",
-    "tags": "Tags"
+    "tags": "Tags",
+    "openDrawer": "Open drawer",
+    "mobilityDatabaseHome": "Mobility Database home",
+    "accountMenu": "Account menu",
+    "accountDetails": "Account Details",
+    "login": "Login",
+    "metricsAdminOnly": "Metrics - Admin Only",
+    "languageSelect": "Language select",
+    "transitFeedsRedirectTitle": "You've been redirected from TransitFeeds",
+    "transitFeedsRedirectBody": "This page now lives on MobilityDatabase.org, where you'll find the most up-to-date transit data."
   },
   "feeds": {
     "feeds": "Feeds",
@@ -512,6 +521,37 @@
       "boundingBoxes": "Bounding boxes that help to visualize or filter in the API by a select region",
       "addFeeds": "A simple, easy-to-use form to add new feeds",
       "openSource": "An open source community actively working to improve the tools"
+    }
+  },
+  "footer": {
+    "tagline": "An open catalog of transit and mobility data feeds, serving the global transportation community.",
+    "maintainedBy": "Maintained with 💙 by MobilityData",
+    "copyright": "© {year} MobilityDatabase. All rights reserved.",
+    "columns": {
+      "platform": "Platform",
+      "validators": "Validators",
+      "company": "Company",
+      "legal": "Legal"
+    },
+    "links": {
+      "feeds": "Feeds",
+      "addFeed": "Add a Feed",
+      "apiDocs": "API Docs",
+      "gtfsValidator": "GTFS Validator",
+      "gtfsRtValidator": "GTFS-RT Validator",
+      "gbfsValidator": "GBFS Validator",
+      "about": "About",
+      "faq": "FAQ",
+      "contactUs": "Contact Us",
+      "shareFeedback": "Share Feedback",
+      "privacyPolicy": "Privacy Policy",
+      "termsAndConditions": "Terms and Conditions"
+    },
+    "aria": {
+      "github": "GitHub",
+      "slack": "Slack",
+      "linkedin": "LinkedIn",
+      "logo": "MobilityDatabase logo"
     }
   }
 }

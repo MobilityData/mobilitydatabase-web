@@ -4,13 +4,15 @@ import * as React from 'react';
 import dynamic from 'next/dynamic';
 import {
   AppBar,
+  Avatar,
   Box,
+  Divider,
   Drawer,
   IconButton,
+  ListSubheader,
   Toolbar,
   Typography,
   Button,
-  ListItemIcon,
   Menu,
   MenuItem,
   Select,
@@ -20,8 +22,6 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import LogoutIcon from '@mui/icons-material/Logout';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import {
   navigationAccountItem,
   SIGN_IN_TARGET,
@@ -32,15 +32,13 @@ import {
 import type NavigationItem from '../interface/Navigation';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { BikeScooterOutlined, OpenInNew } from '@mui/icons-material';
+import { OpenInNew } from '@mui/icons-material';
 import { useRemoteConfig } from '../context/RemoteConfigProvider';
-import { NestedMenuItem } from 'mui-nested-menu';
-import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
-import DepartureBoardIcon from '@mui/icons-material/DepartureBoard';
 import { fontFamily } from '../Theme';
 import { defaultRemoteConfigValues } from '../interface/RemoteConfig';
 import { animatedButtonStyling } from './Header.style';
 import ThemeToggle from './ThemeToggle';
+import HeaderSearchBar from './HeaderSearchBar';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { useAuthSession } from './AuthSessionProvider';
@@ -74,7 +72,11 @@ function useClientSearchParams(): URLSearchParams | null {
 }
 
 export default function DrawerAppBar(): React.ReactElement {
-  const { email: userEmail, isAuthenticated } = useAuthSession();
+  const {
+    email: userEmail,
+    isAuthenticated,
+    displayName: userDisplayName,
+  } = useAuthSession();
   const clientSearchParams = useClientSearchParams();
   const hasTransitFeedsRedirectParam =
     clientSearchParams?.get('utm_source') === 'transitfeeds';
@@ -91,7 +93,7 @@ export default function DrawerAppBar(): React.ReactElement {
   >(buildNavigationItems(defaultRemoteConfigValues));
   const locale = useLocale();
   const { config } = useRemoteConfig();
-  const t = useTranslations('common');
+  const tCommon = useTranslations('common');
 
   React.useEffect(() => {
     if (hasTransitFeedsRedirectParam) {
@@ -125,26 +127,52 @@ export default function DrawerAppBar(): React.ReactElement {
 
   const handleLogoutClick = (): void => {
     setOpenDialog(true);
-    handleMenuClose();
+    setAccountAnchorEl(null);
   };
 
   const container =
     typeof window !== 'undefined' ? () => window.document.body : undefined;
 
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [validatorAnchorEl, setValidatorAnchorEl] =
+    React.useState<null | HTMLElement>(null);
+  const validatorCloseTimer =
+    React.useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>): void => {
-    setAnchorEl(event.currentTarget);
+  const handleValidatorOpen = (e: React.MouseEvent<HTMLElement>): void => {
+    clearTimeout(validatorCloseTimer.current);
+    setValidatorAnchorEl(e.currentTarget);
   };
 
-  const handleMenuClose = (): void => {
-    setAnchorEl(null);
+  const handleValidatorClose = (): void => {
+    validatorCloseTimer.current = setTimeout(() => {
+      setValidatorAnchorEl(null);
+    }, 80);
   };
 
-  const handleMenuItemClick = (item: NavigationItem | string): void => {
-    handleMenuClose();
-    handleNavigation(item);
+  const [accountAnchorEl, setAccountAnchorEl] =
+    React.useState<null | HTMLElement>(null);
+  const accountCloseTimer =
+    React.useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const handleAccountOpen = (e: React.MouseEvent<HTMLElement>): void => {
+    clearTimeout(accountCloseTimer.current);
+    setAccountAnchorEl(e.currentTarget);
   };
+
+  const handleAccountClose = (): void => {
+    accountCloseTimer.current = setTimeout(() => {
+      setAccountAnchorEl(null);
+    }, 80);
+  };
+
+  React.useEffect(() => {
+    return () => {
+      clearTimeout(validatorCloseTimer.current);
+      clearTimeout(accountCloseTimer.current);
+    };
+  }, []);
+
+  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
 
   const metricsOptionsEnabled =
     config.enableMetrics || userEmail?.endsWith('mobilitydata.org') === true;
@@ -164,15 +192,35 @@ export default function DrawerAppBar(): React.ReactElement {
         sx={{
           background: theme.palette.background.paper,
           fontFamily: fontFamily.secondary,
-          borderBottom: '1px solid',
-          borderColor: theme.palette.divider,
         }}
       >
-        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Box
+          id='search-background'
+          aria-hidden='true'
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            bgcolor: theme.palette.text.disabled,
+            opacity: isSearchOpen ? 1 : 0,
+            zIndex: 1,
+            pointerEvents: isSearchOpen ? 'auto' : 'none',
+            transition: 'opacity 0.25s ease',
+          }}
+        />
+        <Toolbar
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            width: '100%',
+            maxWidth: theme.breakpoints.values.xl,
+            mx: 'auto',
+            position: 'relative',
+          }}
+        >
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <IconButton
               color='inherit'
-              aria-label='open drawer'
+              aria-label={tCommon('openDrawer')}
               edge='start'
               onClick={handleDrawerToggle}
               sx={{ mr: 2, display: { md: 'none' } }}
@@ -187,7 +235,7 @@ export default function DrawerAppBar(): React.ReactElement {
                 alignItems: 'center',
               }}
               className='btn-link'
-              aria-label='Mobility Database home'
+              aria-label={tCommon('mobilityDatabaseHome')}
             >
               <Image
                 src={
@@ -206,7 +254,7 @@ export default function DrawerAppBar(): React.ReactElement {
                 sx={{
                   ml: 1,
                   fontWeight: 700,
-                  fontSize: '1.6rem',
+                  fontSize: '1.5rem',
                   display: { xs: 'none', md: 'block' },
                 }}
               >
@@ -216,6 +264,7 @@ export default function DrawerAppBar(): React.ReactElement {
           </Box>
 
           <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+            <HeaderSearchBar onOpenChange={setIsSearchOpen} />
             {navigationItems.map((item) => (
               <Link
                 data-cy={
@@ -241,187 +290,225 @@ export default function DrawerAppBar(): React.ReactElement {
                 </Button>
               </Link>
             ))}
-            {config.gbfsValidator && (
-              <>
-                <Button
-                  aria-controls='validator-menu'
-                  aria-haspopup='true'
-                  endIcon={<ArrowDropDownIcon />}
-                  onClick={handleMenuOpen}
-                  sx={(theme) => ({
-                    ...animatedButtonStyling(theme),
-                    color: theme.palette.text.primary,
-                  })}
-                  id='validator-button-menu'
-                  className={
-                    activeTab.includes('validator') ? 'active short' : ''
-                  }
+
+            <Box
+              component='span'
+              onMouseEnter={handleValidatorOpen}
+              onMouseLeave={handleValidatorClose}
+              sx={{ display: 'inline-flex' }}
+            >
+              <Button
+                aria-controls='validator-menu'
+                aria-haspopup='true'
+                aria-expanded={validatorAnchorEl !== null}
+                endIcon={<ArrowDropDownIcon />}
+                sx={(theme) => ({
+                  ...animatedButtonStyling(theme),
+                  color: theme.palette.text.primary,
+                })}
+                className={
+                  activeTab.includes('validator') ? 'active short' : ''
+                }
+              >
+                {tCommon('validators')}
+              </Button>
+              <Menu
+                id='validator-menu'
+                anchorEl={validatorAnchorEl}
+                open={validatorAnchorEl !== null}
+                onClose={() => {
+                  setValidatorAnchorEl(null);
+                }}
+                disableScrollLock
+                disableRestoreFocus
+                sx={{ pointerEvents: 'none' }}
+                slotProps={{
+                  paper: {
+                    onMouseEnter: () => {
+                      clearTimeout(validatorCloseTimer.current);
+                    },
+                    onMouseLeave: handleValidatorClose,
+                    sx: { pointerEvents: 'auto' },
+                  },
+                }}
+              >
+                <MenuItem
+                  component={'a'}
+                  href='https://gtfs-validator.mobilitydata.org/'
+                  target='_blank'
+                  rel='noopener noreferrer'
                 >
-                  {t('validators')}
-                </Button>
-                <Menu
-                  id='validator-menu'
-                  anchorEl={anchorEl}
-                  open={
-                    anchorEl !== null && anchorEl.id === 'validator-button-menu'
-                  }
-                  onClose={handleMenuClose}
+                  {tCommon('gtfsValidator')}
+                  <OpenInNew fontSize='small' sx={{ ml: 0.5 }} />
+                </MenuItem>
+                <MenuItem
+                  component={'a'}
+                  href='https://github.com/MobilityData/gtfs-realtime-validator'
+                  target='_blank'
+                  rel='noopener noreferrer'
                 >
+                  {tCommon('gtfsRtValidator')}
+                  <OpenInNew fontSize='small' sx={{ ml: 0.5 }} />
+                </MenuItem>
+                {config.gbfsValidator ? (
                   <MenuItem
-                    key={'gbfs-validator'}
                     onClick={() => {
-                      handleMenuItemClick('gbfs-validator');
+                      setValidatorAnchorEl(null);
+                      handleNavigation('/gbfs-validator');
                     }}
-                    sx={{ display: 'flex', gap: 1 }}
                   >
-                    <BikeScooterOutlined fontSize='small' />
-                    {t('gbfsValidator')}
+                    {tCommon('gbfsValidator')}
                   </MenuItem>
+                ) : (
                   <MenuItem
-                    key={'gtfs-validator'}
-                    component={Link}
-                    href='https://gtfs-validator.mobilitydata.org/'
+                    component={'a'}
+                    href='https://gbfs-validator.mobilitydata.org/'
                     target='_blank'
                     rel='noopener noreferrer'
                   >
-                    <DirectionsBusIcon fontSize='small' sx={{ mr: 1 }} />
-                    {t('gtfsValidator')}
+                    {tCommon('gbfsValidator')}
                     <OpenInNew fontSize='small' sx={{ ml: 0.5 }} />
                   </MenuItem>
-                  <MenuItem
-                    key={'gtfs-rt-validator'}
-                    component={Link}
-                    href='https://github.com/MobilityData/gtfs-realtime-validator'
-                    target='_blank'
-                    rel='noopener noreferrer'
-                  >
-                    <DepartureBoardIcon fontSize='small' sx={{ mr: 1 }} />
-                    {t('gtfsRtValidator')}
-                    <OpenInNew fontSize='small' sx={{ ml: 0.5 }} />
-                  </MenuItem>
-                </Menu>
-              </>
-            )}
-            {/* Allow users with mobilitydata.org email to access metrics */}
-            {metricsOptionsEnabled && (
-              <>
-                <Button
-                  aria-controls='analytics-menu'
-                  aria-haspopup='true'
-                  endIcon={<ArrowDropDownIcon />}
-                  onClick={handleMenuOpen}
-                  sx={(theme) => ({
-                    ...animatedButtonStyling(theme),
-                    color: theme.palette.text.primary,
-                  })}
-                  id='analytics-button-menu'
-                  className={
-                    activeTab.includes('metrics') ? 'active short' : ''
-                  }
-                >
-                  Metrics
-                </Button>
-                <Menu
-                  id='analytics-menu'
-                  anchorEl={anchorEl}
-                  open={
-                    anchorEl !== null && anchorEl.id === 'analytics-button-menu'
-                  }
-                  onClose={handleMenuClose}
-                >
-                  <NestedMenuItem
-                    label='GTFS'
-                    parentMenuOpen={Boolean(anchorEl)}
-                    leftIcon={<DirectionsBusIcon />}
-                  >
-                    {gtfsMetricsNavItems.map((item) => (
-                      <MenuItem
-                        key={item.title}
-                        onClick={() => {
-                          handleMenuItemClick(item.target);
-                        }}
-                      >
-                        {item.title}
-                      </MenuItem>
-                    ))}
-                  </NestedMenuItem>
-                  <NestedMenuItem
-                    label='GBFS'
-                    parentMenuOpen={Boolean(anchorEl)}
-                    leftIcon={<BikeScooterOutlined />}
-                  >
-                    {gbfsMetricsNavItems.map((item) => (
-                      <MenuItem
-                        key={item.title}
-                        onClick={() => {
-                          handleMenuItemClick(item.target);
-                        }}
-                      >
-                        {item.title}
-                      </MenuItem>
-                    ))}
-                  </NestedMenuItem>
-                </Menu>
-              </>
-            )}
+                )}
+              </Menu>
+            </Box>
 
             {isAuthenticated ? (
-              <>
-                <Button
+              <Box
+                component='span'
+                onMouseEnter={handleAccountOpen}
+                onMouseLeave={handleAccountClose}
+                sx={{ display: 'inline-flex' }}
+              >
+                <IconButton
                   aria-controls='account-menu'
                   aria-haspopup='true'
-                  onClick={handleMenuOpen}
-                  endIcon={<ArrowDropDownIcon />}
-                  id='account-button-menu'
-                  sx={animatedButtonStyling}
-                  className={activeTab === '/account' ? 'active short' : ''}
+                  aria-expanded={accountAnchorEl !== null}
+                  aria-label={tCommon('accountMenu')}
+                  size='small'
                   data-cy='accountHeader'
+                  onClick={() => {
+                    handleNavigation(navigationAccountItem);
+                  }}
                 >
-                  Account
-                </Button>
+                  <Avatar
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      fontSize: theme.typography.body2.fontSize,
+                      bgcolor: theme.palette.primary.main,
+                    }}
+                  >
+                    {(userDisplayName ?? userEmail)?.[0]?.toUpperCase() ?? ''}
+                  </Avatar>
+                </IconButton>
                 <Menu
                   id='account-menu'
-                  anchorEl={anchorEl}
-                  open={
-                    anchorEl !== null && anchorEl.id === 'account-button-menu'
-                  }
-                  onClose={handleMenuClose}
+                  anchorEl={accountAnchorEl}
+                  open={accountAnchorEl !== null}
+                  onClose={() => {
+                    setAccountAnchorEl(null);
+                  }}
+                  disableScrollLock
+                  disableRestoreFocus
+                  sx={{ pointerEvents: 'none' }}
+                  slotProps={{
+                    paper: {
+                      onMouseEnter: () => {
+                        clearTimeout(accountCloseTimer.current);
+                      },
+                      onMouseLeave: handleAccountClose,
+                      sx: { pointerEvents: 'auto', minWidth: 200 },
+                    },
+                  }}
                 >
                   <MenuItem
                     data-cy='accountDetailsHeader'
                     onClick={() => {
-                      handleMenuItemClick(navigationAccountItem);
+                      setAccountAnchorEl(null);
+                      handleNavigation(navigationAccountItem);
                     }}
                   >
-                    <ListItemIcon>
-                      <AccountCircleIcon
-                        fontSize='small'
-                        sx={{ color: theme.palette.text.primary }}
-                      />
-                    </ListItemIcon>
-                    Account Details
+                    {tCommon('accountDetails')}
                   </MenuItem>
-                  <MenuItem onClick={handleLogoutClick}>
-                    <ListItemIcon>
-                      <LogoutIcon
-                        fontSize='small'
-                        sx={{ color: theme.palette.text.primary }}
-                      />
-                    </ListItemIcon>
-                    Sign Out
+                  <MenuItem
+                    onClick={() => {
+                      setAccountAnchorEl(null);
+                      handleLogoutClick();
+                    }}
+                  >
+                    {tCommon('signOut')}
                   </MenuItem>
+                  {metricsOptionsEnabled && [
+                    <Divider key='metrics-divider' />,
+                    <ListSubheader
+                      key='metrics-header'
+                      sx={{ lineHeight: '32px' }}
+                    >
+                      {tCommon('metricsAdminOnly')}
+                    </ListSubheader>,
+                    <ListSubheader
+                      key='gtfs-header'
+                      sx={{
+                        lineHeight: '28px',
+                        fontSize: '0.75rem',
+                        color: 'text.secondary',
+                      }}
+                    >
+                      GTFS
+                    </ListSubheader>,
+                    ...gtfsMetricsNavItems.map((item) => (
+                      <MenuItem
+                        key={item.title}
+                        onClick={() => {
+                          setAccountAnchorEl(null);
+                          handleNavigation(item.target);
+                        }}
+                      >
+                        {item.title}
+                      </MenuItem>
+                    )),
+                    <ListSubheader
+                      key='gbfs-header'
+                      sx={{
+                        lineHeight: '28px',
+                        fontSize: '0.75rem',
+                        color: 'text.secondary',
+                      }}
+                    >
+                      GBFS
+                    </ListSubheader>,
+                    ...gbfsMetricsNavItems.map((item) => (
+                      <MenuItem
+                        key={'gbfs-header-' + item.title}
+                        onClick={() => {
+                          setAccountAnchorEl(null);
+                          handleNavigation(item.target);
+                        }}
+                      >
+                        {item.title}
+                      </MenuItem>
+                    )),
+                  ]}
                 </Menu>
-              </>
+              </Box>
             ) : (
               <Button
-                sx={{ fontFamily: fontFamily.secondary }}
+                variant='contained'
+                color='primary'
+                sx={{ fontFamily: fontFamily.secondary, ml: { md: 1, lg: 2 } }}
                 href={SIGN_IN_TARGET}
                 component={Link}
+                size='small'
               >
-                Login
+                {tCommon('login')}
               </Button>
             )}
-            <ThemeToggle></ThemeToggle>
+
+            <Box sx={{ ml: 2, display: 'inline-block' }}>
+              <ThemeToggle></ThemeToggle>
+            </Box>
+
             {/* Testing language tool -> to revisit */}
             {config.enableLanguageToggle && (
               <Select
@@ -449,7 +536,7 @@ export default function DrawerAppBar(): React.ReactElement {
                   }
                 }}
                 variant='standard'
-                inputProps={{ 'aria-label': 'language select' }}
+                inputProps={{ 'aria-label': tCommon('languageSelect') }}
               >
                 <MenuItem value={'en'}>EN</MenuItem>
                 <MenuItem value={'fr'}>FR</MenuItem>
@@ -457,6 +544,7 @@ export default function DrawerAppBar(): React.ReactElement {
             )}
           </Box>
         </Toolbar>
+
         {hasTransitFeedsRedirect && (
           <Alert
             severity='warning'
@@ -472,15 +560,12 @@ export default function DrawerAppBar(): React.ReactElement {
             }}
             sx={{ '.MuiAlert-message': { pb: { xs: 0, md: 1 } } }}
           >
-            <AlertTitle>
-              You&apos;ve been redirected from TransitFeeds
-            </AlertTitle>
+            <AlertTitle>{tCommon('transitFeedsRedirectTitle')}</AlertTitle>
             <Box
               component={'span'}
               sx={{ display: { xs: 'none', md: 'block' } }}
             >
-              This page now lives on MobilityDatabase.org, where you&apos;ll
-              find the most up-to-date transit data.
+              {tCommon('transitFeedsRedirectBody')}
             </Box>
           </Alert>
         )}
@@ -506,6 +591,7 @@ export default function DrawerAppBar(): React.ReactElement {
             onLogoutClick={handleLogoutClick}
             navigationItems={navigationItems}
             metricsOptionsEnabled={metricsOptionsEnabled}
+            onClose={handleDrawerToggle}
           />
         </Drawer>
       </nav>
