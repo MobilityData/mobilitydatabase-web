@@ -524,7 +524,7 @@
     }
   },
   "footer": {
-    "tagline": "The world's largest open catalog of transit and mobility data feeds, serving the global transportation community.",
+    "tagline": "An open catalog of transit and mobility data feeds, serving the global transportation community.",
     "maintainedBy": "Maintained with 💙 by MobilityData",
     "copyright": "© {year} MobilityDatabase. All rights reserved.",
     "columns": {
