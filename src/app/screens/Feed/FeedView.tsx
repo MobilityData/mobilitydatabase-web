@@ -24,10 +24,12 @@ import {
   type GTFSRTFeedType,
 } from '../../services/feeds/utils';
 import ClientDownloadButton from './components/ClientDownloadButton';
+import RevalidateCacheButton from './components/RevalidateCacheButton';
 import { type components } from '../../services/feeds/types';
 import ClientQualityReportButton from './components/ClientQualityReportButton';
 import { getBoundingBox } from './Feed.functions';
 import dynamic from 'next/dynamic';
+import { ContentBox } from '../../components/ContentBox';
 
 const CoveredAreaMap = dynamic(
   async () =>
@@ -68,6 +70,7 @@ interface Props {
   relatedGtfsRtFeeds?: GTFSRTFeedType[];
   totalRoutes?: number;
   routeTypes?: string[];
+  isMobilityDatabaseAdmin?: boolean;
 }
 
 type LatestDatasetFull = components['schemas']['GtfsDataset'] | undefined;
@@ -79,6 +82,7 @@ export default async function FeedView({
   relatedGtfsRtFeeds = [],
   totalRoutes,
   routeTypes,
+  isMobilityDatabaseAdmin = false,
 }: Props): Promise<React.ReactElement> {
   if (feed == undefined) notFound();
 
@@ -418,6 +422,23 @@ export default async function FeedView({
           </Box>
         </Box>
       </Box>
+      {isMobilityDatabaseAdmin && (
+        <ContentBox
+          title={'MobilityDatabase Admin Tools'}
+          subtitle={
+            <>
+              This section is only visible to Mobility Data employees with an{' '}
+              <code>@mobilitydata.org</code> email address. It contains tools
+              for debugging and managing feed data
+            </>
+          }
+          sx={{ mt: 4, backgroundColor: 'background.paper' }}
+        >
+          {feed?.id != null && feed?.id !== '' && (
+            <RevalidateCacheButton feedId={feed.id} />
+          )}
+        </ContentBox>
+      )}
     </Container>
   );
 }

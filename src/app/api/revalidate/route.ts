@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
-import { revalidatePath, revalidateTag } from 'next/cache';
-import { AVAILABLE_LOCALES } from '../../../i18n/routing';
 import { nonEmpty } from '../../utils/config';
+import {
+  revalidateFullSite,
+  revalidateAllFeeds,
+  revalidateAllGbfsFeeds,
+  revalidateAllGtfsFeeds,
+  revalidateAllGtfsRtFeeds,
+  revalidateSpecificFeeds,
+} from '../../utils/revalidate-feeds';
 
 type RevalidateTypes =
   | 'full'
@@ -46,8 +52,7 @@ export async function GET(req: Request): Promise<NextResponse> {
   }
 
   try {
-    revalidateTag('guest-feeds', 'max');
-    revalidatePath('/[locale]/feeds/[feedDataType]/[feedId]', 'layout');
+    revalidateAllFeeds();
     console.log(
       '[cron] revalidate /api/revalidate: all-feeds revalidation triggered',
     );
@@ -104,60 +109,13 @@ export async function POST(req: Request): Promise<NextResponse> {
   // revalidateTag = triggers revalidation for API calls using `unstable_cache` with matching tags (e.g., feed-123, guest-feeds)
 
   try {
-    // clears cache for entire site
-    if (payload.type === 'full') {
-      revalidateTag('guest-feeds', 'max');
-      revalidatePath('/', 'layout');
-    }
-
-    // clears cache for all feed pages (ISR-cached layout)
-    if (payload.type === 'all-feeds') {
-      revalidateTag('guest-feeds', 'max');
-      revalidatePath('/[locale]/feeds/[feedDataType]/[feedId]', 'layout');
-    }
-
-    // clears cache for all GBFS feed pages (ISR-cached layout)
-    if (payload.type === 'all-gbfs-feeds') {
-      revalidateTag('feed-type-gbfs', 'max');
-      revalidatePath('/[locale]/feeds/gbfs/[feedId]', 'layout');
-    }
-
-    // clears cache for all GTFS feed pages (ISR-cached layout)
-    if (payload.type === 'all-gtfs-feeds') {
-      revalidateTag('feed-type-gtfs', 'max');
-      revalidatePath('/[locale]/feeds/gtfs/[feedId]', 'layout');
-    }
-
-    // clears cache for all GTFS RT feed pages (ISR-cached layout)
-    if (payload.type === 'all-gtfs-rt-feeds') {
-      revalidateTag('feed-type-gtfs_rt', 'max');
-      revalidatePath('/[locale]/feeds/gtfs_rt/[feedId]', 'layout');
-    }
-
-    // clears cache for specific feed pages (ISR-cached page) + localized paths
-    if (payload.type === 'specific-feeds') {
-      const localPaths = AVAILABLE_LOCALES.filter((loc) => loc !== 'en');
-      const pathsToRevalidate: string[] = [];
-
-      payload.feedIds.forEach((id) => {
-        revalidateTag(`feed-${id}`, 'max');
-        // The id will try to revalidate all feed types with that id, but that's necessary since we don't know the feed type here and it's not a big deal if we revalidate some non-existent pages
-        pathsToRevalidate.push(`/feeds/gtfs/${id}`);
-        pathsToRevalidate.push(`/feeds/gtfs_rt/${id}`);
-        pathsToRevalidate.push(`/feeds/gbfs/${id}`);
-      });
-
-      console.log('Revalidating paths:', pathsToRevalidate);
-
-      pathsToRevalidate.forEach((path) => {
-        revalidatePath(path);
-        revalidatePath(path + '/map');
-        localPaths.forEach((loc) => {
-          revalidatePath(`/${loc}${path}`);
-          revalidatePath(`/${loc}${path}/map`);
-        });
-      });
-    }
+    if (payload.type === 'full') revalidateFullSite();
+    if (payload.type === 'all-feeds') revalidateAllFeeds();
+    if (payload.type === 'all-gbfs-feeds') revalidateAllGbfsFeeds();
+    if (payload.type === 'all-gtfs-feeds') revalidateAllGtfsFeeds();
+    if (payload.type === 'all-gtfs-rt-feeds') revalidateAllGtfsRtFeeds();
+    if (payload.type === 'specific-feeds')
+      revalidateSpecificFeeds(payload.feedIds);
 
     return NextResponse.json({
       ok: true,

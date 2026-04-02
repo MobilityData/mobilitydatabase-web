@@ -5,6 +5,10 @@ import type { Metadata, ResolvingMetadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { fetchCompleteFeedData } from '../lib/feed-data';
 import { generateFeedMetadata } from '../lib/generate-feed-metadata';
+import {
+  getCurrentUserFromCookie,
+  isMobilityDatabaseAdmin,
+} from '../../../../../utils/auth-server';
 
 interface Props {
   params: Promise<{ locale: string; feedDataType: string; feedId: string }>;
@@ -40,7 +44,11 @@ export default async function AuthedFeedPage({
 }: Props): Promise<ReactElement> {
   const { feedId, feedDataType } = await params;
 
-  const feedData = await fetchCompleteFeedData(feedDataType, feedId);
+  const [userData, feedData] = await Promise.all([
+    getCurrentUserFromCookie(),
+    fetchCompleteFeedData(feedDataType, feedId),
+  ]);
+  const isAdmin = isMobilityDatabaseAdmin(userData?.email);
 
   if (feedData == null) {
     return <div>Feed not found</div>;
@@ -69,6 +77,7 @@ export default async function AuthedFeedPage({
         relatedGtfsRtFeeds={relatedGtfsRtFeeds}
         totalRoutes={totalRoutes}
         routeTypes={routeTypes}
+        isMobilityDatabaseAdmin={isAdmin}
       />
     </>
   );
