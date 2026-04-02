@@ -9,6 +9,7 @@ import { type RemoteConfigValues } from './interface/RemoteConfig';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { AuthSessionProvider } from './components/AuthSessionProvider';
+import { polyfillCountryFlagEmojis } from 'country-flag-emoji-polyfill';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -20,6 +21,15 @@ export function Providers({
   children,
   remoteConfig,
 }: ProvidersProps): React.ReactElement {
+  // Polyfill country flag emojis for browsers that don't support them natively
+  // (e.g. Microsoft Edge / Chrome on Windows)
+  React.useEffect(() => {
+    polyfillCountryFlagEmojis(
+      'Twemoji Country Flags',
+      '/fonts/TwemojiCountryFlags.woff2',
+    );
+  }, []);
+
   // Start MSW in mock mode to intercept API calls client-side
   React.useEffect(() => {
     if (process.env.NEXT_PUBLIC_API_MOCKING === 'enabled') {
