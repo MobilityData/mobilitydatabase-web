@@ -46,7 +46,7 @@ export default async function AboutPage(): Promise<ReactElement> {
           {t('whyUseAnswer')}
           <br /> <br />
           In addition to our database, we develop and maintain other tools that
-          integrate with it such as&#20;
+          integrate with it such as{' '}
           <Button
             variant='text'
             className='line-start inline'
@@ -57,7 +57,7 @@ export default async function AboutPage(): Promise<ReactElement> {
           >
             {t('gtfsValidator')}
           </Button>
-          and&#20;
+          and{' '}
           <Button
             variant='text'
             className='line-start inline'

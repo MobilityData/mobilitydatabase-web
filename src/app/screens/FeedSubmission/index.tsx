@@ -70,7 +70,7 @@ function Component(): React.ReactElement {
                 </Button>
                 <br /> <br />
                 Want to submit a GBFS feed to the Mobility Database? Contribute
-                through the&#20;
+                through the{' '}
                 <Button
                   variant='text'
                   className='line-start inline'

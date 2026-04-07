@@ -50,7 +50,7 @@ export default function FAQ(): React.ReactElement {
           Who can use the Mobility Database?
         </Typography>
         <Typography className='answer'>
-          Everyone has free access to the Mobility Database. However, to&#20;
+          Everyone has free access to the Mobility Database. However, to{' '}
           <Button
             variant='text'
             className='line-start inline'
@@ -59,7 +59,7 @@ export default function FAQ(): React.ReactElement {
           >
             add a feed
           </Button>
-          or&#20;
+          or{' '}
           <Button
             variant='text'
             className='line-start inline'
@@ -69,7 +69,7 @@ export default function FAQ(): React.ReactElement {
           >
             use our API
           </Button>
-          you’ll need to&#20;
+          you’ll need to{' '}
           <Button
             variant='text'
             className='line-start inline'
@@ -114,7 +114,7 @@ export default function FAQ(): React.ReactElement {
           updates using the URL provided by the producer upon uploading. If we
           detect a change, we add the new feed version automatically.
           <br /> <br />
-          For GBFS feeds, we do an additional sync any time a change to the&#20;
+          For GBFS feeds, we do an additional sync any time a change to the{' '}
           <Button
             variant='text'
             className='line-start inline'
@@ -165,7 +165,7 @@ export default function FAQ(): React.ReactElement {
           expires.
           <br /> <br />
           Detailed instructions for installing and implementing our API can be
-          found on&#20;
+          found on{' '}
           <Button
             variant='text'
             className='inline line-start'
@@ -178,7 +178,7 @@ export default function FAQ(): React.ReactElement {
             Swagger.
           </Button>
           In addition to searching the database or using our API to pull data,
-          you’re able to&#20;
+          you’re able to{' '}
           <Button
             variant='text'
             className='inline line-start'
@@ -190,7 +190,7 @@ export default function FAQ(): React.ReactElement {
             download GTFS and GTFS Realtime feeds via the spreadsheet here
           </Button>
           <br /> <br />
-          GBFS feeds can be downloaded via a spreadsheet with the&#20;
+          GBFS feeds can be downloaded via a spreadsheet with the{' '}
           <Button
             variant='text'
             className='line-start inline'
