@@ -8,6 +8,7 @@ import {
   defaultRemoteConfigValues,
   type RemoteConfigValues,
 } from '../app/interface/RemoteConfig';
+import { isMobilityDatabaseAdmin } from '../app/utils/auth-server';
 
 /**
  * Cache duration for Remote Config fetches (in seconds).
@@ -139,4 +140,37 @@ export async function refreshRemoteConfig(): Promise<RemoteConfigValues> {
   cachedConfig = null;
   cacheTimestamp = 0;
   return await getRemoteConfigValues();
+}
+
+/**
+ * Returns a copy of the config with all boolean flags set to `true`.
+ * Used to give internal @mobilitydata.org users access to all features.
+ */
+function applyEmailBypass(config: RemoteConfigValues): RemoteConfigValues {
+  const overridden = { ...config };
+  for (const key of Object.keys(overridden) as Array<
+    keyof RemoteConfigValues
+  >) {
+    if (typeof overridden[key] === 'boolean') {
+      (overridden as Record<string, unknown>)[key] = true;
+    }
+  }
+  return overridden;
+}
+
+/**
+ * Get Remote Config values for a specific user.
+ * In production, @mobilitydata.org users receive all boolean feature flags enabled.
+ */
+export async function getRemoteConfigValuesForUser(
+  email?: string,
+): Promise<RemoteConfigValues> {
+  const config = await getRemoteConfigValues();
+  if (
+    process.env.VERCEL_ENV === 'production' &&
+    isMobilityDatabaseAdmin(email)
+  ) {
+    return applyEmailBypass(config);
+  }
+  return config;
 }

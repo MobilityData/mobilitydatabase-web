@@ -7,7 +7,8 @@ import { WarningContentBox } from '../../../components/WarningContentBox';
 import { FeedStatusChip } from '../../../components/FeedStatus';
 import OfficialChip from '../../../components/OfficialChip';
 import { getTranslations } from 'next-intl/server';
-import { getRemoteConfigValues } from '../../../../lib/remote-config.server';
+import { getRemoteConfigValuesForUser } from '../../../../lib/remote-config.server';
+import { getCurrentUserFromCookie } from '../../../utils/auth-server';
 
 export interface DataQualitySummaryProps {
   feedStatus: components['schemas']['Feed']['status'];
@@ -21,11 +22,12 @@ export default async function DataQualitySummary({
   isOfficialFeed,
   latestDataset,
 }: DataQualitySummaryProps): Promise<React.ReactElement> {
-  const [t, tCommon, config] = await Promise.all([
+  const [t, tCommon, currentUser] = await Promise.all([
     getTranslations('feeds'),
     getTranslations('common'),
-    getRemoteConfigValues(),
+    getCurrentUserFromCookie(),
   ]);
+  const config = await getRemoteConfigValuesForUser(currentUser?.email);
 
   return (
     <Box data-testid='data-quality-summary' sx={{ my: 2 }}>
