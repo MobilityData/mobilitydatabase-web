@@ -24,7 +24,6 @@ import {
   Typography,
 } from '@mui/material';
 
-import '../analytics.css';
 import { useSearchParams } from 'next/navigation';
 import {
   fetchAvailableFilesStart,
