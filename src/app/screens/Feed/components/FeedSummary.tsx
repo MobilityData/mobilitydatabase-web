@@ -53,10 +53,13 @@ import {
 import { getFeatureComponentDecorators } from '../../../utils/consts';
 import dynamic from 'next/dynamic';
 import CopyLinkElement from './CopyLinkElement';
-
-const Locations = dynamic(async () => await import('../../../components/Locations'), { ssr: false });
 import { formatDateShort } from '../../../utils/date';
 import ExternalIds from './ExternalIds';
+
+const Locations = dynamic(
+  async () => await import('../../../components/Locations'),
+  { ssr: false },
+);
 
 export interface FeedSummaryProps {
   feed: GTFSFeedType | GTFSRTFeedType | GBFSFeedType | undefined;

@@ -45,7 +45,10 @@ import {
 // Dynamically import Map and MapGeoJSON for code splitting and bundle size
 // Useful since these components are rendered conditionally to the tab and will only import when on page
 const GtfsVisualizationMap = dynamic(
-  async () => await import('./GtfsVisualizationMap').then((mod) => mod.GtfsVisualizationMap),
+  async () =>
+    await import('./GtfsVisualizationMap').then(
+      (mod) => mod.GtfsVisualizationMap,
+    ),
   { ssr: false },
 );
 const MapGeoJSON = dynamic(

@@ -52,7 +52,10 @@ export const useTableColumns = (
             placement='top-start'
           >
             <Box
-              sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline', color: '#000' } }}
+              sx={{
+                cursor: 'pointer',
+                '&:hover': { textDecoration: 'underline', color: '#000' },
+              }}
               onClick={() => {
                 const url = `/feeds/${cell.getValue<string>()}`;
                 window.open(url, '_blank');
@@ -159,7 +162,12 @@ export const useTableColumns = (
             {cell.getValue<string[]>()?.map((error, index) => (
               <Box
                 key={index}
-                sx={{ cursor: 'pointer', marginBottom: '2px', padding: '1px', '&:hover': { textDecoration: 'underline', color: '#000' } }}
+                sx={{
+                  cursor: 'pointer',
+                  marginBottom: '2px',
+                  padding: '1px',
+                  '&:hover': { textDecoration: 'underline', color: '#000' },
+                }}
                 onClick={() => {
                   router.push(`/metrics/gtfs/notices?noticeCode=${error}`);
                 }}
@@ -175,7 +183,18 @@ export const useTableColumns = (
         Header: (
           <span>
             Notice Severity :
-            <Box component='span' sx={{ borderRadius: '5px', padding: '5px', marginLeft: '5px', marginBottom: '2px', width: 'fit-content', backgroundColor: '#d54402', color: 'white' }}>
+            <Box
+              component='span'
+              sx={{
+                borderRadius: '5px',
+                padding: '5px',
+                marginLeft: '5px',
+                marginBottom: '2px',
+                width: 'fit-content',
+                backgroundColor: '#d54402',
+                color: 'white',
+              }}
+            >
               ERROR
             </Box>
           </span>
@@ -196,7 +215,12 @@ export const useTableColumns = (
             {cell.getValue<string[]>()?.map((warning, index) => (
               <Box
                 key={index}
-                sx={{ cursor: 'pointer', marginBottom: '2px', padding: '1px', '&:hover': { textDecoration: 'underline', color: '#000' } }}
+                sx={{
+                  cursor: 'pointer',
+                  marginBottom: '2px',
+                  padding: '1px',
+                  '&:hover': { textDecoration: 'underline', color: '#000' },
+                }}
                 onClick={() => {
                   router.push(`/metrics/gtfs/notices?noticeCode=${warning}`);
                 }}
@@ -212,7 +236,18 @@ export const useTableColumns = (
         Header: (
           <span>
             Notice Severity :
-            <Box component='span' sx={{ borderRadius: '5px', padding: '5px', marginLeft: '5px', marginBottom: '2px', width: 'fit-content', backgroundColor: '#f3c280', color: 'black' }}>
+            <Box
+              component='span'
+              sx={{
+                borderRadius: '5px',
+                padding: '5px',
+                marginLeft: '5px',
+                marginBottom: '2px',
+                width: 'fit-content',
+                backgroundColor: '#f3c280',
+                color: 'black',
+              }}
+            >
               WARNING
             </Box>
           </span>
@@ -231,7 +266,18 @@ export const useTableColumns = (
         Header: (
           <span>
             Notice Severity :
-            <Box component='span' sx={{ borderRadius: '5px', padding: '5px', marginLeft: '5px', marginBottom: '2px', width: 'fit-content', backgroundColor: '#badfb7', color: 'black' }}>
+            <Box
+              component='span'
+              sx={{
+                borderRadius: '5px',
+                padding: '5px',
+                marginLeft: '5px',
+                marginBottom: '2px',
+                width: 'fit-content',
+                backgroundColor: '#badfb7',
+                color: 'black',
+              }}
+            >
               INFO
             </Box>
           </span>
@@ -241,7 +287,12 @@ export const useTableColumns = (
             {cell.getValue<string[]>()?.map((info, index) => (
               <Box
                 key={index}
-                sx={{ cursor: 'pointer', marginBottom: '2px', padding: '1px', '&:hover': { textDecoration: 'underline', color: '#000' } }}
+                sx={{
+                  cursor: 'pointer',
+                  marginBottom: '2px',
+                  padding: '1px',
+                  '&:hover': { textDecoration: 'underline', color: '#000' },
+                }}
                 onClick={() => {
                   router.push(`/metrics/gtfs/notices?noticeCode=${info}`);
                 }}
@@ -300,7 +351,14 @@ export const useTableColumns = (
                       {features.map((featureData, index) => (
                         <Box
                           key={index}
-                          sx={{ cursor: 'pointer', marginLeft: '10px', '&:hover': { textDecoration: 'underline', color: '#000' } }}
+                          sx={{
+                            cursor: 'pointer',
+                            marginLeft: '10px',
+                            '&:hover': {
+                              textDecoration: 'underline',
+                              color: '#000',
+                            },
+                          }}
                           onClick={() => {
                             router.push(
                               `/metrics/gtfs/features?featureName=${featureData.feature}`,

@@ -91,7 +91,12 @@ export const useTableColumns = (): Array<
             {cell.getValue<string[]>()?.map((version, index) => (
               <Box
                 key={index}
-                sx={{ cursor: 'pointer', marginBottom: '2px', padding: '1px', '&:hover': { textDecoration: 'underline', color: '#000' } }}
+                sx={{
+                  cursor: 'pointer',
+                  marginBottom: '2px',
+                  padding: '1px',
+                  '&:hover': { textDecoration: 'underline', color: '#000' },
+                }}
                 onClick={() => {
                   router.push(`/metrics/gbfs/versions?version=${version}`);
                 }}
