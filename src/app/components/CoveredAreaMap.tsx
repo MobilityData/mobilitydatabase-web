@@ -33,7 +33,6 @@ import { computeBoundingBox } from '../screens/Feed/Feed.functions';
 import { displayFormattedDate } from '../utils/date';
 import { useSelector } from 'react-redux';
 import ModeOfTravelIcon from '@mui/icons-material/ModeOfTravel';
-import { GtfsVisualizationMap } from './GtfsVisualizationMap';
 import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
 import { useRemoteConfig } from '../context/RemoteConfigProvider';
 import { sendGAEvent } from '@next/third-parties/google';
@@ -45,6 +44,10 @@ import {
 
 // Dynamically import Map and MapGeoJSON for code splitting and bundle size
 // Useful since these components are rendered conditionally to the tab and will only import when on page
+const GtfsVisualizationMap = dynamic(
+  async () => await import('./GtfsVisualizationMap').then((mod) => mod.GtfsVisualizationMap),
+  { ssr: false },
+);
 const MapGeoJSON = dynamic(
   async () => await import('./MapGeoJSON').then((mod) => mod.MapGeoJSON),
   { ssr: false },
