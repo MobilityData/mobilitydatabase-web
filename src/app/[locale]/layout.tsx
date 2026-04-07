@@ -101,7 +101,9 @@ export default async function LocaleLayout({
         <link rel='preconnect' href='https://firebaseapp.com' />
         <link rel='dns-prefetch' href='https://firebaseapp.com' />
       </head>
-      <body className={`${mulish.variable} ${ibmPlexMono.variable}`}>
+      <body
+        className={`${mulish.className} ${mulish.variable} ${ibmPlexMono.variable}`}
+      >
         <InitColorSchemeScript attribute='class' />
         <ThemeRegistry>
           <NextIntlClientProvider messages={messages}>
