@@ -139,7 +139,7 @@ export async function refreshRemoteConfig(): Promise<RemoteConfigValues> {
 
 /**
  * Returns a copy of the config with all boolean flags set to `true`.
- * Used to give internal @mobilitydata.org users access to all features.
+ * Used to give specific users ex: internal @mobilitydata.org users access to all features.
  * Exported for use in server components that receive isAdmin as a prop.
  */
 export function applyAdminBypass(
@@ -158,7 +158,7 @@ export function applyAdminBypass(
 
 /**
  * Get Remote Config values for a specific user.
- * @mobilitydata.org users receive all boolean feature flags enabled.
+ * Specific users ex: @mobilitydata.org users receive all boolean feature flags enabled.
  */
 export async function getRemoteConfigValuesForUser(
   email?: string,

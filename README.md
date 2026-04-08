@@ -87,9 +87,9 @@ npx firebase hosting:channel:deploy {channel_name}
 
 # Firebase Remote Configs
 
-Firebase remoet configs help us toggle new features on and off. Due to the nature of static pages, there are some nuances. For static pages, the remote configs are called and set at build time and will be the same for the remainder of the static page's cache.
+Firebase remote configs help us toggle new features on and off. Due to the nature of static pages, there are some nuances. For static pages, the remote configs are called and set at build time and will be the same for the remainder of the static page's cache.
 
-When remote configs change (they rarily do), it is recommended to redploy the app as that will trigger a new cache for all pages, that will include the updated remote configs
+When remote configs change (they rarily do), it is recommended to redeploy the app as that will trigger a new cache for all pages, that will include the updated remote configs
 
 What this also means is that client components will be able to access the firebase remote configs using the Context but server components will have to fetch them each time. This isn't a big deal as the firebase remote configs are cached (for 1 hour on the server)
 
