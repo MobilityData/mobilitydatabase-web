@@ -47,3 +47,23 @@ export const defaultRemoteConfigValues: RemoteConfigValues = {
   enableDetailedCoveredArea: false,
   gbfsValidator: false,
 };
+
+/**
+ * Returns true if the given email matches any regex pattern in the
+ * featureFlagBypass config value (format: `{ "regex": [".+@example.org"] }`).
+ */
+export function matchesFeatureFlagBypass(
+  email: string | null | undefined,
+  featureFlagBypass: string,
+): boolean {
+  if (email == null || email === '' || featureFlagBypass === '') return false;
+  try {
+    const parsed = JSON.parse(featureFlagBypass) as { regex?: unknown };
+    if (!Array.isArray(parsed.regex)) return false;
+    return (parsed.regex as string[]).some((pattern) =>
+      new RegExp(pattern).test(email),
+    );
+  } catch {
+    return false;
+  }
+}

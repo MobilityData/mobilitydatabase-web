@@ -7,8 +7,7 @@ import { type ReactElement } from 'react';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { getRemoteConfigValuesForUser } from '../../lib/remote-config.server';
-import { getCurrentUserFromCookie } from '../utils/auth-server';
+import { getRemoteConfigValues } from '../../lib/remote-config.server';
 import { Mulish, IBM_Plex_Mono } from 'next/font/google';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
@@ -90,11 +89,10 @@ export default async function LocaleLayout({
   // Enable static rendering for this locale
   setRequestLocale(validLocale);
 
-  const [messages, currentUser] = await Promise.all([
+  const [messages, remoteConfig] = await Promise.all([
     getMessages(),
-    getCurrentUserFromCookie(),
+    getRemoteConfigValues(),
   ]);
-  const remoteConfig = await getRemoteConfigValuesForUser(currentUser?.email);
 
   return (
     <html lang={validLocale}>
