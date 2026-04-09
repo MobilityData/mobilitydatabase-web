@@ -44,11 +44,13 @@ export function Providers({
 
   return (
     <ContextProviders>
-      <RemoteConfigProvider config={remoteConfig}>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <AuthSessionProvider>{children}</AuthSessionProvider>
-        </LocalizationProvider>
-      </RemoteConfigProvider>
+      <AuthSessionProvider>
+        <RemoteConfigProvider config={remoteConfig}>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            {children}
+          </LocalizationProvider>
+        </RemoteConfigProvider>
+      </AuthSessionProvider>
     </ContextProviders>
   );
 }

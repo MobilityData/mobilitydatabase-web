@@ -1,13 +1,16 @@
 import 'server-only';
 
 import { cache } from 'react';
+import { unstable_cache, revalidateTag } from 'next/cache';
 import { getRemoteConfig } from 'firebase-admin/remote-config';
 import { getFirebaseAdminApp } from './firebase-admin';
 import { getEnvConfig } from '../app/utils/config';
 import {
   defaultRemoteConfigValues,
+  matchesFeatureFlagBypass,
   type RemoteConfigValues,
 } from '../app/interface/RemoteConfig';
+import { getCurrentUserFromCookie } from '../app/utils/auth-server';
 
 /**
  * Cache duration for Remote Config fetches (in seconds).
@@ -16,13 +19,6 @@ import {
  */
 const CACHE_DURATION_SECONDS =
   process.env.NODE_ENV === 'development' ? 300 : 3600;
-
-/**
- * In-memory cache for Remote Config values.
- * This provides fast access on subsequent requests within the same server instance.
- */
-let cachedConfig: RemoteConfigValues | null = null;
-let cacheTimestamp: number = 0;
 
 /**
  * Parse a Remote Config parameter value into the appropriate type.
@@ -92,41 +88,42 @@ async function fetchRemoteConfigFromFirebase(): Promise<RemoteConfigValues> {
 }
 
 /**
+ * Fetch Remote Config from Firebase, backed by Next.js Data Cache.
+ * On Vercel, this cache is shared across all function instances and persists
+ * across invocations, unlike in-memory caching.
+ * Tagged with 'remote-config' for on-demand revalidation via revalidateTag().
+ */
+const fetchRemoteConfigCached = unstable_cache(
+  fetchRemoteConfigFromFirebase,
+  ['remote-config'],
+  { revalidate: CACHE_DURATION_SECONDS, tags: ['remote-config'] },
+);
+
+/**
  * Get Remote Config values with server-side caching.
  * This function is safe to call from Server Components and Server Actions.
  *
  * Caching strategy:
- * - React cache() deduplicates calls within the same request (e.g., layout + page)
- * - In-memory cache for fast access across multiple requests within the same server instance
- * - Cache invalidates after CACHE_DURATION_SECONDS
- * - On error, returns cached values if available, otherwise defaults
+ * - react cache() deduplicates calls within the same request (e.g., layout + page)
+ * - unstable_cache persists across requests and Vercel function instances
+ * - Cache revalidates after CACHE_DURATION_SECONDS
+ * - On error, returns defaults
  */
 export const getRemoteConfigValues = cache(
   async (): Promise<RemoteConfigValues> => {
-    // Dev/mock bypass: use defaults immediately
+    // Dev/mock bypass: skip cache entirely
     const isMock =
       getEnvConfig('NEXT_PUBLIC_API_MOCKING') === 'enabled' ||
       getEnvConfig('LOCAL_DEV_NO_ADMIN') === '1';
     if (isMock) {
       return defaultRemoteConfigValues;
     }
-    const now = Date.now();
-    const cacheAge = (now - cacheTimestamp) / 1000;
-
-    // Return cached config if still valid
-    if (cachedConfig != undefined && cacheAge < CACHE_DURATION_SECONDS) {
-      return cachedConfig;
-    }
 
     try {
-      const freshConfig = await fetchRemoteConfigFromFirebase();
-      cachedConfig = freshConfig;
-      cacheTimestamp = now;
-      return freshConfig;
+      return await fetchRemoteConfigCached();
     } catch (error) {
       console.error('Error fetching Remote Config:', error);
-      // Return stale cache if available, otherwise defaults
-      return cachedConfig ?? defaultRemoteConfigValues;
+      return defaultRemoteConfigValues;
     }
   },
 );
@@ -136,7 +133,54 @@ export const getRemoteConfigValues = cache(
  * Useful for admin operations or webhooks that need immediate updates.
  */
 export async function refreshRemoteConfig(): Promise<RemoteConfigValues> {
-  cachedConfig = null;
-  cacheTimestamp = 0;
+  revalidateTag('remote-config', 'max');
   return await getRemoteConfigValues();
+}
+
+/**
+ * Returns a copy of the config with all boolean flags set to `true`.
+ * Used to give specific users ex: internal @mobilitydata.org users access to all features.
+ * Exported for use in server components that receive isAdmin as a prop.
+ */
+export function applyAdminBypass(
+  config: RemoteConfigValues,
+): RemoteConfigValues {
+  const overridden = { ...config };
+  for (const key of Object.keys(overridden) as Array<
+    keyof RemoteConfigValues
+  >) {
+    if (typeof overridden[key] === 'boolean') {
+      (overridden as Record<string, unknown>)[key] = true;
+    }
+  }
+  return overridden;
+}
+
+/**
+ * Get Remote Config values for a specific user.
+ * Specific users ex: @mobilitydata.org users receive all boolean feature flags enabled.
+ */
+export async function getRemoteConfigValuesForUser(
+  email?: string,
+): Promise<RemoteConfigValues> {
+  const config = await getRemoteConfigValues();
+  if (matchesFeatureFlagBypass(email, config.featureFlagBypass)) {
+    return applyAdminBypass(config);
+  }
+  return config;
+}
+
+/**
+ * Get Remote Config values for the current request's authenticated user.
+ * Reads the session cookie internally — no prop threading required.
+ * Safe to call from any server component; cookies() is request-scoped.
+ */
+export async function getUserRemoteConfigValues(): Promise<RemoteConfigValues> {
+  const [config, currentUser] = await Promise.all([
+    getRemoteConfigValues(),
+    getCurrentUserFromCookie(),
+  ]);
+  return matchesFeatureFlagBypass(currentUser?.email, config.featureFlagBypass)
+    ? applyAdminBypass(config)
+    : config;
 }
