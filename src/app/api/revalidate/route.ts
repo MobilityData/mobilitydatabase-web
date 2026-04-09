@@ -29,9 +29,9 @@ const defaultRevalidateOptions: RevalidateBody = {
 };
 
 /**
- * GET handler for the Vercel cron job that revalidates all feed pages once a day.
+ * GET handler for the Vercel cron job that revalidates all GBFS feed pages.
  * Vercel automatically passes Authorization: Bearer <CRON_SECRET> with each invocation.
- * Configured in vercel.json under "crons" (schedule: 0 9 * * * = 4am EST / 9am UTC).
+ * Configured in vercel.json under "crons" for 4am UTC Monday-Saturday and 7am UTC Sunday.
  */
 export async function GET(req: Request): Promise<NextResponse> {
   const authHeader = req.headers.get('authorization');
@@ -52,13 +52,13 @@ export async function GET(req: Request): Promise<NextResponse> {
   }
 
   try {
-    revalidateAllFeeds();
+    revalidateAllGbfsFeeds();
     console.log(
-      '[cron] revalidate /api/revalidate: all-feeds revalidation triggered',
+      '[cron] revalidate /api/revalidate: all-gbfs-feeds revalidation triggered',
     );
     return NextResponse.json({
       ok: true,
-      message: 'All feeds revalidated successfully',
+      message: 'All GBFS feeds revalidated successfully',
     });
   } catch (error) {
     console.error(
