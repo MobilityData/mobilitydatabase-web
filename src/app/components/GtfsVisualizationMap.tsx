@@ -32,6 +32,7 @@ import {
 import {
   RouteHighlightLayer,
   RouteLayer,
+  RoutesWhiteHighlightLayer,
   RoutesWhiteLayer,
   StopLayer,
   StopsHighlightLayer,
@@ -590,7 +591,13 @@ export const GtfsVisualizationMap = ({
                 },
                 RoutesWhiteLayer(filteredRouteTypeIds, theme),
                 RouteLayer(filteredRoutes, filteredRouteTypeIds),
-                StopLayer(hideStops, allSelectedRouteIds, stopRadius),
+                RoutesWhiteHighlightLayer(
+                  mapClickRouteData?.route_id,
+                  hoverInfo,
+                  filteredRoutes,
+                  theme,
+                ),
+                StopLayer(hideStops, allSelectedRouteIds, stopRadius, theme),
                 RouteHighlightLayer(
                   mapClickRouteData?.route_id,
                   hoverInfo,
@@ -602,6 +609,7 @@ export const GtfsVisualizationMap = ({
                   filteredRoutes,
                   mapClickStopData?.stop_id,
                   stopHighlightColorMap,
+                  theme,
                 ),
                 StopsHighlightOuterLayer(
                   hoverInfo,
