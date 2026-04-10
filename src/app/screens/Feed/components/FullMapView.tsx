@@ -178,7 +178,7 @@ export default function FullMapView({
           variant='outlined'
           size='small'
           key={routeTypeId}
-          label={getRouteTypeTranslatedName(routeTypeId, t)}
+          label={getRouteTypeTranslatedName(routeTypeId, tCommon)}
           onDelete={() => {
             setFilteredRouteTypeIds((prev) =>
               prev.filter((type) => type !== routeTypeId),
