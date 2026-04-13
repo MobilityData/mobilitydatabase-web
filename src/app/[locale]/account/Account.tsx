@@ -1,5 +1,6 @@
+'use client';
+
 import * as React from 'react';
-import '../styles/Account.css';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@mui/material/styles';
 import {
@@ -33,15 +34,21 @@ import {
   selectUserProfile,
   selectSignedInWithProvider,
   selectIsTokenRefreshed,
-} from '../store/selectors';
-import LogoutConfirmModal from '../components/LogoutConfirmModal';
-import { useAppDispatch } from '../hooks';
-import { requestRefreshAccessToken } from '../store/profile-reducer';
+} from '../../store/selectors';
+import LogoutConfirmModal from '../../components/LogoutConfirmModal';
+import { useAppDispatch } from '../../hooks';
+import { requestRefreshAccessToken } from '../../store/profile-reducer';
 import {
   formatTokenExpiration,
   getTimeLeftForTokenExpiration,
-} from '../utils/date';
+} from '../../utils/date';
 import { useTranslations } from 'next-intl';
+import {
+  codeBlockContentSx,
+  codeBlockSx,
+  tokenActionButtonsSx,
+  tokenDisplayElementSx,
+} from './Account.styles';
 
 interface APIAccountState {
   showRefreshToken: boolean;
@@ -415,15 +422,7 @@ export default function APIAccount(): React.ReactElement {
             <Typography sx={{ mb: 2 }}>
               {t('refreshToken.description')}
             </Typography>
-            <Box
-              className='token-display-element'
-              sx={{
-                backgroundColor: theme.palette.background.paper,
-                p: 2,
-                borderRadius: '6px',
-                border: `1px solid ${theme.palette.primary.main}`,
-              }}
-            >
+            <Box sx={tokenDisplayElementSx}>
               <Typography
                 width={500}
                 variant='body1'
@@ -437,7 +436,7 @@ export default function APIAccount(): React.ReactElement {
                       : texts.tokenUnavailable
                     : texts.refreshTokenHidden}
               </Typography>
-              <Box className='token-action-buttons'>
+              <Box sx={tokenActionButtonsSx}>
                 <Tooltip
                   title={
                     showRefreshTokenCopied
@@ -504,7 +503,7 @@ export default function APIAccount(): React.ReactElement {
               </Link>{' '}
               {t('accessToken.description.pt2')}
             </Typography>
-            <Paper elevation={3} id='code-block'>
+            <Paper elevation={3} sx={codeBlockSx}>
               <Box
                 sx={{
                   display: 'flex',
@@ -534,7 +533,7 @@ export default function APIAccount(): React.ReactElement {
                   </IconButton>
                 </Tooltip>
               </Box>
-              <Typography id='code-block-content'>
+              <Typography sx={codeBlockContentSx}>
                 <span style={{ ...theme.mixins.code.command }}>curl</span>{' '}
                 --location &apos;{apiURL}/tokens&apos;
                 <span style={{ color: theme.mixins.code?.contrastText }}>
@@ -588,15 +587,7 @@ export default function APIAccount(): React.ReactElement {
 
             {!showGenerateAccessTokenButton && (
               <Box sx={{ width: 'fit-content', p: 1, mb: 5 }}>
-                <Box
-                  className='token-display-element'
-                  sx={{
-                    backgroundColor: theme.palette.background.paper,
-                    p: 2,
-                    borderRadius: '6px',
-                    border: `1px solid ${theme.palette.primary.main}`,
-                  }}
-                >
+                <Box sx={tokenDisplayElementSx}>
                   <Typography
                     width={500}
                     variant='body1'
@@ -608,7 +599,7 @@ export default function APIAccount(): React.ReactElement {
                         : texts.tokenUnavailable
                       : texts.accessTokenHidden}
                   </Typography>
-                  <Box className='token-action-buttons'>
+                  <Box sx={tokenActionButtonsSx}>
                     <Tooltip title={refreshAccessTokenButtonText}>
                       <span>
                         <IconButton
@@ -719,7 +710,7 @@ export default function APIAccount(): React.ReactElement {
                 </Typography>
               </Box>
             )}
-            <Paper elevation={3} id='code-block'>
+            <Paper elevation={3} sx={codeBlockSx}>
               <Box
                 sx={{
                   display: 'flex',
@@ -749,7 +740,7 @@ export default function APIAccount(): React.ReactElement {
                   </IconButton>
                 </Tooltip>
               </Box>
-              <Typography id='code-block-content'>
+              <Typography sx={codeBlockContentSx}>
                 <span style={{ color: '#ff79c6', fontWeight: 'bold' }}>
                   curl
                 </span>{' '}
