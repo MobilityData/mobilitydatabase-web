@@ -1,3 +1,5 @@
+'use client';
+
 import * as React from 'react';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -20,13 +22,16 @@ import {
 import {
   passwordValidationRegex,
   passwordValidationError,
-} from '../constants/Validation';
-import { useAppDispatch } from '../hooks';
-import { changePassword, changePasswordInit } from '../store/profile-reducer';
+} from '../../constants/Validation';
+import { useAppDispatch } from '../../hooks';
+import {
+  changePassword,
+  changePasswordInit,
+} from '../../store/profile-reducer';
 import {
   selectChangePasswordError,
   selectChangePasswordStatus,
-} from '../store/profile-selectors';
+} from '../../store/profile-selectors';
 import { useSelector } from 'react-redux/es/hooks/useSelector';
 import { useRouter } from 'next/navigation';
 import { VisibilityOffOutlined, VisibilityOutlined } from '@mui/icons-material';
