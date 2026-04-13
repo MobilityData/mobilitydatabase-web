@@ -1,23 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { useRouter } from 'next/navigation';
-import SignIn from '../screens/SignIn';
-import SignUp from '../screens/SignUp';
-import Account from '../screens/Account';
-import ContactInformation from '../screens/ContactInformation';
-import { ProtectedRoute } from './ProtectedRoute';
-import CompleteRegistration from '../screens/CompleteRegistration';
-import ChangePassword from '../screens/ChangePassword';
 import ForgotPassword from '../screens/ForgotPassword';
-import PostRegistration from '../screens/PostRegistration';
-import { SIGN_OUT_TARGET } from '../constants/Navigation';
-import {
-  LOGIN_CHANNEL,
-  LOGOUT_CHANNEL,
-  createBroadcastChannel,
-} from '../services/channel-service';
-import { useAppDispatch } from '../hooks';
-import { logout } from '../store/profile-reducer';
 import FeedSubmission from '../screens/FeedSubmission';
 import FeedSubmitted from '../screens/FeedSubmitted';
 import GTFSFeedAnalytics from '../screens/Analytics/GTFSFeedAnalytics';
@@ -28,61 +11,8 @@ import GBFSNoticeAnalytics from '../screens/Analytics/GBFSNoticeAnalytics';
 import GBFSVersionAnalytics from '../screens/Analytics/GBFSVersionAnalytics';
 
 export const AppRouter: React.FC = () => {
-  const router = useRouter();
-  const dispatch = useAppDispatch();
-
-  /**
-   * Logs out the user and redirects to the sign-out target screen after a logout event is received on the other sessions.
-   */
-  const logoutUserCallback = (): void => {
-    dispatch(
-      logout({
-        redirectScreen: SIGN_OUT_TARGET,
-        navigateTo: (path) => {
-          router.push(String(path));
-        },
-        propagate: false,
-      }),
-    );
-  };
-
-  /**
-   * Refreshes the page to ensure the user is authenticated after a login event is received on the other sessions.
-   */
-  const loginUserCallback = (): void => {
-    window.location.reload();
-  };
-
-  /**
-   * The channel creation is placed in this component rather than the App.tsx file due to the need of the navigateTo instance.
-   * The navigateTo instance is only available within the scope the Router including its children.
-   * The callback functions are used to handle the logout and login events received from other sessions.
-   */
-  useEffect(() => {
-    createBroadcastChannel(LOGOUT_CHANNEL, logoutUserCallback);
-    createBroadcastChannel(LOGIN_CHANNEL, loginUserCallback);
-  }, []);
-
   return (
     <Routes>
-      <Route path='sign-in' element={<SignIn />} />
-      <Route path='sign-up' element={<SignUp />} />
-      <Route element={<ProtectedRoute targetStatus='authenticated' />}>
-        <Route
-          path='complete-registration'
-          element={<CompleteRegistration />}
-        />
-      </Route>
-      <Route element={<ProtectedRoute />}>
-        <Route path='account' element={<Account />} />
-      </Route>
-      <Route path='contact-info' element={<ContactInformation />} />
-      <Route element={<ProtectedRoute />}>
-        <Route path='change-password' element={<ChangePassword />} />
-      </Route>
-      <Route element={<ProtectedRoute targetStatus='unverified' />}>
-        <Route path='verify-email' element={<PostRegistration />} />
-      </Route>
       <Route path='forgot-password' element={<ForgotPassword />} />
       <Route path='contribute' element={<FeedSubmission />} />
       <Route path='contribute/submitted' element={<FeedSubmitted />} />
