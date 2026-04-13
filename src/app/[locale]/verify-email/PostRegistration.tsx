@@ -1,21 +1,22 @@
+'use client';
+
 import * as React from 'react';
-import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import { EmailOutlined, InfoOutlined, Sync } from '@mui/icons-material';
 import { Alert, Button } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import { emailVerified, verifyEmail } from '../store/profile-reducer';
+import { emailVerified, verifyEmail } from '../../store/profile-reducer';
 import {
   selectEmailVerificationError,
   selectIsVerificationEmailSent,
   selectUserProfileStatus,
-} from '../store/profile-selectors';
-import { type ProfileError } from '../types';
-import { app } from '../../firebase';
+} from '../../store/profile-selectors';
+import { type ProfileError } from '../../types';
+import { app } from '../../../firebase';
 import { useEffect } from 'react';
-import { ACCOUNT_TARGET, ADD_FEED_TARGET } from '../constants/Navigation';
+import { ACCOUNT_TARGET, ADD_FEED_TARGET } from '../../constants/Navigation';
 import { useRouter, useSearchParams } from 'next/navigation';
 export default function PostRegistration(): React.ReactElement {
   const dispatch = useDispatch();
@@ -69,7 +70,6 @@ export default function PostRegistration(): React.ReactElement {
 
   return (
     <Container component='main' maxWidth='sm'>
-      <CssBaseline />
       <Box
         sx={{
           ml: 2,
