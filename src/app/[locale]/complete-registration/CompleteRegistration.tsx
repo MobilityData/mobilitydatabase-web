@@ -1,3 +1,5 @@
+'use client';
+
 import * as React from 'react';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -14,15 +16,15 @@ import {
   CssBaseline,
   FormControlLabel,
 } from '@mui/material';
-import { useAppDispatch } from '../hooks';
-import { refreshUserInformation } from '../store/profile-reducer';
+import { useAppDispatch } from '../../hooks';
+import { refreshUserInformation } from '../../store/profile-reducer';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   selectUserProfileStatus,
   selectRegistrationError,
-} from '../store/profile-selectors';
+} from '../../store/profile-selectors';
 import { useSelector } from 'react-redux';
-import { ACCOUNT_TARGET, ADD_FEED_TARGET } from '../constants/Navigation';
+import { ACCOUNT_TARGET, ADD_FEED_TARGET } from '../../constants/Navigation';
 
 export default function CompleteRegistration(): React.ReactElement {
   const auth = getAuth();
