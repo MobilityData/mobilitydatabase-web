@@ -56,7 +56,7 @@ export const RoutesWhiteLayer = (
     paint: {
       'line-color': generateRouteOutlineColorExpression(
         theme.map.basemapTileOverallColor ?? '#ffffff',
-        theme.palette.mode === 'light' ? theme.palette.grey[500] : '#ffffff1a',
+        theme.palette.grey[500],
       ),
       'line-opacity': 1,
       'line-width': ['match', ['get', 'route_type'], '3', 5, '1', 10, 7],
@@ -115,9 +115,7 @@ export const RoutesWhiteHighlightLayer = (
     paint: {
       'line-color': generateRouteOutlineColorExpression(
         theme.map.basemapTileOverallColor ?? '#ffffff',
-        theme.palette.mode === 'light'
-          ? theme.palette.grey[500]
-          : theme.palette.grey[200],
+        theme.palette.grey[500],
       ),
       'line-opacity': 1,
       'line-width': ['match', ['get', 'route_type'], '3', 10, '1', 14, 10],
@@ -200,7 +198,7 @@ export const StopsHighlightLayer = (
       'circle-color': generateStopColorExpression(
         stopHighlightColorMap,
         theme.map.basemapTileOverallColor ?? '#ffffff',
-        theme.palette.text.primary,
+        theme.palette.grey[500],
       ),
       'circle-opacity': 1,
     },
