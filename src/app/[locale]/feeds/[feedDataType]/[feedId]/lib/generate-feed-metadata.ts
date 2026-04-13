@@ -176,10 +176,10 @@ function getGbfsStructuredData(
 function getGtfsRtStructuredData(
   feed: GTFSRTFeedType,
   description: string,
-  relatedFeeds?: AllFeedType[],
-  relatedGtfsFeeds?: GTFSRTFeedType[],
+  relatedFeeds?: GTFSRTFeedType[],
+  relatedGtfsFeeds?: GTFSFeedType[],
 ): StructureDataInterface {
-  const associatedGtfsFeed: GTFSFeedType = relatedFeeds?.find(
+  const associatedGtfsFeed: GTFSFeedType = relatedGtfsFeeds?.find(
     (relatedFeed) => relatedFeed?.data_type === 'gtfs',
   );
 
@@ -211,21 +211,23 @@ function getGtfsRtStructuredData(
   }
 
   if (associatedGtfsFeed != null) {
-    (structuredGtfsRtData.hasPart as unknown[]).push({
-      '@type': 'Dataset',
-      name: `GTFS Static Feed for ${feed?.provider}`,
-      description: `The GTFS static feed associated with this GTFS Realtime feed, if available.`,
-      isAccessibleForFree: true,
-      url: `https://mobilitydatabase.org/feeds/gtfs/${associatedGtfsFeed.id}`,
-      distribution: {
-        '@type': 'DataDownload',
-        encodingFormat: 'application/zip',
-        contentUrl: associatedGtfsFeed.source_info?.producer_url,
-      },
+    relatedGtfsFeeds?.forEach((relatedGtfsFeed) => {
+      (structuredGtfsRtData.hasPart as unknown[]).push({
+        '@type': 'Dataset',
+        name: `GTFS Static Feed for ${relatedGtfsFeed?.provider}`,
+        description: `The GTFS static feed associated with this GTFS Realtime feed, if available.`,
+        isAccessibleForFree: true,
+        url: `https://mobilitydatabase.org/feeds/gtfs/${relatedGtfsFeed?.id}`,
+        distribution: {
+          '@type': 'DataDownload',
+          encodingFormat: 'application/zip',
+          contentUrl: relatedGtfsFeed?.source_info?.producer_url,
+        },
+      });
     });
   }
-  if (relatedGtfsFeeds != null && relatedGtfsFeeds.length > 0) {
-    relatedGtfsFeeds.forEach((relatedFeed) => {
+  if (relatedFeeds != null && relatedFeeds.length > 0) {
+    relatedFeeds.forEach((relatedFeed) => {
       let name = `GTFS Realtime Feed for ${relatedFeed?.provider}`;
 
       if (relatedFeed?.entity_types != null) {
