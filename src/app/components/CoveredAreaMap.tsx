@@ -108,7 +108,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
   const routesJsonLoadingStatus = useSelector(
     selectGtfsDatasetRoutesLoadingStatus,
   );
-  const hasNoRoutes = totalRoutes !== undefined && totalRoutes === 0;
+  const hasNoRoutes = totalRoutes == undefined || totalRoutes === 0;
 
   const getAndSetGeoJsonData = (urlToExtract: string): void => {
     setGeoJsonLoading(true);
