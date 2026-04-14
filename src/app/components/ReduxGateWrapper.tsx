@@ -1,7 +1,7 @@
 'use client';
 
-// TODO: Once the [...slug] catch-all route is removed, replace this wrapper
-// with a (store) route group layout that provides PersistGate at the layout level.
+// TODO: Replace this wrapper with a (store) route group layout that provides
+// PersistGate at the layout level.
 import { Suspense } from 'react';
 import { PersistGate } from 'redux-persist/integration/react';
 import { persistor } from '../store/store';

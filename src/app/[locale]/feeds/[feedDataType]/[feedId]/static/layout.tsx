@@ -22,8 +22,7 @@ interface Props {
  * SECURITY: Direct access to /static/ routes is blocked at the proxy level
  * (middleware returns 404). This route is only accessible via proxy rewrite
  * from the clean URLs like /feeds/gtfs/mdb-123.
- * NOTE: In the future we will use private route `_static` but due to our legacy handler `[...slug]` catching all routes, we need to use a public route and block access at the proxy for now.
- *
+ * TODO: Now that legacy catch-all route is removed, change this to a private route `_static` and update proxy and links accordingly.
  */
 export default async function StaticFeedLayout({
   children,
