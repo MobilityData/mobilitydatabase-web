@@ -98,6 +98,12 @@ export default function SignIn(): React.ReactElement {
   });
 
   React.useEffect(() => {
+    if (emailLoginError != null) {
+      setIsOAuthLoading(false);
+    }
+  }, [emailLoginError]);
+
+  React.useEffect(() => {
     if (userProfileStatus === 'registered') {
       if (searchParams.has('add_feed')) {
         router.push(ADD_FEED_TARGET);
@@ -126,7 +132,6 @@ export default function SignIn(): React.ReactElement {
           setIsOAuthLoading(false);
           setShowNoEmailSnackbar(true);
         } else {
-          setIsOAuthLoading(false);
           dispatch(loginWithProvider({ oauthProvider, userCredential }));
         }
       })
