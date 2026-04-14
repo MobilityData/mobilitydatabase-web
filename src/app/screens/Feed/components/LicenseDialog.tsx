@@ -24,6 +24,7 @@ import {
 } from '../../../store/license-selectors';
 import { loadingLicense } from '../../../store/license-reducer';
 import { useTranslations } from 'next-intl';
+import { useAuthSession } from '../../../components/AuthSessionProvider';
 
 export interface LicenseDialogProps {
   open: boolean;
@@ -43,12 +44,13 @@ export default function LicenseDialog({
   const status = useSelector(selectLicenseStatus);
   const license = useSelector(selectActiveLicense);
   const errors = useSelector(selectLicenseErrors);
+  const { isAuthReady } = useAuthSession();
 
   useEffect(() => {
-    if (open && licenseId != undefined) {
+    if (open && licenseId != undefined && isAuthReady) {
       dispatch(loadingLicense({ licenseId }));
     }
-  }, [open, licenseId, dispatch]);
+  }, [open, licenseId, dispatch, isAuthReady]);
 
   const rulesData = [
     {
@@ -104,7 +106,7 @@ export default function LicenseDialog({
         </IconButton>
       </DialogTitle>
       <DialogContent dividers>
-        {status === 'loading' && (
+        {(status === 'loading' || (open && !isAuthReady)) && (
           <Box
             sx={{
               display: 'flex',
