@@ -85,8 +85,7 @@ if (typeof window !== 'undefined' && (window as any).Cypress) {
 sagaMiddleware.run(rootSaga);
 
 // Create the persistor at the store level so rehydration and
-// state-persistence happen on every page load, not just on the
-// legacy catch-all route.
+// state-persistence can be shared by route-level gate wrappers.
 export const persistor = persistStore(store);
 
 export type RootState = ReturnType<typeof store.getState>;
