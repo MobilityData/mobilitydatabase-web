@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
@@ -22,17 +24,17 @@ import { useSearchParams } from 'next/navigation';
 import {
   fetchAvailableFilesStart,
   selectFile,
-} from '../../../store/gtfs-analytics-reducer';
+} from '../../../../../store/gtfs-analytics-reducer';
 import {
   selectGTFSFeedMetrics,
   selectGTFSAnalyticsStatus,
   selectGTFSAnalyticsError,
-} from '../../../store/gtfs-analytics-selector';
+} from '../../../../../store/gtfs-analytics-selector';
 import { useTableColumns } from './GTFSFeedAnalyticsTable';
 import DetailPanel from './DetailPanel';
-import { type RootState } from '../../../store/store';
+import { type RootState } from '../../../../../store/store';
 import { type AnalyticsFile, type GTFSFeedMetrics } from '../types';
-import { useRemoteConfig } from '../../../context/RemoteConfigProvider';
+import { useRemoteConfig } from '../../../../../context/RemoteConfigProvider';
 import DownloadIcon from '@mui/icons-material/Download';
 import { download, generateCsv, mkConfig } from 'export-to-csv';
 import { setAnalyticsBucketEndpoint } from '../utils';

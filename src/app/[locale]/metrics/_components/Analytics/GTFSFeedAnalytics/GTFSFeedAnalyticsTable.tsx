@@ -8,7 +8,7 @@ import { OpenInNew } from '@mui/icons-material';
 import {
   getComponentDecorators,
   groupFeaturesByComponent,
-} from '../../../utils/consts';
+} from '../../../../../utils/consts';
 
 /**
  * Returns the columns for the feed analytics table.

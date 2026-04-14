@@ -11,9 +11,9 @@ import {
   type AnalyticsFile,
   type GTFSFeedMetrics,
   type GTFSMetrics,
-} from '../../screens/Analytics/types';
+} from '../../utils/analytics-types';
 import { getLocationName } from '../../services/feeds/utils';
-import { getAnalyticsBucketEndpoint } from '../../screens/Analytics/utils';
+import { getAnalyticsBucketEndpoint } from '../../[locale]/metrics/_components/Analytics/GTFSFeedAnalytics/GTFSFeedAnalytics';
 
 function* fetchFeedMetricsSaga(
   action: ReturnType<typeof selectFile>,

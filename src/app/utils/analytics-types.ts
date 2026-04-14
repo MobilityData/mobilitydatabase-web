@@ -1,4 +1,4 @@
-import { type EntityLocations } from '../../services/feeds/utils';
+import { type EntityLocations } from '../services/feeds/utils';
 
 export interface Notices {
   errors: string[];
@@ -40,7 +40,7 @@ export interface FeatureMetrics {
   computed_on: Date[];
   feeds_count: number[];
   latest_feed_count: number;
-  feature_group?: string; // Add a property to handle feature grouping
+  feature_group?: string;
   feature_sub_group?: string;
 }
 
