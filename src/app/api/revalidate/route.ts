@@ -17,6 +17,15 @@ type RevalidateTypes =
   | 'all-gtfs-feeds'
   | 'specific-feeds';
 
+const VALID_REVALIDATE_TYPES: RevalidateTypes[] = [
+  'full',
+  'all-feeds',
+  'all-gbfs-feeds',
+  'all-gtfs-rt-feeds',
+  'all-gtfs-feeds',
+  'specific-feeds',
+];
+
 interface RevalidateBody {
   feedIds: string[]; // only for 'specific-feeds' revalidation type
   type: RevalidateTypes;
@@ -102,6 +111,13 @@ export async function POST(req: Request): Promise<NextResponse> {
       parseError,
     );
     payload = { ...defaultRevalidateOptions };
+  }
+
+  if (!VALID_REVALIDATE_TYPES.includes(payload.type)) {
+    return NextResponse.json(
+      { ok: false, error: 'invalid or missing type parameter' },
+      { status: 500 },
+    );
   }
 
   // NOTE
