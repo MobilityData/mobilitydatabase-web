@@ -1,6 +1,5 @@
 import SearchTable, { getDataTypeElement } from './SearchTable';
 import { render, cleanup, screen, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { type AllFeedsType } from '../../services/feeds/utils';
 
 jest.mock('../../../i18n/navigation', () => ({
@@ -138,15 +137,11 @@ const mockFeedsData: AllFeedsType = {
   ],
 };
 
-describe.only('getProviderElement', () => {
+describe('getProviderElement', () => {
   afterEach(cleanup);
 
   it('should display the correct number of transit providers in table row', () => {
-    render(
-      <MemoryRouter>
-        <SearchTable feedsData={mockFeedsData} />
-      </MemoryRouter>,
-    );
+    render(<SearchTable feedsData={mockFeedsData} />);
 
     expect(screen.getByText('Utah Transit Authority (UTA)')).toBeTruthy();
     const parentElement = screen.getByText('Angel Island Tiburon Ferry');
