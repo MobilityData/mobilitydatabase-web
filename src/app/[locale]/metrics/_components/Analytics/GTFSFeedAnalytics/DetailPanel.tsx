@@ -22,7 +22,7 @@ import {
   CalendarToday,
 } from '@mui/icons-material';
 import { type GTFSFeedMetrics } from '../types';
-import { getLocationName } from '../../../services/feeds/utils';
+import { getLocationName } from '../../../../../services/feeds/utils';
 
 interface RowData {
   original: GTFSFeedMetrics;

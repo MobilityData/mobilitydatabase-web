@@ -2,7 +2,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import {
   type AnalyticsFile,
   type GBFSFeedMetrics,
-} from '../screens/Analytics/types';
+} from '../utils/analytics-types';
 
 // Define the state interface
 interface GBFSAnalyticsState {

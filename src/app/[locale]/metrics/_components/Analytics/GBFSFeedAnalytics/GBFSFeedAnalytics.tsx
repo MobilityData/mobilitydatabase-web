@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import FormHelperText from '@mui/material/FormHelperText';
@@ -29,16 +31,16 @@ import { useSearchParams } from 'next/navigation';
 import {
   fetchAvailableFilesStart,
   selectFile,
-} from '../../../store/gbfs-analytics-reducer';
+} from '../../../../../store/gbfs-analytics-reducer';
 import {
   selectGBFSFeedMetrics,
   selectGBFSAnalyticsStatus,
   selectGBFSAnalyticsError,
-} from '../../../store/gbfs-analytics-selector';
+} from '../../../../../store/gbfs-analytics-selector';
 import { useTableColumns } from './GBFSFeedAnalyticsTable';
-import { type RootState } from '../../../store/store';
+import { type RootState } from '../../../../../store/store';
 import { type AnalyticsFile, type GBFSFeedMetrics } from '../types';
-import { useRemoteConfig } from '../../../context/RemoteConfigProvider';
+import { useRemoteConfig } from '../../../../../context/RemoteConfigProvider';
 import DetailPanel from './DetailPanel';
 import { setAnalyticsBucketEndpoint } from '../utils';
 

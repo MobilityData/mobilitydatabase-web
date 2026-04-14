@@ -1,5 +1,5 @@
 import { type RootState } from './store';
-import { type GTFSFeedMetrics } from '../screens/Analytics/types';
+import { type GTFSFeedMetrics } from '../utils/analytics-types';
 
 export const selectGTFSFeedMetrics = (state: RootState): GTFSFeedMetrics[] =>
   state.gtfsAnalytics.feedMetrics;

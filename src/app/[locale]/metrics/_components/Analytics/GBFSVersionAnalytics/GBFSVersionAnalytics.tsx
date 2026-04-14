@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
@@ -19,45 +21,53 @@ import {
   Tooltip,
 } from 'recharts';
 import Box from '@mui/material/Box';
-import MUITooltip from '@mui/material/Tooltip';
 
 import {
   Typography,
   Button,
   IconButton,
-  AlertTitle,
   Alert,
+  AlertTitle,
 } from '@mui/material';
 import * as React from 'react';
 import { useTheme } from '@mui/material/styles';
 import { InfoOutlined, ListAltOutlined } from '@mui/icons-material';
-import { type NoticeMetrics } from '../types';
-import { WEB_VALIDATOR_LINK } from '../../../constants/Navigation';
-import { useRemoteConfig } from '../../../context/RemoteConfigProvider';
+import { type GBFSVersionMetrics } from '../types';
+import { useRemoteConfig } from '../../../../../context/RemoteConfigProvider';
+import MUITooltip from '@mui/material/Tooltip';
+import { GBFS_LINK } from '../../../../../constants/Navigation';
 
-export default function GTFSNoticeAnalytics(): React.ReactElement {
+export default function GBFSVersionAnalytics(): React.ReactElement {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const noticeCode = searchParams.get('noticeCode');
-  const [data, setData] = useState<NoticeMetrics[]>([]);
+  const [data, setData] = useState<GBFSVersionMetrics[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { config } = useRemoteConfig();
+  const searchParams = useSearchParams();
+  const versionFilter = searchParams.get('version');
+  const initialFilter = useMemo(() => {
+    if (versionFilter != null) {
+      return [{ id: 'version', value: versionFilter }];
+    }
+    return [];
+  }, [versionFilter]);
 
   useEffect(() => {
     const fetchData = async (): Promise<void> => {
       try {
         const response = await fetch(
-          `${config.gtfsMetricsBucketEndpoint}/notices_metrics.json`,
+          `${config.gbfsMetricsBucketEndpoint}/versions_metrics.json`,
         );
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         const fetchedData = await response.json();
-        const dataWLatestCount = fetchedData.map((notice: NoticeMetrics) => ({
-          ...notice,
-          latest_feed_count: notice.feeds_count.slice(-1)[0],
-        }));
+        const dataWLatestCount = fetchedData.map(
+          (version: GBFSVersionMetrics) => ({
+            ...version,
+            latest_feed_count: version.feeds_count.slice(-1)[0],
+          }),
+        );
         setData(dataWLatestCount);
       } catch (error) {
         if (error instanceof Error) {
@@ -72,30 +82,30 @@ export default function GTFSNoticeAnalytics(): React.ReactElement {
     void fetchData();
   }, []);
 
-  const columns = useMemo<Array<MRT_ColumnDef<NoticeMetrics>>>(
+  const columns = useMemo<Array<MRT_ColumnDef<GBFSVersionMetrics>>>(
     () => [
       {
-        accessorKey: 'notice',
-        header: 'Notice',
-        size: 300,
+        accessorKey: 'version',
+        header: 'Version',
+        size: 150,
         Cell: ({
           cell,
           renderedCellValue,
         }: {
-          cell: MRT_Cell<NoticeMetrics>;
+          cell: MRT_Cell<GBFSVersionMetrics>;
           renderedCellValue: React.ReactNode;
         }) => {
           return (
             <div>
               {renderedCellValue}
               <MUITooltip
-                title={`View ${cell.getValue<string>()} definition`}
+                title={`View version v${cell.getValue<string>()} definition`}
                 arrow
               >
                 <IconButton
                   onClick={() => {
                     window.open(
-                      `${WEB_VALIDATOR_LINK}/rules.html#${cell.getValue<string>()}-rule`,
+                      `${GBFS_LINK}/blob/v${cell.getValue<string>()}/gbfs.md`,
                       '_blank',
                     );
                   }}
@@ -108,40 +118,6 @@ export default function GTFSNoticeAnalytics(): React.ReactElement {
         },
       },
       {
-        accessorKey: 'severity',
-        header: 'Severity',
-        size: 150,
-        filterVariant: 'multi-select',
-        filterSelectOptions: ['ERROR', 'WARNING', 'INFO'],
-        Cell: ({
-          cell,
-          renderedCellValue,
-        }: {
-          cell: MRT_Cell<NoticeMetrics>;
-          renderedCellValue: React.ReactNode;
-        }) => {
-          const severity = cell.getValue<string>();
-          const background =
-            severity === 'ERROR'
-              ? '#d54402'
-              : severity === 'WARNING'
-                ? '#fdba06'
-                : '#9ae095';
-          return (
-            <span
-              style={{
-                background,
-                color: background === '#d54402' ? 'white' : 'black',
-                borderRadius: '5px',
-                padding: 5,
-              }}
-            >
-              {renderedCellValue}
-            </span>
-          );
-        },
-      },
-      {
         accessorKey: 'latest_feed_count',
         header: 'Number of Feeds',
         size: 150,
@@ -149,7 +125,7 @@ export default function GTFSNoticeAnalytics(): React.ReactElement {
         muiFilterSliderProps: {
           marks: true,
           max: data.reduce(
-            (max, notice) => Math.max(max, notice.feeds_count.slice(-1)[0]),
+            (max, version) => Math.max(max, version.feeds_count.slice(-1)[0]),
             0,
           ),
           min: 0,
@@ -157,29 +133,19 @@ export default function GTFSNoticeAnalytics(): React.ReactElement {
         },
       },
     ],
-    [data],
+    [data, router],
   );
-
-  const initialFilters =
-    noticeCode != null
-      ? [
-          {
-            id: 'notice',
-            value: noticeCode,
-          },
-        ]
-      : [];
 
   const table = useMaterialReactTable({
     columns,
     data,
     initialState: {
       showColumnFilters: true,
-      columnPinning: { left: ['mrt-row-expand', 'notice'] },
+      columnPinning: { left: ['mrt-row-expand', 'version'] },
       density: 'compact',
-      sorting: [{ id: 'notice', desc: false }],
-      columnFilters: initialFilters,
-      expanded: initialFilters.length > 0 ? true : {},
+      sorting: [{ id: 'version', desc: false }],
+      columnFilters: initialFilter,
+      expanded: initialFilter.length > 0 ? true : {},
     },
     state: {
       isLoading: loading,
@@ -212,7 +178,7 @@ export default function GTFSNoticeAnalytics(): React.ReactElement {
           }}
         >
           <Box sx={{ flex: 1, paddingRight: 2 }}>
-            <Typography gutterBottom>Monthly Notice Metrics</Typography>
+            <Typography gutterBottom>Monthly Version Metrics</Typography>
             <ResponsiveContainer width='100%' height={300}>
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray='3 3' />
@@ -242,7 +208,7 @@ export default function GTFSNoticeAnalytics(): React.ReactElement {
                   }}
                 />
                 This graph shows the monthly feed validation metrics, including
-                the count of feeds associated with each notice over time.
+                the count of feeds associated with each GBFS version over time.
               </Typography>
               <Button
                 variant='contained'
@@ -250,9 +216,7 @@ export default function GTFSNoticeAnalytics(): React.ReactElement {
                 sx={{ mb: 2 }}
                 startIcon={<ListAltOutlined />}
                 onClick={() => {
-                  router.push(
-                    `/metrics/gtfs/feeds?severity=${metrics.severity}&noticeCode=${metrics.notice}`,
-                  );
+                  router.push(`/metrics/gbfs/feeds?version=${metrics.version}`);
                 }}
               >
                 Show Feeds
@@ -272,7 +236,7 @@ export default function GTFSNoticeAnalytics(): React.ReactElement {
         color='primary'
         sx={{ fontWeight: 700, mb: 2 }}
       >
-        GTFS Notices Metrics{' '}
+        GBFS Versions Metrics{' '}
       </Typography>
       {error != null && (
         <Alert severity='error'>
