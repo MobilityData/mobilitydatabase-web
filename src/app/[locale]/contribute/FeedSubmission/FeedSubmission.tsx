@@ -1,3 +1,5 @@
+'use client';
+
 import * as React from 'react';
 import { useSelector } from 'react-redux';
 import {
@@ -9,11 +11,11 @@ import {
   Typography,
 } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
-import { selectIsAuthenticated } from '../../store/profile-selectors';
+import { selectIsAuthenticated } from '../../../store/profile-selectors';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import FeedSubmissionForm from './Form';
-import { ColoredContainer } from '../../styles/PageLayout.style';
+import { ColoredContainer } from '../../../styles/PageLayout.style';
 
 function Component(): React.ReactElement {
   const t = useTranslations('feeds');

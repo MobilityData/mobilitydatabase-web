@@ -10,11 +10,11 @@ import {
   FormHelperText,
 } from '@mui/material';
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
-import { type FeedSubmissionFormFormInput } from '.';
 import { useTranslations } from 'next-intl';
 import { getCountryDataList } from 'countries-list';
 import { useState } from 'react';
 import FormLabelDescription from './components/FormLabelDescription';
+import { type FeedSubmissionFormFormInput } from './types';
 
 export interface FeedSubmissionFormInputSecondStep {
   country: string;

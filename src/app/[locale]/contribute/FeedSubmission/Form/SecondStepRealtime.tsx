@@ -7,10 +7,13 @@ import {
   TextField,
 } from '@mui/material';
 import { type SubmitHandler, Controller, useForm } from 'react-hook-form';
-import { type AuthTypes, type FeedSubmissionFormFormInput } from '.';
 import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { isValidFeedLink } from '../../../services/feeds/utils';
+import { isValidFeedLink } from '../../../../services/feeds/utils';
+import {
+  type AuthTypes,
+  type FeedSubmissionFormFormInput,
+} from './types';
 
 export interface FeedSubmissionFormInputSecondStepRT {
   tripUpdates: string;

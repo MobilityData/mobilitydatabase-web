@@ -14,10 +14,13 @@ import {
   useForm,
   useWatch,
 } from 'react-hook-form';
-import { type FeedSubmissionFormFormInput, type AuthTypes } from '.';
 import { useTranslations } from 'next-intl';
-import { isValidFeedLink } from '../../../services/feeds/utils';
+import { isValidFeedLink } from '../../../../services/feeds/utils';
 import FormLabelDescription from './components/FormLabelDescription';
+import {
+  type AuthTypes,
+  type FeedSubmissionFormFormInput,
+} from './types';
 
 export interface FeedSubmissionFormInputThirdStep {
   authType: AuthTypes;
