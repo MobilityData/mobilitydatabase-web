@@ -30,6 +30,8 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import {
   Alert,
+  Backdrop,
+  CircularProgress,
   Divider,
   IconButton,
   InputAdornment,
@@ -59,7 +61,10 @@ export default function SignIn(): React.ReactElement {
   const [isSubmitted, setIsSubmitted] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
   const [showNoEmailSnackbar, setShowNoEmailSnackbar] = React.useState(false);
+  const [isOAuthLoading, setIsOAuthLoading] = React.useState(false);
   const searchParams = useSearchParams();
+
+  const isLoading = userProfileStatus === 'login_in' || isOAuthLoading;
 
   const SignInSchema = Yup.object().shape({
     email: Yup.string()
@@ -111,18 +116,22 @@ export default function SignIn(): React.ReactElement {
   const signInWithProvider = (oauthProvider: OauthProvider): void => {
     const auth = getAuth();
     const provider = oathProviders[oauthProvider];
+    setIsOAuthLoading(true);
     signInWithPopup(auth, provider)
       .then((userCredential: UserCredential) => {
         if (!userCredential.user.emailVerified) {
           dispatch(verifyEmail());
         }
         if (userCredential.user.email == null) {
+          setIsOAuthLoading(false);
           setShowNoEmailSnackbar(true);
         } else {
+          setIsOAuthLoading(false);
           dispatch(loginWithProvider({ oauthProvider, userCredential }));
         }
       })
       .catch((error) => {
+        setIsOAuthLoading(false);
         dispatch(
           loginFail({
             code: error.code,
@@ -135,6 +144,13 @@ export default function SignIn(): React.ReactElement {
 
   return (
     <Container component='main' maxWidth='xs'>
+      <Backdrop
+        open={isLoading}
+        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        data-testid='signin-loading-overlay'
+      >
+        <CircularProgress aria-label='Signing in...' />
+      </Backdrop>
       <Snackbar
         open={showNoEmailSnackbar}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
