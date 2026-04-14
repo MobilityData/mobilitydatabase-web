@@ -37,10 +37,7 @@ import { GtfsVisualizationMap } from './GtfsVisualizationMap';
 import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
 import { useRemoteConfig } from '../context/RemoteConfigProvider';
 import { sendGAEvent } from '@next/third-parties/google';
-import {
-  selectGtfsDatasetRoutesLoadingStatus,
-  selectGtfsDatasetRoutesTotal,
-} from '../store/supporting-files-selectors';
+import { selectGtfsDatasetRoutesLoadingStatus } from '../store/supporting-files-selectors';
 import {
   getLatestGbfsVersion,
   type LatestDatasetLite,
@@ -60,6 +57,7 @@ interface CoveredAreaMapProps {
   boundingBox?: LngLatTuple[];
   latestDataset?: LatestDatasetLite;
   feed: AllFeedType;
+  totalRoutes?: number;
 }
 
 export const fetchGeoJson = async (
@@ -86,6 +84,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
   boundingBox,
   latestDataset,
   feed,
+  totalRoutes,
 }) => {
   const t = useTranslations('feeds');
   const tCommon = useTranslations('common');
@@ -109,9 +108,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
   const routesJsonLoadingStatus = useSelector(
     selectGtfsDatasetRoutesLoadingStatus,
   );
-  const routesTotal = useSelector(selectGtfsDatasetRoutesTotal);
-  const hasNoRoutes =
-    routesJsonLoadingStatus === 'loaded' && routesTotal === 0;
+  const hasNoRoutes = totalRoutes !== undefined && totalRoutes === 0;
 
   const getAndSetGeoJsonData = (urlToExtract: string): void => {
     setGeoJsonLoading(true);
@@ -187,7 +184,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
       return;
     }
     setView('boundingBoxView');
-  }, [feed, routesJsonLoadingStatus, routesTotal, boundingBox, geoJsonData]);
+  }, [feed, routesJsonLoadingStatus, totalRoutes, boundingBox, geoJsonData]);
 
   const handleViewChange = (
     _: React.MouseEvent<HTMLElement>,
