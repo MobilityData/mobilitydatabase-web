@@ -1,23 +1,27 @@
+'use client';
+
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+
 import {
   MaterialReactTable,
+  useMaterialReactTable,
   type MRT_ColumnDef,
   type MRT_Cell,
-  useMaterialReactTable,
 } from 'material-react-table';
 import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
   Legend,
   ResponsiveContainer,
   Brush,
   Line,
   LineChart,
+  Tooltip,
 } from 'recharts';
 import Box from '@mui/material/Box';
+
 import {
   Typography,
   Button,
@@ -28,54 +32,43 @@ import {
 import * as React from 'react';
 import { useTheme } from '@mui/material/styles';
 import { InfoOutlined, ListAltOutlined } from '@mui/icons-material';
-import { type FeatureMetrics } from '../types';
-import { useRemoteConfig } from '../../../context/RemoteConfigProvider';
+import { type GBFSVersionMetrics } from '../types';
+import { useRemoteConfig } from '../../../../../context/RemoteConfigProvider';
 import MUITooltip from '@mui/material/Tooltip';
-import { GTFS_ORG_LINK } from '../../../constants/Navigation';
-import {
-  DATASET_FEATURES,
-  getComponentDecorators,
-} from '../../../utils/consts';
+import { GBFS_LINK } from '../../../../../constants/Navigation';
 
-export default function GTFSFeatureAnalytics(): React.ReactElement {
+export default function GBFSVersionAnalytics(): React.ReactElement {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const featureName = searchParams.get('featureName');
-  const [data, setData] = useState<FeatureMetrics[]>([]);
+  const [data, setData] = useState<GBFSVersionMetrics[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { config } = useRemoteConfig();
-
-  const getUniqueKeyStringValues = (key: keyof FeatureMetrics): string[] => {
-    const subGroups = new Set<string>();
-    data.forEach((item) => {
-      if (item[key] !== undefined) {
-        subGroups.add(item[key] as string);
-      }
-    });
-    return Array.from(subGroups);
-  };
+  const searchParams = useSearchParams();
+  const versionFilter = searchParams.get('version');
+  const initialFilter = useMemo(() => {
+    if (versionFilter != null) {
+      return [{ id: 'version', value: versionFilter }];
+    }
+    return [];
+  }, [versionFilter]);
 
   useEffect(() => {
     const fetchData = async (): Promise<void> => {
       try {
         const response = await fetch(
-          `${config.gtfsMetricsBucketEndpoint}/features_metrics.json`,
+          `${config.gbfsMetricsBucketEndpoint}/versions_metrics.json`,
         );
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         const fetchedData = await response.json();
-        const dataWithGroups = fetchedData.map((feature: FeatureMetrics) => {
-          return {
-            ...feature,
-            latest_feed_count: feature.feeds_count.slice(-1)[0],
-            feature_group: DATASET_FEATURES[feature.feature]?.component,
-            feature_sub_group:
-              DATASET_FEATURES[feature.feature]?.componentSubgroup,
-          };
-        });
-        setData(dataWithGroups);
+        const dataWLatestCount = fetchedData.map(
+          (version: GBFSVersionMetrics) => ({
+            ...version,
+            latest_feed_count: version.feeds_count.slice(-1)[0],
+          }),
+        );
+        setData(dataWLatestCount);
       } catch (error) {
         if (error instanceof Error) {
           setError(error.message);
@@ -89,33 +82,30 @@ export default function GTFSFeatureAnalytics(): React.ReactElement {
     void fetchData();
   }, []);
 
-  const columns = useMemo<Array<MRT_ColumnDef<FeatureMetrics>>>(
+  const columns = useMemo<Array<MRT_ColumnDef<GBFSVersionMetrics>>>(
     () => [
       {
-        accessorKey: 'feature',
-        header: 'Feature Name',
-        size: 300,
-        enableClickToCopy: true,
+        accessorKey: 'version',
+        header: 'Version',
+        size: 150,
         Cell: ({
           cell,
           renderedCellValue,
         }: {
-          cell: MRT_Cell<FeatureMetrics>;
+          cell: MRT_Cell<GBFSVersionMetrics>;
           renderedCellValue: React.ReactNode;
         }) => {
           return (
             <div>
               {renderedCellValue}
               <MUITooltip
-                title={`View ${cell.getValue<string>()} definition`}
+                title={`View version v${cell.getValue<string>()} definition`}
                 arrow
               >
                 <IconButton
                   onClick={() => {
                     window.open(
-                      `${GTFS_ORG_LINK}/getting_started/features/base_add-ons/#${cell
-                        .getValue<string>()
-                        .toLowerCase()}`,
+                      `${GBFS_LINK}/blob/v${cell.getValue<string>()}/gbfs.md`,
                       '_blank',
                     );
                   }}
@@ -128,48 +118,6 @@ export default function GTFSFeatureAnalytics(): React.ReactElement {
         },
       },
       {
-        accessorKey: 'feature_group',
-        header: 'Feature Group',
-        size: 200,
-        filterVariant: 'multi-select',
-        filterSelectOptions: getUniqueKeyStringValues('feature_group'),
-        Cell: ({ cell }: { cell: MRT_Cell<FeatureMetrics> }) => {
-          const group = cell.getValue<string>();
-          return group == null ? null : (
-            <span
-              style={{
-                backgroundColor: getComponentDecorators(group).color,
-                borderRadius: '5px',
-                padding: '2px 8px',
-              }}
-            >
-              {group}
-            </span>
-          );
-        },
-      },
-      {
-        accessorKey: 'feature_sub_group',
-        header: 'Feature Sub Group',
-        size: 200,
-        filterVariant: 'multi-select',
-        filterSelectOptions: getUniqueKeyStringValues('feature_sub_group'),
-        Cell: ({ cell }: { cell: MRT_Cell<FeatureMetrics> }) => {
-          const group = cell.getValue<string>();
-          return group == null ? null : (
-            <span
-              style={{
-                backgroundColor: getComponentDecorators(group).color,
-                borderRadius: '5px',
-                padding: '2px 8px',
-              }}
-            >
-              {group}
-            </span>
-          );
-        },
-      },
-      {
         accessorKey: 'latest_feed_count',
         header: 'Number of Feeds',
         size: 150,
@@ -177,7 +125,7 @@ export default function GTFSFeatureAnalytics(): React.ReactElement {
         muiFilterSliderProps: {
           marks: true,
           max: data.reduce(
-            (max, feature) => Math.max(max, feature.latest_feed_count),
+            (max, version) => Math.max(max, version.feeds_count.slice(-1)[0]),
             0,
           ),
           min: 0,
@@ -185,29 +133,19 @@ export default function GTFSFeatureAnalytics(): React.ReactElement {
         },
       },
     ],
-    [data],
+    [data, router],
   );
-
-  const initialFilters =
-    featureName != null
-      ? [
-          {
-            id: 'feature',
-            value: featureName,
-          },
-        ]
-      : [];
 
   const table = useMaterialReactTable({
     columns,
     data,
     initialState: {
       showColumnFilters: true,
-      columnPinning: { left: ['mrt-row-expand', 'feature'] },
+      columnPinning: { left: ['mrt-row-expand', 'version'] },
       density: 'compact',
-      sorting: [{ id: 'feature', desc: false }],
-      columnFilters: initialFilters,
-      expanded: initialFilters.length > 0 ? true : {},
+      sorting: [{ id: 'version', desc: false }],
+      columnFilters: initialFilter,
+      expanded: initialFilter.length > 0 ? true : {},
     },
     state: {
       isLoading: loading,
@@ -223,9 +161,7 @@ export default function GTFSFeatureAnalytics(): React.ReactElement {
       const metrics = row.original;
 
       const chartData = metrics.computed_on.map((date, index) => ({
-        date: new Date(date).toLocaleDateString('en-CA', {
-          timeZone: 'UTC',
-        }),
+        date: new Date(date).toLocaleDateString('en-CA', { timeZone: 'UTC' }),
         feeds: metrics.feeds_count[index],
       }));
       const domain = [
@@ -242,7 +178,7 @@ export default function GTFSFeatureAnalytics(): React.ReactElement {
           }}
         >
           <Box sx={{ flex: 1, paddingRight: 2 }}>
-            <Typography gutterBottom>Monthly Feature Metrics</Typography>
+            <Typography gutterBottom>Monthly Version Metrics</Typography>
             <ResponsiveContainer width='100%' height={300}>
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray='3 3' />
@@ -271,8 +207,8 @@ export default function GTFSFeatureAnalytics(): React.ReactElement {
                     verticalAlign: 'middle',
                   }}
                 />
-                This graph shows the monthly feed metrics, including the count
-                of feeds associated with each feature over time.
+                This graph shows the monthly feed validation metrics, including
+                the count of feeds associated with each GBFS version over time.
               </Typography>
               <Button
                 variant='contained'
@@ -280,9 +216,7 @@ export default function GTFSFeatureAnalytics(): React.ReactElement {
                 sx={{ mb: 2 }}
                 startIcon={<ListAltOutlined />}
                 onClick={() => {
-                  router.push(
-                    `/metrics/gtfs/feeds?featureName=${metrics.feature}`,
-                  );
+                  router.push(`/metrics/gbfs/feeds?version=${metrics.version}`);
                 }}
               >
                 Show Feeds
@@ -302,7 +236,7 @@ export default function GTFSFeatureAnalytics(): React.ReactElement {
         color='primary'
         sx={{ fontWeight: 700, mb: 2 }}
       >
-        GTFS Features Metrics{' '}
+        GBFS Versions Metrics{' '}
       </Typography>
       {error != null && (
         <Alert severity='error'>

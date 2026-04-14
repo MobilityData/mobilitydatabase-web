@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
@@ -5,6 +7,7 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
   type MRT_ColumnDef,
+  type MRT_Cell,
 } from 'material-react-table';
 import {
   XAxis,
@@ -18,19 +21,27 @@ import {
   Tooltip,
 } from 'recharts';
 import Box from '@mui/material/Box';
+import MUITooltip from '@mui/material/Tooltip';
 
-import { Typography, Button, Alert, AlertTitle } from '@mui/material';
+import {
+  Typography,
+  Button,
+  IconButton,
+  AlertTitle,
+  Alert,
+} from '@mui/material';
 import * as React from 'react';
 import { useTheme } from '@mui/material/styles';
 import { InfoOutlined, ListAltOutlined } from '@mui/icons-material';
-import { type GBFSNoticeMetrics } from '../types';
-import { useRemoteConfig } from '../../../context/RemoteConfigProvider';
+import { type NoticeMetrics } from '../types';
+import { WEB_VALIDATOR_LINK } from '../../../../../constants/Navigation';
+import { useRemoteConfig } from '../../../../../context/RemoteConfigProvider';
 
-export default function GBFSNoticeAnalytics(): React.ReactElement {
+export default function GTFSNoticeAnalytics(): React.ReactElement {
   const router = useRouter();
   const searchParams = useSearchParams();
   const noticeCode = searchParams.get('noticeCode');
-  const [data, setData] = useState<GBFSNoticeMetrics[]>([]);
+  const [data, setData] = useState<NoticeMetrics[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { config } = useRemoteConfig();
@@ -39,18 +50,16 @@ export default function GBFSNoticeAnalytics(): React.ReactElement {
     const fetchData = async (): Promise<void> => {
       try {
         const response = await fetch(
-          `${config.gbfsMetricsBucketEndpoint}/notices_metrics.json`,
+          `${config.gtfsMetricsBucketEndpoint}/notices_metrics.json`,
         );
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         const fetchedData = await response.json();
-        const dataWLatestCount = fetchedData.map(
-          (notice: GBFSNoticeMetrics) => ({
-            ...notice,
-            latest_feed_count: notice.feeds_count.slice(-1)[0],
-          }),
-        );
+        const dataWLatestCount = fetchedData.map((notice: NoticeMetrics) => ({
+          ...notice,
+          latest_feed_count: notice.feeds_count.slice(-1)[0],
+        }));
         setData(dataWLatestCount);
       } catch (error) {
         if (error instanceof Error) {
@@ -65,21 +74,74 @@ export default function GBFSNoticeAnalytics(): React.ReactElement {
     void fetchData();
   }, []);
 
-  const columns = useMemo<Array<MRT_ColumnDef<GBFSNoticeMetrics>>>(
+  const columns = useMemo<Array<MRT_ColumnDef<NoticeMetrics>>>(
     () => [
       {
-        accessorKey: 'keyword',
-        header: 'Keyword',
+        accessorKey: 'notice',
+        header: 'Notice',
         size: 300,
+        Cell: ({
+          cell,
+          renderedCellValue,
+        }: {
+          cell: MRT_Cell<NoticeMetrics>;
+          renderedCellValue: React.ReactNode;
+        }) => {
+          return (
+            <div>
+              {renderedCellValue}
+              <MUITooltip
+                title={`View ${cell.getValue<string>()} definition`}
+                arrow
+              >
+                <IconButton
+                  onClick={() => {
+                    window.open(
+                      `${WEB_VALIDATOR_LINK}/rules.html#${cell.getValue<string>()}-rule`,
+                      '_blank',
+                    );
+                  }}
+                >
+                  <InfoOutlined />
+                </IconButton>
+              </MUITooltip>
+            </div>
+          );
+        },
       },
       {
-        accessorKey: 'gbfs_file',
-        header: 'GBFS File',
+        accessorKey: 'severity',
+        header: 'Severity',
         size: 150,
-      },
-      {
-        accessorKey: 'schema_path',
-        header: 'Schema Path',
+        filterVariant: 'multi-select',
+        filterSelectOptions: ['ERROR', 'WARNING', 'INFO'],
+        Cell: ({
+          cell,
+          renderedCellValue,
+        }: {
+          cell: MRT_Cell<NoticeMetrics>;
+          renderedCellValue: React.ReactNode;
+        }) => {
+          const severity = cell.getValue<string>();
+          const background =
+            severity === 'ERROR'
+              ? '#d54402'
+              : severity === 'WARNING'
+                ? '#fdba06'
+                : '#9ae095';
+          return (
+            <span
+              style={{
+                background,
+                color: background === '#d54402' ? 'white' : 'black',
+                borderRadius: '5px',
+                padding: 5,
+              }}
+            >
+              {renderedCellValue}
+            </span>
+          );
+        },
       },
       {
         accessorKey: 'latest_feed_count',
@@ -104,7 +166,7 @@ export default function GBFSNoticeAnalytics(): React.ReactElement {
     noticeCode != null
       ? [
           {
-            id: 'keyword',
+            id: 'notice',
             value: noticeCode,
           },
         ]
@@ -115,9 +177,9 @@ export default function GBFSNoticeAnalytics(): React.ReactElement {
     data,
     initialState: {
       showColumnFilters: true,
-      columnPinning: { left: ['mrt-row-expand', 'keyword'] },
+      columnPinning: { left: ['mrt-row-expand', 'notice'] },
       density: 'compact',
-      sorting: [{ id: 'keyword', desc: false }],
+      sorting: [{ id: 'notice', desc: false }],
       columnFilters: initialFilters,
       expanded: initialFilters.length > 0 ? true : {},
     },
@@ -191,9 +253,7 @@ export default function GBFSNoticeAnalytics(): React.ReactElement {
                 startIcon={<ListAltOutlined />}
                 onClick={() => {
                   router.push(
-                    `/metrics/gbfs/feeds?schemaPath=${encodeURIComponent(
-                      metrics.schema_path,
-                    )}`,
+                    `/metrics/gtfs/feeds?severity=${metrics.severity}&noticeCode=${metrics.notice}`,
                   );
                 }}
               >
@@ -206,10 +266,6 @@ export default function GBFSNoticeAnalytics(): React.ReactElement {
     },
   });
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
   return (
     <Box sx={{ mx: 6 }}>
       <Typography
@@ -218,7 +274,7 @@ export default function GBFSNoticeAnalytics(): React.ReactElement {
         color='primary'
         sx={{ fontWeight: 700, mb: 2 }}
       >
-        GBFS Notices Metrics
+        GTFS Notices Metrics{' '}
       </Typography>
       {error != null && (
         <Alert severity='error'>

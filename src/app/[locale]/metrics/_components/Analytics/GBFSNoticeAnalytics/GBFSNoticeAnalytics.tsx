@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
@@ -5,7 +7,6 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
   type MRT_ColumnDef,
-  type MRT_Cell,
 } from 'material-react-table';
 import {
   XAxis,
@@ -20,50 +21,36 @@ import {
 } from 'recharts';
 import Box from '@mui/material/Box';
 
-import {
-  Typography,
-  Button,
-  IconButton,
-  Alert,
-  AlertTitle,
-} from '@mui/material';
+import { Typography, Button, Alert, AlertTitle } from '@mui/material';
 import * as React from 'react';
 import { useTheme } from '@mui/material/styles';
 import { InfoOutlined, ListAltOutlined } from '@mui/icons-material';
-import { type GBFSVersionMetrics } from '../types';
-import { useRemoteConfig } from '../../../context/RemoteConfigProvider';
-import MUITooltip from '@mui/material/Tooltip';
-import { GBFS_LINK } from '../../../constants/Navigation';
+import { type GBFSNoticeMetrics } from '../types';
+import { useRemoteConfig } from '../../../../../context/RemoteConfigProvider';
 
-export default function GBFSVersionAnalytics(): React.ReactElement {
+export default function GBFSNoticeAnalytics(): React.ReactElement {
   const router = useRouter();
-  const [data, setData] = useState<GBFSVersionMetrics[]>([]);
+  const searchParams = useSearchParams();
+  const noticeCode = searchParams.get('noticeCode');
+  const [data, setData] = useState<GBFSNoticeMetrics[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { config } = useRemoteConfig();
-  const searchParams = useSearchParams();
-  const versionFilter = searchParams.get('version');
-  const initialFilter = useMemo(() => {
-    if (versionFilter != null) {
-      return [{ id: 'version', value: versionFilter }];
-    }
-    return [];
-  }, [versionFilter]);
 
   useEffect(() => {
     const fetchData = async (): Promise<void> => {
       try {
         const response = await fetch(
-          `${config.gbfsMetricsBucketEndpoint}/versions_metrics.json`,
+          `${config.gbfsMetricsBucketEndpoint}/notices_metrics.json`,
         );
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         const fetchedData = await response.json();
         const dataWLatestCount = fetchedData.map(
-          (version: GBFSVersionMetrics) => ({
-            ...version,
-            latest_feed_count: version.feeds_count.slice(-1)[0],
+          (notice: GBFSNoticeMetrics) => ({
+            ...notice,
+            latest_feed_count: notice.feeds_count.slice(-1)[0],
           }),
         );
         setData(dataWLatestCount);
@@ -80,40 +67,21 @@ export default function GBFSVersionAnalytics(): React.ReactElement {
     void fetchData();
   }, []);
 
-  const columns = useMemo<Array<MRT_ColumnDef<GBFSVersionMetrics>>>(
+  const columns = useMemo<Array<MRT_ColumnDef<GBFSNoticeMetrics>>>(
     () => [
       {
-        accessorKey: 'version',
-        header: 'Version',
+        accessorKey: 'keyword',
+        header: 'Keyword',
+        size: 300,
+      },
+      {
+        accessorKey: 'gbfs_file',
+        header: 'GBFS File',
         size: 150,
-        Cell: ({
-          cell,
-          renderedCellValue,
-        }: {
-          cell: MRT_Cell<GBFSVersionMetrics>;
-          renderedCellValue: React.ReactNode;
-        }) => {
-          return (
-            <div>
-              {renderedCellValue}
-              <MUITooltip
-                title={`View version v${cell.getValue<string>()} definition`}
-                arrow
-              >
-                <IconButton
-                  onClick={() => {
-                    window.open(
-                      `${GBFS_LINK}/blob/v${cell.getValue<string>()}/gbfs.md`,
-                      '_blank',
-                    );
-                  }}
-                >
-                  <InfoOutlined />
-                </IconButton>
-              </MUITooltip>
-            </div>
-          );
-        },
+      },
+      {
+        accessorKey: 'schema_path',
+        header: 'Schema Path',
       },
       {
         accessorKey: 'latest_feed_count',
@@ -123,7 +91,7 @@ export default function GBFSVersionAnalytics(): React.ReactElement {
         muiFilterSliderProps: {
           marks: true,
           max: data.reduce(
-            (max, version) => Math.max(max, version.feeds_count.slice(-1)[0]),
+            (max, notice) => Math.max(max, notice.feeds_count.slice(-1)[0]),
             0,
           ),
           min: 0,
@@ -131,19 +99,29 @@ export default function GBFSVersionAnalytics(): React.ReactElement {
         },
       },
     ],
-    [data, router],
+    [data],
   );
+
+  const initialFilters =
+    noticeCode != null
+      ? [
+          {
+            id: 'keyword',
+            value: noticeCode,
+          },
+        ]
+      : [];
 
   const table = useMaterialReactTable({
     columns,
     data,
     initialState: {
       showColumnFilters: true,
-      columnPinning: { left: ['mrt-row-expand', 'version'] },
+      columnPinning: { left: ['mrt-row-expand', 'keyword'] },
       density: 'compact',
-      sorting: [{ id: 'version', desc: false }],
-      columnFilters: initialFilter,
-      expanded: initialFilter.length > 0 ? true : {},
+      sorting: [{ id: 'keyword', desc: false }],
+      columnFilters: initialFilters,
+      expanded: initialFilters.length > 0 ? true : {},
     },
     state: {
       isLoading: loading,
@@ -176,7 +154,7 @@ export default function GBFSVersionAnalytics(): React.ReactElement {
           }}
         >
           <Box sx={{ flex: 1, paddingRight: 2 }}>
-            <Typography gutterBottom>Monthly Version Metrics</Typography>
+            <Typography gutterBottom>Monthly Notice Metrics</Typography>
             <ResponsiveContainer width='100%' height={300}>
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray='3 3' />
@@ -206,7 +184,7 @@ export default function GBFSVersionAnalytics(): React.ReactElement {
                   }}
                 />
                 This graph shows the monthly feed validation metrics, including
-                the count of feeds associated with each GBFS version over time.
+                the count of feeds associated with each notice over time.
               </Typography>
               <Button
                 variant='contained'
@@ -214,7 +192,11 @@ export default function GBFSVersionAnalytics(): React.ReactElement {
                 sx={{ mb: 2 }}
                 startIcon={<ListAltOutlined />}
                 onClick={() => {
-                  router.push(`/metrics/gbfs/feeds?version=${metrics.version}`);
+                  router.push(
+                    `/metrics/gbfs/feeds?schemaPath=${encodeURIComponent(
+                      metrics.schema_path,
+                    )}`,
+                  );
                 }}
               >
                 Show Feeds
@@ -226,6 +208,10 @@ export default function GBFSVersionAnalytics(): React.ReactElement {
     },
   });
 
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <Box sx={{ mx: 6 }}>
       <Typography
@@ -234,7 +220,7 @@ export default function GBFSVersionAnalytics(): React.ReactElement {
         color='primary'
         sx={{ fontWeight: 700, mb: 2 }}
       >
-        GBFS Versions Metrics{' '}
+        GBFS Notices Metrics
       </Typography>
       {error != null && (
         <Alert severity='error'>

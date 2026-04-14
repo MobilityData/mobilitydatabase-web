@@ -1,6 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { type RootState } from './store';
-import { type GBFSFeedMetrics } from '../screens/Analytics/types';
+import { type GBFSFeedMetrics } from '../utils/analytics-types';
 
 // Selector to get the GBFS feed metrics
 export const selectGBFSFeedMetrics = (state: RootState): GBFSFeedMetrics[] =>
