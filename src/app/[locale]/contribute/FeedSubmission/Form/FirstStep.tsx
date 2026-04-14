@@ -18,11 +18,14 @@ import {
   useForm,
   useWatch,
 } from 'react-hook-form';
-import { type YesNoFormInput, type FeedSubmissionFormFormInput } from '.';
 import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { isValidFeedLink } from '../../../services/feeds/utils';
+import { isValidFeedLink } from '../../../../services/feeds/utils';
 import FormLabelDescription from './components/FormLabelDescription';
+import {
+  type FeedSubmissionFormFormInput,
+  type YesNoFormInput,
+} from './types';
 
 export interface FeedSubmissionFormFormInputFirstStep {
   isOfficialProducer: YesNoFormInput;

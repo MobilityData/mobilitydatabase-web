@@ -13,48 +13,12 @@ import {
 } from '@mui/material';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import FormThirdStep from './ThirdStep';
-import { submitNewFeedForm } from '../../../services/feeds/add-feed-form-service';
+import { submitNewFeedForm } from '../../../../services/feeds/add-feed-form-service';
 import { useTranslations } from 'next-intl';
-
-export type YesNoFormInput = 'yes' | 'no' | '';
-export type AuthTypes =
-  | 'None - 0'
-  | 'API key - 1'
-  | 'HTTP header - 2'
-  | 'choiceRequired';
-
-export interface FeedSubmissionFormFormInput {
-  isOfficialProducer: YesNoFormInput;
-  isOfficialFeed: 'yes' | 'no' | 'unsure' | undefined;
-  dataType: 'gtfs' | 'gtfs_rt';
-  transitProviderName: string;
-  feedLink?: string;
-  oldFeedLink?: string;
-  isUpdatingFeed?: YesNoFormInput;
-  licensePath?: string;
-  country?: string;
-  region?: string;
-  municipality?: string;
-  tripUpdates?: string;
-  vehiclePositions?: string;
-  serviceAlerts?: string;
-  oldTripUpdates?: string;
-  oldVehiclePositions?: string;
-  oldServiceAlerts?: string;
-  gtfsRelatedScheduleLink?: string;
-  name?: string;
-  authType: AuthTypes;
-  authSignupLink?: string;
-  authParameterName?: string;
-  dataProducerEmail: string;
-  isInterestedInQualityAudit: YesNoFormInput;
-  userInterviewEmail?: string;
-  whatToolsUsedText?: string;
-  hasLogoPermission: YesNoFormInput;
-  unofficialDesc?: string; // Why was this feed created?
-  updateFreq?: string; // How often is this feed updated?
-  emptyLicenseUsage?: string; // Confirm usage if no license and official
-}
+import {
+  type FeedSubmissionFormFormInput,
+  type YesNoFormInput,
+} from './types';
 
 const defaultFormValues: FeedSubmissionFormFormInput = {
   isOfficialProducer: '',
@@ -176,14 +140,20 @@ export default function FeedSubmissionForm(): React.ReactElement {
   const formStepSubmit = (
     partialFormData: Partial<FeedSubmissionFormFormInput>,
   ): void => {
-    setFormData((prevData) => ({ ...prevData, ...partialFormData }));
+    setFormData((prevData: FeedSubmissionFormFormInput) => ({
+      ...prevData,
+      ...partialFormData,
+    }));
     handleNext();
   };
 
   const formStepBack = (
     partialFormData: Partial<FeedSubmissionFormFormInput>,
   ): void => {
-    setFormData((prevData) => ({ ...prevData, ...partialFormData }));
+    setFormData((prevData: FeedSubmissionFormFormInput) => ({
+      ...prevData,
+      ...partialFormData,
+    }));
     handleBack();
   };
 
