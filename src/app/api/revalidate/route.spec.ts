@@ -473,7 +473,8 @@ describe('POST /api/revalidate', () => {
       expect(mockRevalidateTag).not.toHaveBeenCalled();
     });
 
-    it('handles specific-feeds with empty feedIds', async () => {      const request = new Request('http://localhost:3000/api/revalidate', {
+    it('handles specific-feeds with empty feedIds', async () => {
+      const request = new Request('http://localhost:3000/api/revalidate', {
         method: 'POST',
         headers: {
           'x-revalidate-secret': 'test-secret',
