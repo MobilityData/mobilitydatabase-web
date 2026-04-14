@@ -449,6 +449,30 @@ describe('POST /api/revalidate', () => {
       expect(mockRevalidatePath).toHaveBeenCalledTimes(36);
     });
 
+    it('returns 500 when type is invalid', async () => {
+      const request = new Request('http://localhost:3000/api/revalidate', {
+        method: 'POST',
+        headers: {
+          'x-revalidate-secret': 'test-secret',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'not-a-valid-type',
+        }),
+      });
+
+      const response = await POST(request);
+      const json = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(json).toEqual({
+        ok: false,
+        error: 'invalid or missing type parameter',
+      });
+      expect(mockRevalidatePath).not.toHaveBeenCalled();
+      expect(mockRevalidateTag).not.toHaveBeenCalled();
+    });
+
     it('handles specific-feeds with empty feedIds', async () => {
       const request = new Request('http://localhost:3000/api/revalidate', {
         method: 'POST',
