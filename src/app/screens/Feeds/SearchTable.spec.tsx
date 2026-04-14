@@ -1,6 +1,5 @@
 import SearchTable, { getDataTypeElement } from './SearchTable';
 import { render, cleanup, screen, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { type AllFeedsType } from '../../services/feeds/utils';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from '../../Theme';
@@ -140,17 +139,11 @@ const mockFeedsData: AllFeedsType = {
   ],
 };
 
-describe.only('getProviderElement', () => {
+describe('getProviderElement', () => {
   afterEach(cleanup);
 
   it('should display the correct number of transit providers in table row', () => {
-    render(
-      <ThemeProvider theme={theme}>
-        <MemoryRouter>
-          <SearchTable feedsData={mockFeedsData} />
-        </MemoryRouter>
-      </ThemeProvider>,
-    );
+    render(<SearchTable feedsData={mockFeedsData} />);
 
     expect(screen.getByText('Utah Transit Authority (UTA)')).toBeTruthy();
     const parentElement = screen.getByText('Angel Island Tiburon Ferry');
