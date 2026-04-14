@@ -110,6 +110,8 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
     selectGtfsDatasetRoutesLoadingStatus,
   );
   const routesTotal = useSelector(selectGtfsDatasetRoutesTotal);
+  const hasNoRoutes =
+    routesJsonLoadingStatus === 'loaded' && routesTotal === 0;
 
   const getAndSetGeoJsonData = (urlToExtract: string): void => {
     setGeoJsonLoading(true);
@@ -170,7 +172,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
     if (
       feed?.data_type === 'gtfs' &&
       routesJsonLoadingStatus != 'failed' &&
-      !(routesJsonLoadingStatus === 'loaded' && routesTotal === 0) &&
+      !hasNoRoutes &&
       boundingBox != undefined
     ) {
       setView('gtfsVisualizationView');
@@ -284,10 +286,10 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
     return (
       feed?.data_type === 'gtfs' &&
       routesJsonLoadingStatus != 'failed' &&
-      !(routesJsonLoadingStatus === 'loaded' && routesTotal === 0) &&
+      !hasNoRoutes &&
       boundingBox != undefined
     );
-  }, [feed?.data_type, routesJsonLoadingStatus, routesTotal, boundingBox]);
+  }, [feed?.data_type, routesJsonLoadingStatus, hasNoRoutes, boundingBox]);
 
   return (
     <Box
