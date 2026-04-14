@@ -37,7 +37,10 @@ import { GtfsVisualizationMap } from './GtfsVisualizationMap';
 import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
 import { useRemoteConfig } from '../context/RemoteConfigProvider';
 import { sendGAEvent } from '@next/third-parties/google';
-import { selectGtfsDatasetRoutesLoadingStatus } from '../store/supporting-files-selectors';
+import {
+  selectGtfsDatasetRoutesLoadingStatus,
+  selectGtfsDatasetRoutesTotal,
+} from '../store/supporting-files-selectors';
 import {
   getLatestGbfsVersion,
   type LatestDatasetLite,
@@ -106,6 +109,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
   const routesJsonLoadingStatus = useSelector(
     selectGtfsDatasetRoutesLoadingStatus,
   );
+  const routesTotal = useSelector(selectGtfsDatasetRoutesTotal);
 
   const getAndSetGeoJsonData = (urlToExtract: string): void => {
     setGeoJsonLoading(true);
@@ -166,6 +170,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
     if (
       feed?.data_type === 'gtfs' &&
       routesJsonLoadingStatus != 'failed' &&
+      !(routesJsonLoadingStatus === 'loaded' && routesTotal === 0) &&
       boundingBox != undefined
     ) {
       setView('gtfsVisualizationView');
@@ -180,7 +185,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
       return;
     }
     setView('boundingBoxView');
-  }, [feed, routesJsonLoadingStatus, boundingBox, geoJsonData]);
+  }, [feed, routesJsonLoadingStatus, routesTotal, boundingBox, geoJsonData]);
 
   const handleViewChange = (
     _: React.MouseEvent<HTMLElement>,
@@ -279,9 +284,10 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
     return (
       feed?.data_type === 'gtfs' &&
       routesJsonLoadingStatus != 'failed' &&
+      !(routesJsonLoadingStatus === 'loaded' && routesTotal === 0) &&
       boundingBox != undefined
     );
-  }, [feed?.data_type, routesJsonLoadingStatus, boundingBox]);
+  }, [feed?.data_type, routesJsonLoadingStatus, routesTotal, boundingBox]);
 
   return (
     <Box
