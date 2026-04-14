@@ -384,6 +384,7 @@ export default async function FeedView({
                     boundingBox={boundingBox}
                     latestDataset={latestDataset}
                     feed={feed}
+                    totalRoutes={totalRoutes}
                   />
                 )}
                 <Box sx={{ width: { xs: '100%', md: '475px' } }}>

@@ -57,6 +57,7 @@ interface CoveredAreaMapProps {
   boundingBox?: LngLatTuple[];
   latestDataset?: LatestDatasetLite;
   feed: AllFeedType;
+  totalRoutes?: number;
 }
 
 export const fetchGeoJson = async (
@@ -83,6 +84,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
   boundingBox,
   latestDataset,
   feed,
+  totalRoutes,
 }) => {
   const t = useTranslations('feeds');
   const tCommon = useTranslations('common');
@@ -106,6 +108,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
   const routesJsonLoadingStatus = useSelector(
     selectGtfsDatasetRoutesLoadingStatus,
   );
+  const hasNoRoutes = totalRoutes == undefined || totalRoutes === 0;
 
   const getAndSetGeoJsonData = (urlToExtract: string): void => {
     setGeoJsonLoading(true);
@@ -166,6 +169,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
     if (
       feed?.data_type === 'gtfs' &&
       routesJsonLoadingStatus != 'failed' &&
+      !hasNoRoutes &&
       boundingBox != undefined
     ) {
       setView('gtfsVisualizationView');
@@ -180,7 +184,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
       return;
     }
     setView('boundingBoxView');
-  }, [feed, routesJsonLoadingStatus, boundingBox, geoJsonData]);
+  }, [feed, routesJsonLoadingStatus, totalRoutes, boundingBox, geoJsonData]);
 
   const handleViewChange = (
     _: React.MouseEvent<HTMLElement>,
@@ -279,9 +283,10 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
     return (
       feed?.data_type === 'gtfs' &&
       routesJsonLoadingStatus != 'failed' &&
+      !hasNoRoutes &&
       boundingBox != undefined
     );
-  }, [feed?.data_type, routesJsonLoadingStatus, boundingBox]);
+  }, [feed?.data_type, routesJsonLoadingStatus, hasNoRoutes, boundingBox]);
 
   return (
     <Box
