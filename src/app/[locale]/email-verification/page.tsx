@@ -42,7 +42,7 @@ export default async function EmailVerificationPage({
   const { locale } = await params;
   const { mode, oobCode } = await searchParams;
 
-  setRequestLocale(locale as Locale);
+  setRequestLocale(locale);
 
   return <EmailVerificationContent mode={mode} oobCode={oobCode} />;
 }
