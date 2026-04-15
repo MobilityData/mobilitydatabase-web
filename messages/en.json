@@ -116,6 +116,16 @@
     "transitFeedsRedirectTitle": "You've been redirected from TransitFeeds",
     "transitFeedsRedirectBody": "This page now lives on MobilityDatabase.org, where you'll find the most up-to-date transit data."
   },
+  "emailVerification": {
+    "loadingTitle": "Verifying your email",
+    "loadingDescription": "Please wait while we confirm your email address.",
+    "successTitle": "Email verified",
+    "successDescription": "Your email address has been verified successfully. You can return to Mobility Database and continue using your account.",
+    "errorTitle": "Unable to verify email",
+    "errorDescription": "This verification link is invalid, incomplete, or has already been used.",
+    "invalidLink": "The verification link is missing required information.",
+    "verificationFailed": "We could not verify your email with this link."
+  },
   "feeds": {
     "feeds": "Feeds",
     "dataType": "Data Format",
