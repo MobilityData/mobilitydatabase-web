@@ -23,6 +23,7 @@ import FeedSubmitted from '../screens/FeedSubmitted';
 import GTFSFeedAnalytics from '../screens/Analytics/GTFSFeedAnalytics';
 import GTFSNoticeAnalytics from '../screens/Analytics/GTFSNoticeAnalytics';
 import GTFSFeatureAnalytics from '../screens/Analytics/GTFSFeatureAnalytics';
+import GTFSFeaturesTracker from '../screens/Analytics/GTFSFeaturesTracker';
 import GBFSFeedAnalytics from '../screens/Analytics/GBFSFeedAnalytics';
 import GBFSNoticeAnalytics from '../screens/Analytics/GBFSNoticeAnalytics';
 import GBFSVersionAnalytics from '../screens/Analytics/GBFSVersionAnalytics';
@@ -91,6 +92,7 @@ export const AppRouter: React.FC = () => {
         <Route path='feeds/*' element={<GTFSFeedAnalytics />} />
         <Route path='notices/*' element={<GTFSNoticeAnalytics />} />
         <Route path='features/*' element={<GTFSFeatureAnalytics />} />
+        <Route path='features-tracker/*' element={<GTFSFeaturesTracker />} />
       </Route>
       <Route path='metrics/gbfs'>
         <Route path='feeds/*' element={<GBFSFeedAnalytics />} />
