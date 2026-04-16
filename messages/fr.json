@@ -116,6 +116,16 @@
     "transitFeedsRedirectTitle": "Vous avez été redirigé depuis TransitFeeds",
     "transitFeedsRedirectBody": "Cette page se trouve désormais sur MobilityDatabase.org, où vous trouverez les données de transit les plus récentes."
   },
+  "emailVerification": {
+    "loadingTitle": "Vérification de votre e-mail",
+    "loadingDescription": "Veuillez patienter pendant que nous confirmons votre adresse e-mail.",
+    "successTitle": "E-mail vérifié",
+    "successDescription": "Votre adresse e-mail a bien été vérifiée. Vous pouvez retourner sur Mobility Database et continuer à utiliser votre compte.",
+    "errorTitle": "Impossible de vérifier l'e-mail",
+    "errorDescription": "Ce lien de vérification est invalide, incomplet ou a déjà été utilisé.",
+    "invalidLink": "Le lien de vérification ne contient pas les informations requises.",
+    "verificationFailed": "Nous n'avons pas pu vérifier votre e-mail avec ce lien."
+  },
   "feeds": {
     "feeds": "Feeds",
     "dataType": "Data Format",

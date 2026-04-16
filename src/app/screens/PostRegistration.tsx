@@ -93,7 +93,8 @@ export default function PostRegistration(): React.ReactElement {
         </Typography>
         <Box sx={{ mt: 2 }}>
           An email has been sent or will be sent to you shortly confirming your
-          account registration.
+          account registration. Please also check your junk or spam folder if
+          you do not see it in your inbox.
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
           <Button
