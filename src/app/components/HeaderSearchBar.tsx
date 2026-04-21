@@ -78,7 +78,7 @@ export default function HeaderSearchBar({
           transform: 'translateY(-50%)',
           zIndex: 2,
           ...(searchOpen && {
-            bgcolor: theme.palette.background.paper,
+            bgcolor: theme.vars.palette.background.paper,
             borderRadius: 1,
             boxShadow: 3,
             px: 1,

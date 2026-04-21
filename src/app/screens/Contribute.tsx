@@ -21,7 +21,7 @@ export default function Contribute(): React.ReactElement {
         </Typography>
         <Box
           sx={{
-            background: theme.palette.background.paper,
+            background: theme.vars.palette.background.paper,
             mt: 2,
             p: 2,
             borderRadius: '6px 6px 0px 0px',

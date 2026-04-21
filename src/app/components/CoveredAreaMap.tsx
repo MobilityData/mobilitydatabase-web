@@ -299,7 +299,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
         maxHeight: '90vh',
         minHeight: '50vh',
         p: 2,
-        backgroundColor: theme.palette.background.default,
+        backgroundColor: theme.vars.palette.background.default,
         borderRadius: '5px',
         border: 'none',
       }}

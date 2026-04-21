@@ -24,7 +24,7 @@ export const stickyHeaderStyles = (props: {
       xs: props.headerBannerVisible ? '113px' : '56px',
       md: props.headerBannerVisible ? '140px' : '64px',
     },
-    background: props.theme.palette.background.default,
+    background: props.theme.vars.palette.background.default,
     transition: 'box-shadow 0.3s ease-in-out',
     mx: {
       xs: '-16px',

@@ -60,10 +60,10 @@ export const ScanningOverlay = (
         sx={{
           width: 420,
           maxWidth: '90%',
-          bgcolor: theme.palette.background.paper,
+          bgcolor: theme.vars.palette.background.paper,
           borderRadius: '14px',
           boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
-          border: `1px solid ${theme.palette.divider}`,
+          border: `1px solid ${theme.vars.palette.divider}`,
           p: 2.25,
         }}
       >
@@ -83,7 +83,7 @@ export const ScanningOverlay = (
 
         <Typography
           variant='body2'
-          sx={{ mb: 1, color: theme.palette.text.secondary }}
+          sx={{ mb: 1, color: theme.vars.palette.text.secondary }}
         >
           {isLarge ? t('scanning.bodyLarge') : t('scanning.body')}
         </Typography>
@@ -113,7 +113,7 @@ export const ScanningOverlay = (
 
         <Typography
           variant='caption'
-          sx={{ color: theme.palette.text.secondary }}
+          sx={{ color: theme.vars.palette.text.secondary }}
         >
           {t('scanning.percentComplete', { percent: progressPct })}
         </Typography>

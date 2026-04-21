@@ -25,13 +25,13 @@ export const ctaContainerStyle: SxProps<Theme> = (theme) => ({
   display: 'flex',
   flexWrap: { xs: 'wrap', sm: 'nowrap' },
   gap: 1,
-  borderTop: `1px solid ${theme.palette.divider}`,
+  borderTop: `1px solid ${theme.vars.palette.divider}`,
   pt: 3,
 });
 
 export const featureChipsStyle: SxProps<Theme> = (theme) => ({
-  color: theme.palette.secondary.contrastText,
-  backgroundColor: theme.palette.secondary.dark,
+  color: theme.vars.palette.secondary.contrastText,
+  backgroundColor: theme.vars.palette.secondary.dark,
   border: `2px solid transparent`,
   ':hover': {
     opacity: 0.95,

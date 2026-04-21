@@ -22,7 +22,7 @@ export const FeedStatusIndicator = (
         <Tooltip title={statusData.toolTip} placement='top'>
           <Box
             sx={{
-              background: theme.palette[statusData.themeColor].main,
+              background: theme.vars.palette[statusData.themeColor].main,
               width: '12px',
               height: '12px',
               borderRadius: '50%',

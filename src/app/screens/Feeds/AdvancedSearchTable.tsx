@@ -154,7 +154,7 @@ const renderGTFSDetails = (
                   sx={{
                     background: featureData.color,
                     border: selectedFeatures.includes(feature)
-                      ? `2px solid ${theme.palette.primary.main}`
+                      ? `2px solid ${theme.vars.palette.primary.main}`
                       : 'none',
                     color: 'black',
                   }}
@@ -205,9 +205,9 @@ const renderGBFSDetails = (
           sx={{
             mr: 1,
             border: selectedGbfsVersions.includes('v' + version)
-              ? `2px solid ${theme.palette.primary.main}`
+              ? `2px solid ${theme.vars.palette.primary.main}`
               : '',
-            color: theme.palette.text.primary,
+            color: theme.vars.palette.text.primary,
           }}
         />
       ))}
@@ -250,7 +250,7 @@ export default function AdvancedSearchTable({
 
   const descriptionDividerStyle: SxProps = {
     py: 1,
-    borderTop: `1px solid ${theme.palette.divider}`,
+    borderTop: `1px solid ${theme.vars.palette.divider}`,
     mt: 1,
     display: 'flex',
     flexDirection: 'column',

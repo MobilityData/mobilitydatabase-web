@@ -325,7 +325,7 @@ export default function APIAccount(): React.ReactElement {
       >
         <Paper
           sx={{
-            bgcolor: theme.palette.background.paper,
+            bgcolor: theme.vars.palette.background.paper,
             width: {
               xs: '100%',
               md: '390px',

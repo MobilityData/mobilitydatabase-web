@@ -20,7 +20,7 @@ export default function FeedSubmitted(): React.ReactElement {
           mt: 10,
           mb: 4,
           mx: 2,
-          color: theme.palette.primary.main,
+          color: theme.vars.palette.primary.main,
           fontWeight: 'bold',
         }}
       >

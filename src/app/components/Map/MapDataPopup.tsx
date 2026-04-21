@@ -105,8 +105,8 @@ export const MapDataPopup = (
               sx={{
                 p: 1,
                 border: getGradientBorder(mapClickStopData.route_colors),
-                backgroundColor: theme.palette.background.paper,
-                color: theme.palette.text.primary,
+                backgroundColor: theme.vars.palette.background.paper,
+                color: theme.vars.palette.text.primary,
               }}
             >
               <Box
@@ -118,7 +118,7 @@ export const MapDataPopup = (
                 <Box display={'flex'} alignItems={'flex-end'} gap={1}>
                   {renderLocationTypeIcon(
                     mapClickStopData.location_type,
-                    theme.palette.text.primary,
+                    theme.vars.palette.text.primary,
                   )}
                   <Typography component={'p'} variant={'body2'}>
                     {
@@ -134,8 +134,8 @@ export const MapDataPopup = (
                 {mapClickStopData.wheelchair_boarding === '1' && (
                   <AccessibleIcon
                     sx={{
-                      backgroundColor: theme.palette.error.main,
-                      color: theme.palette.error.contrastText,
+                      backgroundColor: theme.vars.palette.error.main,
+                      color: theme.vars.palette.error.contrastText,
                       borderRadius: '3px',
                       p: '2px',
                     }}

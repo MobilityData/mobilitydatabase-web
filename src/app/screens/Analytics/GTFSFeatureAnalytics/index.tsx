@@ -253,12 +253,12 @@ export default function GTFSFeatureAnalytics(): React.ReactElement {
                 <Brush
                   dataKey='date'
                   height={30}
-                  stroke={theme.palette.primary.main}
+                  stroke={theme.vars.palette.primary.main}
                 />
                 <Line
                   type='monotone'
                   dataKey='feeds'
-                  stroke={theme.palette.primary.main}
+                  stroke={theme.vars.palette.primary.main}
                 />
               </LineChart>
             </ResponsiveContainer>

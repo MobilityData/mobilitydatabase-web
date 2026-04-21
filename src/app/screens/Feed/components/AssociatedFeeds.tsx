@@ -41,7 +41,7 @@ const renderAssociatedGTFSFeedRow = (
       sx={{
         textDecoration: 'none',
         '&:hover, &:focus': {
-          backgroundColor: theme.palette.background.paper,
+          backgroundColor: theme.vars.palette.background.paper,
         },
       }}
     >
@@ -84,7 +84,7 @@ const renderAssociatedGTFSRTFeedRow = (
       sx={{
         textDecoration: 'none',
         '&:hover, &:focus': {
-          backgroundColor: theme.palette.background.paper,
+          backgroundColor: theme.vars.palette.background.paper,
         },
       }}
     >
@@ -124,7 +124,7 @@ export default function AssociatedGTFSRTFeeds({
       <ContentBox
         width={{ xs: '100%' }}
         title={'Related Schedule Feeds'}
-        outlineColor={theme.palette.background.default}
+        outlineColor={theme.vars.palette.background.default}
         margin={`0 0 ${theme.spacing(2)}`}
         padding={2}
       >
@@ -148,7 +148,7 @@ export default function AssociatedGTFSRTFeeds({
       <ContentBox
         width={{ xs: '100%' }}
         title={'Related Realtime Feeds'}
-        outlineColor={theme.palette.background.default}
+        outlineColor={theme.vars.palette.background.default}
         padding={2}
       >
         {gtfsRtFeeds === undefined && <Typography>Loading...</Typography>}

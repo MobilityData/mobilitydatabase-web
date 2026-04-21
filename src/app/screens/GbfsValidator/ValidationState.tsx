@@ -136,7 +136,7 @@ export default function ValidationState(): ReactElement {
             sx={{
               fontWeight: 700,
               mb: 3,
-              color: theme.palette.primary.main,
+              color: theme.vars.palette.primary.main,
               overflowWrap: 'break-word',
             }}
           >
@@ -223,7 +223,7 @@ export default function ValidationState(): ReactElement {
         {/* TODO: Disabled until map data is implemented
         <Box
           sx={{
-            backgroundColor: theme.palette.background.paper,
+            backgroundColor: theme.vars.palette.background.paper,
             borderRadius: '5px',
             mb: 2,
           }}

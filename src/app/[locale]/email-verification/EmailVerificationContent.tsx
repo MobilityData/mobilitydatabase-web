@@ -58,7 +58,7 @@ export default function EmailVerificationContent({
       sx={{
         display: 'flex',
         justifyContent: 'center',
-        backgroundColor: theme.palette.background.paper,
+        backgroundColor: theme.vars.palette.background.paper,
         maxWidth: theme.breakpoints.values.sm,
         mx: 'auto',
         mt: 6,

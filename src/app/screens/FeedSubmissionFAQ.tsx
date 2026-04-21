@@ -24,9 +24,9 @@ export default function FeedSubmissionFAQ(): React.ReactElement {
     boxShadow: 'none',
     background: 'transparent',
     borderBottom: '2px solid',
-    borderColor: theme.palette.divider,
+    borderColor: theme.vars.palette.divider,
     '&:before': { display: 'none' },
-    svg: { color: theme.palette.divider },
+    svg: { color: theme.vars.palette.divider },
   };
 
   return (
@@ -42,7 +42,7 @@ export default function FeedSubmissionFAQ(): React.ReactElement {
       </Typography>
       <Box
         sx={{
-          background: theme.palette.background.paper,
+          background: theme.vars.palette.background.paper,
           mt: 2,
           p: 2,
           borderRadius: '6px 6px 0px 0px',

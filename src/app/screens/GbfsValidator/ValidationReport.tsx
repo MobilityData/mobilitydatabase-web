@@ -200,14 +200,14 @@ export default function ValidationReport({
                               {hasErrors ? (
                                 <ErrorOutlineIcon
                                   sx={{
-                                    color: theme.palette.error.main,
+                                    color: theme.vars.palette.error.main,
                                     mr: 1,
                                   }}
                                 />
                               ) : (
                                 <WarningAmberOutlinedIcon
                                   sx={{
-                                    color: theme.palette.warning.main,
+                                    color: theme.vars.palette.warning.main,
                                     mr: 1,
                                   }}
                                 />
@@ -215,7 +215,10 @@ export default function ValidationReport({
                             </Badge>
                           ) : (
                             <CheckCircleOutlineIcon
-                              sx={{ color: theme.palette.success.main, mr: 1 }}
+                              sx={{
+                                color: theme.vars.palette.success.main,
+                                mr: 1,
+                              }}
                             />
                           )}
                         </ListItemIcon>
@@ -224,10 +227,10 @@ export default function ValidationReport({
                           secondary={secondary}
                           sx={{
                             color: hasErrors
-                              ? theme.palette.error.main
+                              ? theme.vars.palette.error.main
                               : hasSystemErrors
-                                ? theme.palette.warning.main
-                                : theme.palette.text.primary,
+                                ? theme.vars.palette.warning.main
+                                : theme.vars.palette.text.primary,
                           }}
                         />
                       </ListItemButton>
@@ -242,7 +245,7 @@ export default function ValidationReport({
                 height: '100%',
                 width: '100%',
                 borderRadius: '5px',
-                backgroundColor: theme.palette.background.paper,
+                backgroundColor: theme.vars.palette.background.paper,
                 p: 0,
               }}
             >
@@ -326,7 +329,7 @@ export default function ValidationReport({
                         (fg.systemErrors?.length ?? 0) === 0 && (
                           <Typography
                             variant='body2'
-                            color={theme.palette.success.main}
+                            color={theme.vars.palette.success.main}
                           >
                             <b>Valid</b> no errors
                           </Typography>
@@ -387,7 +390,7 @@ export default function ValidationReport({
                                       },
                                       '&:hover': {
                                         backgroundColor:
-                                          theme.palette.action.hover,
+                                          theme.vars.palette.action.hover,
                                       },
                                       '&:hover .hover-details-btn, &:focus-visible .hover-details-btn':
                                         {
@@ -526,11 +529,11 @@ export default function ValidationReport({
                                                 'background-color 120ms, box-shadow 120ms',
                                               cursor: 'pointer',
                                               '&:hover': {
-                                                boxShadow: `0 0 0 2px ${theme.palette.error.light}`,
+                                                boxShadow: `0 0 0 2px ${theme.vars.palette.error.light}`,
                                               },
                                               '&:focus-visible': {
                                                 outline: 'none',
-                                                boxShadow: `0 0 0 3px ${theme.palette.error.main}`,
+                                                boxShadow: `0 0 0 3px ${theme.vars.palette.error.main}`,
                                               },
                                               '&:hover .hover-details-btn, &:focus-visible .hover-details-btn':
                                                 {

@@ -120,7 +120,7 @@ export default function GbfsVersions({
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                backgroundColor: theme.palette.background.default,
+                backgroundColor: theme.vars.palette.background.default,
               }}
               width={{ xs: '100%' }}
             >
@@ -143,8 +143,8 @@ export default function GbfsVersions({
                         <Chip
                           label={t('gbfsVersionsJson')}
                           sx={{
-                            backgroundColor: theme.palette.primary.dark,
-                            color: theme.palette.secondary.contrastText,
+                            backgroundColor: theme.vars.palette.primary.dark,
+                            color: theme.vars.palette.secondary.contrastText,
                           }}
                           variant='filled'
                         ></Chip>

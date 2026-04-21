@@ -276,7 +276,9 @@ export function ErrorDetailsDialog({
       onClose={onClose}
       maxWidth='md'
       fullWidth
-      PaperProps={{ sx: { backgroundColor: theme.palette.background.default } }}
+      PaperProps={{
+        sx: { backgroundColor: theme.vars.palette.background.default },
+      }}
       fullScreen={fullScreen}
     >
       <DialogTitle sx={dialogTitleSx}>
@@ -294,7 +296,7 @@ export function ErrorDetailsDialog({
               <Box width={'100%'}>
                 <Typography
                   variant='subtitle2'
-                  sx={{ color: theme.palette.text.secondary }}
+                  sx={{ color: theme.vars.palette.text.secondary }}
                 >
                   Instance path
                 </Typography>
@@ -305,7 +307,10 @@ export function ErrorDetailsDialog({
               <Box width={'100%'}>
                 <Typography
                   variant='subtitle2'
-                  sx={{ color: theme.palette.text.secondary, width: '100%' }}
+                  sx={{
+                    color: theme.vars.palette.text.secondary,
+                    width: '100%',
+                  }}
                 >
                   Schema path
                 </Typography>
@@ -316,7 +321,10 @@ export function ErrorDetailsDialog({
               <Box sx={{ mt: 2, width: '100%' }}>
                 <Typography
                   variant='subtitle2'
-                  sx={{ color: theme.palette.text.secondary, width: '100%' }}
+                  sx={{
+                    color: theme.vars.palette.text.secondary,
+                    width: '100%',
+                  }}
                 >
                   Error Message
                 </Typography>
@@ -397,7 +405,7 @@ export function ErrorDetailsDialog({
                                         p: 1,
                                         borderRadius: 1,
                                         backgroundColor: 'rgba(244,67,54,0.08)',
-                                        borderLeft: `3px solid ${theme.palette.error.main}`,
+                                        borderLeft: `3px solid ${theme.vars.palette.error.main}`,
                                         fontFamily: 'monospace',
                                       }}
                                     >
@@ -406,7 +414,7 @@ export function ErrorDetailsDialog({
                                         sx={{
                                           fontFamily: 'inherit',
                                           fontWeight: 700,
-                                          color: theme.palette.error.main,
+                                          color: theme.vars.palette.error.main,
                                         }}
                                       >
                                         &quot;{missingKey}&quot;:

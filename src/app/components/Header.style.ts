@@ -8,7 +8,7 @@ export const mobileNavElementStyle = (
   width: '100%',
   justifyContent: 'flex-start',
   pl: 3,
-  color: theme.palette.text.primary,
+  color: theme.vars.palette.text.primary,
 });
 
 export const animatedButtonStyling = (
@@ -39,7 +39,7 @@ export const animatedButtonStyling = (
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: theme.palette.primary.main,
+    backgroundColor: theme.vars.palette.primary.main,
     opacity: 0.7,
     transition: 'transform 0.9s cubic-bezier(0.19, 1, 0.22, 1)',
     transform: 'scaleX(0)',

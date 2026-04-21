@@ -120,7 +120,7 @@ export default function NestedCheckboxList({
               display: 'block',
               borderBottom:
                 checkboxData.children !== undefined
-                  ? `1px solid ${theme.palette.text.primary}`
+                  ? `1px solid ${theme.vars.palette.text.primary}`
                   : 'none',
               '.MuiListItemSecondaryAction-root': {
                 top: checkboxData.type === 'checkbox' ? '22px' : '11px',

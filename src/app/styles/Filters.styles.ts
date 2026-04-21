@@ -12,6 +12,6 @@ export const SearchHeader = styled(Typography)(({ theme }) => ({
     display: 'block',
     height: '3px',
     width: '104px',
-    background: theme.palette.text.primary,
+    background: theme.vars.palette.text.primary,
   },
 }));

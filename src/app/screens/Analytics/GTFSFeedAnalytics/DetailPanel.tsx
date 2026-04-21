@@ -89,11 +89,11 @@ const DetailPanel: React.FC<RenderDetailPanelProps> = ({ row }) => {
               <Brush
                 dataKey='date'
                 height={30}
-                stroke={theme.palette.primary.main}
+                stroke={theme.vars.palette.primary.main}
               />
               <Line
                 dataKey='errors'
-                stroke={theme.palette.error.main}
+                stroke={theme.vars.palette.error.main}
                 strokeWidth={2}
               />
               <Line dataKey='warnings' stroke='#fdba06' strokeWidth={2} />
@@ -105,9 +105,9 @@ const DetailPanel: React.FC<RenderDetailPanelProps> = ({ row }) => {
           <Box
             sx={{
               padding: 2,
-              border: `1px solid ${theme.palette.divider}`,
+              border: `1px solid ${theme.vars.palette.divider}`,
               borderRadius: 2,
-              backgroundColor: theme.palette.background.paper,
+              backgroundColor: theme.vars.palette.background.paper,
             }}
           >
             <Typography variant='subtitle1' gutterBottom color='primary'>
