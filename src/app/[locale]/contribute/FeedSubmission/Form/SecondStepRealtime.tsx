@@ -10,10 +10,7 @@ import { type SubmitHandler, Controller, useForm } from 'react-hook-form';
 import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { isValidFeedLink } from '../../../../services/feeds/utils';
-import {
-  type AuthTypes,
-  type FeedSubmissionFormFormInput,
-} from './types';
+import { type AuthTypes, type FeedSubmissionFormFormInput } from './types';
 
 export interface FeedSubmissionFormInputSecondStepRT {
   tripUpdates: string;

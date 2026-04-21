@@ -16,10 +16,7 @@ import {
 } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import FormLabelDescription from './components/FormLabelDescription';
-import {
-  type FeedSubmissionFormFormInput,
-  type YesNoFormInput,
-} from './types';
+import { type FeedSubmissionFormFormInput, type YesNoFormInput } from './types';
 
 export interface FeedSubmissionFormInputFourthStep {
   dataProducerEmail?: string;

@@ -15,10 +15,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import FormThirdStep from './ThirdStep';
 import { submitNewFeedForm } from '../../../../services/feeds/add-feed-form-service';
 import { useTranslations } from 'next-intl';
-import {
-  type FeedSubmissionFormFormInput,
-  type YesNoFormInput,
-} from './types';
+import { type FeedSubmissionFormFormInput, type YesNoFormInput } from './types';
 
 const defaultFormValues: FeedSubmissionFormFormInput = {
   isOfficialProducer: '',
