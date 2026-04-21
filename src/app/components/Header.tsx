@@ -20,6 +20,7 @@ import {
   Alert,
   AlertTitle,
 } from '@mui/material';
+import { useColorScheme } from '@mui/material/styles';
 import MenuIcon from '@mui/icons-material/Menu';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import {
@@ -81,7 +82,7 @@ export default function DrawerAppBar(): React.ReactElement {
   const hasTransitFeedsRedirectParam =
     clientSearchParams?.get('utm_source') === 'transitfeeds';
 
-  const theme = useTheme();
+  const { mode } = useColorScheme();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [hasTransitFeedsRedirect, setHasTransitFeedsRedirect] =
@@ -189,33 +190,33 @@ export default function DrawerAppBar(): React.ReactElement {
         component='nav'
         color='inherit'
         elevation={0}
-        sx={{
-          background: theme.palette.background.paper,
+        sx={(theme) => ({
+          backgroundColor: theme.vars.palette.background.paper,
           fontFamily: fontFamily.secondary,
-        }}
+        })}
       >
         <Box
           id='search-background'
           aria-hidden='true'
-          sx={{
+          sx={(theme) => ({
             position: 'absolute',
             inset: 0,
-            bgcolor: theme.palette.text.disabled,
+            bgcolor: theme.vars.palette.text.disabled,
             opacity: isSearchOpen ? 1 : 0,
             zIndex: 1,
             pointerEvents: isSearchOpen ? 'auto' : 'none',
             transition: 'opacity 0.25s ease',
-          }}
+          })}
         />
         <Toolbar
-          sx={{
+          sx={(theme) => ({
             display: 'flex',
             justifyContent: 'space-between',
             width: '100%',
             maxWidth: theme.breakpoints.values.xl,
             mx: 'auto',
             position: 'relative',
-          }}
+          })}
         >
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <IconButton
@@ -239,7 +240,7 @@ export default function DrawerAppBar(): React.ReactElement {
             >
               <Image
                 src={
-                  theme.palette.mode === 'light'
+                  mode !== 'dark'
                     ? '/assets/MOBILTYDATA_logo_light_blue_M.png'
                     : '/assets/MOBILTYDATA_logo_purple_M.png'
                 }
@@ -278,7 +279,7 @@ export default function DrawerAppBar(): React.ReactElement {
                 <Button
                   sx={(theme) => ({
                     ...animatedButtonStyling(theme),
-                    color: theme.palette.text.primary,
+                    color: theme.vars.palette.text.primary,
                   })}
                   variant={'text'}
                   endIcon={item.external === true ? <OpenInNew /> : null}
@@ -304,7 +305,7 @@ export default function DrawerAppBar(): React.ReactElement {
                 endIcon={<ArrowDropDownIcon />}
                 sx={(theme) => ({
                   ...animatedButtonStyling(theme),
-                  color: theme.palette.text.primary,
+                  color: theme.vars.palette.text.primary,
                 })}
                 className={
                   activeTab.includes('validator') ? 'active short' : ''
@@ -392,12 +393,12 @@ export default function DrawerAppBar(): React.ReactElement {
                   }}
                 >
                   <Avatar
-                    sx={{
+                    sx={(theme) => ({
                       width: 32,
                       height: 32,
                       fontSize: theme.typography.body2.fontSize,
-                      bgcolor: theme.palette.primary.main,
-                    }}
+                      bgcolor: theme.vars.palette.primary.main,
+                    })}
                   >
                     {(userDisplayName ?? userEmail)?.[0]?.toUpperCase() ?? ''}
                   </Avatar>

@@ -17,6 +17,7 @@ import {
   InputBase,
   IconButton,
 } from '@mui/material';
+import { useColorScheme } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
 import {
   ACCOUNT_TARGET,
@@ -55,6 +56,7 @@ export default function DrawerContent({
   const t = useTranslations('common');
   const tFeeds = useTranslations('feeds');
   const theme = useTheme();
+  const { mode } = useColorScheme();
 
   const [searchValue, setSearchValue] = React.useState('');
   const searchInputRef = React.useRef<HTMLInputElement>(null);
@@ -79,7 +81,7 @@ export default function DrawerContent({
       >
         <Image
           src={
-            theme.palette.mode === 'light'
+            mode !== 'dark'
               ? '/assets/MOBILTYDATA_logo_light_blue_M.png'
               : '/assets/MOBILTYDATA_logo_purple_M.png'
           }
@@ -96,7 +98,7 @@ export default function DrawerContent({
           sx={{
             my: 2,
             cursor: 'pointer',
-            color: theme.palette.primary.main,
+            color: theme.vars.palette.primary.main,
             fontWeight: 700,
           }}
           data-testid='websiteTile'

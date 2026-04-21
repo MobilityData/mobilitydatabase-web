@@ -10,11 +10,8 @@ import {
   TableContainer,
   Typography,
 } from '@mui/material';
-import { type Theme } from '@mui/material/styles';
-
 interface PopupTableProps {
   properties: Record<string, string | number>;
-  theme: Theme;
 }
 
 const fieldDescriptions: Record<string, { description?: string }> = {
@@ -28,10 +25,7 @@ const fieldDescriptions: Record<string, { description?: string }> = {
   },
 };
 
-export const PopupTable: React.FC<PopupTableProps> = ({
-  properties,
-  theme,
-}) => {
+export const PopupTable: React.FC<PopupTableProps> = ({ properties }) => {
   const displayName = properties?.display_name ?? 'Details';
 
   // Create rows for each property (exclude 'color' and 'display_name')
@@ -45,7 +39,7 @@ export const PopupTable: React.FC<PopupTableProps> = ({
 
       return (
         <TableRow key={key}>
-          <TableCell sx={{ color: theme.palette.text.primary }}>
+          <TableCell sx={{ color: (theme) => theme.vars.palette.text.primary }}>
             <b>{formattedKey} </b>
             {fieldInfo.description != null && (
               <Tooltip title={fieldInfo.description} arrow>
@@ -53,7 +47,7 @@ export const PopupTable: React.FC<PopupTableProps> = ({
               </Tooltip>
             )}
           </TableCell>
-          <TableCell sx={{ color: theme.palette.text.primary }}>
+          <TableCell sx={{ color: (theme) => theme.vars.palette.text.primary }}>
             {properties[key]}
           </TableCell>
         </TableRow>
@@ -62,14 +56,14 @@ export const PopupTable: React.FC<PopupTableProps> = ({
 
   return (
     <Box
-      sx={{
-        background: theme.palette.background.paper,
-        color: theme.palette.text.primary,
+      sx={(theme) => ({
+        background: theme.vars.palette.background.paper,
+        color: theme.vars.palette.text.primary,
         maxWidth: '300px',
-        border: `1px solid ${theme.palette.divider}`,
+        border: `1px solid ${theme.vars.palette.divider}`,
         borderRadius: theme.shape.borderRadius,
         padding: theme.spacing(1),
-      }}
+      })}
     >
       <Typography
         variant={'h6'}
@@ -80,10 +74,10 @@ export const PopupTable: React.FC<PopupTableProps> = ({
       <TableContainer
         component={Paper}
         elevation={2}
-        sx={{
-          background: theme.palette.background.default,
-          color: theme.palette.text.primary,
-        }}
+        sx={(theme) => ({
+          background: theme.vars.palette.background.default,
+          color: theme.vars.palette.text.primary,
+        })}
       >
         <Table size='small'>
           <TableBody>{rows}</TableBody>
