@@ -31,10 +31,13 @@ done
 # Fall back to yarn install if node_modules doesn't exist in main repo
 if [ -d "$MAIN_REPO/node_modules" ]; then
   echo "📦 Hard-linking node_modules..."
-  cp -rl "$MAIN_REPO/node_modules" "$WORKTREE_DIR/node_modules"
+  if ! cp -rl "$MAIN_REPO/node_modules" "$WORKTREE_DIR/node_modules"; then
+    echo "⚠️  Hard-linking node_modules failed, running yarn install..."
+    (cd "$WORKTREE_DIR" && yarn install)
+  fi
 else
   echo "📦 node_modules not found in main repo, running yarn install..."
-  cd $WORKTREE_DIR && yarn install
+  (cd "$WORKTREE_DIR" && yarn install)
 fi
  
 # Open in VSCode
