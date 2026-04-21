@@ -15,8 +15,12 @@ fi
 # Create the worktree and branch
 git worktree add -b $BRANCH $WORKTREE_DIR main
  
-# Copy .vscode
-cp -r "$MAIN_REPO/.vscode" "$WORKTREE_DIR/.vscode"
+# Copy .vscode if present
+if [ -d "$MAIN_REPO/.vscode" ]; then
+  cp -r "$MAIN_REPO/.vscode" "$WORKTREE_DIR/.vscode"
+else
+  echo "ℹ️  No .vscode directory found in main repo, skipping copy."
+fi
  
 # Copy all .env files
 for env_file in "$MAIN_REPO"/.env*; do
