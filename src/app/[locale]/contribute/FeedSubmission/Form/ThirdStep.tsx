@@ -17,10 +17,7 @@ import {
 import { useTranslations } from 'next-intl';
 import { isValidFeedLink } from '../../../../services/feeds/utils';
 import FormLabelDescription from './components/FormLabelDescription';
-import {
-  type AuthTypes,
-  type FeedSubmissionFormFormInput,
-} from './types';
+import { type AuthTypes, type FeedSubmissionFormFormInput } from './types';
 
 export interface FeedSubmissionFormInputThirdStep {
   authType: AuthTypes;

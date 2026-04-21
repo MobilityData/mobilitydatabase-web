@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  Typography,
-  Box,
-  Container,
-  useTheme,
-  Button,
-} from '@mui/material';
+import { Typography, Box, Container, useTheme, Button } from '@mui/material';
 
 export default function FeedSubmitted(): React.ReactElement {
   const theme = useTheme();
