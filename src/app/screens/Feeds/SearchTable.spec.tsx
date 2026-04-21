@@ -2,6 +2,8 @@ import SearchTable, { getDataTypeElement } from './SearchTable';
 import { render, cleanup, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { type AllFeedsType } from '../../services/feeds/utils';
+import { ThemeProvider } from '@mui/material/styles';
+import { theme } from '../../Theme';
 
 jest.mock('../../../i18n/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
@@ -143,9 +145,11 @@ describe.only('getProviderElement', () => {
 
   it('should display the correct number of transit providers in table row', () => {
     render(
-      <MemoryRouter>
-        <SearchTable feedsData={mockFeedsData} />
-      </MemoryRouter>,
+      <ThemeProvider theme={theme}>
+        <MemoryRouter>
+          <SearchTable feedsData={mockFeedsData} />
+        </MemoryRouter>
+      </ThemeProvider>,
     );
 
     expect(screen.getByText('Utah Transit Authority (UTA)')).toBeTruthy();
