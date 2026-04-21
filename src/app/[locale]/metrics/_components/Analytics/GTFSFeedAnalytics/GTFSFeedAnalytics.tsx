@@ -37,7 +37,7 @@ import { type AnalyticsFile, type GTFSFeedMetrics } from '../types';
 import { useRemoteConfig } from '../../../../../context/RemoteConfigProvider';
 import DownloadIcon from '@mui/icons-material/Download';
 import { download, generateCsv, mkConfig } from 'export-to-csv';
-import { setAnalyticsBucketEndpoint } from '../utils';
+import { setAnalyticsBucketEndpoint } from '../../../../../utils/metricsUtils';
 
 export default function GTFSFeedAnalytics(): React.ReactElement {
   const searchParams = useSearchParams();

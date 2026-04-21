@@ -1,5 +1,5 @@
 /**
- * Global analytics bucket endpoint storage and access
+ * Global analytics bucket endpoint storage and access.
  */
 let globalAnalyticsBucketEndpoint: string | undefined;
 
