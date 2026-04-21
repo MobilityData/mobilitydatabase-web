@@ -38,10 +38,7 @@ import { type AnalyticsFile, type GTFSFeedMetrics } from '../types';
 import { useRemoteConfig } from '../../../../../context/RemoteConfigProvider';
 import DownloadIcon from '@mui/icons-material/Download';
 import { download, generateCsv, mkConfig } from 'export-to-csv';
-
-let globalAnalyticsBucketEndpoint: string | undefined;
-export const getAnalyticsBucketEndpoint = (): string | undefined =>
-  globalAnalyticsBucketEndpoint;
+import { setAnalyticsBucketEndpoint } from '../../../../../utils/metricsUtils';
 
 export default function GTFSFeedAnalytics(): React.ReactElement {
   const searchParams = useSearchParams();
@@ -81,7 +78,7 @@ export default function GTFSFeedAnalytics(): React.ReactElement {
   };
 
   React.useEffect(() => {
-    globalAnalyticsBucketEndpoint = config.gtfsMetricsBucketEndpoint;
+    setAnalyticsBucketEndpoint(config.gtfsMetricsBucketEndpoint);
     dispatch(fetchAvailableFilesStart());
   }, [dispatch, config.gtfsMetricsBucketEndpoint]);
 

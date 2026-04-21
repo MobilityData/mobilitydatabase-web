@@ -42,7 +42,7 @@ import { type RootState } from '../../../../../store/store';
 import { type AnalyticsFile, type GBFSFeedMetrics } from '../types';
 import { useRemoteConfig } from '../../../../../context/RemoteConfigProvider';
 import DetailPanel from './DetailPanel';
-import { setAnalyticsBucketEndpoint } from '../utils';
+import { setAnalyticsBucketEndpoint } from '../../../../../utils/metricsUtils';
 
 export default function GBFSFeedAnalytics(): React.ReactElement {
   const searchParams = useSearchParams();
