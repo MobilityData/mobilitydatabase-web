@@ -1,9 +1,9 @@
+'use client';
+
 import * as React from 'react';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
 import Link from '@mui/material/Link';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -11,101 +11,91 @@ import Container from '@mui/material/Container';
 import GoogleIcon from '@mui/icons-material/Google';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import AppleIcon from '@mui/icons-material/Apple';
-import { useSearchParams, useRouter } from 'next/navigation';
-import * as Yup from 'yup';
-import { useFormik } from 'formik';
-import { useAppDispatch } from '../hooks';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAppDispatch } from '../../hooks';
 import {
+  login,
+  loginFail,
   loginWithProvider,
-  signUp,
-  signUpFail,
   verifyEmail,
-} from '../store/profile-reducer';
+} from '../../store/profile-reducer';
+import {
+  OauthProvider,
+  type EmailLogin,
+  ProfileErrorSource,
+  oathProviders,
+} from '../../types';
+import { useSelector } from 'react-redux';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
 import {
   Alert,
+  Divider,
   IconButton,
   InputAdornment,
   Snackbar,
   Tooltip,
+  useTheme,
 } from '@mui/material';
-import { useSelector } from 'react-redux';
+import {
+  selectEmailLoginError,
+  selectUserProfileStatus,
+} from '../../store/selectors';
+import { getAuth, signInWithPopup, type UserCredential } from 'firebase/auth';
 import {
   ACCOUNT_TARGET,
   ADD_FEED_TARGET,
   COMPLETE_REGISTRATION_TARGET,
   POST_REGISTRATION_TARGET,
-  SIGN_IN_TARGET,
-} from '../constants/Navigation';
-import { selectSignUpError, selectUserProfileStatus } from '../store/selectors';
-import { ProfileErrorSource, OauthProvider, oathProviders } from '../types';
-import {
-  passwordValidationError,
-  passwordValidationRegex,
-} from '../constants/Validation';
-import { type UserCredential, getAuth, signInWithPopup } from 'firebase/auth';
-import ReCAPTCHA from 'react-google-recaptcha';
+} from '../../constants/Navigation';
 import { VisibilityOffOutlined, VisibilityOutlined } from '@mui/icons-material';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
-export default function SignUp(): React.ReactElement {
+export default function SignIn(): React.ReactElement {
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const theme = useTheme();
+  const userProfileStatus = useSelector(selectUserProfileStatus);
+  const emailLoginError = useSelector(selectEmailLoginError);
+  const [isSubmitted, setIsSubmitted] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [showNoEmailSnackbar, setShowNoEmailSnackbar] = React.useState(false);
   const searchParams = useSearchParams();
 
-  const router = useRouter();
-  const dispatch = useAppDispatch();
-  const signUpError = useSelector(selectSignUpError);
-  const userProfileStatus = useSelector(selectUserProfileStatus);
-  const [isSubmitted, setIsSubmitted] = React.useState(false);
-
-  const SignUpSchema = Yup.object().shape({
+  const SignInSchema = Yup.object().shape({
     email: Yup.string()
       .email('Email format is invalid.')
       .required('Email is required'),
-    confirmEmail: Yup.string().oneOf(
-      [Yup.ref('email'), ''],
-      'Emails do not match',
-    ),
+
     password: Yup.string()
       .required('Password is required')
-      .matches(passwordValidationRegex, 'Password error'),
-    confirmPassword: Yup.string().oneOf(
-      [Yup.ref('password'), ''],
-      'Passwords do not match',
-    ),
-    agreeToTerms: Yup.boolean()
-      .required('You must accept the terms and conditions.')
-      .isTrue('You must accept the terms and conditions.'),
-    reCaptcha: Yup.string().required('You must verify you are not a robot.'),
+      .min(
+        12,
+        'Password is too short. Your password should be 12 characters minimum',
+      ),
   });
 
   const formik = useFormik({
     initialValues: {
       email: '',
-      confirmEmail: '',
       password: '',
-      confirmPassword: '',
-      agreeToTerms: false,
-      reCaptcha: null,
     },
-    validationSchema: SignUpSchema,
+    validationSchema: SignInSchema,
     validateOnChange: isSubmitted,
     validateOnBlur: true,
     onSubmit: (values) => {
-      dispatch(
-        signUp({
-          email: values.email,
-          password: values.password,
-        }),
-      );
+      console.log('Submitting form with values:', values);
+      const emailLogin: EmailLogin = {
+        email: values.email,
+        password: values.password,
+      };
+      dispatch(login(emailLogin));
     },
   });
 
   React.useEffect(() => {
     if (userProfileStatus === 'registered') {
       if (searchParams.has('add_feed')) {
-        router.push(ADD_FEED_TARGET + '?from=registration');
+        router.push(ADD_FEED_TARGET);
       } else {
         router.push(ACCOUNT_TARGET);
       }
@@ -116,7 +106,7 @@ export default function SignUp(): React.ReactElement {
     if (userProfileStatus === 'unverified') {
       router.push(POST_REGISTRATION_TARGET + '?' + searchParams.toString());
     }
-  }, [userProfileStatus]);
+  }, [userProfileStatus, router, searchParams]);
 
   const signInWithProvider = (oauthProvider: OauthProvider): void => {
     const auth = getAuth();
@@ -134,34 +124,13 @@ export default function SignUp(): React.ReactElement {
       })
       .catch((error) => {
         dispatch(
-          signUpFail({
+          loginFail({
             code: error.code,
             message: error.message,
             source: ProfileErrorSource.Login,
           }),
         );
       });
-  };
-
-  const termsAndConditionsElement = (
-    <span>
-      I have read and I agree to the
-      <Button
-        variant='text'
-        className='inline'
-        href={'/terms-and-conditions'}
-        rel='noreferrer'
-        target='_blank'
-        endIcon={<OpenInNewIcon />}
-      >
-        terms and conditions
-      </Button>
-      .
-    </span>
-  );
-
-  const onChangeReCaptcha = (value: string | null): void => {
-    void formik.setFieldValue('reCaptcha', value);
   };
 
   return (
@@ -180,7 +149,7 @@ export default function SignUp(): React.ReactElement {
           }}
         >
           No public email provided in Github account. Please use a different
-          registration method.
+          login method.
         </Alert>
       </Snackbar>
       <CssBaseline />
@@ -196,16 +165,12 @@ export default function SignUp(): React.ReactElement {
           color='primary'
           fontWeight='bold'
         >
-          API Sign Up
+          API Login
         </Typography>
         <Typography component='h5'>
-          Already have an account?{' '}
-          <Link
-            href={`${SIGN_IN_TARGET}?${searchParams.toString()}`}
-            color={'inherit'}
-            fontWeight='bold'
-          >
-            Log In Here
+          Don&apos;t have an account?{' '}
+          <Link href='/sign-up' color={'inherit'} fontWeight='bold'>
+            Register Here
           </Link>
           .
         </Typography>
@@ -232,24 +197,10 @@ export default function SignUp(): React.ReactElement {
             onChange={formik.handleChange}
             value={formik.values.email}
             error={formik.errors.email != null}
+            data-cy='signInEmailInput'
           />
           {formik.errors.email != null ? (
             <Alert severity='error'>{formik.errors.email}</Alert>
-          ) : null}
-          <TextField
-            margin='normal'
-            required
-            fullWidth
-            id='confirmEmail'
-            label='Confirm Email'
-            name='confirmEmail'
-            autoComplete='email'
-            onChange={formik.handleChange}
-            value={formik.values.confirmEmail}
-            error={formik.errors.confirmEmail != null}
-          />
-          {formik.errors.confirmEmail != null ? (
-            <Alert severity='error'>{formik.errors.confirmEmail}</Alert>
           ) : null}
           <TextField
             margin='normal'
@@ -259,10 +210,11 @@ export default function SignUp(): React.ReactElement {
             label='Password'
             type={showPassword ? 'text' : 'password'}
             id='password'
-            autoComplete='current-password'
+            autoComplete='new-password'
             onChange={formik.handleChange}
             value={formik.values.password}
             error={formik.errors.password != null}
+            data-cy='signInPasswordInput'
             InputProps={{
               endAdornment: (
                 <InputAdornment position='end'>
@@ -286,93 +238,34 @@ export default function SignUp(): React.ReactElement {
             }}
           />
           {formik.errors.password != null ? (
-            <Alert severity='error' data-testid='passwordError'>
-              {passwordValidationError}
-            </Alert>
+            <Alert severity='error'>{formik.errors.password}</Alert>
           ) : null}
-          <TextField
-            margin='normal'
-            required
-            fullWidth
-            name='confirmPassword'
-            label='Confirm Password'
-            type={showConfirmPassword ? 'text' : 'password'}
-            id='confirmPassword'
-            autoComplete='new-password'
-            onChange={formik.handleChange}
-            value={formik.values.confirmPassword}
-            error={formik.errors.confirmPassword != null}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position='end'>
-                  <Tooltip title='Toggle Password Visibility'>
-                    <IconButton
-                      color='primary'
-                      aria-label='toggle Password visibility'
-                      onClick={() => {
-                        setShowConfirmPassword(!showConfirmPassword);
-                      }}
-                    >
-                      {showConfirmPassword ? (
-                        <VisibilityOutlined fontSize='small' />
-                      ) : (
-                        <VisibilityOffOutlined fontSize='small' />
-                      )}
-                    </IconButton>
-                  </Tooltip>
-                </InputAdornment>
-              ),
-            }}
-          />
-          {formik.errors.confirmPassword != null ? (
-            <Alert severity='error' data-testid='confirmPasswordError'>
-              {formik.errors.confirmPassword}
-            </Alert>
-          ) : null}
-          <FormControlLabel
-            control={
-              <Checkbox
-                id='agreeToTerms'
-                value={formik.values.agreeToTerms}
-                onChange={formik.handleChange}
-                color='primary'
-              />
-            }
-            label={termsAndConditionsElement}
+          {/* TODO: Add remember me functionality
+            <FormControlLabel
+            control={<Checkbox value='remember' color='primary' />}
+            label='Remember me'
             sx={{ width: '100%' }}
-          />
-          {formik.errors.agreeToTerms != null ? (
-            <Alert severity='error' data-testid='agreeToTermsError'>
-              {formik.errors.agreeToTerms}
-            </Alert>
-          ) : null}
-          <Box m={1}>
-            <ReCAPTCHA
-              sitekey={String(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY)}
-              onChange={onChangeReCaptcha}
-              data-testid='reCaptcha'
-              style={{ alignSelf: 'center', margin: 'normal' }}
-            />
-          </Box>
-          {formik.errors.reCaptcha != null ? (
-            <Alert severity='error' data-testid='reCaptchaError'>
-              {formik.errors.reCaptcha}
-            </Alert>
-          ) : null}
+          /> */}
+          <Typography component='h5' sx={{ textAlign: 'left', width: '100%' }}>
+            Forgot your password?{' '}
+            <Link href='/forgot-password' color={'inherit'} fontWeight='bold'>
+              Reset Here
+            </Link>
+            .
+          </Typography>
           <Button
             type='submit'
             variant='contained'
-            disabled={!formik.values.agreeToTerms}
-            sx={{ mt: 3, mb: 2, alignSelf: 'center' }}
+            sx={{ mt: 3, mb: 2 }}
             onClick={() => {
               setIsSubmitted(true);
             }}
-            id='sign-up-button'
+            data-testid='signin'
           >
-            Sign Up
+            Sign In
           </Button>
-          {signUpError != null ? (
-            <Alert severity='error'>{signUpError.message}</Alert>
+          {emailLoginError != null ? (
+            <Alert severity='error'>{emailLoginError.message}</Alert>
           ) : null}
         </Box>
         <Box
@@ -380,13 +273,22 @@ export default function SignUp(): React.ReactElement {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            mb: 1,
+            mb: 2,
           }}
         >
-          <p className='hr-text'>
-            <span>OR</span>
-          </p>
+          <Typography
+            component='h5'
+            sx={{
+              zIndex: 1,
+              backgroundColor: theme.palette.background.default,
+              px: 2,
+            }}
+          >
+            OR
+          </Typography>
+          <Divider sx={{ width: '100%', mb: 2, mt: '-12px' }} />
         </Box>
+
         <Button
           variant='outlined'
           color='primary'
@@ -396,7 +298,7 @@ export default function SignUp(): React.ReactElement {
             signInWithProvider(OauthProvider.Google);
           }}
         >
-          Sign Up With Google
+          Sign In With Google
         </Button>
         <Button
           variant='outlined'
@@ -407,7 +309,7 @@ export default function SignUp(): React.ReactElement {
             signInWithProvider(OauthProvider.Github);
           }}
         >
-          Sign Up With GitHub
+          Sign In With Github
         </Button>
         <Button
           variant='outlined'
@@ -418,7 +320,7 @@ export default function SignUp(): React.ReactElement {
             signInWithProvider(OauthProvider.Apple);
           }}
         >
-          Sign Up With Apple
+          Sign in With Apple
         </Button>
       </Box>
     </Container>

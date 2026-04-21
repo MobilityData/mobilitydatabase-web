@@ -9,6 +9,7 @@ import { type RemoteConfigValues } from './interface/RemoteConfig';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { AuthSessionProvider } from './components/AuthSessionProvider';
+import { AuthBroadcastChannelSync } from './components/AuthBroadcastChannelSync';
 import { polyfillCountryFlagEmojis } from 'country-flag-emoji-polyfill';
 
 interface ProvidersProps {
@@ -44,6 +45,7 @@ export function Providers({
 
   return (
     <ContextProviders>
+      <AuthBroadcastChannelSync />
       <AuthSessionProvider>
         <RemoteConfigProvider config={remoteConfig}>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
