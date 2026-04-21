@@ -34,7 +34,11 @@ else
 fi
  
 # Open in VSCode
-code $WORKTREE_DIR
+if command -v code &> /dev/null; then
+  code $WORKTREE_DIR
+else
+  echo "⚠️  VS Code CLI not found. Open the worktree manually: $WORKTREE_DIR"
+fi
  
 echo "✅ Worktree ready at $WORKTREE_DIR on branch $BRANCH"
  
