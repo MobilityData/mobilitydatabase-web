@@ -115,6 +115,32 @@ yarn e2e:run
 yarn e2e:open
 ```
 
+## Git Worktrees
+
+The project includes scripts to manage [Git worktrees](https://git-scm.com/docs/git-worktree), allowing you to work on multiple branches simultaneously in separate directories without stashing or switching branches.
+
+### Create a new worktree
+
+```
+yarn new-worktree feat/my-feature
+```
+
+This will:
+1. Create a new branch (`feat/my-feature`) and check it out in a sibling directory named `wt-feat-my-feature`
+2. Copy `.vscode` settings and all `.env*` files from the main repo
+3. Hard-link `node_modules` from the main repo (fast, minimal extra disk usage) — or run `yarn install` if none exist
+4. Open the new worktree in a new VS Code window
+
+> If the new branch changes `package.json` dependencies, run `yarn install` inside the worktree directory to reconcile.
+
+### Remove a worktree
+
+```
+yarn remove-worktree feat/my-feature
+```
+
+This will remove the worktree directory and delete the local branch. The branch must be fully merged before deletion (uses `git branch -d`).
+
 ## API Types Generation
 
 The project includes scripts for generating TypeScript types from OpenAPI specifications:
