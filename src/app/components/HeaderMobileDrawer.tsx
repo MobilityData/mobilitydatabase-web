@@ -56,7 +56,7 @@ export default function DrawerContent({
   const t = useTranslations('common');
   const tFeeds = useTranslations('feeds');
   const theme = useTheme();
-  const { mode } = useColorScheme();
+  const { colorScheme } = useColorScheme();
 
   const [searchValue, setSearchValue] = React.useState('');
   const searchInputRef = React.useRef<HTMLInputElement>(null);
@@ -81,7 +81,7 @@ export default function DrawerContent({
       >
         <Image
           src={
-            mode !== 'dark'
+            colorScheme !== 'dark'
               ? '/assets/MOBILTYDATA_logo_light_blue_M.png'
               : '/assets/MOBILTYDATA_logo_purple_M.png'
           }

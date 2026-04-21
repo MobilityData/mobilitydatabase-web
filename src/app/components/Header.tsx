@@ -81,7 +81,7 @@ export default function DrawerAppBar(): React.ReactElement {
   const hasTransitFeedsRedirectParam =
     clientSearchParams?.get('utm_source') === 'transitfeeds';
 
-  const { mode } = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [hasTransitFeedsRedirect, setHasTransitFeedsRedirect] =
@@ -239,7 +239,7 @@ export default function DrawerAppBar(): React.ReactElement {
             >
               <Image
                 src={
-                  mode !== 'dark'
+                  colorScheme !== 'dark'
                     ? '/assets/MOBILTYDATA_logo_light_blue_M.png'
                     : '/assets/MOBILTYDATA_logo_purple_M.png'
                 }

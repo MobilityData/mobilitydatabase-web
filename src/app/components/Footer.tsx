@@ -12,7 +12,7 @@ import { useRemoteConfig } from '../context/RemoteConfigProvider';
 
 const Footer: React.FC = () => {
   const theme = useTheme();
-  const { mode } = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const t = useTranslations('footer');
   const { config } = useRemoteConfig();
   const FOOTER_COLUMN_WIDTH = '185px';
@@ -60,7 +60,7 @@ const Footer: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
             <Image
               src={
-                mode !== 'dark'
+                colorScheme !== 'dark'
                   ? '/assets/MOBILTYDATA_logo_light_blue_M.png'
                   : '/assets/MOBILTYDATA_logo_purple_M.png'
               }
@@ -229,7 +229,7 @@ const Footer: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Image
               src={
-                mode !== 'dark'
+                colorScheme !== 'dark'
                   ? '/assets/MOBILTYDATA_logo_light_blue_M.png'
                   : '/assets/MOBILTYDATA_logo_purple_M.png'
               }
