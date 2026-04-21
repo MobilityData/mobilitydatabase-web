@@ -11,10 +11,10 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { type LngLatTuple } from '../types';
 import { useTranslations } from 'next-intl';
 import { PopupTable } from './PopupTable';
-import { useTheme } from '@mui/material/styles';
 import { Box, Typography, Tooltip } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { getBoundsFromCoordinates } from './GtfsVisualizationMap.functions';
+import { useMapConfig } from '../hooks/useMapConfig';
 
 export interface GeoJSONData {
   type: 'FeatureCollection' | 'Feature' | 'GeometryCollection';
@@ -42,7 +42,7 @@ export interface MapProps {
 export const MapGeoJSON = (
   props: React.PropsWithChildren<MapProps>,
 ): React.ReactElement => {
-  const theme = useTheme();
+  const mapCfg = useMapConfig();
   const t = useTranslations('feeds');
   const { geoJSONData, displayMapDetails = true } = props;
   const [popupInfo, setPopupInfo] = React.useState<{
@@ -92,7 +92,7 @@ export const MapGeoJSON = (
           sources: {
             'raster-tiles': {
               type: 'raster',
-              tiles: [theme.map.basemapTileUrl],
+              tiles: [mapCfg.basemapTileUrl],
               tileSize: 256,
               attribution:
                 '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -118,11 +118,7 @@ export const MapGeoJSON = (
             id='geojson-fill'
             type='fill'
             paint={{
-              'fill-color': [
-                'coalesce',
-                ['get', 'color'],
-                theme.palette.primary.main,
-              ],
+              'fill-color': ['coalesce', ['get', 'color'], mapCfg.primaryMain],
               'fill-opacity': 0.3,
             }}
           />
@@ -130,11 +126,7 @@ export const MapGeoJSON = (
             id='geojson-outline'
             type='line'
             paint={{
-              'line-color': [
-                'coalesce',
-                ['get', 'color'],
-                theme.palette.primary.main,
-              ],
+              'line-color': ['coalesce', ['get', 'color'], mapCfg.primaryMain],
               'line-width': 2,
             }}
           />
@@ -150,23 +142,23 @@ export const MapGeoJSON = (
             }}
             closeOnClick={false}
           >
-            <PopupTable properties={popupInfo.properties} theme={theme} />
+            <PopupTable properties={popupInfo.properties} />
           </Popup>
         )}
       </MapGL>
       {props.geoJSONData !== null && displayMapDetails && (
         <Box
-          sx={{
+          sx={(theme) => ({
             position: 'absolute',
             bottom: 20,
             right: 16,
-            background: theme.palette.background.paper,
+            background: theme.vars.palette.background.paper,
             padding: 1,
             borderRadius: 2,
             boxShadow: 3,
             maxWidth: 175,
             zIndex: 1000,
-          }}
+          })}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Typography style={{ fontSize: '0.85rem', fontWeight: 800 }}>
@@ -187,11 +179,11 @@ export const MapGeoJSON = (
               }
             >
               <InfoOutlinedIcon
-                sx={{
+                sx={(theme) => ({
                   fontSize: '16px',
-                  color: theme.palette.text.secondary,
+                  color: theme.vars.palette.text.secondary,
                   cursor: 'pointer',
-                }}
+                })}
               />
             </Tooltip>
           </Box>
@@ -206,13 +198,13 @@ export const MapGeoJSON = (
             }}
           />
           <Box
-            sx={{
+            sx={(theme) => ({
               display: 'flex',
               justifyContent: 'space-between',
               fontSize: '0.75rem',
               gap: 2,
-              color: theme.palette.text.secondary,
-            }}
+              color: theme.vars.palette.text.secondary,
+            })}
           >
             <span>{t('heatmapLower')}</span>
             <span>{t('heatmapHigher')}</span>

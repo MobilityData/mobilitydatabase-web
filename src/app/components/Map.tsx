@@ -9,9 +9,9 @@ import MapGL, {
 } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { type LngLatTuple } from '../types';
-import { useTheme } from '@mui/material/styles';
 import { Box } from '@mui/material';
 import { getBoundsFromCoordinates } from './GtfsVisualizationMap.functions';
+import { useMapConfig } from '../hooks/useMapConfig';
 
 export interface MapProps {
   polygon: LngLatTuple[];
@@ -20,7 +20,7 @@ export interface MapProps {
 export const Map = (
   props: React.PropsWithChildren<MapProps>,
 ): React.ReactElement => {
-  const theme = useTheme();
+  const mapCfg = useMapConfig();
 
   const bounds = React.useMemo(() => {
     return getBoundsFromCoordinates(props.polygon);
@@ -61,7 +61,7 @@ export const Map = (
             sources: {
               'raster-tiles': {
                 type: 'raster',
-                tiles: [theme.map.basemapTileUrl],
+                tiles: [mapCfg.basemapTileUrl],
                 tileSize: 256,
                 attribution:
                   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -83,7 +83,7 @@ export const Map = (
               id='polygon-fill'
               type='fill'
               paint={{
-                'fill-color': theme.palette.primary.main,
+                'fill-color': mapCfg.primaryMain,
                 'fill-opacity': 0.2,
               }}
             />
@@ -91,7 +91,7 @@ export const Map = (
               id='polygon-outline'
               type='line'
               paint={{
-                'line-color': theme.palette.primary.main,
+                'line-color': mapCfg.primaryMain,
                 'line-width': 2,
               }}
             />

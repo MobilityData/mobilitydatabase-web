@@ -11,7 +11,8 @@ import maplibregl, { type LngLatBoundsLike } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Protocol } from 'pmtiles';
 import { type LngLatTuple, type GtfsRoute } from '../types';
-import { Box, useTheme } from '@mui/material';
+import { Box } from '@mui/material';
+import { useMapConfig } from '../hooks/useMapConfig';
 
 import {
   MapElement,
@@ -68,7 +69,7 @@ export const GtfsVisualizationMap = ({
   stopRadius = 3,
   preview = true,
 }: GtfsVisualizationMapProps): React.ReactElement => {
-  const theme = useTheme();
+  const mapCfg = useMapConfig();
   const [hoverInfo, setHoverInfo] = useState<string[]>([]);
   const [mapElements, setMapElements] = useState<MapElementType[]>([]);
   const [mapClickRouteData, setMapClickRouteData] = useState<Record<
@@ -500,13 +501,13 @@ export const GtfsVisualizationMap = ({
     <MapProvider>
       <Box sx={{ display: 'flex', height: '100%' }}>
         <Box
-          sx={{
+          sx={(theme) => ({
             width: '100%',
             height: '100%',
             position: 'relative',
-            borderColor: theme.palette.primary.main,
+            borderColor: theme.vars.palette.primary.main,
             borderRadius: '5px',
-          }}
+          })}
         >
           {/* Hover/click info (top-left) */}
           <MapElement
@@ -565,7 +566,7 @@ export const GtfsVisualizationMap = ({
               sources: {
                 'raster-tiles': {
                   type: 'raster',
-                  tiles: [theme.map.basemapTileUrl],
+                  tiles: [mapCfg.basemapTileUrl],
                   tileSize: 256,
                   attribution:
                     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -589,15 +590,15 @@ export const GtfsVisualizationMap = ({
                   minzoom: 0,
                   maxzoom: 22,
                 },
-                RoutesWhiteLayer(filteredRouteTypeIds, theme),
+                RoutesWhiteLayer(filteredRouteTypeIds, mapCfg),
                 RouteLayer(filteredRoutes, filteredRouteTypeIds),
                 RoutesWhiteHighlightLayer(
                   mapClickRouteData?.route_id,
                   hoverInfo,
                   filteredRoutes,
-                  theme,
+                  mapCfg,
                 ),
-                StopLayer(hideStops, allSelectedRouteIds, stopRadius, theme),
+                StopLayer(hideStops, allSelectedRouteIds, stopRadius, mapCfg),
                 RouteHighlightLayer(
                   mapClickRouteData?.route_id,
                   hoverInfo,
@@ -609,13 +610,13 @@ export const GtfsVisualizationMap = ({
                   filteredRoutes,
                   mapClickStopData?.stop_id,
                   stopHighlightColorMap,
-                  theme,
+                  mapCfg,
                 ),
                 StopsHighlightOuterLayer(
                   hoverInfo,
                   hideStops,
                   filteredRoutes,
-                  theme,
+                  mapCfg,
                 ),
                 StopsIndexLayer(),
               ],
