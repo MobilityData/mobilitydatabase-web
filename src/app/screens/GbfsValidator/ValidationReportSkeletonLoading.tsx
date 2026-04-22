@@ -50,7 +50,7 @@ export function ValidationReportSkeletonLoading(): ReactElement {
             height: '100%',
             width: '100%',
             borderRadius: '5px',
-            backgroundColor: theme.palette.background.paper,
+            backgroundColor: theme.vars.palette.background.paper,
             p: 0,
           }}
         >

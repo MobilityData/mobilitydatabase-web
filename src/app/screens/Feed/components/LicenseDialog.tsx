@@ -99,7 +99,7 @@ export default function LicenseDialog({
             position: 'absolute',
             right: 8,
             top: 8,
-            color: (theme) => theme.palette.grey[500],
+            color: (theme) => theme.vars.palette.grey[500],
           }}
         >
           <CloseIcon />

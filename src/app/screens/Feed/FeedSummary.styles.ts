@@ -2,7 +2,7 @@ import { Box, Card, styled, Typography } from '@mui/material';
 import type { ElementType } from 'react';
 
 export const GroupCard = styled(Card)(({ theme }) => ({
-  background: theme.palette.background.default,
+  background: theme.vars.palette.background.default,
   border: 'none',
   padding: theme.spacing(2),
   marginBottom: theme.spacing(2),
@@ -17,7 +17,7 @@ export const GroupHeader = styled(Typography)<{ component?: ElementType }>(
     gap: theme.spacing(1),
     marginBottom: theme.spacing(1),
     alignItems: 'center',
-    color: theme.palette.text.secondary,
+    color: theme.vars.palette.text.secondary,
   }),
 );
 

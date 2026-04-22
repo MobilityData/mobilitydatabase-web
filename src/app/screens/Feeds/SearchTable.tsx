@@ -148,7 +148,7 @@ export default function SearchTable({
               borderTopLeftRadius: '6px',
             },
             '.feed-row:first-of-type .feed-column': {
-              borderTop: `1px solid ${theme.palette.divider}`,
+              borderTop: `1px solid ${theme.vars.palette.divider}`,
             },
             '.feed-row:last-child .feed-column:last-child': {
               borderBottomRightRadius: '6px',
@@ -157,13 +157,13 @@ export default function SearchTable({
               borderBottomLeftRadius: '6px',
             },
             '.feed-row:last-child .feed-column': {
-              borderBottom: `1px solid ${theme.palette.divider}`,
+              borderBottom: `1px solid ${theme.vars.palette.divider}`,
             },
             '.feed-row .feed-column:first-of-type': {
-              borderLeft: `1px solid ${theme.palette.divider}`,
+              borderLeft: `1px solid ${theme.vars.palette.divider}`,
             },
             '.feed-row .feed-column:last-child': {
-              borderRight: `1px solid ${theme.palette.divider}`,
+              borderRight: `1px solid ${theme.vars.palette.divider}`,
               minWidth: '180px',
             },
           }}
@@ -188,13 +188,13 @@ export default function SearchTable({
               }}
               sx={{
                 textDecoration: 'none',
-                backgroundColor: theme.palette.background.default,
+                backgroundColor: theme.vars.palette.background.default,
                 '.feed-column': {
                   fontSize: '16px',
-                  borderBottom: `1px solid ${theme.palette.divider}`,
+                  borderBottom: `1px solid ${theme.vars.palette.divider}`,
                 },
                 '&:hover, &:focus': {
-                  backgroundColor: theme.palette.background.paper,
+                  backgroundColor: theme.vars.palette.background.paper,
                   cursor: 'pointer',
                 },
               }}
@@ -286,8 +286,8 @@ export default function SearchTable({
             anchorEl={anchorEl}
             placement='top'
             sx={{
-              backgroundColor: theme.palette.background.paper,
-              boxShadow: theme.palette.boxShadow,
+              backgroundColor: theme.vars.palette.background.paper,
+              boxShadow: theme.vars.palette.boxShadow,
               zIndex: 1000,
             }}
           >

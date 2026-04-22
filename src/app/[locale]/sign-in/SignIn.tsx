@@ -280,7 +280,7 @@ export default function SignIn(): React.ReactElement {
             component='h5'
             sx={{
               zIndex: 1,
-              backgroundColor: theme.palette.background.default,
+              backgroundColor: theme.vars.palette.background.default,
               px: 2,
             }}
           >

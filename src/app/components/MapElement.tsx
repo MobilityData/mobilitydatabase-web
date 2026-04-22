@@ -1,10 +1,11 @@
 import * as React from 'react';
-import { Box, Typography, useTheme } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import {
   renderLocationTypeIcon,
   renderRouteTypeIcon,
 } from '../constants/RouteTypes';
 import { useTranslations } from 'next-intl';
+import { useMapConfig } from '../hooks/useMapConfig';
 
 export interface BaseMapElement {
   isStop: boolean;
@@ -35,7 +36,7 @@ export interface MapElementProps {
 export const MapElement = (
   props: React.PropsWithChildren<MapElementProps>,
 ): React.ReactElement => {
-  const theme = useTheme();
+  const mapCfg = useMapConfig();
   const t = useTranslations('feeds');
   const limit = props.dataDisplayLimit ?? 10;
   const formatSet = new Set<string>();
@@ -64,11 +65,11 @@ export const MapElement = (
           color:
             element.routeTextColor !== ''
               ? '#' + element.routeTextColor
-              : theme.map.routeTextColor,
+              : mapCfg.routeTextColor,
           background:
             element.routeColor !== ''
               ? '#' + element.routeColor
-              : theme.map.routeColor,
+              : mapCfg.routeColor,
           padding: '5px',
           borderRadius: '5px',
         }}
@@ -77,7 +78,7 @@ export const MapElement = (
           element.routeType != null ? element.routeType.toString() : '0',
           element.routeTextColor !== ''
             ? '#' + element.routeTextColor
-            : theme.map.routeTextColor,
+            : mapCfg.routeTextColor,
         )}
 
         <Typography gutterBottom sx={{ color: 'inherit', fontSize: 14, m: 0 }}>
@@ -126,15 +127,15 @@ export const MapElement = (
         return (
           <Box
             key={index}
-            sx={{
-              background: theme.palette.background.default,
+            sx={(theme) => ({
+              background: theme.vars.palette.background.default,
               borderRadius: '10px',
               boxShadow: '1px 1px 5px 1px rgba(0,0,0,0.2)',
               padding: '10px',
               my: 2,
               overflow: 'hidden',
               width: '250px',
-            }}
+            })}
           >
             <Typography variant='body1' sx={{ mb: '4px', fontSize: '12px' }}>
               {element.isStop ? 'Stop' : 'Route'}
@@ -143,7 +144,7 @@ export const MapElement = (
               <>
                 {renderStopMapElement(
                   element as MapStopElement,
-                  theme.palette.text.primary,
+                  mapCfg.textPrimary,
                 )}
               </>
             ) : (
@@ -154,15 +155,15 @@ export const MapElement = (
       })}
       {elementLeftover > 0 && (
         <Box
-          sx={{
-            background: theme.palette.background.default,
+          sx={(theme) => ({
+            background: theme.vars.palette.background.default,
             borderRadius: '10px',
             boxShadow: '1px 1px 5px 1px rgba(0,0,0,0.2)',
             padding: '10px',
             my: 2,
             overflow: 'hidden',
             width: '250px',
-          }}
+          })}
         >
           <Typography variant='body1' sx={{ mb: '4px', fontSize: '12px' }}>
             {t('andMoreElements', { count: elementLeftover })}

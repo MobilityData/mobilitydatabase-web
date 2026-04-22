@@ -588,11 +588,13 @@ export default function FeedsScreen(): React.ReactElement {
                           sx={{
                             mt: 2,
                             button: {
-                              backgroundColor: theme.palette.background.default,
-                              color: theme.palette.primary.main,
+                              backgroundColor:
+                                theme.vars.palette.background.default,
+                              color: theme.vars.palette.primary.main,
                               '&.Mui-selected': {
-                                backgroundColor: theme.palette.primary.main,
-                                color: theme.palette.background.default,
+                                backgroundColor:
+                                  theme.vars.palette.primary.main,
+                                color: theme.vars.palette.background.default,
                               },
                             },
                           }}

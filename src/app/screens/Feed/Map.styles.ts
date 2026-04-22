@@ -11,7 +11,7 @@ export const StyledMapControlPanel = styled(Box, {
   paddingTop: '100px', // to account for the fixed header on mobile
   flexDirection: 'column',
   flexWrap: 'nowrap',
-  backgroundColor: theme.palette.background.paper,
+  backgroundColor: theme.vars.palette.background.paper,
   zIndex: 10000,
   display: showMapControlMobile ? 'flex' : 'none',
   width: '100%',

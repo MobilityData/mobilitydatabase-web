@@ -44,7 +44,7 @@ export const PromotionTextColumn = styled(Box)(({ theme }) => ({
 }));
 
 export const ValidationReportTableStyles: SxProps<Theme> = (theme) => ({
-  backgroundColor: theme.palette.background.paper,
+  backgroundColor: theme.vars.palette.background.paper,
   height: 'fit-content',
   position: 'sticky',
   top: theme.spacing(10),
@@ -77,7 +77,7 @@ export const AlertErrorBoxStyles = (
   whiteSpace: 'pre-wrap',
   fontFamily:
     'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-  bgcolor: theme.palette.action.hover,
+  bgcolor: theme.vars.palette.action.hover,
   p: 1.5,
   borderRadius: 1,
   maxHeight: showDetails ? 400 : 140,
@@ -87,7 +87,7 @@ export const AlertErrorBoxStyles = (
 });
 
 export const ValidationErrorPathStyles = (theme: Theme): CSSProperties => ({
-  background: theme.palette.background.paper,
+  background: theme.vars.palette.background.paper,
   width: '100%',
   overflowX: 'auto',
   fontSize: '0.875em',
@@ -100,7 +100,7 @@ export const ValidationErrorPathStyles = (theme: Theme): CSSProperties => ({
 });
 
 export const ContentTitle = styled(Typography)(({ theme }) => ({
-  color: theme.palette.text.secondary,
+  color: theme.vars.palette.text.secondary,
   fontSize: theme.typography.subtitle2.fontSize,
   padding: `0 ${theme.spacing(2)}`,
   lineHeight: '48px',
@@ -117,7 +117,7 @@ export const highlightedPreSx: SxProps<Theme> = (theme: Theme) => ({
   m: 0,
   p: 1,
   borderRadius: 1,
-  backgroundColor: theme.palette.action.hover,
+  backgroundColor: theme.vars.palette.action.hover,
   maxHeight: 300,
   overflow: 'auto',
   whiteSpace: 'pre-wrap',
@@ -127,18 +127,18 @@ export const highlightedPreSx: SxProps<Theme> = (theme: Theme) => ({
 
 export const highlightedContainerSx: SxProps<Theme> = (theme: Theme) => ({
   border: '1px solid',
-  borderColor: theme.palette.divider,
+  borderColor: theme.vars.palette.divider,
   borderRadius: 2,
   overflow: 'hidden',
 });
 
 export const highlightedTitleSx: SxProps<Theme> = (theme: Theme) => ({
   width: '100%',
-  backgroundColor: theme.palette.background.default,
-  borderBottom: `1px solid ${theme.palette.divider}`,
+  backgroundColor: theme.vars.palette.background.default,
+  borderBottom: `1px solid ${theme.vars.palette.divider}`,
   p: 1,
   px: 1,
-  color: theme.palette.text.primary,
+  color: theme.vars.palette.text.primary,
   display: 'flex',
   alignItems: 'center',
   gap: 2,
@@ -148,7 +148,7 @@ export const highlightedInnerSx: SxProps<Theme> = (theme: Theme) => ({
   m: 0,
   p: 1,
   borderRadius: 1,
-  backgroundColor: theme.palette.action.hover,
+  backgroundColor: theme.vars.palette.action.hover,
   maxHeight: 300,
   overflow: 'auto',
   fontFamily: 'monospace',
@@ -163,7 +163,7 @@ export const entryRowSx = (
   alignItems: 'flex-start',
   px: 0.5,
   borderLeft: isHitProp ? '3px solid' : undefined,
-  borderColor: isHitProp ? theme.palette.error.main : undefined,
+  borderColor: isHitProp ? theme.vars.palette.error.main : undefined,
   backgroundColor: isHitProp ? 'rgba(244,67,54,0.08)' : undefined,
   borderRadius: 0.5,
 });
@@ -174,7 +174,7 @@ export const keyTypographySx = (
 ): SxProps<Theme> => ({
   fontFamily: 'inherit',
   fontWeight: isHitProp ? 700 : 400,
-  color: isHitProp ? theme.palette.error.main : 'inherit',
+  color: isHitProp ? theme.vars.palette.error.main : 'inherit',
 });
 
 export const listItemSx = (
@@ -183,7 +183,7 @@ export const listItemSx = (
 ): SxProps<Theme> => ({
   backgroundColor: isOffender ? 'rgba(244,67,54,0.08)' : '',
   borderLeft: isOffender ? '3px solid' : '',
-  borderColor: isOffender ? theme.palette.error.main : '',
+  borderColor: isOffender ? theme.vars.palette.error.main : '',
   pl: isOffender ? 1 : 0,
   borderRadius: 0.5,
   wordBreak: 'break-word',
@@ -199,12 +199,12 @@ export const outlinePreSx: SxProps<Theme> = (theme: Theme) => ({
   m: 0,
   p: 1,
   borderRadius: 1,
-  backgroundColor: theme.palette.action.hover,
+  backgroundColor: theme.vars.palette.action.hover,
   maxHeight: 300,
   overflow: 'auto',
   whiteSpace: 'pre-wrap',
   wordBreak: 'break-word',
-  outline: `2px solid ${theme.palette.error.main}`,
+  outline: `2px solid ${theme.vars.palette.error.main}`,
   outlineOffset: '-2px',
 });
 
@@ -219,14 +219,14 @@ export const rowButtonOutlineErrorSx: SxProps<Theme> = (theme: Theme) => ({
   px: theme.spacing(1),
   py: theme.spacing(0.5),
   borderRadius: '5px',
-  border: `1px solid ${theme.palette.error.main}`,
-  color: theme.palette.error.main,
+  border: `1px solid ${theme.vars.palette.error.main}`,
+  color: theme.vars.palette.error.main,
   fontSize: '0.8125rem',
   fontFamily: fontFamily.secondary,
   fontWeight: 500,
   background: 'transparent',
   '&:hover': {
-    backgroundColor: theme.palette.error.light,
-    color: theme.palette.error.contrastText,
+    backgroundColor: theme.vars.palette.error.light,
+    color: theme.vars.palette.error.contrastText,
   },
 });

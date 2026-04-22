@@ -9,7 +9,8 @@ import {
   generateStopColorExpression,
   generateRouteOutlineColorExpression,
 } from './GtfsVisualizationMap.functions';
-import { type Theme } from '@mui/material';
+import { type MapConfig } from '../Theme';
+import { grey } from '@mui/material/colors';
 
 // layer helpers
 
@@ -45,7 +46,7 @@ export const stopsBaseFilter = (
 
 export const RoutesWhiteLayer = (
   filteredRouteTypeIds: string[],
-  theme: Theme,
+  mapCfg: MapConfig,
 ): LayerSpecification => {
   return {
     id: 'routes-white',
@@ -55,8 +56,8 @@ export const RoutesWhiteLayer = (
     type: 'line',
     paint: {
       'line-color': generateRouteOutlineColorExpression(
-        theme.map.basemapTileOverallColor ?? '#ffffff',
-        theme.palette.grey[500],
+        mapCfg.basemapTileOverallColor ?? '#ffffff',
+        grey[500],
       ),
       'line-opacity': 1,
       'line-width': ['match', ['get', 'route_type'], '3', 5, '1', 10, 7],
@@ -105,7 +106,7 @@ export const RoutesWhiteHighlightLayer = (
   routeId: string | undefined,
   hoverInfo: string[],
   filteredRoutes: string[],
-  theme: Theme,
+  mapCfg: MapConfig,
 ): LayerSpecification => {
   return {
     id: 'routes-white-highlight',
@@ -114,8 +115,8 @@ export const RoutesWhiteHighlightLayer = (
     type: 'line',
     paint: {
       'line-color': generateRouteOutlineColorExpression(
-        theme.map.basemapTileOverallColor ?? '#ffffff',
-        theme.palette.grey[500],
+        mapCfg.basemapTileOverallColor ?? '#ffffff',
+        grey[500],
       ),
       'line-opacity': 1,
       'line-width': ['match', ['get', 'route_type'], '3', 10, '1', 14, 10],
@@ -162,7 +163,7 @@ export const StopLayer = (
   hideStops: boolean,
   allSelectedRouteIds: string[],
   stopRadius: number,
-  theme: Theme,
+  mapCfg: MapConfig,
 ): LayerSpecification => {
   return {
     id: 'stops',
@@ -172,7 +173,7 @@ export const StopLayer = (
     type: 'circle',
     paint: {
       'circle-radius': stopRadius,
-      'circle-color': theme.palette.text.primary,
+      'circle-color': mapCfg.textPrimary,
       'circle-opacity': 0.4,
     },
     minzoom: 12,
@@ -186,7 +187,7 @@ export const StopsHighlightLayer = (
   filteredRoutes: string[],
   stopId: string | undefined,
   stopHighlightColorMap: Record<string, string>,
-  theme: Theme,
+  mapCfg: MapConfig,
 ): LayerSpecification => {
   return {
     id: 'stops-highlight',
@@ -197,8 +198,8 @@ export const StopsHighlightLayer = (
       'circle-radius': 7,
       'circle-color': generateStopColorExpression(
         stopHighlightColorMap,
-        theme.map.basemapTileOverallColor ?? '#ffffff',
-        theme.palette.grey[500],
+        mapCfg.basemapTileOverallColor ?? '#ffffff',
+        grey[500],
       ),
       'circle-opacity': 1,
     },
@@ -238,7 +239,7 @@ export const StopsHighlightOuterLayer = (
   hoverInfo: string[],
   hideStops: boolean,
   filteredRoutes: string[],
-  theme: Theme,
+  mapCfg: MapConfig,
 ): LayerSpecification => {
   return {
     id: 'stops-highlight-outer',
@@ -247,7 +248,7 @@ export const StopsHighlightOuterLayer = (
     type: 'circle',
     paint: {
       'circle-radius': 3,
-      'circle-color': theme.palette.background.paper,
+      'circle-color': mapCfg.backgroundPaper,
       'circle-opacity': 1,
     },
     minzoom: 11,

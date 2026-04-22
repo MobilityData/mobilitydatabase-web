@@ -13,7 +13,7 @@ export default function PrivacyPolicy(): React.ReactElement {
           display: 'flex',
           flexDirection: 'column',
           width: '100%',
-          background: theme.palette.background.paper,
+          background: theme.vars.palette.background.paper,
         }}
       >
         <Typography

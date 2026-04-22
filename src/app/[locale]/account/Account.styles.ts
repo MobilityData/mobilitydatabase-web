@@ -25,10 +25,10 @@ export const tokenDisplayElementSx: SxProps<Theme> = (theme) => ({
   wordWrap: 'break-word',
   width: '100%',
   maxWidth: '610px',
-  backgroundColor: theme.palette.background.paper,
+  backgroundColor: theme.vars.palette.background.paper,
   p: 2,
   borderRadius: '6px',
-  border: `1px solid ${theme.palette.primary.main}`,
+  border: `1px solid ${theme.vars.palette.primary.main}`,
 });
 
 export const tokenActionButtonsSx: SxProps<Theme> = {

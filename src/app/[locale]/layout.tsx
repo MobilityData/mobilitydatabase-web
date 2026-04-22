@@ -1,6 +1,7 @@
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 import { GoogleAnalytics } from '@next/third-parties/google';
+import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
 import ThemeRegistry from '../registry';
 import { Providers } from '../providers';
 import { type ReactElement } from 'react';
@@ -95,12 +96,13 @@ export default async function LocaleLayout({
   ]);
 
   return (
-    <html lang={validLocale}>
+    <html lang={validLocale} suppressHydrationWarning>
       <head>
         <link rel='preconnect' href='https://firebaseapp.com' />
         <link rel='dns-prefetch' href='https://firebaseapp.com' />
       </head>
       <body className={`${mulish.variable} ${ibmPlexMono.variable}`}>
+        <InitColorSchemeScript attribute='class' />
         <ThemeRegistry>
           <NextIntlClientProvider messages={messages}>
             <Providers remoteConfig={remoteConfig}>

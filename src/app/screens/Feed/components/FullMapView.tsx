@@ -215,7 +215,7 @@ export default function FullMapView({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: theme.palette.background.default,
+        backgroundColor: theme.vars.palette.background.default,
       }}
     >
       <Stack spacing={2} sx={{ maxWidth: 720 }}>
@@ -252,7 +252,7 @@ export default function FullMapView({
           <Box
             width={'100%'}
             sx={{
-              backgroundColor: theme.palette.background.paper,
+              backgroundColor: theme.vars.palette.background.paper,
               zIndex: 1,
               top: 0,
               left: 0,
@@ -385,7 +385,7 @@ export default function FullMapView({
             sx={{
               mr: 2,
               borderRadius: '6px',
-              border: `2px solid ${theme.palette.primary.main}`,
+              border: `2px solid ${theme.vars.palette.primary.main}`,
               overflow: 'hidden',
               flex: 1,
               ml: { xs: 2, md: 0 },
@@ -457,8 +457,8 @@ export default function FullMapView({
                       p: 1.5,
                       width: 300,
                       borderRadius: 2,
-                      border: `1px solid ${theme.palette.divider}`,
-                      backgroundColor: theme.palette.background.paper,
+                      border: `1px solid ${theme.vars.palette.divider}`,
+                      backgroundColor: theme.vars.palette.background.paper,
                     }}
                   >
                     <Typography
@@ -470,7 +470,7 @@ export default function FullMapView({
 
                     <Typography
                       variant='caption'
-                      sx={{ color: theme.palette.text.secondary }}
+                      sx={{ color: theme.vars.palette.text.secondary }}
                     >
                       {t('fullMapView.style.stopSize')}
                     </Typography>
@@ -522,7 +522,7 @@ export default function FullMapView({
                         />
                         <Typography
                           variant='caption'
-                          sx={{ color: theme.palette.text.secondary }}
+                          sx={{ color: theme.vars.palette.text.secondary }}
                         >
                           {t('fullMapView.style.radius', {
                             px: customStopRadius,

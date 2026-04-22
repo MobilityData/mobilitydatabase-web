@@ -39,7 +39,7 @@ export const SelectedRoutesStopsPanel = (
           width: 250,
           transform: 'translateY(-0%)',
           zIndex: 1000,
-          bgcolor: theme.palette.background.default,
+          bgcolor: theme.vars.palette.background.default,
           borderRadius: '12px',
           boxShadow: '1px 1px 8px rgba(0,0,0,0.25)',
           display: 'flex',
@@ -50,7 +50,7 @@ export const SelectedRoutesStopsPanel = (
         <Box
           sx={{
             p: 1.5,
-            borderBottom: `1px solid ${theme.palette.divider}`,
+            borderBottom: `1px solid ${theme.vars.palette.divider}`,
             cursor: 'move',
           }}
           className='drag-handle'
@@ -63,7 +63,7 @@ export const SelectedRoutesStopsPanel = (
           </Typography>
           <Typography
             variant='caption'
-            sx={{ color: theme.palette.text.secondary }}
+            sx={{ color: theme.vars.palette.text.secondary }}
           >
             {t('selectedRouteStops.routeIds_one', {
               count: filteredRoutes.length,
@@ -92,16 +92,16 @@ export const SelectedRoutesStopsPanel = (
                   mb: 0.5,
                   borderRadius: '10px',
                   border: isActive
-                    ? `2px solid ${theme.palette.primary.main}`
-                    : `1px solid ${theme.palette.divider}`,
+                    ? `2px solid ${theme.vars.palette.primary.main}`
+                    : `1px solid ${theme.vars.palette.divider}`,
                   backgroundColor: isActive
-                    ? theme.palette.action.selected
+                    ? theme.vars.palette.action.selected
                     : 'transparent',
                   transition:
                     'background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease',
                   cursor: 'pointer',
                   '&:hover': {
-                    backgroundColor: theme.palette.action.hover,
+                    backgroundColor: theme.vars.palette.action.hover,
                   },
                   boxShadow: isActive
                     ? '0 0 0 2px rgba(0,0,0,0.06) inset'
@@ -116,7 +116,7 @@ export const SelectedRoutesStopsPanel = (
                 </Typography>
                 <Typography
                   variant='caption'
-                  sx={{ color: theme.palette.text.secondary }}
+                  sx={{ color: theme.vars.palette.text.secondary }}
                 >
                   {t('selectedRouteStops.stopId')} {s.stopId}
                 </Typography>

@@ -34,7 +34,7 @@ export default function GbfsValidator(): React.ReactElement {
             sx={{
               ...gbfsValidatorHeroBg,
               padding: 2,
-              color: theme.palette.common.black,
+              color: theme.vars.palette.common.black,
               marginTop: '-32px',
               height: '400px',
               display: 'flex',

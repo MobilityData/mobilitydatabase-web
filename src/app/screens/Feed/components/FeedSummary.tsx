@@ -368,8 +368,8 @@ export default function FeedSummary({
                       whiteSpace: 'nowrap',
                       overflowX: 'auto',
                       borderRadius: '5px',
-                      backgroundColor: theme.palette.secondary.light,
-                      color: theme.palette.text.lightContrast,
+                      backgroundColor: theme.vars.palette.secondary.light,
+                      color: theme.vars.palette.text.lightContrast,
                       py: 1.5,
                       px: 2,
                       fontSize: '0.875em',
@@ -856,7 +856,7 @@ export default function FeedSummary({
             position: 'absolute',
             right: 8,
             top: 8,
-            color: (theme) => theme.palette.grey[500],
+            color: (theme) => theme.vars.palette.grey[500],
           })}
         >
           <CloseIcon />

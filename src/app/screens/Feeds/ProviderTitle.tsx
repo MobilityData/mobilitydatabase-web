@@ -33,7 +33,7 @@ export default function ProviderTitle({
           fontStyle: 'italic',
           fontSize: '14px',
           fontWeight: 'bold',
-          color: theme.palette.primary.main,
+          color: theme.vars.palette.primary.main,
           padding: 2,
         }}
         onMouseEnter={(event) => {

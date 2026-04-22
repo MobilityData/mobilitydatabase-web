@@ -23,7 +23,7 @@ export const FooterLink: React.FC<FooterLinkProps> = ({
       target={external === true ? '_blank' : undefined}
       rel={external === true ? 'noopener noreferrer' : undefined}
       sx={{
-        color: theme.palette.text.secondary,
+        color: theme.vars.palette.text.secondary,
         textDecoration: 'none',
         fontSize: theme.typography.body2.fontSize,
         fontFamily: fontFamily.secondary,
@@ -31,7 +31,7 @@ export const FooterLink: React.FC<FooterLinkProps> = ({
         marginBottom: 1.5,
         transition: 'color 0.2s',
         '&:hover': {
-          color: theme.palette.text.primary,
+          color: theme.vars.palette.text.primary,
         },
       }}
     >

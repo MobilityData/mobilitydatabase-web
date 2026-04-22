@@ -1,10 +1,7 @@
 'use client';
 
-import {
-  type PaletteColor,
-  type Theme,
-  createTheme,
-} from '@mui/material/styles';
+import { type PaletteColor, createTheme } from '@mui/material/styles';
+import type {} from '@mui/material/themeCssVarsAugmentation';
 import { type Property } from 'csstype';
 
 declare module '@mui/material/styles' {
@@ -13,23 +10,6 @@ declare module '@mui/material/styles' {
   }
   interface PaletteOptions {
     boxShadow?: string;
-  }
-  interface Theme {
-    map: {
-      basemapTileUrl: string;
-      basemapTileOverallColor?: string;
-      routeColor: string;
-      routeTextColor: string;
-    };
-  }
-
-  interface ThemeOptions {
-    map?: {
-      basemapTileUrl?: string;
-      basemapTileOverallColor?: string;
-      routeColor?: string;
-      routeTextColor?: string;
-    };
   }
 
   interface TypeText {
@@ -65,7 +45,7 @@ export const fontFamily = {
   secondary: 'var(--font-ibm-plex-mono)',
 };
 
-const palette = {
+const lightPalette = {
   primary: {
     main: '#3959fa',
     dark: '#002eea',
@@ -131,140 +111,170 @@ const darkPalette = {
   boxShadow: '0px 1px 4px 2px rgba(0,0,0,0.6)',
 };
 
-export const getTheme = (mode: ThemeModeEnum): Theme => {
-  const isLightMode = mode === ThemeModeEnum.light;
-  const chosenPalette = !isLightMode ? darkPalette : palette;
-  return createTheme({
-    palette: { ...chosenPalette, mode },
-    map: {
-      basemapTileUrl: isLightMode
-        ? 'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
-        : 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-      basemapTileOverallColor: isLightMode ? '#f6f6f6' : '#0d0d0d',
-      routeColor: chosenPalette.background.default,
-      routeTextColor: chosenPalette.text.primary,
+/**
+ * Map configuration per color scheme.
+ * Extracted from the theme because map tile URLs and canvas colors
+ * need resolved JS values (not CSS variable references).
+ * Use with `useColorScheme()` to pick the right config.
+ */
+export const mapConfig = {
+  light: {
+    basemapTileUrl:
+      'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    basemapTileOverallColor: '#f6f6f6',
+    routeColor: lightPalette.background.default,
+    routeTextColor: lightPalette.text.primary,
+    textPrimary: lightPalette.text.primary,
+    backgroundPaper: lightPalette.background.paper,
+    primaryMain: lightPalette.primary.main,
+  },
+  dark: {
+    basemapTileUrl:
+      'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    basemapTileOverallColor: '#0d0d0d',
+    routeColor: darkPalette.background.default,
+    routeTextColor: darkPalette.text.primary,
+    textPrimary: darkPalette.text.primary,
+    backgroundPaper: darkPalette.background.paper,
+    primaryMain: darkPalette.primary.main,
+  },
+} as const;
+
+export type MapConfig = (typeof mapConfig)[keyof typeof mapConfig];
+
+export const theme = createTheme({
+  cssVariables: {
+    colorSchemeSelector: 'class',
+  },
+  colorSchemes: {
+    light: {
+      palette: lightPalette,
     },
-    mixins: {
-      code: {
-        contrastText: '#f1fa8c',
-        command: {
+    dark: {
+      palette: darkPalette,
+    },
+  },
+  mixins: {
+    code: {
+      contrastText: '#f1fa8c',
+      command: {
+        fontWeight: 'bold',
+        color: '#ff79c6',
+      },
+    },
+  },
+  typography: {
+    fontFamily: fontFamily.primary,
+  },
+  components: {
+    MuiInputAdornment: {
+      styleOverrides: {
+        root: {
+          color: 'inherit',
+        },
+      },
+    },
+    MuiFormLabel: {
+      styleOverrides: {
+        root: {
+          color: 'var(--mui-palette-text-primary)',
           fontWeight: 'bold',
-          color: '#ff79c6',
         },
       },
     },
-    typography: {
-      fontFamily: fontFamily.primary,
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '&.md-small-input': {
+            input: { paddingTop: '7px', paddingBottom: '7px' },
+          },
+          '.MuiOutlinedInput-root fieldset': {
+            borderColor: 'var(--mui-palette-divider)',
+          },
+        },
+      },
     },
-    components: {
-      MuiInputAdornment: {
-        styleOverrides: {
-          root: {
-            color: 'inherit',
+    MuiSelect: {
+      styleOverrides: {
+        root: {
+          '.MuiSelect-select': { paddingTop: '7px', paddingBottom: '7px' },
+          '.MuiSvgIcon-root': { color: 'var(--mui-palette-text-primary)' },
+          '&.MuiInputBase-root fieldset': {
+            borderColor: 'var(--mui-palette-divider)',
           },
         },
       },
-      MuiFormLabel: {
-        styleOverrides: {
-          root: {
-            color: chosenPalette.text.primary,
-            fontWeight: 'bold',
-          },
-        },
-      },
-      MuiTextField: {
-        styleOverrides: {
-          root: {
-            '&.md-small-input': {
-              input: { paddingTop: '7px', paddingBottom: '7px' },
-            },
-            '.MuiOutlinedInput-root fieldset': {
-              borderColor: chosenPalette.divider,
-            },
-          },
-        },
-      },
-      MuiSelect: {
-        styleOverrides: {
-          root: {
-            '.MuiSelect-select': { paddingTop: '7px', paddingBottom: '7px' },
-            '.MuiSvgIcon-root': { color: chosenPalette.text.primary },
-            '&.MuiInputBase-root fieldset': {
-              borderColor: chosenPalette.divider,
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          textTransform: 'none' as const,
+          boxShadow: 'none',
+          fontFamily: fontFamily.secondary,
+          boxSizing: 'border-box' as const,
+          '&.MuiButton-contained': {
+            border: '2px solid transparent',
+            color: 'var(--mui-palette-background-default)',
+            '&.Mui-disabled': {
+              backgroundColor: 'var(--mui-palette-text-disabled)',
             },
           },
-        },
-      },
-      MuiButton: {
-        styleOverrides: {
-          root: {
-            textTransform: 'none',
+          '&.MuiButton-containedPrimary:hover': {
             boxShadow: 'none',
-            fontFamily: fontFamily.secondary,
-            boxSizing: 'border-box',
-            '&.MuiButton-contained': {
-              border: '2px solid transparent',
-              color: chosenPalette.background.default,
-              '&.Mui-disabled': {
-                backgroundColor: chosenPalette.text.disabled,
+            backgroundColor: 'transparent',
+            border: '2px solid var(--mui-palette-primary-main)',
+            color: 'var(--mui-palette-primary-main)',
+          },
+          '&.MuiButton-outlinedPrimary': {
+            border: '2px solid var(--mui-palette-primary-main)',
+            padding: '6px 16px',
+          },
+          '&.MuiButton-outlinedPrimary:hover': {
+            backgroundColor: 'var(--mui-palette-primary-main)',
+            color: 'var(--mui-palette-primary-contrastText)',
+            ...theme.applyStyles('dark', {
+              color: 'var(--mui-palette-background-default)',
+            }),
+          },
+          '&.MuiButton-text.inline': {
+            fontFamily: fontFamily.primary,
+            fontSize: 'inherit',
+            padding: '0 8px',
+            lineHeight: 'normal',
+            verticalAlign: 'baseline',
+            '&.line-start': {
+              paddingLeft: 0,
+            },
+            '.MuiButton-endIcon': {
+              marginRight: 0,
+              svg: {
+                color: 'inherit',
               },
             },
-            '&.MuiButton-containedPrimary:hover': {
-              boxShadow: 'none',
-              backgroundColor: 'transparent',
-              border: `2px solid ${chosenPalette.primary.main}`,
-              color: chosenPalette.primary.main,
-            },
-            '&.MuiButton-outlinedPrimary': {
-              border: `2px solid ${chosenPalette.primary.main}`,
-              padding: '6px 16px',
-            },
-            '&.MuiButton-outlinedPrimary:hover': {
-              backgroundColor: chosenPalette.primary.main,
-              color: isLightMode
-                ? chosenPalette.primary.contrastText
-                : chosenPalette.background.default,
-            },
-            '&.MuiButton-text.inline': {
-              fontFamily: fontFamily.primary,
-              fontSize: 'inherit',
-              padding: `0 8px`,
-              lineHeight: 'normal',
-              verticalAlign: 'baseline',
-              '&.line-start': {
-                paddingLeft: 0,
-              },
-              '.MuiButton-endIcon': {
-                marginRight: 0,
-                svg: {
-                  color: 'inherit',
-                },
-              },
-            },
+          },
+        }),
+      },
+    },
+    MuiTypography: {
+      variants: [
+        {
+          props: { variant: 'sectionTitle' },
+          style: {
+            color: 'var(--mui-palette-primary-main)',
+            fontWeight: 'bold',
+            fontSize: '1.5rem',
+            marginBottom: '0.5rem',
+            marginTop: '1rem',
           },
         },
-      },
-      MuiTypography: {
-        variants: [
-          {
-            props: { variant: 'sectionTitle' },
-            style: {
-              color: chosenPalette.primary?.main,
-              fontWeight: 'bold',
-              fontSize: '1.5rem',
-              marginBottom: '0.5rem',
-              marginTop: '1rem',
-            },
-          },
-        ],
-        styleOverrides: {
-          h1: {
-            fontWeight: 700,
-            color: chosenPalette.primary.main,
-            fontSize: '2.125rem', // h4 size
-          },
+      ],
+      styleOverrides: {
+        h1: {
+          fontWeight: 700,
+          color: 'var(--mui-palette-primary-main)',
+          fontSize: '2.125rem', // h4 size
         },
       },
     },
-  });
-};
+  },
+});

@@ -158,8 +158,8 @@ export default function GbfsFeedSearchInput({
         padding: 2,
         pt: 3,
         marginTop: 2,
-        backgroundColor: theme.palette.background.default,
-        border: '3px solid ' + theme.palette.text.primary,
+        backgroundColor: theme.vars.palette.background.default,
+        border: '3px solid ' + theme.vars.palette.text.primary,
         borderRadius: '5px',
       }}
     >

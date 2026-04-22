@@ -122,11 +122,11 @@ const DetailPanel: React.FC<RenderDetailPanelProps> = ({ row }) => {
             <Brush
               dataKey='date'
               height={30}
-              stroke={theme.palette.primary.main}
+              stroke={theme.vars.palette.primary.main}
             />
             <Line
               dataKey='count'
-              stroke={theme.palette.error.main}
+              stroke={theme.vars.palette.error.main}
               strokeWidth={2}
             />
           </LineChart>

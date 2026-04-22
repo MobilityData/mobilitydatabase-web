@@ -20,8 +20,8 @@ export default function PopoverList({
       anchorEl={anchorEl}
       placement='top'
       sx={{
-        backgroundColor: theme.palette.background.paper,
-        boxShadow: theme.palette.boxShadow,
+        backgroundColor: theme.vars.palette.background.paper,
+        boxShadow: theme.vars.palette.boxShadow,
         zIndex: 1000,
       }}
     >

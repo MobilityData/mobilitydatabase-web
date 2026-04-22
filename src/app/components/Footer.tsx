@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { Box, IconButton, Typography, useTheme } from '@mui/material';
+import { useColorScheme } from '@mui/material/styles';
 import { GitHub, LinkedIn, OpenInNew } from '@mui/icons-material';
 import { MOBILITY_DATA_LINKS } from '../constants/Navigation';
 import { fontFamily } from '../Theme';
@@ -11,6 +12,7 @@ import { useRemoteConfig } from '../context/RemoteConfigProvider';
 
 const Footer: React.FC = () => {
   const theme = useTheme();
+  const { colorScheme } = useColorScheme();
   const t = useTranslations('footer');
   const { config } = useRemoteConfig();
   const FOOTER_COLUMN_WIDTH = '185px';
@@ -34,7 +36,7 @@ const Footer: React.FC = () => {
     <Box
       component='footer'
       sx={{
-        backgroundColor: theme.palette.background.paper,
+        backgroundColor: theme.vars.palette.background.paper,
         width: '100%',
         boxSizing: 'border-box',
         mt: 6,
@@ -58,7 +60,7 @@ const Footer: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
             <Image
               src={
-                theme.palette.mode === 'light'
+                colorScheme !== 'dark'
                   ? '/assets/MOBILTYDATA_logo_light_blue_M.png'
                   : '/assets/MOBILTYDATA_logo_purple_M.png'
               }
@@ -78,7 +80,7 @@ const Footer: React.FC = () => {
 
           <Typography
             sx={{
-              color: theme.palette.text.secondary,
+              color: theme.vars.palette.text.secondary,
               fontSize: theme.typography.body2.fontSize,
               lineHeight: 1.6,
               mb: 3,
@@ -207,8 +209,8 @@ const Footer: React.FC = () => {
       {/* Bottom bar */}
       <Box
         sx={{
-          backgroundColor: theme.palette.background.paper,
-          borderTop: `1px solid ${theme.palette.divider}`,
+          backgroundColor: theme.vars.palette.background.paper,
+          borderTop: `1px solid ${theme.vars.palette.divider}`,
           px: { xs: 3, md: 8 },
           py: 2,
         }}
@@ -227,7 +229,7 @@ const Footer: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Image
               src={
-                theme.palette.mode === 'light'
+                colorScheme !== 'dark'
                   ? '/assets/MOBILTYDATA_logo_light_blue_M.png'
                   : '/assets/MOBILTYDATA_logo_purple_M.png'
               }
@@ -238,7 +240,7 @@ const Footer: React.FC = () => {
             />
             <Typography
               sx={{
-                color: theme.palette.text.secondary,
+                color: theme.vars.palette.text.secondary,
                 fontSize: '0.8rem',
                 fontFamily: fontFamily.secondary,
               }}
@@ -248,7 +250,7 @@ const Footer: React.FC = () => {
           </Box>
           <Typography
             sx={{
-              color: theme.palette.text.secondary,
+              color: theme.vars.palette.text.secondary,
               fontSize: '0.8rem',
               fontFamily: fontFamily.secondary,
             }}
