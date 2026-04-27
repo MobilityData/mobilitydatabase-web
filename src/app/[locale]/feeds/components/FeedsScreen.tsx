@@ -557,7 +557,7 @@ export default function FeedsScreen(): React.ReactElement {
                           <Box
                             sx={{
                               display: 'flex',
-                              alignItems: 'center',
+                              alignItems: 'end',
                               gap: 2,
                               mr: 1,
                               flexWrap: 'wrap',
