@@ -252,7 +252,7 @@ export default function GtfsFeatureTracker({
                   />
                 ) : (
                   <Box
-                    aria-label={consumer.name}
+                    aria-hidden='true'
                     sx={(theme) => ({
                       width: 28,
                       height: 28,
