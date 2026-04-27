@@ -39,6 +39,7 @@ import {
   deriveFilterFlags,
   buildSearchUrl,
 } from '../lib/useFeedsSearch';
+import { toFeatureAnchor } from '../../../utils/featureAnchor';
 
 export default function FeedsScreen(): React.ReactElement {
   const theme = useTheme();
@@ -67,6 +68,16 @@ export default function FeedsScreen(): React.ReactElement {
     areFeatureFiltersEnabled,
     areGBFSFiltersEnabled,
   } = deriveFilterFlags(selectedFeedTypes);
+
+  const featureTrackerHref =
+    selectedFeatures.length === 1
+      ? `/gtfs-feature-tracker#${toFeatureAnchor(selectedFeatures[0])}`
+      : '/gtfs-feature-tracker';
+
+  const featureTrackerLabel =
+    selectedFeatures.length === 1
+      ? t('featureTrackerBannerSingle', { feature: selectedFeatures[0] })
+      : t('featureTrackerBanner');
 
   // SWR-powered data fetching - keyed off URL params
   const { feedsData, isLoading, isValidating, isError, searchLimit } =
@@ -321,14 +332,14 @@ export default function FeedsScreen(): React.ReactElement {
                 {selectedFeatures.length > 0 && (
                   <Button
                     component={NextLink}
-                    href='/gtfs-feature-tracker'
+                    href={featureTrackerHref}
                     variant='outlined'
                     size='small'
                     target='_blank'
                     color='primary'
                     endIcon={<OpenInNew />}
                   >
-                    {t('featureTrackerBanner')}
+                    {featureTrackerLabel}
                   </Button>
                 )}
                 {selectedFeedTypes.gtfs && (

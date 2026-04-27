@@ -144,6 +144,7 @@
     "deprecated": "Deprecated",
     "searchPlaceholder": "Transit provider, feed name, or location",
     "featureTrackerBanner": "See which trip planners use these features",
+    "featureTrackerBannerSingle": "See which trip planners use {feature}",
     "noResults": "We're sorry, we found no search results for ''{activeSearch}''.",
     "searchSuggestions": "Search suggestions: ",
     "searchTips": {

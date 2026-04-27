@@ -1,6 +1,14 @@
 'use client';
 
-import { useState, useMemo, memo, type ReactElement, Fragment } from 'react';
+import {
+  useState,
+  useMemo,
+  useEffect,
+  useRef,
+  memo,
+  type ReactElement,
+  Fragment,
+} from 'react';
 import {
   Box,
   Typography,
@@ -36,6 +44,7 @@ import {
   formatDate,
   tokenizeDetail,
 } from './GtfsFeatureTracker.helpers';
+import { toFeatureAnchor } from '../../../utils/featureAnchor';
 
 const CONTRIBUTE_URL = 'https://forms.gle/W3iJGgoaPDYLypZ38';
 
@@ -160,9 +169,15 @@ export default function GtfsFeatureTracker({
   knownFields,
 }: GtfsFeatureTrackerProps): ReactElement {
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [highlightedFeatureAnchor, setHighlightedFeatureAnchor] = useState<
+    string | null
+  >(null);
   const [expandedCategories, setExpandedCategories] = useState<
     Record<string, boolean>
   >({});
+  const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   const knownFieldsSet = useMemo(() => new Set(knownFields), [knownFields]);
 
@@ -195,6 +210,42 @@ export default function GtfsFeatureTracker({
   const isCategoryExpanded = (category: string): boolean => {
     return expandedCategories[category] ?? true;
   };
+
+  useEffect(function highlightRowFromAnchor() {
+    const clearHighlightTimeout = (): void => {
+      if (highlightTimeoutRef.current != null) {
+        clearTimeout(highlightTimeoutRef.current);
+        highlightTimeoutRef.current = null;
+      }
+    };
+
+    const revealFromHash = (): void => {
+      const hash = window.location.hash;
+      if (hash === '') return;
+
+      const anchor = decodeURIComponent(hash.replace(/^#/, ''));
+      if (anchor === '') return;
+
+      const targetElement = document.getElementById(anchor);
+      if (targetElement == null) return;
+
+      setHighlightedFeatureAnchor(anchor);
+      targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      clearHighlightTimeout();
+      highlightTimeoutRef.current = setTimeout(() => {
+        setHighlightedFeatureAnchor((prev) => (prev === anchor ? null : prev));
+      }, 2800);
+    };
+
+    revealFromHash();
+    window.addEventListener('hashchange', revealFromHash);
+
+    return () => {
+      clearHighlightTimeout();
+      window.removeEventListener('hashchange', revealFromHash);
+    };
+  }, []);
 
   return (
     <Box
@@ -507,147 +558,175 @@ export default function GtfsFeatureTracker({
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {categoryFeatures.map((feature) => (
-                        <TableRow
-                          key={feature.name}
-                          sx={{
-                            borderBottom: '1px solid',
-                            borderColor: 'divider',
-                            height: 72,
-                            '&:hover .feature-links': {
-                              opacity: 1,
-                            },
-                          }}
-                        >
-                          <TableCell
-                            sx={{
-                              position: 'sticky',
-                              left: 0,
-                              zIndex: 10,
-                              bgcolor: 'background.default',
-                              verticalAlign: 'middle',
-                              minWidth: 210,
-                            }}
+                      {categoryFeatures.map((feature) => {
+                        const featureAnchor = toFeatureAnchor(feature.name);
+                        const isHighlighted =
+                          highlightedFeatureAnchor === featureAnchor;
+
+                        return (
+                          <TableRow
+                            key={feature.name}
+                            id={featureAnchor}
+                            sx={(theme) => ({
+                              borderBottom: '1px solid',
+                              borderColor: 'divider',
+                              height: 72,
+                              ...(isHighlighted
+                                ? {
+                                    animation:
+                                      'feature-row-highlight 2.8s cubic-bezier(0.22, 1, 0.36, 1) 1',
+                                    '@keyframes feature-row-highlight': {
+                                      '0%': {
+                                        backgroundColor: `rgba(${theme.vars.palette.warning.mainChannel} / 0.36)`,
+                                      },
+                                      '100%': {
+                                        backgroundColor: 'transparent',
+                                      },
+                                    },
+                                  }
+                                : null),
+                              '&:hover .feature-links': {
+                                opacity: 1,
+                              },
+                            })}
                           >
-                            <Box
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                gap: 1,
-                              }}
+                            <TableCell
+                              sx={(theme) => ({
+                                position: 'sticky',
+                                left: 0,
+                                zIndex: 10,
+                                bgcolor: isHighlighted
+                                  ? `rgba(${theme.vars.palette.warning.mainChannel} / 0.20)`
+                                  : 'background.default',
+                                verticalAlign: 'middle',
+                                minWidth: 210,
+                              })}
                             >
-                              <Typography
-                                variant='body2'
-                                fontWeight={600}
-                                sx={{ maxWidth: '125px' }}
-                              >
-                                {feature.name}
-                              </Typography>
                               <Box
-                                className='feature-links'
                                 sx={{
                                   display: 'flex',
-                                  flexDirection: 'column',
-                                  alignItems: 'flex-start',
-                                  flexShrink: 0,
-                                  gap: 0,
-                                  opacity: 0,
-                                  transition: 'opacity 0.15s',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  gap: 1,
                                 }}
                               >
-                                {feature.documentationUrl != null ? (
-                                  <Button
-                                    component='a'
-                                    href={feature.documentationUrl}
-                                    target='_blank'
-                                    rel='noopener noreferrer'
-                                    variant='text'
-                                    size='small'
-                                    startIcon={
-                                      <MenuBookIcon sx={{ fontSize: 13 }} />
-                                    }
-                                    sx={{
-                                      color: 'text.secondary',
-                                      minWidth: 0,
-                                      px: 0.5,
-                                    }}
-                                  >
-                                    Docs
-                                  </Button>
-                                ) : null}
-                                {feature.category.toLowerCase() !== 'base' && (
-                                  <Button
-                                    component='a'
-                                    href={`/feeds?features=${encodeURIComponent(feature.name)}`}
-                                    target='_blank'
-                                    rel='noopener noreferrer'
-                                    variant='text'
-                                    size='small'
-                                    startIcon={
-                                      <DatasetIcon sx={{ fontSize: 13 }} />
-                                    }
-                                    sx={{
-                                      color: 'text.secondary',
-                                      minWidth: 0,
-                                      px: 0.5,
-                                    }}
-                                  >
-                                    Feeds
-                                  </Button>
-                                )}
-                              </Box>
-                            </Box>
-                          </TableCell>
-                          {filteredConsumers.map((consumer) => {
-                            const support = feature.support[consumer.id] ?? {
-                              rawStatus: '',
-                              details: '',
-                            };
-                            const statusText = getStatusText(support.rawStatus);
-                            return (
-                              <TableCell
-                                key={consumer.id}
-                                sx={{
-                                  verticalAlign: 'middle',
-                                  backgroundColor: 'background.default',
-                                }}
-                              >
+                                <Typography
+                                  variant='body2'
+                                  fontWeight={600}
+                                  sx={{ maxWidth: '125px' }}
+                                >
+                                  {feature.name}
+                                </Typography>
                                 <Box
+                                  className='feature-links'
                                   sx={{
                                     display: 'flex',
                                     flexDirection: 'column',
-                                    gap: 0.5,
+                                    alignItems: 'flex-start',
+                                    flexShrink: 0,
+                                    gap: 0,
+                                    opacity: 0,
+                                    transition: 'opacity 0.15s',
                                   }}
+                                >
+                                  {feature.documentationUrl != null ? (
+                                    <Button
+                                      component='a'
+                                      href={feature.documentationUrl}
+                                      target='_blank'
+                                      rel='noopener noreferrer'
+                                      variant='text'
+                                      size='small'
+                                      startIcon={
+                                        <MenuBookIcon sx={{ fontSize: 13 }} />
+                                      }
+                                      sx={{
+                                        color: 'text.secondary',
+                                        minWidth: 0,
+                                        px: 0.5,
+                                      }}
+                                    >
+                                      Docs
+                                    </Button>
+                                  ) : null}
+                                  {feature.category.toLowerCase() !==
+                                    'base' && (
+                                    <Button
+                                      component='a'
+                                      href={`/feeds?features=${encodeURIComponent(feature.name)}`}
+                                      target='_blank'
+                                      rel='noopener noreferrer'
+                                      variant='text'
+                                      size='small'
+                                      startIcon={
+                                        <DatasetIcon sx={{ fontSize: 13 }} />
+                                      }
+                                      sx={{
+                                        color: 'text.secondary',
+                                        minWidth: 0,
+                                        px: 0.5,
+                                      }}
+                                    >
+                                      Feeds
+                                    </Button>
+                                  )}
+                                </Box>
+                              </Box>
+                            </TableCell>
+                            {filteredConsumers.map((consumer) => {
+                              const support = feature.support[consumer.id] ?? {
+                                rawStatus: '',
+                                details: '',
+                              };
+                              const statusText = getStatusText(
+                                support.rawStatus,
+                              );
+                              return (
+                                <TableCell
+                                  key={consumer.id}
+                                  sx={(theme) => ({
+                                    verticalAlign: 'middle',
+                                    backgroundColor: isHighlighted
+                                      ? `rgba(${theme.vars.palette.warning.mainChannel} / 0.14)`
+                                      : 'background.default',
+                                  })}
                                 >
                                   <Box
                                     sx={{
                                       display: 'flex',
-                                      alignItems: 'center',
+                                      flexDirection: 'column',
                                       gap: 0.5,
                                     }}
                                   >
-                                    {getStatusIcon(support.rawStatus)}
-                                    <Typography
-                                      variant='body2'
-                                      fontWeight={500}
+                                    <Box
+                                      sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 0.5,
+                                      }}
                                     >
-                                      {statusText}
-                                    </Typography>
+                                      {getStatusIcon(support.rawStatus)}
+                                      <Typography
+                                        variant='body2'
+                                        fontWeight={500}
+                                      >
+                                        {statusText}
+                                      </Typography>
+                                    </Box>
+                                    {support.details != null &&
+                                    support.details !== '' ? (
+                                      <FeatureDetail
+                                        text={support.details}
+                                        knownFieldsSet={knownFieldsSet}
+                                      />
+                                    ) : null}
                                   </Box>
-                                  {support.details != null &&
-                                  support.details !== '' ? (
-                                    <FeatureDetail
-                                      text={support.details}
-                                      knownFieldsSet={knownFieldsSet}
-                                    />
-                                  ) : null}
-                                </Box>
-                              </TableCell>
-                            );
-                          })}
-                        </TableRow>
-                      ))}
+                                </TableCell>
+                              );
+                            })}
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </TableContainer>

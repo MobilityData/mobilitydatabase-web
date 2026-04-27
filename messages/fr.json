@@ -144,6 +144,7 @@
     "deprecated": "Deprecated",
     "searchPlaceholder": "Transit provider, feed name, or location",
     "featureTrackerBanner": "Voir quels planificateurs d’itinéraires utilisent ces fonctionnalités",
+    "featureTrackerBannerSingle": "Voir quels planificateurs d’itinéraires utilisent {feature}",
     "noResults": "We're sorry, we found no search results for ''{activeSearch}''.",
     "searchSuggestions": "Search suggestions: ",
     "searchTips": {
