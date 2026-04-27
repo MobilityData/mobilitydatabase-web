@@ -329,19 +329,6 @@ export default function FeedsScreen(): React.ReactElement {
 
             <Grid size={{ xs: 12, md: 10 }}>
               <Box sx={chipHolderStyles}>
-                {selectedFeatures.length > 0 && (
-                  <Button
-                    component={NextLink}
-                    href={featureTrackerHref}
-                    variant='outlined'
-                    size='small'
-                    target='_blank'
-                    color='primary'
-                    endIcon={<OpenInNew />}
-                  >
-                    {featureTrackerLabel}
-                  </Button>
-                )}
                 {selectedFeedTypes.gtfs && (
                   <Chip
                     color='primary'
@@ -567,13 +554,37 @@ export default function FeedsScreen(): React.ReactElement {
                             alignItems: 'self-end',
                           }}
                         >
-                          <Typography
-                            variant='subtitle2'
-                            sx={{ fontWeight: 'bold' }}
-                            gutterBottom
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 2,
+                              mr: 1,
+                              flexWrap: 'wrap',
+                            }}
                           >
-                            {getSearchResultNumbers()}
-                          </Typography>
+                            <Typography
+                              variant='subtitle2'
+                              sx={{ fontWeight: 'bold', mb: 0 }}
+                              gutterBottom
+                            >
+                              {getSearchResultNumbers()}
+                            </Typography>
+                            {selectedFeatures.length > 0 && (
+                              <Button
+                                component={NextLink}
+                                href={featureTrackerHref}
+                                variant='outlined'
+                                size='small'
+                                target='_blank'
+                                color='primary'
+                                endIcon={<OpenInNew />}
+                              >
+                                {featureTrackerLabel}
+                              </Button>
+                            )}
+                          </Box>
+
                           <ToggleButtonGroup
                             color='primary'
                             value={searchView}
