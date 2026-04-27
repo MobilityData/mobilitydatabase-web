@@ -124,77 +124,88 @@ function formatConsumerName(id: string): string {
   return names[id.toLowerCase()] ?? id;
 }
 
+async function fetchCsvText(url: string): Promise<string> {
+  const response = await fetch(url, { next: { revalidate: 3600 } });
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch tracker CSV from ${url}: ${response.status} ${response.statusText}`,
+    );
+  }
+
+  return response.text();
+}
+
 export async function fetchTrackerData(): Promise<TrackerData> {
-  const [featuresRes, categoriesRes, fieldsRes] = await Promise.all([
-    fetch(CSV_URL, { next: { revalidate: 3600 } }),
-    fetch(CATEGORIES_CSV_URL, { next: { revalidate: 3600 } }),
-    fetch(FIELDS_CSV_URL, { next: { revalidate: 3600 } }),
-  ]);
+  try {
+    const [featuresText, categoriesText, fieldsText] = await Promise.all([
+      fetchCsvText(CSV_URL),
+      fetchCsvText(CATEGORIES_CSV_URL),
+      fetchCsvText(FIELDS_CSV_URL),
+    ]);
 
-  const [featuresText, categoriesText, fieldsText] = await Promise.all([
-    featuresRes.text(),
-    categoriesRes.text(),
-    fieldsRes.text(),
-  ]);
+    // Parse known GTFS field names
+    const fieldsRows = parseCSVText(fieldsText);
+    const knownFields = Array.from(
+      new Set(fieldsRows.map((r) => r.field_name?.trim()).filter(Boolean)),
+    );
 
-  // Parse known GTFS field names
-  const fieldsRows = parseCSVText(fieldsText);
-  const knownFields = Array.from(
-    new Set(fieldsRows.map((r) => r.field_name?.trim()).filter(Boolean)),
-  );
-
-  // Parse categories → consumers with types and dates
-  const categoriesRows = parseCSVText(categoriesText);
-  const consumerDates: Record<string, string> = {};
-  const consumerTypes: Record<string, string> = {};
-  for (const row of categoriesRows) {
-    const c = (row.consumer ?? '').trim();
-    if (!c) continue;
-    const key = c.toLowerCase().replace(/\s+/g, '');
-    consumerTypes[key] = (row.type ?? '').trim();
-    consumerDates[key] = (row.last_update ?? '').trim();
-  }
-
-  // Parse features CSV — header driven
-  const featureRows = parseCSVText(featuresText);
-  if (featureRows.length === 0) {
-    return { features: [], consumers: [], knownFields };
-  }
-
-  // Extract consumer IDs from header columns (pattern: {id}_use)
-  const headers = Object.keys(featureRows[0]);
-  const consumerIds = headers
-    .filter((h) => h.endsWith('_use'))
-    .map((h) => h.replace('_use', ''));
-
-  // Build consumer list preserving CSV column order
-  const consumers: Consumer[] = consumerIds.map((id) => {
-    const key = id.toLowerCase().replace(/\s+/g, '');
-    return {
-      id,
-      name: formatConsumerName(id),
-      type: consumerTypes[key] ?? '',
-      lastUpdate: consumerDates[key] ?? '',
-    };
-  });
-
-  const features: Feature[] = featureRows.map((row) => {
-    const support: Record<string, FeatureSupport> = {};
-    for (const cId of consumerIds) {
-      const cLow = cId.toLowerCase();
-      support[cId] = {
-        rawStatus: (row[`${cId}_use`] ?? row[`${cLow}_use`] ?? '').trim(),
-        details: (row[`${cId}_details`] ?? row[`${cLow}_details`] ?? '').trim(),
-      };
+    // Parse categories → consumers with types and dates
+    const categoriesRows = parseCSVText(categoriesText);
+    const consumerDates: Record<string, string> = {};
+    const consumerTypes: Record<string, string> = {};
+    for (const row of categoriesRows) {
+      const c = (row.consumer ?? '').trim();
+      if (!c) continue;
+      const key = c.toLowerCase().replace(/\s+/g, '');
+      consumerTypes[key] = (row.type ?? '').trim();
+      consumerDates[key] = (row.last_update ?? '').trim();
     }
-    return {
-      name: row.Feature ?? '',
-      category: row.Type ?? 'Other',
-      description: row.Description ?? '',
-      documentationUrl: DOCS_URL_MAP[row.Feature ?? ''] ?? null,
-      support,
-    };
-  });
 
-  return { features, consumers, knownFields };
+    // Parse features CSV — header driven
+    const featureRows = parseCSVText(featuresText);
+    if (featureRows.length === 0) {
+      return { features: [], consumers: [], knownFields };
+    }
+
+    // Extract consumer IDs from header columns (pattern: {id}_use)
+    const headers = Object.keys(featureRows[0]);
+    const consumerIds = headers
+      .filter((h) => h.endsWith('_use'))
+      .map((h) => h.replace('_use', ''));
+
+    // Build consumer list preserving CSV column order
+    const consumers: Consumer[] = consumerIds.map((id) => {
+      const key = id.toLowerCase().replace(/\s+/g, '');
+      return {
+        id,
+        name: formatConsumerName(id),
+        type: consumerTypes[key] ?? '',
+        lastUpdate: consumerDates[key] ?? '',
+      };
+    });
+
+    const features: Feature[] = featureRows.map((row) => {
+      const support: Record<string, FeatureSupport> = {};
+      for (const cId of consumerIds) {
+        const cLow = cId.toLowerCase();
+        support[cId] = {
+          rawStatus: (row[`${cId}_use`] ?? row[`${cLow}_use`] ?? '').trim(),
+          details: (row[`${cId}_details`] ?? row[`${cLow}_details`] ?? '').trim(),
+        };
+      }
+      return {
+        name: row.Feature ?? '',
+        category: row.Type ?? 'Other',
+        description: row.Description ?? '',
+        documentationUrl: DOCS_URL_MAP[row.Feature ?? ''] ?? null,
+        support,
+      };
+    });
+
+    return { features, consumers, knownFields };
+  } catch (error) {
+    console.error('Failed to fetch GTFS feature tracker data', error);
+    return { features: [], consumers: [], knownFields: [] };
+  }
 }
