@@ -64,7 +64,7 @@ const CONSUMER_LOGOS: Record<string, string> = {
 
 // ── FeatureDetail ─────────────────────────────────────────────────────────────
 // Extracted as a memo component (rerender-memo) so each cell only re-renders
-// when its own text or the knownFields set changes.
+// when its own text or the knownFields set changes
 
 const FeatureDetail = memo(function FeatureDetail({
   text,
