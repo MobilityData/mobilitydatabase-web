@@ -146,10 +146,9 @@ const Footer: React.FC = () => {
             </FooterLink>
           </Box>
 
-          {/* Validators column */}
-
+          {/* Tools column — validators + analytics */}
           <Box sx={{ width: FOOTER_COLUMN_WIDTH }}>
-            <FooterColumnTitle>{t('columns.validators')}</FooterColumnTitle>
+            <FooterColumnTitle>{t('columns.tools')}</FooterColumnTitle>
             <FooterLink
               href='https://gtfs-validator.mobilitydata.org/'
               external
@@ -177,6 +176,9 @@ const Footer: React.FC = () => {
                 <OpenInNew sx={{ fontSize: '1rem', verticalAlign: 'middle' }} />
               </FooterLink>
             )}
+            <FooterLink href='/gtfs-feature-tracker'>
+              {t('links.gtfsFeatureTracker')}
+            </FooterLink>
           </Box>
 
           {/* Company column */}

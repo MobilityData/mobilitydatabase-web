@@ -9,12 +9,13 @@ import {
   Divider,
   Drawer,
   IconButton,
-  ListSubheader,
   Toolbar,
   Typography,
   Button,
   Menu,
+  MenuList,
   MenuItem,
+  Popover,
   Select,
   Alert,
   AlertTitle,
@@ -36,7 +37,12 @@ import { OpenInNew } from '@mui/icons-material';
 import { useRemoteConfig } from '../context/RemoteConfigProvider';
 import { fontFamily } from '../Theme';
 import { defaultRemoteConfigValues } from '../interface/RemoteConfig';
-import { animatedButtonStyling } from './Header.style';
+import {
+  animatedButtonStyling,
+  headerDropdownMenuHeader,
+  HeaderMenuItem,
+  HeaderMenuItemHeader,
+} from './Header.style';
 import ThemeToggle from './ThemeToggle';
 import HeaderSearchBar from './HeaderSearchBar';
 import { useTranslations, useLocale } from 'next-intl';
@@ -133,19 +139,20 @@ export default function DrawerAppBar(): React.ReactElement {
   const container =
     typeof window !== 'undefined' ? () => window.document.body : undefined;
 
-  const [validatorAnchorEl, setValidatorAnchorEl] =
-    React.useState<null | HTMLElement>(null);
-  const validatorCloseTimer =
+  const [toolsAnchorEl, setToolsAnchorEl] = React.useState<null | HTMLElement>(
+    null,
+  );
+  const toolsCloseTimer =
     React.useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const handleValidatorOpen = (e: React.MouseEvent<HTMLElement>): void => {
-    clearTimeout(validatorCloseTimer.current);
-    setValidatorAnchorEl(e.currentTarget);
+  const handleToolsOpen = (e: React.MouseEvent<HTMLElement>): void => {
+    clearTimeout(toolsCloseTimer.current);
+    setToolsAnchorEl(e.currentTarget);
   };
 
-  const handleValidatorClose = (): void => {
-    validatorCloseTimer.current = setTimeout(() => {
-      setValidatorAnchorEl(null);
+  const handleToolsClose = (): void => {
+    toolsCloseTimer.current = setTimeout(() => {
+      setToolsAnchorEl(null);
     }, 80);
   };
 
@@ -167,7 +174,7 @@ export default function DrawerAppBar(): React.ReactElement {
 
   React.useEffect(() => {
     return () => {
-      clearTimeout(validatorCloseTimer.current);
+      clearTimeout(toolsCloseTimer.current);
       clearTimeout(accountCloseTimer.current);
     };
   }, []);
@@ -293,84 +300,174 @@ export default function DrawerAppBar(): React.ReactElement {
 
             <Box
               component='span'
-              onMouseEnter={handleValidatorOpen}
-              onMouseLeave={handleValidatorClose}
+              onMouseEnter={handleToolsOpen}
+              onMouseLeave={handleToolsClose}
               sx={{ display: 'inline-flex' }}
             >
               <Button
-                aria-controls='validator-menu'
+                aria-controls='tools-menu'
                 aria-haspopup='true'
-                aria-expanded={validatorAnchorEl !== null}
+                aria-expanded={toolsAnchorEl !== null}
                 endIcon={<ArrowDropDownIcon />}
                 sx={(theme) => ({
                   ...animatedButtonStyling(theme),
                   color: theme.vars.palette.text.primary,
                 })}
                 className={
-                  activeTab.includes('validator') ? 'active short' : ''
+                  activeTab.includes('validator') ||
+                  activeTab.includes('gtfs-feature-tracker')
+                    ? 'active short'
+                    : ''
                 }
               >
-                {tCommon('validators')}
+                Tools
               </Button>
-              <Menu
-                id='validator-menu'
-                anchorEl={validatorAnchorEl}
-                open={validatorAnchorEl !== null}
+              <Popover
+                id='tools-menu'
+                anchorEl={toolsAnchorEl}
+                open={toolsAnchorEl !== null}
                 onClose={() => {
-                  setValidatorAnchorEl(null);
+                  setToolsAnchorEl(null);
                 }}
                 disableScrollLock
                 disableRestoreFocus
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                 sx={{ pointerEvents: 'none' }}
                 slotProps={{
                   paper: {
                     onMouseEnter: () => {
-                      clearTimeout(validatorCloseTimer.current);
+                      clearTimeout(toolsCloseTimer.current);
                     },
-                    onMouseLeave: handleValidatorClose,
+                    onMouseLeave: handleToolsClose,
                     sx: { pointerEvents: 'auto' },
                   },
                 }}
               >
-                <MenuItem
-                  component={'a'}
-                  href='https://gtfs-validator.mobilitydata.org/'
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  {tCommon('gtfsValidator')}
-                  <OpenInNew fontSize='small' sx={{ ml: 0.5 }} />
-                </MenuItem>
-                <MenuItem
-                  component={'a'}
-                  href='https://github.com/MobilityData/gtfs-realtime-validator'
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  {tCommon('gtfsRtValidator')}
-                  <OpenInNew fontSize='small' sx={{ ml: 0.5 }} />
-                </MenuItem>
-                {config.gbfsValidator ? (
-                  <MenuItem
-                    onClick={() => {
-                      setValidatorAnchorEl(null);
-                      handleNavigation('/gbfs-validator');
-                    }}
-                  >
-                    {tCommon('gbfsValidator')}
-                  </MenuItem>
-                ) : (
-                  <MenuItem
-                    component={'a'}
-                    href='https://gbfs-validator.mobilitydata.org/'
-                    target='_blank'
-                    rel='noopener noreferrer'
-                  >
-                    {tCommon('gbfsValidator')}
-                    <OpenInNew fontSize='small' sx={{ ml: 0.5 }} />
-                  </MenuItem>
-                )}
-              </Menu>
+                <Box sx={{ display: 'flex' }}>
+                  {/* Validators column */}
+                  <Box sx={{ minWidth: 220 }}>
+                    <Typography
+                      variant='overline'
+                      sx={headerDropdownMenuHeader}
+                    >
+                      Validators
+                    </Typography>
+                    <MenuList dense>
+                      <HeaderMenuItem
+                        component='a'
+                        href='https://gtfs-validator.mobilitydata.org/'
+                        target='_blank'
+                        rel='noopener noreferrer'
+                      >
+                        {tCommon('gtfsValidator')}
+                        <OpenInNew fontSize='small' sx={{ ml: 0.5 }} />
+                      </HeaderMenuItem>
+                      <HeaderMenuItem
+                        component='a'
+                        href='https://github.com/MobilityData/gtfs-realtime-validator'
+                        target='_blank'
+                        rel='noopener noreferrer'
+                      >
+                        {tCommon('gtfsRtValidator')}
+                        <OpenInNew fontSize='small' sx={{ ml: 0.5 }} />
+                      </HeaderMenuItem>
+                      {config.gbfsValidator ? (
+                        <HeaderMenuItem
+                          onClick={() => {
+                            setToolsAnchorEl(null);
+                            handleNavigation('/gbfs-validator');
+                          }}
+                        >
+                          {tCommon('gbfsValidator')}
+                        </HeaderMenuItem>
+                      ) : (
+                        <HeaderMenuItem
+                          component='a'
+                          href='https://gbfs-validator.mobilitydata.org/'
+                          target='_blank'
+                          rel='noopener noreferrer'
+                        >
+                          {tCommon('gbfsValidator')}
+                          <OpenInNew fontSize='small' sx={{ ml: 0.5 }} />
+                        </HeaderMenuItem>
+                      )}
+                    </MenuList>
+                  </Box>
+                  <Divider
+                    orientation='vertical'
+                    flexItem
+                    sx={{ my: 2, opacity: 0.5 }}
+                  />
+                  {/* Analytics column */}
+                  <Box sx={{ minWidth: 220 }}>
+                    <Typography
+                      variant='overline'
+                      sx={headerDropdownMenuHeader}
+                    >
+                      Analytics
+                    </Typography>
+                    <MenuList dense>
+                      <HeaderMenuItem
+                        component='a'
+                        href='/gtfs-feature-tracker'
+                      >
+                        GTFS Feature Tracker
+                      </HeaderMenuItem>
+                    </MenuList>
+                  </Box>
+                  {/* Metrics column — admin only */}
+                  {metricsOptionsEnabled ? (
+                    <>
+                      <Divider
+                        orientation='vertical'
+                        flexItem
+                        sx={{ my: 2, opacity: 0.5 }}
+                      />
+                      <Box sx={{ minWidth: 220 }}>
+                        <Typography
+                          variant='overline'
+                          sx={headerDropdownMenuHeader}
+                        >
+                          Metrics - Admin Only
+                        </Typography>
+                        <MenuList dense>
+                          <HeaderMenuItemHeader variant='caption'>
+                            GTFS
+                          </HeaderMenuItemHeader>
+                          {gtfsMetricsNavItems.map((item) => (
+                            <HeaderMenuItem
+                              key={item.title}
+                              component='a'
+                              href={item.target}
+                              onClick={() => {
+                                setToolsAnchorEl(null);
+                              }}
+                            >
+                              {item.title}
+                            </HeaderMenuItem>
+                          ))}
+                          <HeaderMenuItemHeader variant='caption'>
+                            GBFS
+                          </HeaderMenuItemHeader>
+                          {gbfsMetricsNavItems.map((item) => (
+                            <HeaderMenuItem
+                              key={item.title}
+                              component='a'
+                              href={item.target}
+                              onClick={() => {
+                                setToolsAnchorEl(null);
+                              }}
+                            >
+                              {item.title}
+                            </HeaderMenuItem>
+                          ))}
+                        </MenuList>
+                      </Box>
+                    </>
+                  ) : null}
+                </Box>
+              </Popover>
             </Box>
 
             {isAuthenticated ? (
@@ -439,57 +536,6 @@ export default function DrawerAppBar(): React.ReactElement {
                   >
                     {tCommon('signOut')}
                   </MenuItem>
-                  {metricsOptionsEnabled && [
-                    <Divider key='metrics-divider' />,
-                    <ListSubheader
-                      key='metrics-header'
-                      sx={{ lineHeight: '32px' }}
-                    >
-                      {tCommon('metricsAdminOnly')}
-                    </ListSubheader>,
-                    <ListSubheader
-                      key='gtfs-header'
-                      sx={{
-                        lineHeight: '28px',
-                        fontSize: '0.75rem',
-                        color: 'text.secondary',
-                      }}
-                    >
-                      GTFS
-                    </ListSubheader>,
-                    ...gtfsMetricsNavItems.map((item) => (
-                      <MenuItem
-                        key={item.title}
-                        onClick={() => {
-                          setAccountAnchorEl(null);
-                          handleNavigation(item.target);
-                        }}
-                      >
-                        {item.title}
-                      </MenuItem>
-                    )),
-                    <ListSubheader
-                      key='gbfs-header'
-                      sx={{
-                        lineHeight: '28px',
-                        fontSize: '0.75rem',
-                        color: 'text.secondary',
-                      }}
-                    >
-                      GBFS
-                    </ListSubheader>,
-                    ...gbfsMetricsNavItems.map((item) => (
-                      <MenuItem
-                        key={'gbfs-header-' + item.title}
-                        onClick={() => {
-                          setAccountAnchorEl(null);
-                          handleNavigation(item.target);
-                        }}
-                      >
-                        {item.title}
-                      </MenuItem>
-                    )),
-                  ]}
                 </Menu>
               </Box>
             ) : (

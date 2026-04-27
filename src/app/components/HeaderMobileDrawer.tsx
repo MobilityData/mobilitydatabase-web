@@ -155,53 +155,107 @@ export default function DrawerContent({
         ))}
 
         <Divider sx={{ my: 2 }} />
-        {config.gbfsValidator && (
-          <Accordion disableGutters={true} sx={{ boxShadow: 'none' }}>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls='validators-content'
-              id='validators-content'
+        <Accordion disableGutters={true} sx={{ boxShadow: 'none' }}>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls='tools-content'
+            id='tools-header'
+          >
+            <Typography
+              variant={'subtitle1'}
+              sx={{ fontFamily: fontFamily.secondary }}
             >
-              <Typography
-                variant={'subtitle1'}
-                sx={{ fontFamily: fontFamily.secondary }}
-              >
-                {t('validators')}
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
+              Tools
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ p: 0 }}>
+            {/* Validators sub-section */}
+            <Typography
+              variant='caption'
+              fontWeight={700}
+              sx={{
+                px: 2,
+                pt: 1,
+                pb: 0.5,
+                display: 'block',
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+                color: 'text.secondary',
+              }}
+            >
+              {t('validators')}
+            </Typography>
+            <Button
+              variant='text'
+              sx={mobileNavElementStyle}
+              endIcon={<OpenInNew />}
+              component={Link}
+              href='https://gtfs-validator.mobilitydata.org/'
+              target='_blank'
+              rel='noopener noreferrer'
+            >
+              {t('gtfsValidator')}
+            </Button>
+            <Button
+              variant='text'
+              sx={mobileNavElementStyle}
+              endIcon={<OpenInNew />}
+              component={Link}
+              href='https://github.com/MobilityData/gtfs-realtime-validator'
+              target='_blank'
+              rel='noopener noreferrer'
+            >
+              {t('gtfsRtValidator')}
+            </Button>
+            {config.gbfsValidator ? (
               <Button
                 variant='text'
                 sx={mobileNavElementStyle}
-                href={'gbfs-validator'}
+                href='/gbfs-validator'
+                onClick={onClose}
               >
                 {t('gbfsValidator')}
               </Button>
+            ) : (
               <Button
                 variant='text'
                 sx={mobileNavElementStyle}
                 endIcon={<OpenInNew />}
                 component={Link}
-                href='https://gtfs-validator.mobilitydata.org/'
+                href='https://gbfs-validator.mobilitydata.org/'
                 target='_blank'
                 rel='noopener noreferrer'
               >
-                {t('gtfsValidator')}
+                {t('gbfsValidator')}
               </Button>
-              <Button
-                variant='text'
-                sx={mobileNavElementStyle}
-                endIcon={<OpenInNew />}
-                component={Link}
-                href='https://github.com/MobilityData/gtfs-realtime-validator'
-                target='_blank'
-                rel='noopener noreferrer'
-              >
-                {t('gtfsRtValidator')}
-              </Button>
-            </AccordionDetails>
-          </Accordion>
-        )}
+            )}
+
+            {/* Analytics sub-section */}
+            <Typography
+              variant='caption'
+              fontWeight={700}
+              sx={{
+                px: 2,
+                pt: 1.5,
+                pb: 0.5,
+                display: 'block',
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+                color: 'text.secondary',
+              }}
+            >
+              Analytics
+            </Typography>
+            <Button
+              variant='text'
+              sx={mobileNavElementStyle}
+              href='/gtfs-feature-tracker'
+              onClick={onClose}
+            >
+              GTFS Feature Tracker
+            </Button>
+          </AccordionDetails>
+        </Accordion>
         {metricsOptionsEnabled && (
           <>
             <Accordion disableGutters={true} sx={{ boxShadow: 'none' }}>
