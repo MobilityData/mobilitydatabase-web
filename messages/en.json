@@ -138,6 +138,7 @@
     "resultsFor": "{startResult}-{endResult} of {totalResults} results",
     "deprecated": "Deprecated",
     "searchPlaceholder": "Transit provider, feed name, or location",
+    "featureTrackerBanner": "See which trip planners use these features",
     "noResults": "We're sorry, we found no search results for ''{activeSearch}''.",
     "searchSuggestions": "Search suggestions: ",
     "searchTips": {
@@ -539,7 +540,7 @@
     "copyright": "© {year} MobilityDatabase. All rights reserved.",
     "columns": {
       "platform": "Platform",
-      "validators": "Validators",
+      "tools": "Tools",
       "company": "Company",
       "legal": "Legal"
     },
@@ -547,6 +548,7 @@
       "feeds": "Feeds",
       "addFeed": "Add a Feed",
       "apiDocs": "API Docs",
+      "gtfsFeatureTracker": "GTFS Feature Tracker",
       "gtfsValidator": "GTFS Validator",
       "gtfsRtValidator": "GTFS-RT Validator",
       "gbfsValidator": "GBFS Validator",

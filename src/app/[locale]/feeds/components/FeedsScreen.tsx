@@ -6,7 +6,6 @@ import {
   Button,
   Chip,
   Container,
-  CssBaseline,
   Grid,
   InputAdornment,
   LinearProgress,
@@ -19,8 +18,9 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import { Search } from '@mui/icons-material';
+import { OpenInNew, Search } from '@mui/icons-material';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import NextLink from 'next/link';
 import SearchTable from '../../../screens/Feeds/SearchTable';
 import { useTranslations } from 'next-intl';
 import {
@@ -179,7 +179,6 @@ export default function FeedsScreen(): React.ReactElement {
         position: 'relative',
       }}
     >
-      <CssBaseline />
       <Box
         sx={{
           display: 'flex',
@@ -319,6 +318,19 @@ export default function FeedsScreen(): React.ReactElement {
 
             <Grid size={{ xs: 12, md: 10 }}>
               <Box sx={chipHolderStyles}>
+                {selectedFeatures.length > 0 && (
+                  <Button
+                    component={NextLink}
+                    href='/gtfs-feature-tracker'
+                    variant='outlined'
+                    size='small'
+                    target='_blank'
+                    color='primary'
+                    endIcon={<OpenInNew />}
+                  >
+                    {t('featureTrackerBanner')}
+                  </Button>
+                )}
                 {selectedFeedTypes.gtfs && (
                   <Chip
                     color='primary'
