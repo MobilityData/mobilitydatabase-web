@@ -242,7 +242,7 @@ export default function GtfsFeatureTracker({
                 key={consumer.id}
                 sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
               >
-                {consumerLogoSrc ? (
+                {consumerLogoSrc != null && consumerLogoSrc !== '' ? (
                   <Image
                     src={consumerLogoSrc}
                     alt={consumer.name}
@@ -263,7 +263,11 @@ export default function GtfsFeatureTracker({
                     })}
                   />
                 )}
-                <Typography variant='body1' fontWeight={700} fontSize={'1.25rem'}>
+                <Typography
+                  variant='body1'
+                  fontWeight={700}
+                  fontSize={'1.25rem'}
+                >
                   {consumer.name}
                 </Typography>
               </Box>
@@ -432,7 +436,9 @@ export default function GtfsFeatureTracker({
                               sx={{
                                 minWidth: '150px',
                                 width:
-                                  'calc(100% / ' + filteredConsumers.length + ')',
+                                  'calc(100% / ' +
+                                  filteredConsumers.length +
+                                  ')',
                               }}
                             >
                               <Box
@@ -449,7 +455,8 @@ export default function GtfsFeatureTracker({
                                     gap: 1,
                                   }}
                                 >
-                                  {consumerLogo ? (
+                                  {consumerLogo != null &&
+                                  consumerLogo !== '' ? (
                                     <Image
                                       src={consumerLogo}
                                       alt={consumer.name}
@@ -477,7 +484,8 @@ export default function GtfsFeatureTracker({
                                       }}
                                       aria-label={`${consumer.name} logo unavailable`}
                                     >
-                                      {consumer.name?.charAt(0).toUpperCase() ?? '?'}
+                                      {consumer.name?.charAt(0).toUpperCase() ??
+                                        '?'}
                                     </Box>
                                   )}
                                   <Typography variant='body2' fontWeight={600}>
