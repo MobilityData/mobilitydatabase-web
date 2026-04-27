@@ -570,19 +570,20 @@ export default function FeedsScreen(): React.ReactElement {
                             >
                               {getSearchResultNumbers()}
                             </Typography>
-                            {selectedFeatures.length > 0 && (
-                              <Button
-                                component={NextLink}
-                                href={featureTrackerHref}
-                                variant='outlined'
-                                size='small'
-                                target='_blank'
-                                color='primary'
-                                endIcon={<OpenInNew />}
-                              >
-                                {featureTrackerLabel}
-                              </Button>
-                            )}
+                            {selectedFeatures.length > 0 &&
+                              areFeatureFiltersEnabled && (
+                                <Button
+                                  component={NextLink}
+                                  href={featureTrackerHref}
+                                  variant='outlined'
+                                  size='small'
+                                  target='_blank'
+                                  color='primary'
+                                  endIcon={<OpenInNew />}
+                                >
+                                  {featureTrackerLabel}
+                                </Button>
+                              )}
                           </Box>
 
                           <ToggleButtonGroup
