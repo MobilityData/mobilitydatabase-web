@@ -422,56 +422,80 @@ export default function GtfsFeatureTracker({
                         >
                           Feature
                         </TableCell>
-                        {filteredConsumers.map((consumer) => (
-                          <TableCell
-                            key={consumer.id}
-                            sx={{
-                              minWidth: '150px',
-                              width:
-                                'calc(100% / ' + filteredConsumers.length + ')',
-                            }}
-                          >
-                            <Box
+                        {filteredConsumers.map((consumer) => {
+                          const consumerLogo =
+                            CONSUMER_LOGOS[consumer.id.toLowerCase()];
+
+                          return (
+                            <TableCell
+                              key={consumer.id}
                               sx={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: 0.25,
+                                minWidth: '150px',
+                                width:
+                                  'calc(100% / ' + filteredConsumers.length + ')',
                               }}
                             >
                               <Box
                                 sx={{
                                   display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 1,
+                                  flexDirection: 'column',
+                                  gap: 0.25,
                                 }}
                               >
-                                <Image
-                                  src={
-                                    CONSUMER_LOGOS[consumer.id.toLowerCase()]
-                                  }
-                                  alt={consumer.name}
-                                  width={32}
-                                  height={32}
-                                  style={{
-                                    objectFit: 'contain',
-                                    borderRadius: '4px',
+                                <Box
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
                                   }}
-                                />
-                                <Typography variant='body2' fontWeight={600}>
-                                  {consumer.name}
-                                </Typography>
-                              </Box>
-                              {consumer.lastUpdate != null ? (
-                                <Typography
-                                  variant='caption'
-                                  color='text.secondary'
                                 >
-                                  {`Updated ${formatDate(consumer.lastUpdate)}`}
-                                </Typography>
-                              ) : null}
-                            </Box>
-                          </TableCell>
-                        ))}
+                                  {consumerLogo ? (
+                                    <Image
+                                      src={consumerLogo}
+                                      alt={consumer.name}
+                                      width={32}
+                                      height={32}
+                                      style={{
+                                        objectFit: 'contain',
+                                        borderRadius: '4px',
+                                      }}
+                                    />
+                                  ) : (
+                                    <Box
+                                      sx={{
+                                        width: 32,
+                                        height: 32,
+                                        borderRadius: '4px',
+                                        bgcolor: 'grey.200',
+                                        color: 'text.secondary',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 600,
+                                        flexShrink: 0,
+                                      }}
+                                      aria-label={`${consumer.name} logo unavailable`}
+                                    >
+                                      {consumer.name?.charAt(0).toUpperCase() ?? '?'}
+                                    </Box>
+                                  )}
+                                  <Typography variant='body2' fontWeight={600}>
+                                    {consumer.name}
+                                  </Typography>
+                                </Box>
+                                {consumer.lastUpdate != null ? (
+                                  <Typography
+                                    variant='caption'
+                                    color='text.secondary'
+                                  >
+                                    {`Updated ${formatDate(consumer.lastUpdate)}`}
+                                  </Typography>
+                                ) : null}
+                              </Box>
+                            </TableCell>
+                          );
+                        })}
                       </TableRow>
                     </TableHead>
                     <TableBody>
