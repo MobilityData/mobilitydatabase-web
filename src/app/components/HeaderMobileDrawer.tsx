@@ -166,7 +166,7 @@ export default function DrawerContent({
               variant={'subtitle1'}
               sx={{ fontFamily: fontFamily.secondary }}
             >
-              Tools
+              {t('tools')}
             </Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ p: 0 }}>
@@ -245,7 +245,7 @@ export default function DrawerContent({
                 color: 'text.secondary',
               }}
             >
-              Analytics
+              {t('analytics')}
             </Typography>
             <Button
               variant='text'
@@ -254,7 +254,7 @@ export default function DrawerContent({
               href='/gtfs-feature-tracker'
               onClick={onClose}
             >
-              GTFS Feature Tracker
+              {t('gtfsFeatureTracker')}
             </Button>
           </AccordionDetails>
         </Accordion>
@@ -270,7 +270,7 @@ export default function DrawerContent({
                   variant={'subtitle1'}
                   sx={{ fontFamily: fontFamily.secondary }}
                 >
-                  GTFS Metrics
+                  {`${t('gtfs')} ${t('metrics')}`}
                 </Typography>
               </AccordionSummary>
               <AccordionDetails>
@@ -296,7 +296,7 @@ export default function DrawerContent({
                   variant={'subtitle1'}
                   sx={{ fontFamily: fontFamily.secondary }}
                 >
-                  GBFS Metrics
+                  {`${t('gbfs')} ${t('metrics')}`}
                 </Typography>
               </AccordionSummary>
               <AccordionDetails>
@@ -326,7 +326,7 @@ export default function DrawerContent({
                 variant={'subtitle1'}
                 sx={{ fontFamily: fontFamily.secondary }}
               >
-                Account
+                {t('account')}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
@@ -335,20 +335,20 @@ export default function DrawerContent({
                 sx={mobileNavElementStyle}
                 href={ACCOUNT_TARGET}
               >
-                Account Details
+                {t('accountDetails')}
               </Button>
               <Button
                 variant='text'
                 sx={mobileNavElementStyle}
                 onClick={onLogoutClick}
               >
-                Sign Out
+                {t('signOut')}
               </Button>
             </AccordionDetails>
           </Accordion>
         ) : (
           <Button variant='contained' sx={{ ml: 2 }} href={SIGN_IN_TARGET}>
-            Login
+            {t('login')}
           </Button>
         )}
       </List>

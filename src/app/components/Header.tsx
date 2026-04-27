@@ -320,7 +320,7 @@ export default function DrawerAppBar(): React.ReactElement {
                     : ''
                 }
               >
-                Tools
+                {tCommon('tools')}
               </Button>
               <Popover
                 id='tools-menu'
@@ -351,7 +351,7 @@ export default function DrawerAppBar(): React.ReactElement {
                       variant='overline'
                       sx={headerDropdownMenuHeader}
                     >
-                      Validators
+                      {tCommon('validators')}
                     </Typography>
                     <MenuList dense>
                       <HeaderMenuItem
@@ -405,14 +405,14 @@ export default function DrawerAppBar(): React.ReactElement {
                       variant='overline'
                       sx={headerDropdownMenuHeader}
                     >
-                      Analytics
+                      {tCommon('analytics')}
                     </Typography>
                     <MenuList dense>
                       <HeaderMenuItem
                         component='a'
                         href='/gtfs-feature-tracker'
                       >
-                        GTFS Feature Tracker
+                        {tCommon('gtfsFeatureTracker')}
                       </HeaderMenuItem>
                     </MenuList>
                   </Box>
@@ -429,11 +429,11 @@ export default function DrawerAppBar(): React.ReactElement {
                           variant='overline'
                           sx={headerDropdownMenuHeader}
                         >
-                          Metrics - Admin Only
+                          {tCommon('metricsAdminOnly')}
                         </Typography>
                         <MenuList dense>
                           <HeaderMenuItemHeader variant='caption'>
-                            GTFS
+                            {tCommon('gtfs')}
                           </HeaderMenuItemHeader>
                           {gtfsMetricsNavItems.map((item) => (
                             <HeaderMenuItem
@@ -448,7 +448,7 @@ export default function DrawerAppBar(): React.ReactElement {
                             </HeaderMenuItem>
                           ))}
                           <HeaderMenuItemHeader variant='caption'>
-                            GBFS
+                            {tCommon('gbfs')}
                           </HeaderMenuItemHeader>
                           {gbfsMetricsNavItems.map((item) => (
                             <HeaderMenuItem
