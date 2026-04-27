@@ -234,23 +234,41 @@ export default function GtfsFeatureTracker({
             alignItems: 'center',
           }}
         >
-          {filteredConsumers.map((consumer) => (
-            <Box
-              key={consumer.id}
-              sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-            >
-              <Image
-                src={CONSUMER_LOGOS[consumer.id.toLowerCase()]}
-                alt={consumer.name}
-                width={28}
-                height={28}
-                style={{ objectFit: 'contain', borderRadius: 8 }}
-              />
-              <Typography variant='body1' fontWeight={700} fontSize={'1.25rem'}>
-                {consumer.name}
-              </Typography>
-            </Box>
-          ))}
+          {filteredConsumers.map((consumer) => {
+            const consumerLogoSrc = CONSUMER_LOGOS[consumer.id.toLowerCase()];
+
+            return (
+              <Box
+                key={consumer.id}
+                sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+              >
+                {consumerLogoSrc ? (
+                  <Image
+                    src={consumerLogoSrc}
+                    alt={consumer.name}
+                    width={28}
+                    height={28}
+                    style={{ objectFit: 'contain', borderRadius: 8 }}
+                  />
+                ) : (
+                  <Box
+                    aria-label={consumer.name}
+                    sx={(theme) => ({
+                      width: 28,
+                      height: 28,
+                      borderRadius: 2,
+                      bgcolor: theme.palette.grey[200],
+                      border: `1px solid ${theme.palette.divider}`,
+                      flexShrink: 0,
+                    })}
+                  />
+                )}
+                <Typography variant='body1' fontWeight={700} fontSize={'1.25rem'}>
+                  {consumer.name}
+                </Typography>
+              </Box>
+            );
+          })}
         </Box>
         <Box
           sx={{
