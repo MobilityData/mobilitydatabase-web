@@ -33,6 +33,7 @@ import { useRemoteConfig } from '../context/RemoteConfigProvider';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import ThemeToggle from './ThemeToggle';
+import { Link as LocaleLink } from '../../i18n/navigation';
 
 const websiteTile = 'MobilityDatabase';
 
@@ -249,6 +250,7 @@ export default function DrawerContent({
             <Button
               variant='text'
               sx={mobileNavElementStyle}
+              component={LocaleLink}
               href='/gtfs-feature-tracker'
               onClick={onClose}
             >
