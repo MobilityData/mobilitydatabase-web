@@ -13,7 +13,7 @@ import {
   type GTFSMetrics,
 } from '../../screens/Analytics/types';
 import { getLocationName } from '../../services/feeds/utils';
-import { getAnalyticsBucketEndpoint } from '../../screens/Analytics/GTFSFeedAnalytics';
+import { getAnalyticsBucketEndpoint } from '../../screens/Analytics/utils';
 
 function* fetchFeedMetricsSaga(
   action: ReturnType<typeof selectFile>,
