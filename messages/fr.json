@@ -99,6 +99,11 @@
     "gbfsValidator": "GBFS Validator",
     "gtfsValidator": "GTFS Validator",
     "gtfsRtValidator": "GTFS RT Validator",
+    "tools": "Outils",
+    "analytics": "Analyses",
+    "metrics": "Métriques",
+    "account": "Compte",
+    "gtfsFeatureTracker": "Suivi des fonctionnalités GTFS",
     "start": "Start",
     "end": "End",
     "showLess": "Show less",
@@ -138,6 +143,8 @@
     "resultsFor": "{startResult}-{endResult} of {totalResults} results",
     "deprecated": "Deprecated",
     "searchPlaceholder": "Transit provider, feed name, or location",
+    "featureTrackerBanner": "Voir quels planificateurs d’itinéraires utilisent ces fonctionnalités",
+    "featureTrackerBannerSingle": "Voir quels planificateurs d’itinéraires utilisent {feature}",
     "noResults": "We're sorry, we found no search results for ''{activeSearch}''.",
     "searchSuggestions": "Search suggestions: ",
     "searchTips": {
@@ -539,7 +546,7 @@
     "copyright": "© {year} MobilityDatabase. Tous droits réservés.",
     "columns": {
       "platform": "Plateforme",
-      "validators": "Validateurs",
+      "tools": "Outils",
       "company": "Entreprise",
       "legal": "Légal"
     },
@@ -547,6 +554,7 @@
       "feeds": "Flux",
       "addFeed": "Ajouter un flux",
       "apiDocs": "Docs API",
+      "gtfsFeatureTracker": "Suivi des fonctionnalités GTFS",
       "gtfsValidator": "Validateur GTFS",
       "gtfsRtValidator": "Validateur GTFS-RT",
       "gbfsValidator": "Validateur GBFS",

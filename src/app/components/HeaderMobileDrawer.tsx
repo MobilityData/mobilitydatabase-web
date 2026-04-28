@@ -33,6 +33,7 @@ import { useRemoteConfig } from '../context/RemoteConfigProvider';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import ThemeToggle from './ThemeToggle';
+import { Link as LocaleLink } from '../../i18n/navigation';
 
 const websiteTile = 'MobilityDatabase';
 
@@ -155,53 +156,108 @@ export default function DrawerContent({
         ))}
 
         <Divider sx={{ my: 2 }} />
-        {config.gbfsValidator && (
-          <Accordion disableGutters={true} sx={{ boxShadow: 'none' }}>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls='validators-content'
-              id='validators-content'
+        <Accordion disableGutters={true} sx={{ boxShadow: 'none' }}>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls='tools-content'
+            id='tools-header'
+          >
+            <Typography
+              variant={'subtitle1'}
+              sx={{ fontFamily: fontFamily.secondary }}
             >
-              <Typography
-                variant={'subtitle1'}
-                sx={{ fontFamily: fontFamily.secondary }}
-              >
-                {t('validators')}
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
+              {t('tools')}
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ p: 0 }}>
+            {/* Validators sub-section */}
+            <Typography
+              variant='caption'
+              fontWeight={700}
+              sx={{
+                px: 2,
+                pt: 1,
+                pb: 0.5,
+                display: 'block',
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+                color: 'text.secondary',
+              }}
+            >
+              {t('validators')}
+            </Typography>
+            <Button
+              variant='text'
+              sx={mobileNavElementStyle}
+              endIcon={<OpenInNew />}
+              component={Link}
+              href='https://gtfs-validator.mobilitydata.org/'
+              target='_blank'
+              rel='noopener noreferrer'
+            >
+              {t('gtfsValidator')}
+            </Button>
+            <Button
+              variant='text'
+              sx={mobileNavElementStyle}
+              endIcon={<OpenInNew />}
+              component={Link}
+              href='https://github.com/MobilityData/gtfs-realtime-validator'
+              target='_blank'
+              rel='noopener noreferrer'
+            >
+              {t('gtfsRtValidator')}
+            </Button>
+            {config.gbfsValidator ? (
               <Button
                 variant='text'
                 sx={mobileNavElementStyle}
-                href={'gbfs-validator'}
+                href='/gbfs-validator'
+                onClick={onClose}
               >
                 {t('gbfsValidator')}
               </Button>
+            ) : (
               <Button
                 variant='text'
                 sx={mobileNavElementStyle}
                 endIcon={<OpenInNew />}
                 component={Link}
-                href='https://gtfs-validator.mobilitydata.org/'
+                href='https://gbfs-validator.mobilitydata.org/'
                 target='_blank'
                 rel='noopener noreferrer'
               >
-                {t('gtfsValidator')}
+                {t('gbfsValidator')}
               </Button>
-              <Button
-                variant='text'
-                sx={mobileNavElementStyle}
-                endIcon={<OpenInNew />}
-                component={Link}
-                href='https://github.com/MobilityData/gtfs-realtime-validator'
-                target='_blank'
-                rel='noopener noreferrer'
-              >
-                {t('gtfsRtValidator')}
-              </Button>
-            </AccordionDetails>
-          </Accordion>
-        )}
+            )}
+
+            {/* Analytics sub-section */}
+            <Typography
+              variant='caption'
+              fontWeight={700}
+              sx={{
+                px: 2,
+                pt: 1.5,
+                pb: 0.5,
+                display: 'block',
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+                color: 'text.secondary',
+              }}
+            >
+              {t('analytics')}
+            </Typography>
+            <Button
+              variant='text'
+              sx={mobileNavElementStyle}
+              component={LocaleLink}
+              href='/gtfs-feature-tracker'
+              onClick={onClose}
+            >
+              {t('gtfsFeatureTracker')}
+            </Button>
+          </AccordionDetails>
+        </Accordion>
         {metricsOptionsEnabled && (
           <>
             <Accordion disableGutters={true} sx={{ boxShadow: 'none' }}>
@@ -214,7 +270,7 @@ export default function DrawerContent({
                   variant={'subtitle1'}
                   sx={{ fontFamily: fontFamily.secondary }}
                 >
-                  GTFS Metrics
+                  {`${t('gtfs')} ${t('metrics')}`}
                 </Typography>
               </AccordionSummary>
               <AccordionDetails>
@@ -240,7 +296,7 @@ export default function DrawerContent({
                   variant={'subtitle1'}
                   sx={{ fontFamily: fontFamily.secondary }}
                 >
-                  GBFS Metrics
+                  {`${t('gbfs')} ${t('metrics')}`}
                 </Typography>
               </AccordionSummary>
               <AccordionDetails>
@@ -270,7 +326,7 @@ export default function DrawerContent({
                 variant={'subtitle1'}
                 sx={{ fontFamily: fontFamily.secondary }}
               >
-                Account
+                {t('account')}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
@@ -279,20 +335,20 @@ export default function DrawerContent({
                 sx={mobileNavElementStyle}
                 href={ACCOUNT_TARGET}
               >
-                Account Details
+                {t('accountDetails')}
               </Button>
               <Button
                 variant='text'
                 sx={mobileNavElementStyle}
                 onClick={onLogoutClick}
               >
-                Sign Out
+                {t('signOut')}
               </Button>
             </AccordionDetails>
           </Accordion>
         ) : (
           <Button variant='contained' sx={{ ml: 2 }} href={SIGN_IN_TARGET}>
-            Login
+            {t('login')}
           </Button>
         )}
       </List>

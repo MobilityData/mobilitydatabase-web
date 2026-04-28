@@ -1,4 +1,6 @@
-import { type Theme } from '@mui/material';
+import type React from 'react';
+import { MenuItem, Typography, type Theme } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { type SystemStyleObject } from '@mui/system';
 import { fontFamily } from '../Theme';
 
@@ -47,3 +49,35 @@ export const animatedButtonStyling = (
     pointerEvents: 'none',
   },
 });
+
+export const headerDropdownMenuHeader = (): SystemStyleObject<Theme> => ({
+  px: 2,
+  pt: 1.5,
+  pb: 0.5,
+  display: 'block',
+  color: 'text.disabled',
+  lineHeight: 2,
+});
+
+export const HeaderMenuItemHeader = styled(Typography)(({ theme }) => ({
+  paddingLeft: theme.spacing(2),
+  paddingRight: theme.spacing(2),
+  paddingTop: theme.spacing(1),
+  color: theme.vars.palette.primary.main,
+  fontWeight: 700,
+  fontFamily: fontFamily.secondary,
+}));
+
+export const HeaderMenuItem = styled(MenuItem)<{
+  component?: React.ElementType;
+  href?: string;
+  target?: string;
+  rel?: string;
+}>(() => ({
+  fontFamily: fontFamily.secondary,
+  opacity: 0.8,
+  fontWeight: 500,
+  '&:hover': {
+    opacity: 1,
+  },
+})) as typeof MenuItem;

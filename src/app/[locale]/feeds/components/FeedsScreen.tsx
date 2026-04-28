@@ -6,7 +6,6 @@ import {
   Button,
   Chip,
   Container,
-  CssBaseline,
   Grid,
   InputAdornment,
   LinearProgress,
@@ -19,8 +18,9 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import { Search } from '@mui/icons-material';
+import { OpenInNew, Search } from '@mui/icons-material';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import NextLink from 'next/link';
 import SearchTable from '../../../screens/Feeds/SearchTable';
 import { useTranslations } from 'next-intl';
 import {
@@ -39,6 +39,7 @@ import {
   deriveFilterFlags,
   buildSearchUrl,
 } from '../lib/useFeedsSearch';
+import { toFeatureAnchor } from '../../../utils/featureAnchor';
 
 export default function FeedsScreen(): React.ReactElement {
   const theme = useTheme();
@@ -67,6 +68,16 @@ export default function FeedsScreen(): React.ReactElement {
     areFeatureFiltersEnabled,
     areGBFSFiltersEnabled,
   } = deriveFilterFlags(selectedFeedTypes);
+
+  const featureTrackerHref =
+    selectedFeatures.length === 1
+      ? `/gtfs-feature-tracker#${toFeatureAnchor(selectedFeatures[0])}`
+      : '/gtfs-feature-tracker';
+
+  const featureTrackerLabel =
+    selectedFeatures.length === 1
+      ? t('featureTrackerBannerSingle', { feature: selectedFeatures[0] })
+      : t('featureTrackerBanner');
 
   // SWR-powered data fetching - keyed off URL params
   const { feedsData, isLoading, isValidating, isError, searchLimit } =
@@ -179,7 +190,6 @@ export default function FeedsScreen(): React.ReactElement {
         position: 'relative',
       }}
     >
-      <CssBaseline />
       <Box
         sx={{
           display: 'flex',
@@ -544,13 +554,38 @@ export default function FeedsScreen(): React.ReactElement {
                             alignItems: 'self-end',
                           }}
                         >
-                          <Typography
-                            variant='subtitle2'
-                            sx={{ fontWeight: 'bold' }}
-                            gutterBottom
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'end',
+                              gap: 2,
+                              mr: 1,
+                              flexWrap: 'wrap',
+                            }}
                           >
-                            {getSearchResultNumbers()}
-                          </Typography>
+                            <Typography
+                              variant='subtitle2'
+                              sx={{ fontWeight: 'bold', mb: 0 }}
+                              gutterBottom
+                            >
+                              {getSearchResultNumbers()}
+                            </Typography>
+                            {selectedFeatures.length > 0 &&
+                              areFeatureFiltersEnabled && (
+                                <Button
+                                  component={NextLink}
+                                  href={featureTrackerHref}
+                                  variant='outlined'
+                                  size='small'
+                                  target='_blank'
+                                  color='primary'
+                                  endIcon={<OpenInNew />}
+                                >
+                                  {featureTrackerLabel}
+                                </Button>
+                              )}
+                          </Box>
+
                           <ToggleButtonGroup
                             color='primary'
                             value={searchView}
