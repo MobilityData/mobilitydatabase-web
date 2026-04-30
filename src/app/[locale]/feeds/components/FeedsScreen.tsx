@@ -40,11 +40,13 @@ import {
   buildSearchUrl,
 } from '../lib/useFeedsSearch';
 import { toFeatureAnchor } from '../../../utils/featureAnchor';
+import { useRemoteConfig } from '../../../context/RemoteConfigProvider';
 
 export default function FeedsScreen(): React.ReactElement {
   const theme = useTheme();
   const t = useTranslations('feeds');
   const tCommon = useTranslations('common');
+  const { config } = useRemoteConfig();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -570,7 +572,8 @@ export default function FeedsScreen(): React.ReactElement {
                             >
                               {getSearchResultNumbers()}
                             </Typography>
-                            {selectedFeatures.length > 0 &&
+                            {config.gtfsFeatureTracker &&
+                              selectedFeatures.length > 0 &&
                               areFeatureFiltersEnabled && (
                                 <Button
                                   component={NextLink}
