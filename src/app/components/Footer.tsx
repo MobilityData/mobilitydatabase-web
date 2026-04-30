@@ -176,9 +176,11 @@ const Footer: React.FC = () => {
                 <OpenInNew sx={{ fontSize: '1rem', verticalAlign: 'middle' }} />
               </FooterLink>
             )}
-            <FooterLink href='/gtfs-feature-tracker'>
-              {t('links.gtfsFeatureTracker')}
-            </FooterLink>
+            {config.gtfsFeatureTracker && (
+              <FooterLink href='/gtfs-feature-tracker'>
+                {t('links.gtfsFeatureTracker')}
+              </FooterLink>
+            )}
           </Box>
 
           {/* Company column */}

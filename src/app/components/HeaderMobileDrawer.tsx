@@ -231,31 +231,35 @@ export default function DrawerContent({
               </Button>
             )}
 
-            {/* Analytics sub-section */}
-            <Typography
-              variant='caption'
-              fontWeight={700}
-              sx={{
-                px: 2,
-                pt: 1.5,
-                pb: 0.5,
-                display: 'block',
-                textTransform: 'uppercase',
-                letterSpacing: 0.5,
-                color: 'text.secondary',
-              }}
-            >
-              {t('analytics')}
-            </Typography>
-            <Button
-              variant='text'
-              sx={mobileNavElementStyle}
-              component={LocaleLink}
-              href='/gtfs-feature-tracker'
-              onClick={onClose}
-            >
-              {t('gtfsFeatureTracker')}
-            </Button>
+            {config.gtfsFeatureTracker && (
+              <>
+                {/* Analytics sub-section */}
+                <Typography
+                  variant='caption'
+                  fontWeight={700}
+                  sx={{
+                    px: 2,
+                    pt: 1.5,
+                    pb: 0.5,
+                    display: 'block',
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5,
+                    color: 'text.secondary',
+                  }}
+                >
+                  {t('analytics')}
+                </Typography>
+                <Button
+                  variant='text'
+                  sx={mobileNavElementStyle}
+                  component={LocaleLink}
+                  href='/gtfs-feature-tracker'
+                  onClick={onClose}
+                >
+                  {t('gtfsFeatureTracker')}
+                </Button>
+              </>
+            )}
           </AccordionDetails>
         </Accordion>
         {metricsOptionsEnabled && (

@@ -394,28 +394,32 @@ export default function DrawerAppBar(): React.ReactElement {
                       )}
                     </MenuList>
                   </Box>
-                  <Divider
-                    orientation='vertical'
-                    flexItem
-                    sx={{ my: 2, opacity: 0.5 }}
-                  />
-                  {/* Analytics column */}
-                  <Box sx={{ minWidth: 220 }}>
-                    <Typography
-                      variant='overline'
-                      sx={headerDropdownMenuHeader}
-                    >
-                      {tCommon('analytics')}
-                    </Typography>
-                    <MenuList dense>
-                      <HeaderMenuItem
-                        component='a'
-                        href='/gtfs-feature-tracker'
-                      >
-                        {tCommon('gtfsFeatureTracker')}
-                      </HeaderMenuItem>
-                    </MenuList>
-                  </Box>
+                  {config.gtfsFeatureTracker && (
+                    <>
+                      <Divider
+                        orientation='vertical'
+                        flexItem
+                        sx={{ my: 2, opacity: 0.5 }}
+                      />
+                      {/* Analytics column */}
+                      <Box sx={{ minWidth: 220 }}>
+                        <Typography
+                          variant='overline'
+                          sx={headerDropdownMenuHeader}
+                        >
+                          {tCommon('analytics')}
+                        </Typography>
+                        <MenuList dense>
+                          <HeaderMenuItem
+                            component='a'
+                            href='/gtfs-feature-tracker'
+                          >
+                            {tCommon('gtfsFeatureTracker')}
+                          </HeaderMenuItem>
+                        </MenuList>
+                      </Box>
+                    </>
+                  )}
                   {/* Metrics column — admin only */}
                   {metricsOptionsEnabled ? (
                     <>

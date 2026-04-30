@@ -27,6 +27,7 @@ export interface RemoteConfigValues {
   // 2- use bounding box view for GBFS instead of full covered area map
   enableDetailedCoveredArea: boolean;
   gbfsValidator: boolean;
+  gtfsFeatureTracker: boolean;
 }
 
 const gbfsVersionsDefault: GbfsVersionConfig = [];
@@ -46,6 +47,7 @@ export const defaultRemoteConfigValues: RemoteConfigValues = {
   visualizationMapPreviewDataLimit: 3,
   enableDetailedCoveredArea: false,
   gbfsValidator: false,
+  gtfsFeatureTracker: false,
 };
 
 /**
