@@ -4,7 +4,7 @@ import {
   type FeatureMetrics,
   type GTFSFeedMetrics,
   type AnalyticsFile,
-} from '../screens/Analytics/types';
+} from '../utils/analytics-types';
 
 interface GTFSAnalyticsState {
   feedMetrics: GTFSFeedMetrics[];

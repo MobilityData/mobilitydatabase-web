@@ -1,17 +1,11 @@
-import {
-  Typography,
-  Box,
-  Container,
-  CssBaseline,
-  useTheme,
-  Button,
-} from '@mui/material';
+'use client';
+
+import { Typography, Box, Container, useTheme, Button } from '@mui/material';
 
 export default function FeedSubmitted(): React.ReactElement {
   const theme = useTheme();
   return (
     <Container component='main' sx={{ my: 0, mx: 'auto' }} maxWidth='lg'>
-      <CssBaseline />
       <Typography
         data-cy='feedSubmitSuccess'
         component='h1'
