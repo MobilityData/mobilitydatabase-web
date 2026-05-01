@@ -55,9 +55,6 @@ const ibmPlexMono = IBM_Plex_Mono({
   variable: '--font-ibm-plex-mono',
 });
 
-const vercelInsightsEnabled =
-  process.env.VERCEL === '1' && process.env.VERCEL_ENV === 'production';
-
 /**
  * Generate static params for all locales.
  * This enables static generation for locale-prefixed routes.
@@ -118,7 +115,7 @@ export default async function LocaleLayout({
                 }}
               >
                 {children}
-                {vercelInsightsEnabled && (
+                {process.env.VERCEL_ENV === 'production' && (
                   <>
                     <SpeedInsights />
                     <Analytics />
