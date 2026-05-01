@@ -81,6 +81,51 @@ export function generatePageTitle(
   return newDocTitle;
 }
 
+export function generateMapPageTitle(
+  sortedProviders: string[],
+  dataType: 'gtfs' | 'gtfs_rt' | 'gbfs' | undefined,
+  feedName?: string,
+): string {
+  let newDocTitle = getFeedFormattedName(sortedProviders, feedName);
+
+  if (newDocTitle !== '') {
+    if (dataType === 'gtfs') {
+      newDocTitle += ' GTFS Schedule Feed Map - ';
+    } else if (dataType === 'gtfs_rt') {
+      newDocTitle += ' GTFS Realtime Feed Map - ';
+    } else if (dataType === 'gbfs') {
+      newDocTitle += ' GBFS Feed Map - ';
+    }
+  }
+
+  newDocTitle += 'Mobility Database';
+  return newDocTitle;
+}
+
+export function generateMapDescriptionMetaTag(
+  t: (key: string, options?: Record<string, string>) => string,
+  sortedProviders: string[],
+  dataType: 'gtfs' | 'gtfs_rt' | 'gbfs' | undefined,
+  feedName?: string,
+): string {
+  const formattedName = getFeedFormattedName(sortedProviders, feedName);
+  if (
+    sortedProviders.length === 0 &&
+    (feedName === undefined || feedName === '')
+  ) {
+    return '';
+  }
+  let dataTypeVerbose = '';
+  if (dataType === 'gtfs') {
+    dataTypeVerbose = t('common.gtfsSchedule');
+  } else if (dataType === 'gtfs_rt') {
+    dataTypeVerbose = t('common.gtfsRealtime');
+  } else if (dataType === 'gbfs') {
+    dataTypeVerbose = t('common.gbfs');
+  }
+  return t('feeds.mapPageDescription', { formattedName, dataTypeVerbose });
+}
+
 export const formatServiceDateRange = (
   dateStart: string,
   dateEnd: string,
