@@ -124,9 +124,6 @@ export const userProfileSlice = createSlice({
       state.errors = { ...initialState.errors, SignUp: action.payload };
       state.isAppRefreshing = false;
     },
-    resetProfileErrors: (state) => {
-      state.errors = { ...initialState.errors };
-    },
     requestRefreshAccessToken: (state) => {
       state.isRefreshingAccessToken = true;
       state.errors = { ...initialState.errors };
@@ -278,7 +275,6 @@ export const {
   signUp,
   signUpSuccess,
   signUpFail,
-  resetProfileErrors,
   refreshAccessToken,
   refreshAccessTokenFail,
   requestRefreshAccessToken,

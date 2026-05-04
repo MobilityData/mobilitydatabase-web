@@ -52,31 +52,10 @@ export const USER_PROFILE_REFRESH_INFORMATION = `${USER_PROFILE}/refreshUserInfo
 export const USER_PROFILE_RESET_PASSWORD = `${USER_PROFILE}/resetPassword`;
 export const USER_PROFILE_ANONYMOUS_LOGIN = `${USER_PROFILE}/anonymousLogin`;
 
-export const FEED_PROFILE = 'feedProfile';
-
-export const FEED_PROFILE_UPDATE_FEED_ID = `${FEED_PROFILE}/updateFeedId`;
-export const FEED_PROFILE_RESET_FEED = `${FEED_PROFILE}/resetFeed`;
-export const FEED_PROFILE_LOADING_FEED = `${FEED_PROFILE}/loadingFeed`;
-export const FEED_PROFILE_LOADING_FEED_SUCCESS = `${FEED_PROFILE}/loadingFeedSuccess`;
-export const FEED_PROFILE_LOADING_FEED_FAIL = `${FEED_PROFILE}/loadingFeedFail`;
-export const FEED_PROFILE_LOADING_RELATED_FEEDS = `${FEED_PROFILE}/loadingRelatedFeeds`;
-export const FEED_PROFILE_LOADING_RELATED_FEEDS_SUCCESS = `${FEED_PROFILE}/loadingRelatedFeedsSuccess`;
-export const FEED_PROFILE_LOADING_RELATED_FEEDS_FAIL = `${FEED_PROFILE}/loadingRelatedFeedsFail`;
-
 export const LICENSE_PROFILE = 'licenseProfile';
 export const LICENSE_PROFILE_LOADING_LICENSE = `${LICENSE_PROFILE}/loadingLicense`;
 export const LICENSE_PROFILE_LOADING_LICENSE_SUCCESS = `${LICENSE_PROFILE}/loadingLicenseSuccess`;
 export const LICENSE_PROFILE_LOADING_LICENSE_FAIL = `${LICENSE_PROFILE}/loadingLicenseFail`;
-
-export const FEEDS_RESET_FEEDS = `feeds/resetFeeds`;
-export const FEEDS_LOADING_FEEDS = `feeds/loadingFeeds`;
-export const FEEDS_LOADING_FEEDS_SUCCESS = `feeds/loadingFeedsSuccess`;
-export const FEEDS_LOADING_FEEDS_FAIL = `feeds/loadingFeedsFail`;
-
-export const DATASET_UPDATE_FEED_ID = `dataset/updateDatasetId`;
-export const DATASET_LOADING_FEED = `dataset/loadingDataset`;
-export const DATASET_LOADING_FEED_SUCCESS = `dataset/loadingDatasetSuccess`;
-export const DATASET_LOADING_FEED_FAIL = `dataset/loadingDatasetFail`;
 
 export enum ProfileErrorSource {
   SignUp = 'SignUp',
@@ -175,21 +154,3 @@ export interface GtfsRoute {
  * This replaces the Leaflet LatLngTuple ([lat, lng]) that was previously used.
  */
 export type LngLatTuple = [number, number];
-
-export type LoadStatus = 'uninitialized' | 'loading' | 'loaded' | 'failed';
-export type SupportingFileKey =
-  | 'gtfsGeolocationGeojson'
-  | 'gtfsDatasetRoutesJson';
-export interface SupportingFileDataMap {
-  gtfsGeolocationGeojson: GeoJSONData;
-  gtfsDatasetRoutesJson: GtfsRoute[];
-}
-export interface SupportingFile<
-  K extends keyof SupportingFileDataMap = keyof SupportingFileDataMap,
-> {
-  key: K;
-  status: LoadStatus;
-  url?: string;
-  data?: SupportingFileDataMap[K];
-  error?: string;
-}

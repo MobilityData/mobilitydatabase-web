@@ -31,12 +31,10 @@ import {
 import { OpenInNew } from '@mui/icons-material';
 import { computeBoundingBox } from '../screens/Feed/Feed.functions';
 import { displayFormattedDate } from '../utils/date';
-import { useSelector } from 'react-redux';
 import ModeOfTravelIcon from '@mui/icons-material/ModeOfTravel';
 import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
 import { useRemoteConfig } from '../context/RemoteConfigProvider';
 import { sendGAEvent } from '@next/third-parties/google';
-import { selectGtfsDatasetRoutesLoadingStatus } from '../store/supporting-files-selectors';
 import {
   getLatestGbfsVersion,
   type LatestDatasetLite,
@@ -111,9 +109,6 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
     return getLatestGbfsVersion(feed as GBFSFeedType);
   }, [feed]);
 
-  const routesJsonLoadingStatus = useSelector(
-    selectGtfsDatasetRoutesLoadingStatus,
-  );
   const hasNoRoutes = totalRoutes == undefined || totalRoutes === 0;
 
   const getAndSetGeoJsonData = (urlToExtract: string): void => {
@@ -174,7 +169,6 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
     // for gtfs feeds
     if (
       feed?.data_type === 'gtfs' &&
-      routesJsonLoadingStatus != 'failed' &&
       !hasNoRoutes &&
       boundingBox != undefined
     ) {
@@ -190,7 +184,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
       return;
     }
     setView('boundingBoxView');
-  }, [feed, routesJsonLoadingStatus, totalRoutes, boundingBox, geoJsonData]);
+  }, [feed, totalRoutes, boundingBox, geoJsonData]);
 
   const handleViewChange = (
     _: React.MouseEvent<HTMLElement>,
@@ -287,12 +281,9 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
   const latestAutodiscoveryUrl = getGbfsLatestVersionVisualizationUrl();
   const enableGtfsVisualizationView = useMemo(() => {
     return (
-      feed?.data_type === 'gtfs' &&
-      routesJsonLoadingStatus != 'failed' &&
-      !hasNoRoutes &&
-      boundingBox != undefined
+      feed?.data_type === 'gtfs' && !hasNoRoutes && boundingBox != undefined
     );
-  }, [feed?.data_type, routesJsonLoadingStatus, hasNoRoutes, boundingBox]);
+  }, [feed?.data_type, hasNoRoutes, boundingBox]);
 
   return (
     <Box
@@ -417,7 +408,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
 
       {(boundingBox != undefined || !geoJsonError) && (
         <Box key={view} sx={mapBoxPositionStyle}>
-          {geoJsonLoading || routesJsonLoadingStatus === 'loading' ? (
+          {geoJsonLoading ? (
             <Skeleton
               variant='rectangular'
               width='100%'
