@@ -1,4 +1,3 @@
-import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
@@ -121,7 +120,6 @@ export default async function LocaleLayout({
                 {children}
                 {process.env.VERCEL_ENV === 'production' && (
                   <>
-                    <SpeedInsights />
                     <Analytics />
                   </>
                 )}
