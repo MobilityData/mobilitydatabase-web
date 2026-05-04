@@ -98,8 +98,7 @@ function* logoutSaga({
       try {
         broadcastMessage(LOGOUT_CHANNEL);
       } catch {
-        // Broadcast channels may not be initialised if no
-        // legacy [...slug] page has been rendered yet.
+        // Broadcast channels may not be initialised yet.
       }
     }
     navigateTo(redirectScreen);

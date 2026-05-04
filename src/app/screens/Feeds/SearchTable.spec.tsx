@@ -1,6 +1,5 @@
 import SearchTable, { getDataTypeElement } from './SearchTable';
 import { render, cleanup, screen, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { type AllFeedsType } from '../../services/feeds/utils';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from '../../Theme';
@@ -140,15 +139,13 @@ const mockFeedsData: AllFeedsType = {
   ],
 };
 
-describe.only('getProviderElement', () => {
+describe('getProviderElement', () => {
   afterEach(cleanup);
 
   it('should display the correct number of transit providers in table row', () => {
     render(
       <ThemeProvider theme={theme}>
-        <MemoryRouter>
-          <SearchTable feedsData={mockFeedsData} />
-        </MemoryRouter>
+        <SearchTable feedsData={mockFeedsData} />
       </ThemeProvider>,
     );
 

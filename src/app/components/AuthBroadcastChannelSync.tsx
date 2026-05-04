@@ -13,7 +13,6 @@ import {
 
 /**
  * Registers the cross-tab auth broadcast channels once for the App Router tree.
- * This replaces the legacy BrowserRouter-based registration in Router.tsx.
  */
 export function AuthBroadcastChannelSync(): ReactElement | null {
   const router = useRouter();

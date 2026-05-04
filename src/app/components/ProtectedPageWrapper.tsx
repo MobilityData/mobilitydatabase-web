@@ -1,7 +1,7 @@
 'use client';
 
-// TODO: Once the [...slug] catch-all route is removed, replace this wrapper
-// with a (protected) route group layout that provides auth guarding at the layout level.
+// TODO: Replace this wrapper with a (protected) route group layout that
+// provides auth guarding at the layout level.
 // targetStatus can be used to scope groups further (e.g. (authenticated), (unverified)).
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';

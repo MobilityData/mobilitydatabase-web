@@ -11,11 +11,6 @@ import {
 } from './app/utils/proxy-helpers';
 
 /**
- * IMPORTANT: The logic of this proxy will be tested once the [...slug] route is removed
- * Reasoning: [...slug] will catch all routes including those with wrong locale prefixes
- */
-
-/**
  * Internationalization and auth-routing proxy following the Next.js i18n guide.
  * @see https://nextjs.org/docs/app/guides/internationalization
  *
