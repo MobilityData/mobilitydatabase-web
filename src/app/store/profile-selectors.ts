@@ -22,7 +22,7 @@ export const selectIsTokenRefreshed = (state: RootState): boolean =>
 export const selectIsVerificationEmailSent = (state: RootState): boolean =>
   state.userProfile.isVerificationEmailSent;
 
-export const selectErrorBySource = (
+const selectErrorBySource = (
   state: RootState,
   source: ProfileErrorSource,
 ): ProfileError | null => state.userProfile.errors[source];
@@ -69,6 +69,3 @@ export const selectRegistrationError = (
   state: RootState,
 ): ProfileError | null =>
   selectErrorBySource(state, ProfileErrorSource.Registration);
-
-export const selectUserEmail = (state: RootState): string | undefined =>
-  state.userProfile.user?.email;
