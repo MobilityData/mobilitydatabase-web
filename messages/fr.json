@@ -242,6 +242,7 @@
     "isAuthRequired": "Is authentication required for the feed?",
     "isAuthRequiredDetails": " Select \"Yes\" if a user has to login or provide credentials to download the feed",
     "detailPageDescription": "Explore the {formattedName} {dataTypeVerbose} feed details with access to a quality data insights",
+    "mapPageDescription": "Explore the {formattedName} {dataTypeVerbose} feed on an interactive map showing routes, stops, and transit coverage.",
     "officialFeed": "Official Feed",
     "officialFeedTooltip": "The transit provider has confirmed this feed should be shared with riders. This has been confirmed either by the transit provider providing the feed on their website or from personalized confirmation with the Mobility Database team.",
     "officialFeedTooltipShort": "Verified feed: Confirmed by the transit provider or the Mobility Database team for rider use.",
