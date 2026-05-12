@@ -121,15 +121,17 @@ export function SearchFilters({
         ),
         seeChildren: expandedElements[parent],
         type: 'checkbox',
-        children: features.map((feature) => {
-          return {
-            title: feature.feature,
-            type: 'checkbox',
-            checked: selectedFeatures.some(
-              (selectedFeature) => selectedFeature === feature.feature,
-            ),
-          };
-        }),
+        children: features
+          .sort((a, b) => a.feature.localeCompare(b.feature))
+          .map((feature) => {
+            return {
+              title: feature.feature,
+              type: 'checkbox',
+              checked: selectedFeatures.some(
+                (selectedFeature) => selectedFeature === feature.feature,
+              ),
+            };
+          }),
       }));
   }
 

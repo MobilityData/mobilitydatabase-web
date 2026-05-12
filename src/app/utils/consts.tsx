@@ -7,7 +7,7 @@ import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 interface DatasetFeature {
   component: string;
   componentSubgroup?: string;
-  fileName: string;
+  fileNames: string[];
   linkToInfo: string;
   deprecated?: boolean;
 }
@@ -93,202 +93,225 @@ export function getComponentDecorators(component: string): {
 export const DATASET_FEATURES: DatasetFeatures = {
   overview: {
     component: '',
-    fileName: '',
+    fileNames: [],
     linkToInfo: 'https://gtfs.org/getting-started/features/overview/',
   },
   'Text-to-Speech': {
     component: 'Accessibility',
-    fileName: 'stops.txt',
+    fileNames: ['stops.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/accessibility/#text-to-speech',
   },
   'Stops Wheelchair Accessibility': {
     component: 'Accessibility',
-    fileName: 'trips.txt',
+    fileNames: ['stops.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/accessibility/#stops-wheelchair-accessibility',
   },
   'Trips Wheelchair Accessibility': {
     component: 'Accessibility',
-    fileName: 'trips.txt',
+    fileNames: ['trips.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/accessibility/#trips-wheelchair-accessibility',
   },
   'Route Colors': {
     component: 'Base add-ons',
-    fileName: 'routes.txt',
+    fileNames: ['routes.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/base-add-ons/#route-colors',
   },
   'Bike Allowed': {
     component: 'Base add-ons',
-    fileName: 'trips.txt',
+    fileNames: ['trips.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/base-add-ons/#bike-allowed',
   },
   Translations: {
     component: 'Base add-ons',
-    fileName: 'translations.txt',
+    fileNames: ['translations.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/base-add-ons/#translations',
   },
   Headsigns: {
     component: 'Base add-ons',
-    fileName: 'trips.txt',
+    fileNames: ['trips.txt', 'stop_times.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/base-add-ons/#headsigns',
   },
   'Fare Products': {
     component: 'Fares',
     componentSubgroup: 'Fares v2',
-    fileName: 'fare_products.txt',
+    fileNames: ['fare_products.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/fares/#fare-products',
   },
   'Fare Media': {
     component: 'Fares',
     componentSubgroup: 'Fares v2',
-    fileName: 'fare_media.txt',
+    fileNames: ['fare_media.txt', 'fare_products.txt'],
     linkToInfo: 'https://gtfs.org/getting-started/features/fares/#fare-media',
   },
   'Rider Categories': {
     component: 'Fares',
     componentSubgroup: 'Fares v2',
-    fileName: 'rider_categories.txt',
+    fileNames: ['rider_categories.txt', 'fare_products.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/fares/#rider-categories',
   },
   'Route-Based Fares': {
     component: 'Fares',
     componentSubgroup: 'Fares v2',
-    fileName: 'routes.txt',
+    fileNames: [
+      'routes.txt',
+      'networks.txt',
+      'fare_products.txt',
+      'fare_leg_rules.txt',
+    ],
     linkToInfo:
       'https://gtfs.org/getting-started/features/fares/#route-based-fares',
   },
   'Time-Based Fares': {
     component: 'Fares',
     componentSubgroup: 'Fares v2',
-    fileName: 'timeframes.txt',
+    fileNames: ['timeframes.txt', 'fare_products.txt', 'fare_leg_rules.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/fares/#time-based-fares',
   },
   'Zone-Based Fares': {
     component: 'Fares',
     componentSubgroup: 'Fares v2',
-    fileName: 'areas.txt',
+    fileNames: ['areas.txt', 'fare_products.txt', 'fare_leg_rules.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/fares/#zone-based-fares',
   },
   'Fare Transfers': {
     component: 'Fares',
     componentSubgroup: 'Fares v2',
-    fileName: 'fare_transfer_rules.txt',
+    fileNames: ['fare_transfer_rules.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/fares/#fare-transfers',
   },
   'Fares V1': {
     component: 'Fares',
-    fileName: 'fare_attributes.txt',
+    fileNames: ['fare_attributes.txt'],
     linkToInfo: 'https://gtfs.org/getting-started/features/fares/#fares-v1',
   },
   'Pathway Connections': {
     component: 'Pathways',
-    fileName: 'pathways.txt',
+    fileNames: ['pathways.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/pathways/#pathway-connections',
   },
   'Pathway Details': {
     component: 'Pathways',
-    fileName: 'pathways.txt',
+    fileNames: ['pathways.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/pathways/#pathway-details',
   },
   Levels: {
     component: 'Pathways',
-    fileName: 'levels.txt',
+    fileNames: ['levels.txt'],
     linkToInfo: 'https://gtfs.org/getting-started/features/pathways/#levels',
   },
   'In-station Traversal Time': {
     component: 'Pathways',
-    fileName: 'pathways.txt',
+    fileNames: ['pathways.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/pathways/#in-station-traversal-time',
   },
   'Pathway Signs': {
     component: 'Pathways',
-    fileName: 'pathways.txt',
+    fileNames: ['pathways.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/pathways/#pathway-signs',
   },
   'Location Types': {
     component: 'Base add-ons',
-    fileName: 'stops.txt',
+    fileNames: ['stops.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/base-add-ons/#location-types',
   },
   'Feed Information': {
     component: 'Base add-ons',
-    fileName: 'feed_info.txt',
+    fileNames: ['feed_info.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/base-add-ons/#feed-information',
   },
   Attributions: {
     component: 'Base add-ons',
-    fileName: 'attributions.txt',
+    fileNames: ['attributions.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/base-add-ons/#attributions',
   },
   'Continuous Stops': {
     component: 'Flexible Services',
-    fileName: 'routes.txt',
+    fileNames: ['routes.txt', 'stop_times.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/flexible-services/#continuous-stops',
   },
   'Booking Rules': {
     component: 'Flexible Services',
     componentSubgroup: 'Flex',
-    fileName: 'routes.txt',
+    fileNames: ['booking_rules.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/flexible-services/#booking-rules',
   },
   'Fixed-Stops Demand Responsive Transit': {
     component: 'Flexible Services',
     componentSubgroup: 'Flex',
-    fileName: 'location_groups.txt',
+    fileNames: ['location_groups.txt', 'stop_times.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/flexible-services/#fixed-stops-demand-responsive-services',
   },
   'Zone-Based Demand Responsive Services': {
     component: 'Flexible Services',
     componentSubgroup: 'Flex',
-    fileName: 'stop_times.txt',
+    fileNames: ['stop_times.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/flexible-services/#zone-based-demand-responsive-services',
   },
   'Predefined Routes with Deviation': {
     component: 'Flexible Services',
     componentSubgroup: 'Flex',
-    fileName: 'stop_times.txt',
+    fileNames: ['stop_times.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/flexible-services/#predefined-routes-with-deviation',
   },
   Shapes: {
     component: 'Base add-ons',
-    fileName: 'shapes.txt',
+    fileNames: ['shapes.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/base-add-ons/#shapes ',
   },
   Transfers: {
     component: 'Base add-ons',
-    fileName: 'transfers.txt',
+    fileNames: ['transfers.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/base-add-ons/#transfers',
   },
   Frequencies: {
     component: 'Base add-ons',
-    fileName: 'frequencies.txt',
+    fileNames: ['frequencies.txt'],
     linkToInfo:
       'https://gtfs.org/getting-started/features/base-add-ons/#frequency-based-service ',
+  },
+  'Contactless EMV Support': {
+    component: 'Fares',
+    fileNames: ['agency.txt', 'routes.txt'],
+    linkToInfo:
+      'https://gtfs.org/getting-started/features/fares/#contactless-emv-support',
+  },
+  'Cars Allowed': {
+    component: 'Base add-ons',
+    fileNames: ['trips.txt'],
+    linkToInfo:
+      'https://gtfs.org/getting-started/features/base-add-ons/#cars-allowed',
+  },
+  'Stop Access': {
+    component: 'Base add-ons',
+    fileNames: ['stops.txt'],
+    linkToInfo:
+      'https://gtfs.org/getting-started/features/base-add-ons/#stop-access',
   },
 };
 // SPELLING CORRECTIONS
@@ -301,7 +324,7 @@ DATASET_FEATURES['Text-To-Speech'] = {
 DATASET_FEATURES['Wheelchair Accessibility'] = {
   // as of 6.0
   component: 'Accessibility',
-  fileName: 'trips.txt',
+  fileNames: ['trips.txt'],
   linkToInfo: 'https://gtfs.org/getting-started/features/accessibility',
   deprecated: true,
 };
@@ -328,7 +351,7 @@ DATASET_FEATURES['Traversal Time'] = {
 DATASET_FEATURES['Pathways Directions'] = {
   // as of 6.0
   component: 'Pathways',
-  fileName: 'pathways.txt',
+  fileNames: ['pathways.txt'],
   linkToInfo: 'https://gtfs.org/schedule/reference/#pathwaystxt',
   deprecated: true,
 };
