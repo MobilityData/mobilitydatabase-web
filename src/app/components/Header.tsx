@@ -373,12 +373,7 @@ export default function DrawerAppBar(): React.ReactElement {
                         <OpenInNew fontSize='small' sx={{ ml: 0.5 }} />
                       </HeaderMenuItem>
                       {config.gbfsValidator ? (
-                        <HeaderMenuItem
-                          onClick={() => {
-                            setToolsAnchorEl(null);
-                            handleNavigation('/gbfs-validator');
-                          }}
-                        >
+                        <HeaderMenuItem component={Link} href='/gbfs-validator'>
                           {tCommon('gbfsValidator')}
                         </HeaderMenuItem>
                       ) : (
@@ -411,7 +406,7 @@ export default function DrawerAppBar(): React.ReactElement {
                         </Typography>
                         <MenuList dense>
                           <HeaderMenuItem
-                            component='a'
+                            component={Link}
                             href='/gtfs-feature-tracker'
                           >
                             {tCommon('gtfsFeatureTracker')}
@@ -442,11 +437,8 @@ export default function DrawerAppBar(): React.ReactElement {
                           {gtfsMetricsNavItems.map((item) => (
                             <HeaderMenuItem
                               key={item.title}
-                              component='a'
+                              component={Link}
                               href={item.target}
-                              onClick={() => {
-                                setToolsAnchorEl(null);
-                              }}
                             >
                               {item.title}
                             </HeaderMenuItem>
@@ -457,11 +449,8 @@ export default function DrawerAppBar(): React.ReactElement {
                           {gbfsMetricsNavItems.map((item) => (
                             <HeaderMenuItem
                               key={item.title}
-                              component='a'
+                              component={Link}
                               href={item.target}
-                              onClick={() => {
-                                setToolsAnchorEl(null);
-                              }}
                             >
                               {item.title}
                             </HeaderMenuItem>
@@ -512,7 +501,10 @@ export default function DrawerAppBar(): React.ReactElement {
                   }}
                   disableScrollLock
                   disableRestoreFocus
-                  sx={{ pointerEvents: 'none' }}
+                  sx={{
+                    pointerEvents: 'none',
+                    fontFamily: fontFamily.secondary,
+                  }}
                   slotProps={{
                     paper: {
                       onMouseEnter: () => {
@@ -523,23 +515,33 @@ export default function DrawerAppBar(): React.ReactElement {
                     },
                   }}
                 >
-                  <MenuItem
+                  <HeaderMenuItem
                     data-cy='accountDetailsHeader'
-                    onClick={() => {
-                      setAccountAnchorEl(null);
-                      handleNavigation(navigationAccountItem);
-                    }}
+                    component={Link}
+                    href='/account'
                   >
                     {tCommon('accountDetails')}
-                  </MenuItem>
-                  <MenuItem
+                  </HeaderMenuItem>
+                  <HeaderMenuItem component={Link} href='/account/api-access'>
+                    API Access
+                  </HeaderMenuItem>
+                  {config.isNotificationsEnabled && (
+                    <HeaderMenuItem
+                      component={Link}
+                      href='/account/notifications'
+                    >
+                      Notifications
+                    </HeaderMenuItem>
+                  )}
+                  <HeaderMenuItem
+                    sx={{ color: 'error.main' }}
                     onClick={() => {
                       setAccountAnchorEl(null);
                       handleLogoutClick();
                     }}
                   >
-                    {tCommon('signOut')}
-                  </MenuItem>
+                    Sign Out
+                  </HeaderMenuItem>
                 </Menu>
               </Box>
             ) : (

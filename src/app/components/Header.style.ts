@@ -77,6 +77,7 @@ export const HeaderMenuItem = styled(MenuItem)<{
   fontFamily: fontFamily.secondary,
   opacity: 0.8,
   fontWeight: 500,
+  fontSize: '0.875rem',
   '&:hover': {
     opacity: 1,
   },
