@@ -139,7 +139,6 @@ export default function AccountApiAccess(): React.ReactElement {
 
   React.useEffect(() => {
     if (isAccessTokenRefreshed) {
-      console.log('Access token refreshed successfully', isAccessTokenRefreshed);  
       setRefreshTokenSuccess(true);
       setTimeout(() => {
         setRefreshTokenSuccess(false);
@@ -457,7 +456,10 @@ export default function AccountApiAccess(): React.ReactElement {
                       ) : (
                         <RefreshOutlined
                           fontSize='small'
-                          sx={{ display: 'inline-block', verticalAlign: 'middle' }}
+                          sx={{
+                            display: 'inline-block',
+                            verticalAlign: 'middle',
+                          }}
                         />
                       )}
                     </IconButton>
@@ -489,7 +491,10 @@ export default function AccountApiAccess(): React.ReactElement {
                     >
                       <ContentCopyOutlined
                         fontSize='small'
-                        sx={{ display: 'inline-block', verticalAlign: 'middle' }}
+                        sx={{
+                          display: 'inline-block',
+                          verticalAlign: 'middle',
+                        }}
                       />
                     </IconButton>
                   </span>
@@ -507,12 +512,18 @@ export default function AccountApiAccess(): React.ReactElement {
                     {accountState.showAccessToken ? (
                       <VisibilityOffOutlined
                         fontSize='small'
-                        sx={{ display: 'inline-block', verticalAlign: 'middle' }}
+                        sx={{
+                          display: 'inline-block',
+                          verticalAlign: 'middle',
+                        }}
                       />
                     ) : (
                       <VisibilityOutlined
                         fontSize='small'
-                        sx={{ display: 'inline-block', verticalAlign: 'middle' }}
+                        sx={{
+                          display: 'inline-block',
+                          verticalAlign: 'middle',
+                        }}
                       />
                     )}
                   </IconButton>

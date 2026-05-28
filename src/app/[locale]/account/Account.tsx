@@ -113,8 +113,6 @@ export default function APIAccount({
   const user = useSelector(selectUserProfile);
   const router = useRouter();
 
-  const [selectedNav, setSelectedNav] = React.useState<NavSection>(section);
-
   const texts = {
     accessTokenHidden: t('accessToken.hidden'),
     refreshTokenHidden: t('refreshToken.placeholder'),
@@ -382,7 +380,7 @@ export default function APIAccount({
             {NAV_ITEMS.map((item) => (
               <ListItemButton
                 key={item.id}
-                selected={selectedNav === item.id}
+                selected={section === item.id}
                 onClick={() => {
                   router.push(NAV_ROUTES[item.id]);
                 }}
@@ -395,11 +393,8 @@ export default function APIAccount({
           </List>
         </Paper>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          {selectedNav === 'general' && (
-            <AccountSectionContainer
-             title={t('userDetails')}
-            >
-             
+          {section === 'general' && (
+            <AccountSectionContainer title={t('userDetails')}>
               <Typography variant='body1'>
                 <b>{tCommon('name')}:</b>
                 {' ' + (user?.fullName ?? tCommon('unknown'))}
@@ -469,9 +464,9 @@ export default function APIAccount({
             </AccountSectionContainer>
           )}
 
-          {selectedNav === 'notifications' && <AccountNotifications />}
+          {section === 'notifications' && <AccountNotifications />}
 
-          {selectedNav === 'api-access' && (
+          {section === 'api-access' && (
             <Box>
               <AccountSectionContainer title={t('refreshToken.title')}>
                 <Typography sx={{ mb: 2 }}>{t('description')}</Typography>

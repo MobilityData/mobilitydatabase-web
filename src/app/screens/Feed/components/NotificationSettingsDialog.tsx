@@ -107,7 +107,7 @@ export default function NotificationSettingsDialog({
             <Slider
               value={threshold}
               onChange={(_, value) => {
-                setThreshold(value as number);
+                setThreshold(value);
               }}
               min={1}
               max={100}

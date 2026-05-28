@@ -217,7 +217,10 @@ function AccountLayoutContent({
 
         <Box sx={{ flex: 1, minWidth: 0 }}>{children}</Box>
       </Box>
-      <LogoutConfirmModal openDialog={openDialog} setOpenDialog={setOpenDialog} />
+      <LogoutConfirmModal
+        openDialog={openDialog}
+        setOpenDialog={setOpenDialog}
+      />
     </Container>
   );
 }

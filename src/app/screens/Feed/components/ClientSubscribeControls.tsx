@@ -1,6 +1,6 @@
 'use client';
 
-// This component is currently hardcoded 
+// This component is currently hardcoded
 // To implement actual data fetching / setting once backend APIs are in place
 
 import { useState } from 'react';

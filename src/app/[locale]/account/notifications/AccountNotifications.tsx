@@ -151,11 +151,6 @@ export default function AccountNotifications(): React.ReactElement {
     }
   };
 
-  const handleOpenSettings = (): void => {
-    handleMenuClose();
-    setSettingsDialogOpen(true);
-  };
-
   const handleSaveSettings = (settings: NotificationSettings): void => {
     if (menuState !== null) {
       setRowSettings((prev) => ({ ...prev, [menuState.id]: settings }));
@@ -195,14 +190,16 @@ export default function AccountNotifications(): React.ReactElement {
         }}
         sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}
       >
-        <Tab label='Feeds' sx={{textTransform: 'none'}}/>
-        <Tab label='Settings' sx={{textTransform: 'none'}}/>
+        <Tab label='Feeds' sx={{ textTransform: 'none' }} />
+        <Tab label='Settings' sx={{ textTransform: 'none' }} />
       </Tabs>
 
       {/* ── Feeds tab ─────────────────────────────────────────────── */}
       {tab === 0 && (
         <Box>
-          <TableContainer sx={{backgroundColor: 'background.default', borderRadius: 1}}>
+          <TableContainer
+            sx={{ backgroundColor: 'background.default', borderRadius: 1 }}
+          >
             <Table>
               <TableHead>
                 <TableRow>
@@ -279,7 +276,7 @@ export default function AccountNotifications(): React.ReactElement {
             transformOrigin={{ vertical: 'top', horizontal: 'right' }}
           >
             <MenuItem onClick={handleTogglePause}>
-              {isPaused === true ? 'Resume Notifications' : 'Pause Notifications'}
+              {isPaused ? 'Resume Notifications' : 'Pause Notifications'}
             </MenuItem>
             <MenuItem onClick={handleUnsubscribe} sx={{ color: 'error.main' }}>
               Unsubscribe
