@@ -28,6 +28,8 @@ export interface RemoteConfigValues {
   enableDetailedCoveredArea: boolean;
   gbfsValidator: boolean;
   gtfsFeatureTracker: boolean;
+  /** Enable feed subscription / notifications UI */
+  isNotificationsEnabled: boolean;
 }
 
 const gbfsVersionsDefault: GbfsVersionConfig = [];
@@ -48,6 +50,7 @@ export const defaultRemoteConfigValues: RemoteConfigValues = {
   enableDetailedCoveredArea: false,
   gbfsValidator: false,
   gtfsFeatureTracker: false,
+  isNotificationsEnabled: false,
 };
 
 /**
