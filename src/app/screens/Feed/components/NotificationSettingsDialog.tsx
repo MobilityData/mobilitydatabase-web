@@ -14,21 +14,29 @@ import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormGroup from '@mui/material/FormGroup';
 import FormLabel from '@mui/material/FormLabel';
+import IconButton from '@mui/material/IconButton';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
-import Slider from '@mui/material/Slider';
-import Typography from '@mui/material/Typography';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import ChangeTypeInfoPopover, {
+  CHANGE_TYPE_INFO,
+} from '../../../components/ChangeTypeInfoPopover';
 
 export interface NotificationSettings {
-  threshold: number;
   frequency: 'onChange' | 'weekly' | 'monthly' | 'quarterly';
   changeTypes: string[];
 }
 
 export const defaultNotificationSettings: NotificationSettings = {
-  threshold: 55,
   frequency: 'onChange',
-  changeTypes: ['any', 'features', 'expiry', 'validation'],
+  changeTypes: [
+    'any',
+    'features',
+    'expiry',
+    'validation',
+    'breaking',
+    'suspicious',
+  ],
 };
 
 const CHANGE_TYPE_OPTIONS = [
@@ -36,9 +44,17 @@ const CHANGE_TYPE_OPTIONS = [
   { value: 'features', label: 'Features Changes' },
   { value: 'expiry', label: '7 Days Before Expiry' },
   { value: 'validation', label: 'New Validation Errors' },
+  { value: 'breaking', label: 'Breaking Changes' },
+  { value: 'suspicious', label: 'Suspicious Changes' },
 ] as const;
 
-const SPECIFIC_TYPES = ['features', 'expiry', 'validation'];
+const SPECIFIC_TYPES = [
+  'features',
+  'expiry',
+  'validation',
+  'breaking',
+  'suspicious',
+];
 
 interface Props {
   open: boolean;
@@ -53,18 +69,21 @@ export default function NotificationSettingsDialog({
   onSave,
   initialSettings,
 }: Props): React.ReactElement {
-  const [threshold, setThreshold] = useState(initialSettings.threshold);
   const [frequency, setFrequency] = useState(initialSettings.frequency);
   const [changeTypes, setChangeTypes] = useState<string[]>(
     initialSettings.changeTypes,
   );
+  const [infoPopover, setInfoPopover] = useState<{
+    anchor: HTMLElement;
+    type: string;
+  } | null>(null);
 
   // Reset to saved settings each time the dialog opens
   useEffect(() => {
     if (open) {
-      setThreshold(initialSettings.threshold);
       setFrequency(initialSettings.frequency);
       setChangeTypes(initialSettings.changeTypes);
+      setInfoPopover(null);
     }
   }, [open, initialSettings]);
 
@@ -90,42 +109,10 @@ export default function NotificationSettingsDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth='sm' fullWidth>
-      <DialogTitle>Notification Settings</DialogTitle>
+      <DialogTitle>Global Notification Settings</DialogTitle>
 
       <DialogContent dividers>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {/* Difference threshold */}
-          <Box>
-            <Typography gutterBottom fontWeight={500}>
-              Difference Threshold: {threshold}%
-            </Typography>
-            <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-              Notifications trigger based on how much the feed has changed. 1%
-              means any single change, 100% means the entire feed would need to
-              change.
-            </Typography>
-            <Slider
-              value={threshold}
-              onChange={(_, value) => {
-                setThreshold(value);
-              }}
-              min={1}
-              max={100}
-              valueLabelDisplay='auto'
-              valueLabelFormat={(v) => `${v}%`}
-            />
-            <Box
-              sx={{ display: 'flex', justifyContent: 'space-between', mt: -1 }}
-            >
-              <Typography variant='caption' color='text.secondary'>
-                Any small change
-              </Typography>
-              <Typography variant='caption' color='text.secondary'>
-                Major changes only
-              </Typography>
-            </Box>
-          </Box>
-
           {/* Frequency */}
           <FormControl>
             <FormLabel sx={{ fontWeight: 500, mb: 0.5 }}>
@@ -164,7 +151,30 @@ export default function NotificationSettingsDialog({
                       }}
                     />
                   }
-                  label={label}
+                  label={
+                    value in CHANGE_TYPE_INFO ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <span>{label}</span>
+                        <IconButton
+                          size='small'
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setInfoPopover({
+                              anchor: e.currentTarget,
+                              type: value,
+                            });
+                          }}
+                          sx={{ ml: 0.5 }}
+                          aria-label={`About ${label}`}
+                        >
+                          <InfoOutlinedIcon fontSize='small' />
+                        </IconButton>
+                      </Box>
+                    ) : (
+                      label
+                    )
+                  }
                 />
               ))}
             </FormGroup>
@@ -172,13 +182,23 @@ export default function NotificationSettingsDialog({
         </Box>
       </DialogContent>
 
+      {infoPopover != null && (
+        <ChangeTypeInfoPopover
+          anchor={infoPopover.anchor}
+          type={infoPopover.type}
+          onClose={() => {
+            setInfoPopover(null);
+          }}
+        />
+      )}
+
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
         <Button
           variant='contained'
           disableElevation
           onClick={() => {
-            onSave({ threshold, frequency, changeTypes });
+            onSave({ frequency, changeTypes });
           }}
         >
           Save

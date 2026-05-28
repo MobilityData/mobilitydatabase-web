@@ -22,7 +22,11 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import ChangeTypeInfoPopover, {
+  CHANGE_TYPE_INFO,
+} from '../../../components/ChangeTypeInfoPopover';
 import NotificationSettingsDialog, {
   defaultNotificationSettings,
   type NotificationSettings,
@@ -75,22 +79,22 @@ const MOCK_NOTIFICATIONS: NotificationSubscription[] = [
   },
 ];
 
-const FREQUENCY_LABELS: Record<NotificationSubscription['frequency'], string> =
-  {
-    onChange: 'On Change',
-    weekly: 'Weekly',
-    monthly: 'Monthly',
-    quarterly: 'Quarterly',
-  };
-
 const CHANGE_TYPE_OPTIONS = [
   { value: 'any', label: 'Any Change' },
   { value: 'features', label: 'Features Only' },
   { value: 'expiry', label: '7 Days Before Expiry' },
   { value: 'validation', label: 'New Validation Errors' },
+  { value: 'breaking', label: 'Breaking Changes' },
+  { value: 'suspicious', label: 'Suspicious Changes' },
 ] as const;
 
-const SPECIFIC_TYPES = ['features', 'expiry', 'validation'];
+const SPECIFIC_TYPES = [
+  'features',
+  'expiry',
+  'validation',
+  'breaking',
+  'suspicious',
+];
 
 export default function AccountNotifications(): React.ReactElement {
   const [tab, setTab] = React.useState(0);
@@ -111,6 +115,10 @@ export default function AccountNotifications(): React.ReactElement {
   const [defaultChangeTypes, setDefaultChangeTypes] = React.useState<string[]>(
     [],
   );
+  const [infoPopover, setInfoPopover] = React.useState<{
+    anchor: HTMLElement;
+    type: string;
+  } | null>(null);
 
   const selectedSubscription =
     menuState !== null
@@ -210,9 +218,6 @@ export default function AccountNotifications(): React.ReactElement {
                     <Typography fontWeight={600}>Status</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography fontWeight={600}>Frequency</Typography>
-                  </TableCell>
-                  <TableCell>
                     <Typography fontWeight={600}>Last Sent</Typography>
                   </TableCell>
                   <TableCell>
@@ -232,7 +237,6 @@ export default function AccountNotifications(): React.ReactElement {
                         variant='outlined'
                       />
                     </TableCell>
-                    <TableCell>{FREQUENCY_LABELS[n.frequency]}</TableCell>
                     <TableCell>
                       {n.lastSent !== null
                         ? new Date(n.lastSent).toLocaleDateString(undefined, {
@@ -298,10 +302,10 @@ export default function AccountNotifications(): React.ReactElement {
       {tab === 1 && (
         <Box sx={{ maxWidth: 480 }}>
           <Typography variant='h6' gutterBottom>
-            Default Notification Preferences
+            Global Notification Preferences
           </Typography>
           <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
-            These settings will apply to any new feed subscriptions you create
+            These settings will apply to all feed subscriptions you create
           </Typography>
 
           <FormControl component='fieldset' sx={{ mb: 3, display: 'block' }}>
@@ -340,7 +344,30 @@ export default function AccountNotifications(): React.ReactElement {
                       }}
                     />
                   }
-                  label={opt.label}
+                  label={
+                    opt.value in CHANGE_TYPE_INFO ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <span>{opt.label}</span>
+                        <IconButton
+                          size='small'
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setInfoPopover({
+                              anchor: e.currentTarget,
+                              type: opt.value,
+                            });
+                          }}
+                          sx={{ ml: 0.5 }}
+                          aria-label={`About ${opt.label}`}
+                        >
+                          <InfoOutlinedIcon fontSize='small' />
+                        </IconButton>
+                      </Box>
+                    ) : (
+                      opt.label
+                    )
+                  }
                 />
               ))}
             </FormGroup>
@@ -355,6 +382,16 @@ export default function AccountNotifications(): React.ReactElement {
             Save Preferences
           </Button>
         </Box>
+      )}
+
+      {infoPopover != null && (
+        <ChangeTypeInfoPopover
+          anchor={infoPopover.anchor}
+          type={infoPopover.type}
+          onClose={() => {
+            setInfoPopover(null);
+          }}
+        />
       )}
     </AccountSectionContainer>
   );

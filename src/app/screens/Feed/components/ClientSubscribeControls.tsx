@@ -139,6 +139,9 @@ export default function ClientSubscribeControls(): React.ReactElement | null {
         >
           Notification Settings
         </MenuItem>
+        <MenuItem component={Link} href='/account/notifications'>
+          View All Notifications
+        </MenuItem>
         <MenuItem onClick={handleUnsubscribe} sx={{ color: 'error.main' }}>
           Unsubscribe
         </MenuItem>
