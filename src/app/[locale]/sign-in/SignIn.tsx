@@ -105,7 +105,14 @@ export default function SignIn(): React.ReactElement {
 
   React.useEffect(() => {
     if (userProfileStatus === 'registered') {
-      if (searchParams.has('add_feed')) {
+      const redirectTo = searchParams.get('redirect_to');
+      if (
+        redirectTo != null &&
+        redirectTo.startsWith('/') &&
+        !redirectTo.startsWith('//')
+      ) {
+        router.push(redirectTo);
+      } else if (searchParams.has('add_feed')) {
         router.push(ADD_FEED_TARGET);
       } else {
         router.push(ACCOUNT_TARGET);

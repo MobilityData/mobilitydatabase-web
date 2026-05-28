@@ -27,6 +27,7 @@ import ClientDownloadButton from './components/ClientDownloadButton';
 import RevalidateCacheButton from './components/RevalidateCacheButton';
 import { type components } from '../../services/feeds/types';
 import ClientQualityReportButton from './components/ClientQualityReportButton';
+import ClientSubscribeControls from './components/ClientSubscribeControls';
 import { getBoundingBox } from './Feed.functions';
 import dynamic from 'next/dynamic';
 import { ContentBox } from '../../components/ContentBox';
@@ -114,7 +115,6 @@ export default async function FeedView({
       <Button
         disableElevation
         variant='contained'
-        sx={{ marginRight: 2 }}
         href={gbfsAutodiscoveryUrl}
         target='_blank'
         rel='noreferrer'
@@ -359,6 +359,7 @@ export default async function FeedView({
                   />
                 )}
               {feed?.data_type === 'gbfs' && <>{gbfsOpenFeedUrlElement()}</>}
+              <ClientSubscribeControls />
             </Box>
 
             <Grid size={12}>
