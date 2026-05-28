@@ -1,14 +1,6 @@
 import { type ReactElement } from 'react';
-import Account from './Account';
-import { ReduxGateWrapper } from '../../components/ReduxGateWrapper';
-import { ProtectedPageWrapper } from '../../components/ProtectedPageWrapper';
+import AccountGeneral from './AccountGeneral';
 
 export default function AccountPage(): ReactElement {
-  return (
-    <ReduxGateWrapper>
-      <ProtectedPageWrapper>
-        <Account />
-      </ProtectedPageWrapper>
-    </ReduxGateWrapper>
-  );
+  return <AccountGeneral />;
 }

@@ -248,6 +248,10 @@
     "officialFeedTooltipShort": "Verified feed: Confirmed by the transit provider or the Mobility Database team for rider use.",
     "seeDetailPageProviders": "See detail page to view {providersCount} others",
     "openFullQualityReport": "Open Full Quality Report",
+    "subscribe": "S'abonner",
+    "unsubscribe": "Se désabonner",
+    "subscribedToFeed": "Vous êtes abonné à ce flux",
+    "unsubscribedFromFeed": "Vous vous êtes désabonné de ce flux",
     "qualityReportUpdated": "Quality report updated",
     "officialFeedUpdated": "Official verification updated",
     "serviceDateRange": "Service Date Range",
@@ -411,7 +415,7 @@
     }
   },
   "account": {
-    "title": "Votre compte API",
+    "title": "Votre compte",
     "userDetails": "Détails de l'utilisateur",
     "description": "L'API de la base de données de mobilité utilise l'authentification OAuth2. Pour initier une demande API réussie, un jeton d'accès doit être inclus en tant que jeton porteur dans l'en-tête HTTP. Les jetons d'accès sont valides pendant une heure. Pour obtenir un jeton d'accès, vous aurez d'abord besoin d'un jeton de rafraîchissement, qui est de longue durée et n'expire pas.",
     "support": "Si vous avez besoin d'un jeton de rafraîchissement réémis ou si vous souhaitez que votre compte soit supprimé, envoyez-nous un courriel à",

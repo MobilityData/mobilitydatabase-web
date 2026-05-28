@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '../../../i18n/navigation';
 import { useTheme } from '@mui/material/styles';
 import {
   Typography,
@@ -16,9 +16,12 @@ import {
   CircularProgress,
   Snackbar,
   Chip,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material';
 import {
-  AccountCircleOutlined,
   Check,
   ContentCopyOutlined,
   ExitToAppOutlined,
@@ -26,6 +29,9 @@ import {
   VisibilityOffOutlined,
   VisibilityOutlined,
   WarningAmberOutlined,
+  DashboardOutlined,
+  VpnKeyOutlined,
+  NotificationsOutlined,
 } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import {
@@ -49,6 +55,32 @@ import {
   tokenActionButtonsSx,
   tokenDisplayElementSx,
 } from './Account.styles';
+import AccountNotifications from './notifications/AccountNotifications';
+import { AccountSectionContainer } from './AccountSectionContainer';
+
+type NavSection = 'general' | 'api-access' | 'notifications';
+
+const NAV_ITEMS: Array<{
+  id: NavSection;
+  label: string;
+  icon: React.ReactElement;
+}> = [
+  {
+    id: 'general',
+    label: 'General',
+    icon: <DashboardOutlined />,
+  },
+  {
+    id: 'api-access',
+    label: 'API Access',
+    icon: <VpnKeyOutlined />,
+  },
+  {
+    id: 'notifications',
+    label: 'Notifications',
+    icon: <NotificationsOutlined />,
+  },
+];
 
 interface APIAccountState {
   showRefreshToken: boolean;
@@ -62,7 +94,17 @@ enum TokenTypes {
   Refresh = 'refreshToken',
 }
 
-export default function APIAccount(): React.ReactElement {
+const NAV_ROUTES: Record<NavSection, string> = {
+  general: '/account',
+  notifications: '/account/notifications',
+  'api-access': '/account/api-access',
+};
+
+export default function APIAccount({
+  section = 'general',
+}: {
+  section?: NavSection;
+}): React.ReactElement {
   const t = useTranslations('account');
   const tCommon = useTranslations('common');
   const apiURL = 'https://api.mobilitydatabase.org/v1';
@@ -70,6 +112,8 @@ export default function APIAccount(): React.ReactElement {
   const theme = useTheme();
   const user = useSelector(selectUserProfile);
   const router = useRouter();
+
+  const [selectedNav, setSelectedNav] = React.useState<NavSection>(section);
 
   const texts = {
     accessTokenHidden: t('accessToken.hidden'),
@@ -324,329 +368,150 @@ export default function APIAccount(): React.ReactElement {
         }}
       >
         <Paper
-          sx={{
-            bgcolor: theme.vars.palette.background.paper,
-            width: {
-              xs: '100%',
-              md: '390px',
-            },
-            p: 3,
-            mr: 1,
-            display: 'flex',
-            flexDirection: 'column',
-          }}
           elevation={0}
+          sx={{
+            width: { xs: '100%', md: 200 },
+            mr: { xs: 0, md: 2 },
+            mb: { xs: 2, md: 0 },
+            height: 'fit-content',
+            bgcolor: theme.vars.palette.background.paper,
+            p: 1,
+          }}
         >
-          <Typography
-            component='h5'
-            variant='h5'
-            color='primary'
-            sx={{
-              fontWeight: 'bold',
-              mb: 1,
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <AccountCircleOutlined sx={{ mr: 1 }} />
-            {t('userDetails')}
-          </Typography>
-          <Typography variant='body1'>
-            <b>{tCommon('name')}:</b>
-            {' ' + (user?.fullName ?? tCommon('unknown'))}
-          </Typography>
-          <Typography variant='body1'>
-            {user?.email !== undefined && user?.email !== '' ? (
-              <Typography variant='body1' component={'span'}>
-                <b>{tCommon('email')}:</b>{' '}
-                {' ' + (user?.email ?? tCommon('unknown'))}
-              </Typography>
-            ) : null}
-          </Typography>
-          {user?.organization !== undefined && (
-            <Typography variant='body1'>
-              <b>{tCommon('organization')}:</b> {' ' + user?.organization}
-            </Typography>
-          )}
-          {user?.isRegisteredToReceiveAPIAnnouncements === true ? (
-            <Chip
-              label={t('registerApiAnnouncements')}
-              color='primary'
-              variant='outlined'
-              sx={{ mt: 1 }}
-              icon={<Check />}
-            />
-          ) : null}
-          <Typography sx={{ mt: 2 }}>
-            {t('support') + ' '}
-            <Link
-              href='mailto:api@mobilitydata.org?subject=Remove Mobility Database account'
-              color={'inherit'}
-              target={'_blank'}
-              fontWeight={'bold'}
-            >
-              api@mobilitydata.org
-            </Link>
-            .
-          </Typography>
-          <Box sx={{ display: 'flex', justifyContent: 'space-evenly', mt: 2 }}>
-            {!signedInWithProvider && (
-              <Button
-                data-cy='changePasswordButton'
-                variant='contained'
-                color='primary'
-                sx={{ m: 1, mb: 0 }}
-                onClick={handleChangePasswordClick}
+          <List disablePadding>
+            {NAV_ITEMS.map((item) => (
+              <ListItemButton
+                key={item.id}
+                selected={selectedNav === item.id}
+                onClick={() => {
+                  router.push(NAV_ROUTES[item.id]);
+                }}
+                sx={{ borderRadius: 1 }}
               >
-                Change Password
-              </Button>
-            )}
-            <Button
-              variant='contained'
-              color='primary'
-              sx={{ m: 1, mb: 0 }}
-              startIcon={<ExitToAppOutlined />}
-              onClick={handleSignOutClick}
-              data-cy='signOutButton'
-            >
-              {tCommon('signOut')}
-            </Button>
-          </Box>
+                <ListItemIcon sx={{ minWidth: 36 }}>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.label} />
+              </ListItemButton>
+            ))}
+          </List>
         </Paper>
-        <Box>
-          <Box sx={{ p: 1, mb: 5 }}>
-            <Typography sx={{ mb: 2 }}>{t('description')}</Typography>
-            <Typography variant='sectionTitle'>
-              {t('refreshToken.title')}
-            </Typography>
-            <Typography sx={{ mb: 2 }}>
-              {t('refreshToken.description')}
-            </Typography>
-            <Box sx={tokenDisplayElementSx}>
-              <Typography
-                width={500}
-                variant='body1'
-                sx={{ wordBreak: 'break-all' }}
-              >
-                {showRefreshTokenCopied
-                  ? refreshTokenCopyResult
-                  : accountState.showRefreshToken
-                    ? user?.refreshToken !== undefined
-                      ? user?.refreshToken
-                      : texts.tokenUnavailable
-                    : texts.refreshTokenHidden}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          {selectedNav === 'general' && (
+            <AccountSectionContainer
+             title={t('userDetails')}
+            >
+             
+              <Typography variant='body1'>
+                <b>{tCommon('name')}:</b>
+                {' ' + (user?.fullName ?? tCommon('unknown'))}
               </Typography>
-              <Box sx={tokenActionButtonsSx}>
-                <Tooltip
-                  title={
-                    showRefreshTokenCopied
-                      ? refreshTokenCopyResult
-                      : texts.copyRefreshToken
-                  }
+              <Typography variant='body1'>
+                {user?.email !== undefined && user?.email !== '' ? (
+                  <Typography variant='body1' component={'span'}>
+                    <b>{tCommon('email')}:</b>{' '}
+                    {' ' + (user?.email ?? tCommon('unknown'))}
+                  </Typography>
+                ) : null}
+              </Typography>
+              {user?.organization !== undefined && (
+                <Typography variant='body1'>
+                  <b>{tCommon('organization')}:</b> {' ' + user?.organization}
+                </Typography>
+              )}
+              {user?.isRegisteredToReceiveAPIAnnouncements === true ? (
+                <Chip
+                  label={t('registerApiAnnouncements')}
+                  color='primary'
+                  variant='outlined'
+                  sx={{ mt: 1 }}
+                  icon={<Check />}
+                />
+              ) : null}
+              <Typography sx={{ mt: 2 }}>
+                {t('support') + ' '}
+                <Link
+                  href='mailto:api@mobilitydata.org?subject=Remove Mobility Database account'
+                  color={'inherit'}
+                  target={'_blank'}
+                  fontWeight={'bold'}
                 >
-                  <span>
-                    <IconButton
-                      color='primary'
-                      aria-label={texts.copyRefreshTokenToClipboard}
-                      edge='end'
-                      disabled={user?.refreshToken === undefined}
-                      onClick={() => {
-                        if (user?.refreshToken != null) {
-                          handleCopyTokenToClipboard(
-                            user.refreshToken,
-                            setRefreshTokenCopyResult,
-                            setShowRefreshTokenCopied,
-                          );
-                        }
-                      }}
-                      sx={{
-                        display: 'inline-block',
-                        verticalAlign: 'middle',
-                      }}
-                    >
-                      <ContentCopyOutlined fontSize='small' />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-                <Tooltip title={t('refreshToken.toggleVisibility')}>
-                  <IconButton
-                    color='primary'
-                    aria-label={t('refreshToken.toggleVisibility')}
-                    onClick={() => {
-                      handleClickShowToken(TokenTypes.Refresh);
-                    }}
-                    edge='end'
-                    sx={{ display: 'inline-block', verticalAlign: 'middle' }}
-                  >
-                    {accountState.showRefreshToken ? (
-                      <VisibilityOffOutlined fontSize='small' />
-                    ) : (
-                      <VisibilityOutlined fontSize='small' />
-                    )}
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </Box>
-          </Box>
-          <Box sx={{ p: 1, mt: 5 }}>
-            <Typography variant='sectionTitle'>
-              {t('accessToken.title')}
-            </Typography>
-            <Typography sx={{ mb: 2 }}>
-              {t('accessToken.description.pt1') + ' '}
-              <Link
-                href='https://mobilitydata.github.io/mobility-feed-api/SwaggerUI/index.html'
-                color={'inherit'}
-                target='_blank'
-              >
-                {t('accessToken.description.cta')}
-              </Link>{' '}
-              {t('accessToken.description.pt2')}
-            </Typography>
-            <Paper elevation={3} sx={codeBlockSx}>
+                  api@mobilitydata.org
+                </Link>
+                .
+              </Typography>
               <Box
                 sx={{
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: '10px',
+                  justifyContent: 'flex-start',
+                  gap: 1,
+                  mt: 2,
                 }}
               >
-                <Box>
-                  <Typography variant='h6'>
-                    {t('accessToken.generate')}
-                  </Typography>
-
-                  <Typography>{t('accessToken.copy')}</Typography>
-                </Box>
-                <Tooltip title={accountState.codeBlockTooltip}>
-                  <IconButton
-                    color='inherit'
-                    aria-label={texts.copyAccessTokenToClipboard}
-                    edge='end'
-                    onClick={() => {
-                      handleCopyCodeBlock(getCurlAccessTokenCommand());
-                    }}
-                    sx={{ display: 'inline-block', verticalAlign: 'middle' }}
+                {!signedInWithProvider && (
+                  <Button
+                    data-cy='changePasswordButton'
+                    variant='contained'
+                    color='primary'
+                    onClick={handleChangePasswordClick}
                   >
-                    <ContentCopyOutlined fontSize='small' />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-              <Typography sx={codeBlockContentSx}>
-                <span style={{ ...theme.mixins.code.command }}>curl</span>{' '}
-                --location &apos;{apiURL}/tokens&apos;
-                <span style={{ color: theme.mixins.code?.contrastText }}>
-                  \
-                </span>
-                <br />
-                <span style={{ color: theme.mixins.code?.contrastText }}>
-                  --header
-                </span>{' '}
-                &apos;Content-Type: application/json&apos;
-                <span style={{ color: theme.mixins.code?.contrastText }}>
-                  \
-                </span>
-                <br />
-                <span style={{ color: theme.mixins.code?.contrastText }}>
-                  --data &apos;&#123;
-                </span>
-                <span>
-                  {' '}
-                  &quot;refresh_token&quot;: &quot;[
-                  {t('refreshToken.yourToken')}]&quot;
-                </span>
-                <span style={{ color: theme.mixins.code?.contrastText }}>
-                  {' '}
-                  &#125;&apos;
-                </span>
-              </Typography>
-            </Paper>
-          </Box>
-          <Box sx={{ p: 1, mt: 5 }}>
-            <Typography variant='sectionTitle'>
-              {t('accessToken.testing.title')}
-            </Typography>
-            <Typography sx={{ mb: 2 }}>
-              {t('accessToken.testing.description.pt1') + ' '}
-              <Link
-                href='https://mobilitydata.github.io/mobility-feed-api/SwaggerUI/index.html#/'
-                target={'_blank'}
-              >
-                {t('accessToken.testing.description.cta')}
-              </Link>
-              {t('accessToken.testing.description.pt2')}
-            </Typography>
-            {showGenerateAccessTokenButton && (
-              <Box sx={{ mb: 2 }}>
-                <Button onClick={handleGenerateAccessToken} variant='contained'>
-                  {t('accessToken.generate')}
+                    Change Password
+                  </Button>
+                )}
+                <Button
+                  variant='contained'
+                  color='primary'
+                  startIcon={<ExitToAppOutlined />}
+                  onClick={handleSignOutClick}
+                  data-cy='signOutButton'
+                >
+                  {tCommon('signOut')}
                 </Button>
               </Box>
-            )}
+            </AccountSectionContainer>
+          )}
 
-            {!showGenerateAccessTokenButton && (
-              <Box sx={{ width: 'fit-content', p: 1, mb: 5 }}>
+          {selectedNav === 'notifications' && <AccountNotifications />}
+
+          {selectedNav === 'api-access' && (
+            <Box>
+              <AccountSectionContainer title={t('refreshToken.title')}>
+                <Typography sx={{ mb: 2 }}>{t('description')}</Typography>
+                <Typography sx={{ mb: 2 }}>
+                  {t('refreshToken.description')}
+                </Typography>
                 <Box sx={tokenDisplayElementSx}>
                   <Typography
                     width={500}
                     variant='body1'
                     sx={{ wordBreak: 'break-all' }}
                   >
-                    {accountState.showAccessToken
-                      ? user?.accessToken !== undefined
-                        ? user?.accessToken
-                        : texts.tokenUnavailable
-                      : texts.accessTokenHidden}
+                    {showRefreshTokenCopied
+                      ? refreshTokenCopyResult
+                      : accountState.showRefreshToken
+                        ? user?.refreshToken !== undefined
+                          ? user?.refreshToken
+                          : texts.tokenUnavailable
+                        : texts.refreshTokenHidden}
                   </Typography>
                   <Box sx={tokenActionButtonsSx}>
-                    <Tooltip title={refreshAccessTokenButtonText}>
-                      <span>
-                        <IconButton
-                          color='primary'
-                          aria-label={refreshAccessTokenButtonText}
-                          edge='end'
-                          sx={{
-                            display: 'inline-block',
-                            verticalAlign: 'middle',
-                          }}
-                          onClick={handleGenerateAccessToken}
-                          disabled={isRefreshingAccessToken}
-                        >
-                          {isRefreshingAccessToken ? (
-                            <CircularProgress size={14} />
-                          ) : (
-                            <RefreshOutlined
-                              fontSize='small'
-                              sx={{
-                                display: 'inline-block',
-                                verticalAlign: 'middle',
-                              }}
-                            />
-                          )}
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-
                     <Tooltip
                       title={
-                        showAccessTokenCopiedTooltip
-                          ? accessTokenCopyResult
-                          : texts.copyAccessToken
+                        showRefreshTokenCopied
+                          ? refreshTokenCopyResult
+                          : texts.copyRefreshToken
                       }
                     >
                       <span>
                         <IconButton
                           color='primary'
-                          aria-label={texts.copyAccessTokenToClipboard}
+                          aria-label={texts.copyRefreshTokenToClipboard}
                           edge='end'
-                          disabled={user?.accessToken === undefined}
+                          disabled={user?.refreshToken === undefined}
                           onClick={() => {
-                            if (user?.accessToken != null) {
+                            if (user?.refreshToken != null) {
                               handleCopyTokenToClipboard(
-                                user.accessToken,
-                                setAccessTokenCopyResult,
-                                setShowAccessTokenCopiedTooltip,
+                                user.refreshToken,
+                                setRefreshTokenCopyResult,
+                                setShowRefreshTokenCopied,
                               );
                             }
                           }}
@@ -655,115 +520,325 @@ export default function APIAccount(): React.ReactElement {
                             verticalAlign: 'middle',
                           }}
                         >
-                          <ContentCopyOutlined
-                            fontSize='small'
-                            sx={{
-                              display: 'inline-block',
-                              verticalAlign: 'middle',
-                            }}
-                          />
+                          <ContentCopyOutlined fontSize='small' />
                         </IconButton>
                       </span>
                     </Tooltip>
-                    <Tooltip title={t('accessToken.toggleVisibility')}>
+                    <Tooltip title={t('refreshToken.toggleVisibility')}>
                       <IconButton
                         color='primary'
-                        aria-label={t('accessToken.toggleVisibility')}
+                        aria-label={t('refreshToken.toggleVisibility')}
+                        onClick={() => {
+                          handleClickShowToken(TokenTypes.Refresh);
+                        }}
+                        edge='end'
+                        sx={{
+                          display: 'inline-block',
+                          verticalAlign: 'middle',
+                        }}
+                      >
+                        {accountState.showRefreshToken ? (
+                          <VisibilityOffOutlined fontSize='small' />
+                        ) : (
+                          <VisibilityOutlined fontSize='small' />
+                        )}
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Box>
+              </AccountSectionContainer>
+              <AccountSectionContainer
+                title={t('accessToken.title')}
+                sx={{ mt: 3 }}
+              >
+                <Typography sx={{ mb: 2 }}>
+                  {t('accessToken.description.pt1') + ' '}
+                  <Link
+                    href='https://mobilitydata.github.io/mobility-feed-api/SwaggerUI/index.html'
+                    color={'inherit'}
+                    target='_blank'
+                  >
+                    {t('accessToken.description.cta')}
+                  </Link>{' '}
+                  {t('accessToken.description.pt2')}
+                </Typography>
+                <Paper elevation={3} sx={codeBlockSx}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: '10px',
+                    }}
+                  >
+                    <Box>
+                      <Typography variant='h6'>
+                        {t('accessToken.generate')}
+                      </Typography>
+
+                      <Typography>{t('accessToken.copy')}</Typography>
+                    </Box>
+                    <Tooltip title={accountState.codeBlockTooltip}>
+                      <IconButton
+                        color='inherit'
+                        aria-label={texts.copyAccessTokenToClipboard}
                         edge='end'
                         onClick={() => {
-                          handleClickShowToken(TokenTypes.Access);
+                          handleCopyCodeBlock(getCurlAccessTokenCommand());
                         }}
                         sx={{
                           display: 'inline-block',
                           verticalAlign: 'middle',
                         }}
                       >
-                        {accountState.showAccessToken ? (
-                          <VisibilityOffOutlined
-                            fontSize='small'
-                            sx={{
-                              display: 'inline-block',
-                              verticalAlign: 'middle',
-                            }}
-                          />
-                        ) : (
-                          <VisibilityOutlined
-                            fontSize='small'
-                            sx={{
-                              display: 'inline-block',
-                              verticalAlign: 'middle',
-                            }}
-                          />
-                        )}
+                        <ContentCopyOutlined fontSize='small' />
                       </IconButton>
                     </Tooltip>
                   </Box>
-                </Box>
-                <Typography color='error' sx={{ mb: 2 }}>
-                  <WarningAmberOutlined style={{ verticalAlign: 'bottom' }} />
-                  {accountState.tokenExpired
-                    ? t('accessToken.expired')
-                    : t('accessToken.willExpireIn', {
-                        timeLeftForTokenExpiration,
-                      })}
-                  .
-                </Typography>
-              </Box>
-            )}
-            <Paper elevation={3} sx={codeBlockSx}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: '10px',
-                }}
-              >
-                <Box>
-                  <Typography variant='h6'>
-                    {t('accessToken.testing.api')}
+                  <Typography sx={codeBlockContentSx}>
+                    <span style={{ ...theme.mixins.code.command }}>curl</span>{' '}
+                    --location &apos;{apiURL}/tokens&apos;
+                    <span style={{ color: theme.mixins.code?.contrastText }}>
+                      \
+                    </span>
+                    <br />
+                    <span style={{ color: theme.mixins.code?.contrastText }}>
+                      --header
+                    </span>{' '}
+                    &apos;Content-Type: application/json&apos;
+                    <span style={{ color: theme.mixins.code?.contrastText }}>
+                      \
+                    </span>
+                    <br />
+                    <span style={{ color: theme.mixins.code?.contrastText }}>
+                      --data &apos;&#123;
+                    </span>
+                    <span>
+                      {' '}
+                      &quot;refresh_token&quot;: &quot;[
+                      {t('refreshToken.yourToken')}]&quot;
+                    </span>
+                    <span style={{ color: theme.mixins.code?.contrastText }}>
+                      {' '}
+                      &#125;&apos;
+                    </span>
                   </Typography>
-
-                  <Typography>{t('accessToken.testing.copyCli')}</Typography>
-                </Box>
-                <Tooltip title={accountState.codeBlockTooltip}>
-                  <IconButton
-                    color='inherit'
-                    aria-label={texts.copyAccessTokenToClipboard}
-                    edge='end'
-                    onClick={() => {
-                      handleCopyCodeBlock(getCurlApiTestCommand());
-                    }}
-                    sx={{ display: 'inline-block', verticalAlign: 'middle' }}
+                </Paper>
+              </AccountSectionContainer>
+              <AccountSectionContainer
+                title={t('accessToken.testing.title')}
+                sx={{ mt: 3 }}
+              >
+                <Typography sx={{ mb: 2 }}>
+                  {t('accessToken.testing.description.pt1') + ' '}
+                  <Link
+                    href='https://mobilitydata.github.io/mobility-feed-api/SwaggerUI/index.html#/'
+                    target={'_blank'}
                   >
-                    <ContentCopyOutlined fontSize='small' />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-              <Typography sx={codeBlockContentSx}>
-                <span style={{ color: '#ff79c6', fontWeight: 'bold' }}>
-                  curl
-                </span>{' '}
-                --location &apos;{apiURL}/metadata&apos;
-                <span style={{ color: theme.mixins.code?.contrastText }}>
-                  \
-                </span>
-                <br />
-                <span style={{ color: theme.mixins.code?.contrastText }}>
-                  --header
-                </span>{' '}
-                &apos;Accept: application/json&apos;
-                <span style={{ color: theme.mixins.code?.contrastText }}>
-                  \
-                </span>
-                <br />
-                <span style={{ color: theme.mixins.code?.contrastText }}>
-                  --header{' '}
-                </span>
-                &apos;Authorization: Bearer [{t('accessToken.yourToken')}]&apos;
-              </Typography>
-            </Paper>
-          </Box>
+                    {t('accessToken.testing.description.cta')}
+                  </Link>
+                  {t('accessToken.testing.description.pt2')}
+                </Typography>
+                {showGenerateAccessTokenButton && (
+                  <Box sx={{ mb: 2 }}>
+                    <Button
+                      onClick={handleGenerateAccessToken}
+                      variant='contained'
+                    >
+                      {t('accessToken.generate')}
+                    </Button>
+                  </Box>
+                )}
+
+                {!showGenerateAccessTokenButton && (
+                  <Box sx={{ width: 'fit-content', p: 1, mb: 5 }}>
+                    <Box sx={tokenDisplayElementSx}>
+                      <Typography
+                        width={500}
+                        variant='body1'
+                        sx={{ wordBreak: 'break-all' }}
+                      >
+                        {accountState.showAccessToken
+                          ? user?.accessToken !== undefined
+                            ? user?.accessToken
+                            : texts.tokenUnavailable
+                          : texts.accessTokenHidden}
+                      </Typography>
+                      <Box sx={tokenActionButtonsSx}>
+                        <Tooltip title={refreshAccessTokenButtonText}>
+                          <span>
+                            <IconButton
+                              color='primary'
+                              aria-label={refreshAccessTokenButtonText}
+                              edge='end'
+                              sx={{
+                                display: 'inline-block',
+                                verticalAlign: 'middle',
+                              }}
+                              onClick={handleGenerateAccessToken}
+                              disabled={isRefreshingAccessToken}
+                            >
+                              {isRefreshingAccessToken ? (
+                                <CircularProgress size={14} />
+                              ) : (
+                                <RefreshOutlined
+                                  fontSize='small'
+                                  sx={{
+                                    display: 'inline-block',
+                                    verticalAlign: 'middle',
+                                  }}
+                                />
+                              )}
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+
+                        <Tooltip
+                          title={
+                            showAccessTokenCopiedTooltip
+                              ? accessTokenCopyResult
+                              : texts.copyAccessToken
+                          }
+                        >
+                          <span>
+                            <IconButton
+                              color='primary'
+                              aria-label={texts.copyAccessTokenToClipboard}
+                              edge='end'
+                              disabled={user?.accessToken === undefined}
+                              onClick={() => {
+                                if (user?.accessToken != null) {
+                                  handleCopyTokenToClipboard(
+                                    user.accessToken,
+                                    setAccessTokenCopyResult,
+                                    setShowAccessTokenCopiedTooltip,
+                                  );
+                                }
+                              }}
+                              sx={{
+                                display: 'inline-block',
+                                verticalAlign: 'middle',
+                              }}
+                            >
+                              <ContentCopyOutlined
+                                fontSize='small'
+                                sx={{
+                                  display: 'inline-block',
+                                  verticalAlign: 'middle',
+                                }}
+                              />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                        <Tooltip title={t('accessToken.toggleVisibility')}>
+                          <IconButton
+                            color='primary'
+                            aria-label={t('accessToken.toggleVisibility')}
+                            edge='end'
+                            onClick={() => {
+                              handleClickShowToken(TokenTypes.Access);
+                            }}
+                            sx={{
+                              display: 'inline-block',
+                              verticalAlign: 'middle',
+                            }}
+                          >
+                            {accountState.showAccessToken ? (
+                              <VisibilityOffOutlined
+                                fontSize='small'
+                                sx={{
+                                  display: 'inline-block',
+                                  verticalAlign: 'middle',
+                                }}
+                              />
+                            ) : (
+                              <VisibilityOutlined
+                                fontSize='small'
+                                sx={{
+                                  display: 'inline-block',
+                                  verticalAlign: 'middle',
+                                }}
+                              />
+                            )}
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </Box>
+                    <Typography color='error' sx={{ mb: 2 }}>
+                      <WarningAmberOutlined
+                        style={{ verticalAlign: 'bottom' }}
+                      />
+                      {accountState.tokenExpired
+                        ? t('accessToken.expired')
+                        : t('accessToken.willExpireIn', {
+                            timeLeftForTokenExpiration,
+                          })}
+                      .
+                    </Typography>
+                  </Box>
+                )}
+                <Paper elevation={3} sx={codeBlockSx}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: '10px',
+                    }}
+                  >
+                    <Box>
+                      <Typography variant='h6'>
+                        {t('accessToken.testing.api')}
+                      </Typography>
+
+                      <Typography>
+                        {t('accessToken.testing.copyCli')}
+                      </Typography>
+                    </Box>
+                    <Tooltip title={accountState.codeBlockTooltip}>
+                      <IconButton
+                        color='inherit'
+                        aria-label={texts.copyAccessTokenToClipboard}
+                        edge='end'
+                        onClick={() => {
+                          handleCopyCodeBlock(getCurlApiTestCommand());
+                        }}
+                        sx={{
+                          display: 'inline-block',
+                          verticalAlign: 'middle',
+                        }}
+                      >
+                        <ContentCopyOutlined fontSize='small' />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                  <Typography sx={codeBlockContentSx}>
+                    <span style={{ color: '#ff79c6', fontWeight: 'bold' }}>
+                      curl
+                    </span>{' '}
+                    --location &apos;{apiURL}/metadata&apos;
+                    <span style={{ color: theme.mixins.code?.contrastText }}>
+                      \
+                    </span>
+                    <br />
+                    <span style={{ color: theme.mixins.code?.contrastText }}>
+                      --header
+                    </span>{' '}
+                    &apos;Accept: application/json&apos;
+                    <span style={{ color: theme.mixins.code?.contrastText }}>
+                      \
+                    </span>
+                    <br />
+                    <span style={{ color: theme.mixins.code?.contrastText }}>
+                      --header{' '}
+                    </span>
+                    &apos;Authorization: Bearer [{t('accessToken.yourToken')}
+                    ]&apos;
+                  </Typography>
+                </Paper>
+              </AccountSectionContainer>
+            </Box>
+          )}
         </Box>
       </Box>
       <LogoutConfirmModal
