@@ -95,7 +95,7 @@ export default function AccountGeneral(): React.ReactElement {
         >
           {!signedInWithProvider && (
             <Button
-              data-cy='changePasswordButton'
+              data-cy='changePasswordButtonAccount'
               variant='contained'
               color='primary'
               onClick={() => {

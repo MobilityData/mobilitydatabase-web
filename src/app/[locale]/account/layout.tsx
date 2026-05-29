@@ -83,12 +83,15 @@ function AccountLayoutContent({
 
   const activeItem = visibleItems.find((item) => item.id === activeSection);
 
-  const navList = (onItemClick?: () => void): React.ReactElement => (
+  const navList = (
+    key: string,
+    onItemClick?: () => void,
+  ): React.ReactElement => (
     <>
       <List disablePadding>
         {visibleItems.map((item) => (
           <ListItemButton
-            key={item.id}
+            key={key + '-' + item.id}
             selected={activeSection === item.id}
             onClick={() => {
               router.push(item.path);
@@ -110,7 +113,7 @@ function AccountLayoutContent({
           setOpenDialog(true);
           onItemClick?.();
         }}
-        data-cy='signOutButton'
+        data-cy={key + '-signOutButton'}
         sx={{ mt: 1 }}
       >
         {tCommon('signOut')}
@@ -159,7 +162,7 @@ function AccountLayoutContent({
             flexShrink: 0,
           }}
         >
-          {navList()}
+          {navList('desktop')}
         </Paper>
 
         {/* Mobile nav trigger — md and below */}
@@ -167,6 +170,7 @@ function AccountLayoutContent({
           role='button'
           tabIndex={0}
           aria-label='Open account navigation'
+          data-cy='mobileNavTrigger'
           onClick={() => {
             setDrawerOpen(true);
           }}
@@ -210,7 +214,7 @@ function AccountLayoutContent({
           <Typography variant='h6' fontWeight={700} sx={{ mb: 2 }}>
             {t('title')}
           </Typography>
-          {navList(() => {
+          {navList('mobile', () => {
             setDrawerOpen(false);
           })}
         </Drawer>

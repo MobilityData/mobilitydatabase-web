@@ -8,8 +8,7 @@ describe('Change Password Screen', () => {
     cy.get('[data-testid="home-title"]').should('exist');
     cy.createNewUserAndSignIn(email, currentPassword);
     cy.get('[data-cy="accountHeader"]').should('exist').click(); // assures that the user is signed in
-    cy.get('[data-cy="accountDetailsHeader"]').should('exist').click();
-    cy.get('[data-cy="changePasswordButton"]').should('exist').click();
+    cy.get('[data-cy="changePasswordButtonAccount"]').should('exist').click();
   });
 
   it('should render components', () => {
@@ -51,7 +50,8 @@ describe('Change Password Screen', () => {
     cy.location('pathname').should('eq', '/account');
 
     // logout
-    cy.get('[data-cy="signOutButton"]').click();
+    cy.get('[data-cy="mobileNavTrigger"]').click();
+    cy.get('[data-cy="mobile-signOutButton"]').click();
     cy.get('[data-cy="confirmSignOutButton"]').should('exist').should('not.be.disabled').click();
     cy.visit('/sign-in');
     cy.get('[data-cy="signInEmailInput"]').type(email);
