@@ -139,7 +139,7 @@ export default function DrawerContent({
           <SearchIcon fontSize='small' />
         </IconButton>
       </Box>
-      <List>
+      <List sx={{ p: 0 }}>
         {navigationItems.map((item) => (
           <Button
             variant='text'
@@ -155,7 +155,7 @@ export default function DrawerContent({
           </Button>
         ))}
 
-        <Divider sx={{ my: 2 }} />
+        <Divider />
         <Accordion disableGutters={true} sx={{ boxShadow: 'none' }}>
           <AccordionSummary
             expandIcon={<ExpandMoreIcon />}
@@ -341,12 +341,23 @@ export default function DrawerContent({
               >
                 {t('accountDetails')}
               </Button>
+              {config.isNotificationsEnabled && (
+                <Button
+                  variant='text'
+                  sx={mobileNavElementStyle}
+                  href='/account/notifications'
+                  onClick={onClose}
+                >
+                  Notifications
+                </Button>
+              )}
               <Button
                 variant='text'
                 sx={mobileNavElementStyle}
-                onClick={onLogoutClick}
+                href='/account/api-access'
+                onClick={onClose}
               >
-                {t('signOut')}
+                API Access
               </Button>
             </AccordionDetails>
           </Accordion>
@@ -359,6 +370,10 @@ export default function DrawerContent({
       <Divider />
       <Box sx={{ px: 2, py: 1.5 }}>
         <ThemeToggle />
+        <br></br>
+        <Button variant='outlined' color='error' onClick={onLogoutClick}>
+          {t('signOut')}
+        </Button>
       </Box>
     </Box>
   );

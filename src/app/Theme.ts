@@ -225,16 +225,9 @@ export const theme = createTheme({
             border: '2px solid var(--mui-palette-primary-main)',
             color: 'var(--mui-palette-primary-main)',
           },
-          '&.MuiButton-outlinedPrimary': {
-            border: '2px solid var(--mui-palette-primary-main)',
+          '&.MuiButton-outlined': {
+            borderWidth: '2px',
             padding: '6px 16px',
-          },
-          '&.MuiButton-outlinedPrimary:hover': {
-            backgroundColor: 'var(--mui-palette-primary-main)',
-            color: 'var(--mui-palette-primary-contrastText)',
-            ...theme.applyStyles('dark', {
-              color: 'var(--mui-palette-background-default)',
-            }),
           },
           '&.MuiButton-text.inline': {
             fontFamily: fontFamily.primary,

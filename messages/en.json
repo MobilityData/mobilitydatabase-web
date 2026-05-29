@@ -248,6 +248,10 @@
     "officialFeedTooltipShort": "Verified feed: Confirmed by the transit provider or the Mobility Database team for rider use.",
     "seeDetailPageProviders": "See detail page to view {providersCount} others",
     "openFullQualityReport": "Open Full Quality Report",
+    "subscribe": "Subscribe to get feed update notifications",
+    "unsubscribe": "Unsubscribe to stop receiving feed update notifications",
+    "subscribedToFeed": "You'll receive updates for this feed",
+    "unsubscribedFromFeed": "You've been unsubscribed and will no longer receive updates for this feed.",
     "qualityReportUpdated": "Quality report updated",
     "officialFeedUpdated": "Official verification updated",
     "serviceDateRange": "Service Date Range",
@@ -411,7 +415,7 @@
     }
   },
   "account": {
-    "title": "Your API Account",
+    "title": "Your Account",
     "userDetails": "User Details",
     "description": "The Mobility Database API uses OAuth2 authentication. To initiate a successful API request, an access token must be included as a bearer token in the HTTP header. Access tokens are valid for one hour. To obtain an access token, you'll first need a refresh token, which is long-lived and does not expire.",
     "support": "If you need a reissued refresh token or want your account removed, send us an email at",
