@@ -25,7 +25,7 @@ export interface GbfsStation {
 
 export interface GbfsStationStatus {
   station_id: string;
-  num_bikes_available: number;
+  num_bikes_available: number | undefined;
   num_docks_available?: number;
   is_installed: boolean;
   is_renting: boolean;
