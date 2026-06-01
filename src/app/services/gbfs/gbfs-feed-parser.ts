@@ -138,7 +138,8 @@ export function parseStationStatuses(
   return statuses.map(
     (s: Record<string, unknown>): GbfsStationStatus => ({
       station_id: String(s.station_id ?? ''),
-      num_bikes_available: Number(s.num_bikes_available ?? 0),
+      num_bikes_available:
+        s.num_bikes_available != null ? Number(s.num_bikes_available) : undefined,
       num_docks_available:
         s.num_docks_available != null
           ? Number(s.num_docks_available)

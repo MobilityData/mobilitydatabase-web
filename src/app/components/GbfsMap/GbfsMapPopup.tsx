@@ -205,6 +205,32 @@ function StationPopupContent({
         </Box>
       )}
 
+      {(() => {
+        let vehicleTypes: Array<{ vehicle_type_id: string; count: number }> | null = null;
+        try {
+          const raw = properties.vehicle_types_available;
+          if (typeof raw === 'string' && raw !== 'null') {
+            vehicleTypes = JSON.parse(raw) as Array<{ vehicle_type_id: string; count: number }>;
+          }
+        } catch {
+          // ignore parse errors
+        }
+        if (vehicleTypes == null || vehicleTypes.length === 0) return null;
+        return (
+          <>
+            <Divider sx={{ my: 1 }} />
+            <Typography variant='caption' fontWeight={600} display='block' mb={0.5}>
+              {t('vehicleTypesAvailable')}
+            </Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0.5 }}>
+              {vehicleTypes.map((vt) => (
+                <InfoRow key={vt.vehicle_type_id} label={vt.vehicle_type_id} value={vt.count} />
+              ))}
+            </Box>
+          </>
+        );
+      })()}
+
       <Box sx={{ display: 'flex', gap: 0.5, mt: 1, flexWrap: 'wrap' }}>
         <StatusChip
           active={properties.is_renting === true}
