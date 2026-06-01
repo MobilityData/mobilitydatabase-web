@@ -230,3 +230,27 @@ export const rowButtonOutlineErrorSx: SxProps<Theme> = (theme: Theme) => ({
     color: theme.vars.palette.error.contrastText,
   },
 });
+
+export const rowButtonOutlinePrimarySx: SxProps<Theme> = (theme: Theme) => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: theme.spacing(0.5),
+  opacity: 0,
+  pointerEvents: 'none',
+  transition: 'opacity 120ms, transform 120ms',
+  whiteSpace: 'nowrap',
+  px: theme.spacing(1),
+  py: theme.spacing(0.5),
+  borderRadius: '5px',
+  border: `1px solid ${theme.vars.palette.primary.main}`,
+  color: theme.vars.palette.primary.main,
+  fontSize: '0.8125rem',
+  fontFamily: fontFamily.secondary,
+  fontWeight: 500,
+  background: 'transparent',
+  cursor: 'pointer',
+  '&:hover': {
+    backgroundColor: theme.vars.palette.primary.main,
+    color: theme.vars.palette.primary.contrastText,
+  },
+});

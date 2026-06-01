@@ -24,6 +24,7 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import LanguageIcon from '@mui/icons-material/Language';
+import MapIcon from '@mui/icons-material/Map';
 import { type components } from '../../services/feeds/gbfs-validator-types';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { OpenInNew } from '@mui/icons-material';
@@ -33,9 +34,12 @@ import {
   ValidationElementCardStyles,
   ValidationErrorPathStyles,
   rowButtonOutlineErrorSx,
+  rowButtonOutlinePrimarySx,
 } from './ValidationReport.styles';
 import { langCodeToName } from '../../services/feeds/utils';
 import { groupErrorsByFile } from './errorGrouping';
+import { getErrorLocation } from './mapErrorOverlay';
+import type { GbfsFeedData } from '../../services/gbfs/gbfs-feed-types';
 import { ValidationReportSkeletonLoading } from './ValidationReportSkeletonLoading';
 import ErrorDetailsDialog from './components/ErrorDetailsDialog';
 import ExpandLess from '@mui/icons-material/ExpandLess';
@@ -48,11 +52,19 @@ export type FileError = components['schemas']['FileError'];
 interface ValidationResultProps {
   validationResult: ValidationResult | undefined;
   loading: boolean;
+  feedData?: GbfsFeedData | null;
+  onSeeOnMap?: (
+    fileName: string,
+    fileUrl: string | undefined,
+    error: FileError,
+  ) => void;
 }
 
 export default function ValidationReport({
   validationResult,
   loading,
+  feedData,
+  onSeeOnMap,
 }: ValidationResultProps): React.ReactElement {
   const theme = useTheme();
   const [visibleSystemErrorsByFile, setVisibleSystemErrorsByFile] = useState<
@@ -258,6 +270,7 @@ export default function ValidationReport({
               {groupedByFile.map((fg, index) => (
                 <Card
                   key={fg.fileName}
+                  id={`validation-file-${fg.fileName}`}
                   ref={(el) => {
                     fileGroupRefs.current[index] = el;
                   }}
@@ -557,10 +570,63 @@ export default function ValidationReport({
                                           It cannot be a button alone because of accessibility issues with nested buttons */}
                                             <Box
                                               component='span'
-                                              className='hover-details-btn'
-                                              sx={rowButtonOutlineErrorSx}
+                                              sx={{
+                                                display: 'inline-flex',
+                                                gap: 0.5,
+                                                alignItems: 'center',
+                                              }}
                                             >
-                                              Click for details
+                                              <Box
+                                                component='span'
+                                                className='hover-details-btn'
+                                                sx={rowButtonOutlineErrorSx}
+                                              >
+                                                Click for details
+                                              </Box>
+                                              {feedData != null &&
+                                                onSeeOnMap != null &&
+                                                getErrorLocation(
+                                                  occ.error.instancePath ?? '',
+                                                  fg.fileName,
+                                                  feedData,
+                                                ) != null && (
+                                                  <Box
+                                                    component='span'
+                                                    role='button'
+                                                    tabIndex={0}
+                                                    className='hover-details-btn'
+                                                    sx={
+                                                      rowButtonOutlinePrimarySx
+                                                    }
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      onSeeOnMap(
+                                                        fg.fileName,
+                                                        fg.fileUrl,
+                                                        occ.error,
+                                                      );
+                                                    }}
+                                                    onKeyDown={(e) => {
+                                                      if (
+                                                        e.key === 'Enter' ||
+                                                        e.key === ' '
+                                                      ) {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        onSeeOnMap(
+                                                          fg.fileName,
+                                                          fg.fileUrl,
+                                                          occ.error,
+                                                        );
+                                                      }
+                                                    }}
+                                                  >
+                                                    <MapIcon
+                                                      sx={{ fontSize: 14 }}
+                                                    />
+                                                    See on Map
+                                                  </Box>
+                                                )}
                                             </Box>
                                           </Box>
                                         ))}
