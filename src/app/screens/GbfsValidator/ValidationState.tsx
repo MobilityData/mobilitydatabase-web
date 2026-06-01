@@ -9,7 +9,15 @@ import {
   Skeleton,
   LinearProgress,
 } from '@mui/material';
-import { type ReactElement, useEffect, useMemo, useState } from 'react';
+import {
+  type ReactElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import dynamic from 'next/dynamic';
 import GbfsFeedSearchInput from './GbfsFeedSearchInput';
 import { gbfsValidatorHeroBg } from './ValidationReport.styles';
 import ValidationReport from './ValidationReport';
@@ -24,6 +32,25 @@ import {
 import { useGbfsAuth } from '../../context/GbfsAuthProvider';
 import { ValidationErrorAlert } from './ValidationErrorAlert';
 import { groupErrorsByFile } from './errorGrouping';
+import { useGbfsFeedData } from './hooks/useGbfsFeedData';
+import { ErrorDetailsDialog } from './components/ErrorDetailsDialog';
+import type {
+  MapErrorDetails,
+  GbfsMapHandle,
+} from '../../components/GbfsMap/GbfsVisualizationMap';
+import { getErrorLocation } from './mapErrorOverlay';
+import type { FileError } from './ValidationReport';
+
+const GbfsVisualizationMap = dynamic(
+  async () =>
+    await import('../../components/GbfsMap/GbfsVisualizationMap').then(
+      (mod) => mod.GbfsVisualizationMap,
+    ),
+  {
+    ssr: false,
+    loading: () => <Skeleton variant='rectangular' height={500} />,
+  },
+);
 
 export default function ValidationState(): ReactElement {
   const theme = useTheme();
@@ -36,6 +63,56 @@ export default function ValidationState(): ReactElement {
   const validationError = useSelector(selectGbfsValidationError);
   const dispatch = useDispatch();
   const feedUrl = searchParams.get('AutoDiscoveryUrl');
+  const {
+    feedData,
+    loading: mapLoading,
+    error: mapError,
+    refresh: refreshMapData,
+  } = useGbfsFeedData(feedUrl);
+
+  // Error details dialog triggered from map popup
+  const [mapErrorDialogOpen, setMapErrorDialogOpen] = useState(false);
+  const [mapErrorDetails, setMapErrorDetails] =
+    useState<MapErrorDetails | null>(null);
+
+  // Refs for "See on Map" feature
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapHandleRef = useRef<GbfsMapHandle>(null);
+
+  const handleViewError = useCallback((details: MapErrorDetails) => {
+    setMapErrorDetails(details);
+    setMapErrorDialogOpen(true);
+  }, []);
+
+  const handleSeeOnMap = useCallback(
+    (fileName: string, fileUrl: string | undefined, error: FileError) => {
+      if (feedData == null) return;
+      const loc = getErrorLocation(
+        error.instancePath ?? '',
+        fileName,
+        feedData,
+      );
+      if (loc == null) return;
+
+      // Scroll map into view
+      mapContainerRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+
+      // Fly to error location and open popup after scroll settles
+      setTimeout(() => {
+        mapHandleRef.current?.flyToError(loc.lat, loc.lon, {
+          keyword: error.keyword ?? '',
+          message: error.message ?? '',
+          instancePath: error.instancePath ?? '',
+          fileName,
+          fileUrl,
+        });
+      }, 400);
+    },
+    [feedData],
+  );
 
   const {
     gbfsVersion,
@@ -220,40 +297,47 @@ export default function ValidationState(): ReactElement {
           </Box>
         )}
 
-        {/* TODO: Disabled until map data is implemented
-        <Box
-          sx={{
-            backgroundColor: theme.vars.palette.background.paper,
-            borderRadius: '5px',
-            mb: 2,
-          }}
-        >
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              py: 0.5,
-              pr: 2,
-            }}
-          >
-            <ContentTitle>Map View</ContentTitle>
-            <Button size='small' variant='text'>
-              View Full Map Details
-            </Button>
-          </Box>
-
-          <Box sx={{ px: 2, pb: 2 }}>
-            <Map polygon={[{ lat: 37.7749, lng: -122.4194 }]}></Map>
-            <Box textAlign={'right'} sx={{ mt: 1 }}></Box>
-          </Box>
-        </Box> */}
+        {/* GBFS Map Visualization */}
+        <Box ref={mapContainerRef} sx={{ mb: 3 }}>
+          <GbfsVisualizationMap
+            ref={mapHandleRef}
+            feedData={feedData}
+            loading={mapLoading}
+            error={mapError}
+            validationResult={validationResult}
+            onRefresh={refreshMapData}
+            onViewError={handleViewError}
+            feedUrl={feedUrl}
+          />
+        </Box>
 
         <ValidationReport
           validationResult={validationResult}
           loading={loadingState}
+          feedData={feedData}
+          onSeeOnMap={handleSeeOnMap}
         ></ValidationReport>
       </Container>
+
+      {/* Error details dialog from map popup "View Error" */}
+      <ErrorDetailsDialog
+        open={mapErrorDialogOpen}
+        onClose={() => {
+          setMapErrorDialogOpen(false);
+        }}
+        fileName={mapErrorDetails?.fileName ?? ''}
+        fileUrl={mapErrorDetails?.fileUrl}
+        error={
+          mapErrorDetails != null
+            ? {
+                keyword: mapErrorDetails.error.keyword ?? '',
+                message: mapErrorDetails.error.message ?? '',
+                instancePath: mapErrorDetails.error.instancePath ?? '',
+                schemaPath: '',
+              }
+            : null
+        }
+      />
     </>
   );
 }
