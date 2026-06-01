@@ -10,8 +10,8 @@ import type { GbfsMapFilters } from './GbfsMap/GbfsMapFilterPanel';
 
 function computeCapacityLevel(station: GbfsStationWithStatus): string {
   const capacity = station.capacity ?? 0;
-  const available = station.status?.num_bikes_available ?? 0;
-  if (capacity === 0) return 'unknown';
+  const available = station.status?.num_bikes_available;
+  if (capacity === 0 || available == null) return 'unknown';
   const ratio = available / capacity;
   if (ratio >= 0.6) return 'high';
   if (ratio >= 0.3) return 'medium';
@@ -55,6 +55,7 @@ export function stationsToGeoJSON(
           is_installed: station.status?.is_installed ?? true,
           address: station.address ?? '',
           rental_methods: JSON.stringify(station.rental_methods ?? []),
+          vehicle_types_available: JSON.stringify(station.status?.vehicle_types_available ?? null),
           _raw: JSON.stringify(station._raw),
           _raw_status: JSON.stringify(station.status?._raw ?? {}),
         },

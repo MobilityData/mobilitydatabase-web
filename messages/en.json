@@ -586,6 +586,7 @@
     "showErrors": "Show Error Overlay",
     "unknownStation": "Unknown Station",
     "bikesAvailable": "Bikes Available",
+    "vehicleTypesAvailable": "Vehicle Types Available",
     "docksAvailable": "Docks Available",
     "capacity": "Capacity",
     "renting": "Renting",
