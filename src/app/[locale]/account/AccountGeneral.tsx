@@ -4,39 +4,118 @@ import * as React from 'react';
 import { useRouter } from '../../../i18n/navigation';
 import { Box, Button, Chip, Link, TextField, Typography } from '@mui/material';
 import { Check } from '@mui/icons-material';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   selectSignedInWithProvider,
   selectUserProfile,
 } from '../../store/selectors';
 import { useTranslations } from 'next-intl';
 import { AccountSectionContainer } from './AccountSectionContainer';
+import { updateUserInformation } from '../../services';
+import {
+  refreshUserInformation,
+  refreshUserInformationFail,
+} from '../../store/profile-reducer';
+import { getAppError } from '../../utils/error';
+import { type ProfileError } from '../../types';
 
 export default function AccountGeneral(): React.ReactElement {
   const t = useTranslations('account');
   const tCommon = useTranslations('common');
   const user = useSelector(selectUserProfile);
+  const dispatch = useDispatch();
   const router = useRouter();
   const signedInWithProvider = useSelector(selectSignedInWithProvider);
 
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [isSaving, setIsSaving] = React.useState(false);
+  const [draftFullName, setDraftFullName] = React.useState('');
+  const [draftOrganization, setDraftOrganization] = React.useState('');
+
+  const handleEditClick = (): void => {
+    setDraftFullName(user?.fullName ?? '');
+    setDraftOrganization(user?.organization ?? '');
+    setIsEditing(true);
+  };
+
+  const handleCancel = (): void => {
+    setIsEditing(false);
+  };
+
+  const handleSave = async (): Promise<void> => {
+    setIsSaving(true);
+    try {
+      await updateUserInformation({
+        fullName: draftFullName,
+        organization: draftOrganization,
+        isRegisteredToReceiveAPIAnnouncements:
+          user?.isRegisteredToReceiveAPIAnnouncements ?? false,
+      });
+      dispatch(
+        refreshUserInformation({
+          fullName: draftFullName,
+          organization: draftOrganization,
+          isRegisteredToReceiveAPIAnnouncements:
+            user?.isRegisteredToReceiveAPIAnnouncements ?? false,
+        }),
+      );
+      setIsEditing(false);
+    } catch (error) {
+      dispatch(
+        refreshUserInformationFail(getAppError(error) as ProfileError),
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <>
-      {/* Edit action to be enabled when we have the user profile API */}
       <AccountSectionContainer
         title={'Personal Information'}
         subtitle={'Your account details and contact information'}
-        // action={
-        //   <Button variant='outlined' size='small'>
-        //     Edit
-        //   </Button>
-        // }
+        action={
+          isEditing ? (
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant='outlined'
+                size='small'
+                onClick={handleCancel}
+                disabled={isSaving}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant='contained'
+                size='small'
+                onClick={() => {
+                  void handleSave();
+                }}
+                disabled={isSaving}
+              >
+                Save
+              </Button>
+            </Box>
+          ) : (
+            <Button variant='outlined' size='small' onClick={handleEditClick}>
+              Edit
+            </Button>
+          )
+        }
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
           <TextField
             fullWidth
             label={tCommon('name')}
-            value={user?.fullName ?? ''}
-            disabled
+            value={isEditing ? draftFullName : (user?.fullName ?? '')}
+            onChange={
+              isEditing
+                ? (e) => {
+                    setDraftFullName(e.target.value);
+                  }
+                : undefined
+            }
+            disabled={!isEditing}
             sx={{ mt: 1 }}
             size='small'
           />
@@ -51,12 +130,19 @@ export default function AccountGeneral(): React.ReactElement {
               size='small'
             />
           ) : null}
-          {user?.organization !== undefined ? (
+          {(isEditing || user?.organization !== undefined) ? (
             <TextField
               fullWidth
               label={tCommon('organization')}
-              value={user?.organization ?? ''}
-              disabled
+              value={isEditing ? draftOrganization : (user?.organization ?? '')}
+              onChange={
+                isEditing
+                  ? (e) => {
+                      setDraftOrganization(e.target.value);
+                    }
+                  : undefined
+              }
+              disabled={!isEditing}
               sx={{ mt: 1 }}
               size='small'
             />

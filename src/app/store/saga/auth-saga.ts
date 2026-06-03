@@ -120,7 +120,13 @@ function* signUpSaga({
     if (user === null) {
       throw new Error('User not found');
     }
-    yield put(signUpSuccess(user as User));
+    const userData = (yield call(retrieveUserInformation)) as UserData;
+    const userEnhanced = populateUserWithAdditionalInfo(
+      user as User,
+      userData,
+      undefined,
+    );
+    yield put(signUpSuccess(userEnhanced));
   } catch (error) {
     yield put(signUpFail(getAppError(error) as ProfileError));
   }
