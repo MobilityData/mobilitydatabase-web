@@ -103,13 +103,13 @@ export default function AccountGeneral(): React.ReactElement {
           sx={{ width: '100%' }}
         >
           {alertSeverity.current === 'success'
-            ? 'Account changes were successful'
-            : 'Failed to save account changes. Please try again.'}
+            ? t('saveSuccess')
+            : t('saveError')}
         </Alert>
       </Snackbar>
       <AccountSectionContainer
-        title={'Personal Information'}
-        subtitle={'Your account details and contact information'}
+        title={t('personalInformation')}
+        subtitle={t('personalInformationSubtitle')}
         loading={isSaving}
         action={
           isEditing ? (
@@ -120,7 +120,7 @@ export default function AccountGeneral(): React.ReactElement {
                 onClick={handleCancel}
                 disabled={isSaving}
               >
-                Cancel
+                {t('cancel')}
               </Button>
               <Button
                 variant='contained'
@@ -128,12 +128,12 @@ export default function AccountGeneral(): React.ReactElement {
                 onClick={handleSave}
                 disabled={isSaving}
               >
-                Save
+                {t('save')}
               </Button>
             </Box>
           ) : (
             <Button variant='outlined' size='small' onClick={handleEditClick}>
-              Edit
+              {t('edit')}
             </Button>
           )
         }
@@ -205,7 +205,7 @@ export default function AccountGeneral(): React.ReactElement {
           />
         </Box>
       </AccountSectionContainer>
-      <AccountSectionContainer title={'Account Support'} sx={{ mt: 3 }}>
+      <AccountSectionContainer title={t('supportTitle')} sx={{ mt: 3 }}>
         <Typography sx={{ pt: 1 }}>
           {t('support') + ' '}
           <Link
@@ -236,7 +236,7 @@ export default function AccountGeneral(): React.ReactElement {
               }}
               sx={{ mt: 1 }}
             >
-              Change Password
+              {t('changePassword')}
             </Button>
           )}
         </Box>
