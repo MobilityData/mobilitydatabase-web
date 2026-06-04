@@ -70,6 +70,10 @@ export default function AccountGeneral(): React.ReactElement {
   };
 
   React.useEffect(() => {
+    dispatch(saveUserProfileReset());
+  }, [dispatch]);
+
+  React.useEffect(() => {
     if (saveStatus === 'success') {
       setIsEditing(false);
     }
