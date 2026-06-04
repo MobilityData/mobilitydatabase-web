@@ -87,7 +87,7 @@ export const updateUserInformation = async (data: {
   const authMiddleware = generateAuthMiddlewareWithToken(accessToken);
   userServiceClient.use(authMiddleware);
   try {
-    await userServiceClient.PUT('/v1/user', {
+    const { error } = await userServiceClient.PUT('/v1/user', {
       body: {
         full_name: data.fullName ?? null,
         legacy_org_name: data.organization ?? null,
@@ -95,6 +95,9 @@ export const updateUserInformation = async (data: {
           data.isRegisteredToReceiveAPIAnnouncements,
       },
     });
+    if (error !== undefined) {
+      throw new Error('Failed to update user information');
+    }
   } finally {
     userServiceClient.eject(authMiddleware);
   }
@@ -130,7 +133,7 @@ export const populateUserWithAdditionalInfo = (
 ): User => {
   return {
     ...user,
-    isRegistered: userData !== null,
+    isRegistered: userData?.organization != undefined,
     fullName:
       userData?.fullName ??
       (additionalUserInfo?.profile?.name as string) ??
