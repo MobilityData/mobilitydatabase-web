@@ -13,10 +13,10 @@ import Container from '@mui/material/Container';
 import GoogleIcon from '@mui/icons-material/Google';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import AppleIcon from '@mui/icons-material/Apple';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useAppDispatch } from '../../hooks';
+import { useAppDispatch, useRegistrationFlowRedirect } from '../../hooks';
 import {
   loginWithProvider,
   signUp,
@@ -31,17 +31,8 @@ import {
   Tooltip,
 } from '@mui/material';
 import { useSelector } from 'react-redux';
-import {
-  ACCOUNT_TARGET,
-  ADD_FEED_TARGET,
-  COMPLETE_REGISTRATION_TARGET,
-  POST_REGISTRATION_TARGET,
-  SIGN_IN_TARGET,
-} from '../../constants/Navigation';
-import {
-  selectSignUpError,
-  selectUserProfileStatus,
-} from '../../store/selectors';
+import { SIGN_IN_TARGET } from '../../constants/Navigation';
+import { selectSignUpError } from '../../store/selectors';
 import { ProfileErrorSource, OauthProvider, oathProviders } from '../../types';
 import {
   passwordValidationError,
@@ -58,11 +49,11 @@ export default function SignUp(): React.ReactElement {
   const [showNoEmailSnackbar, setShowNoEmailSnackbar] = React.useState(false);
   const searchParams = useSearchParams();
 
-  const router = useRouter();
   const dispatch = useAppDispatch();
   const signUpError = useSelector(selectSignUpError);
-  const userProfileStatus = useSelector(selectUserProfileStatus);
   const [isSubmitted, setIsSubmitted] = React.useState(false);
+
+  useRegistrationFlowRedirect();
 
   const SignUpSchema = Yup.object().shape({
     email: Yup.string()
@@ -106,22 +97,6 @@ export default function SignUp(): React.ReactElement {
       );
     },
   });
-
-  React.useEffect(() => {
-    if (userProfileStatus === 'registered') {
-      if (searchParams.has('add_feed')) {
-        router.push(ADD_FEED_TARGET + '?from=registration');
-      } else {
-        router.push(ACCOUNT_TARGET);
-      }
-    }
-    if (userProfileStatus === 'authenticated') {
-      router.push(COMPLETE_REGISTRATION_TARGET + '?' + searchParams.toString());
-    }
-    if (userProfileStatus === 'unverified') {
-      router.push(POST_REGISTRATION_TARGET + '?' + searchParams.toString());
-    }
-  }, [userProfileStatus]);
 
   const signInWithProvider = (oauthProvider: OauthProvider): void => {
     const auth = getAuth();
