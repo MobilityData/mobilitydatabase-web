@@ -110,11 +110,13 @@ export const retrieveUserInformation = async (): Promise<
   const authMiddleware = generateAuthMiddlewareWithToken(accessToken);
   userServiceClient.use(authMiddleware);
   try {
-    const { data } = await userServiceClient.GET('/v1/user');
+    const { data, error } = await userServiceClient.GET('/v1/user');
+    if (error !== undefined) {
+      throw new Error('Failed to retrieve user information');
+    }
     if (data === undefined) {
       return undefined;
     }
-    console.log('User information retrieved from the API', data);
     return {
       fullName: data.full_name ?? '',
       organization: data.legacy_org_name ?? undefined,
