@@ -6,9 +6,10 @@ import { ProtectedPageWrapper } from '../../components/ProtectedPageWrapper';
 export default function CompleteRegistrationPage(): ReactElement {
   return (
     <ReduxGateWrapper>
-      <ProtectedPageWrapper targetStatus='authenticated'>
+       {/* TODO: Revisit protected page wrappers. This page changes the status of the user which causes flickers of mismatched authentication */}
+      {/* <ProtectedPageWrapper targetStatus='authenticated'> */}
         <CompleteRegistration />
-      </ProtectedPageWrapper>
+      {/* </ProtectedPageWrapper> */}
     </ReduxGateWrapper>
   );
 }

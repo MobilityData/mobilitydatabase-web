@@ -6,9 +6,10 @@ import { ProtectedPageWrapper } from '../../components/ProtectedPageWrapper';
 export default function VerifyEmailPage(): ReactElement {
   return (
     <ReduxGateWrapper>
-      <ProtectedPageWrapper targetStatus='unverified'>
+      {/* TODO: Revisit protected page wrappers. This page changes the status of the user which causes flickers of mismatched authentication */}
+      {/* <ProtectedPageWrapper targetStatus='unverified'> */}
         <PostRegistration />
-      </ProtectedPageWrapper>
+      {/* </ProtectedPageWrapper> */}
     </ReduxGateWrapper>
   );
 }
