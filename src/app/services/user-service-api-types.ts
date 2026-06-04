@@ -231,25 +231,19 @@ export interface operations {
     responses: {
       /** @description User profile retrieved (or created) successfully. */
       200: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content: {
           'application/json': components['schemas']['UserProfile'];
         };
       };
       /** @description Unauthorized — missing or invalid token. */
       401: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
       /** @description Internal server error. */
       500: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
     };
@@ -269,46 +263,34 @@ export interface operations {
     responses: {
       /** @description User profile updated successfully. */
       200: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content: {
           'application/json': components['schemas']['UserProfile'];
         };
       };
       /** @description Invalid request body. */
       400: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
       /** @description Unauthorized — missing or invalid token. */
       401: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
       /** @description Forbidden — insufficient permissions to update this profile. */
       403: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
       /** @description User not found. */
       404: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
       /** @description Internal server error. */
       500: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
     };
@@ -324,25 +306,19 @@ export interface operations {
     responses: {
       /** @description List of notification types. */
       200: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content: {
-          'application/json': components['schemas']['NotificationType'][];
+          'application/json': Array<components['schemas']['NotificationType']>;
         };
       };
       /** @description Unauthorized. */
       401: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
       /** @description Not yet implemented. */
       501: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
     };
@@ -358,25 +334,21 @@ export interface operations {
     responses: {
       /** @description List of subscriptions. */
       200: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content: {
-          'application/json': components['schemas']['NotificationSubscription'][];
+          'application/json': Array<
+            components['schemas']['NotificationSubscription']
+          >;
         };
       };
       /** @description Unauthorized. */
       401: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
       /** @description Not yet implemented. */
       501: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
     };
@@ -396,32 +368,24 @@ export interface operations {
     responses: {
       /** @description Subscription created. */
       201: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content: {
           'application/json': components['schemas']['NotificationSubscription'];
         };
       };
       /** @description Invalid request. */
       400: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
       /** @description Unauthorized. */
       401: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
       /** @description Not yet implemented. */
       501: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
     };
@@ -440,30 +404,22 @@ export interface operations {
     responses: {
       /** @description Subscription deleted. */
       204: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
       /** @description Unauthorized. */
       401: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
       /** @description Subscription not found. */
       404: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
       /** @description Not yet implemented. */
       501: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
     };
@@ -486,32 +442,24 @@ export interface operations {
     responses: {
       /** @description Subscription updated. */
       200: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content: {
           'application/json': components['schemas']['NotificationSubscription'];
         };
       };
       /** @description Unauthorized. */
       401: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
       /** @description Subscription not found. */
       404: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
       /** @description Not yet implemented. */
       501: {
-        headers: {
-          [name: string]: unknown;
-        };
+        headers: Record<string, unknown>;
         content?: never;
       };
     };

@@ -73,6 +73,5 @@ export function useRegistrationFlowRedirect(): void {
     }
 
     router.push(target);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userProfileStatus]);
 }
