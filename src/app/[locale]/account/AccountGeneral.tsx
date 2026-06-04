@@ -2,22 +2,29 @@
 
 import * as React from 'react';
 import { useRouter } from '../../../i18n/navigation';
-import { Box, Button, Chip, Link, TextField, Typography } from '@mui/material';
-import { Check } from '@mui/icons-material';
+import {
+  Alert,
+  Box,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  Link,
+  Snackbar,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   selectSignedInWithProvider,
   selectUserProfile,
 } from '../../store/selectors';
+import { selectSaveUserProfileStatus } from '../../store/profile-selectors';
 import { useTranslations } from 'next-intl';
 import { AccountSectionContainer } from './AccountSectionContainer';
-import { updateUserInformation } from '../../services';
 import {
-  refreshUserInformation,
-  refreshUserInformationFail,
+  saveUserProfile,
+  saveUserProfileReset,
 } from '../../store/profile-reducer';
-import { getAppError } from '../../utils/error';
-import { type ProfileError } from '../../types';
 
 export default function AccountGeneral(): React.ReactElement {
   const t = useTranslations('account');
@@ -26,54 +33,80 @@ export default function AccountGeneral(): React.ReactElement {
   const dispatch = useDispatch();
   const router = useRouter();
   const signedInWithProvider = useSelector(selectSignedInWithProvider);
+  const saveStatus = useSelector(selectSaveUserProfileStatus);
 
   const [isEditing, setIsEditing] = React.useState(false);
-  const [isSaving, setIsSaving] = React.useState(false);
   const [draftFullName, setDraftFullName] = React.useState('');
   const [draftOrganization, setDraftOrganization] = React.useState('');
+  const [
+    draftIsRegisteredToReceiveAPIAnnouncements,
+    setDraftIsRegisteredToReceiveAPIAnnouncements,
+  ] = React.useState(false);
 
   const handleEditClick = (): void => {
     setDraftFullName(user?.fullName ?? '');
     setDraftOrganization(user?.organization ?? '');
+    setDraftIsRegisteredToReceiveAPIAnnouncements(
+      user?.isRegisteredToReceiveAPIAnnouncements ?? false,
+    );
+    dispatch(saveUserProfileReset());
     setIsEditing(true);
   };
 
   const handleCancel = (): void => {
+    dispatch(saveUserProfileReset());
     setIsEditing(false);
   };
 
-  const handleSave = async (): Promise<void> => {
-    setIsSaving(true);
-    try {
-      await updateUserInformation({
+  const handleSave = (): void => {
+    dispatch(
+      saveUserProfile({
         fullName: draftFullName,
         organization: draftOrganization,
         isRegisteredToReceiveAPIAnnouncements:
-          user?.isRegisteredToReceiveAPIAnnouncements ?? false,
-      });
-      dispatch(
-        refreshUserInformation({
-          fullName: draftFullName,
-          organization: draftOrganization,
-          isRegisteredToReceiveAPIAnnouncements:
-            user?.isRegisteredToReceiveAPIAnnouncements ?? false,
-        }),
-      );
-      setIsEditing(false);
-    } catch (error) {
-      dispatch(
-        refreshUserInformationFail(getAppError(error) as ProfileError),
-      );
-    } finally {
-      setIsSaving(false);
-    }
+          draftIsRegisteredToReceiveAPIAnnouncements,
+      }),
+    );
   };
+
+  React.useEffect(() => {
+    if (saveStatus === 'success') {
+      setIsEditing(false);
+    }
+  }, [saveStatus]);
+
+  // Reference is due to dispatch save status acting faster than the exit animation of the alert, causing a flash of the wrong alert severity. With this reference, the severity will be consistent during the whole display of the alert.
+  const isSaving = saveStatus === 'loading';
+  const alertSeverity = React.useRef<'success' | 'error'>('success');
+  if (saveStatus === 'success') alertSeverity.current = 'success';
+  if (saveStatus === 'fail') alertSeverity.current = 'error';
 
   return (
     <>
+      <Snackbar
+        open={saveStatus === 'success' || saveStatus === 'fail'}
+        autoHideDuration={4000}
+        onClose={() => {
+          dispatch(saveUserProfileReset());
+        }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          severity={alertSeverity.current}
+          onClose={() => {
+            dispatch(saveUserProfileReset());
+          }}
+          sx={{ width: '100%' }}
+        >
+          {alertSeverity.current === 'success'
+            ? 'Account changes were successful'
+            : 'Failed to save account changes. Please try again.'}
+        </Alert>
+      </Snackbar>
       <AccountSectionContainer
         title={'Personal Information'}
         subtitle={'Your account details and contact information'}
+        loading={isSaving}
         action={
           isEditing ? (
             <Box sx={{ display: 'flex', gap: 1 }}>
@@ -88,9 +121,7 @@ export default function AccountGeneral(): React.ReactElement {
               <Button
                 variant='contained'
                 size='small'
-                onClick={() => {
-                  void handleSave();
-                }}
+                onClick={handleSave}
                 disabled={isSaving}
               >
                 Save
@@ -130,32 +161,44 @@ export default function AccountGeneral(): React.ReactElement {
               size='small'
             />
           ) : null}
-          {(isEditing || user?.organization !== undefined) ? (
-            <TextField
-              fullWidth
-              label={tCommon('organization')}
-              value={isEditing ? draftOrganization : (user?.organization ?? '')}
-              onChange={
-                isEditing
-                  ? (e) => {
-                      setDraftOrganization(e.target.value);
-                    }
-                  : undefined
-              }
-              disabled={!isEditing}
-              sx={{ mt: 1 }}
-              size='small'
-            />
-          ) : null}
-          {user?.isRegisteredToReceiveAPIAnnouncements === true ? (
-            <Chip
-              label={t('registerApiAnnouncements')}
-              color='primary'
-              variant='outlined'
-              sx={{ mt: 0.5, width: 'fit-content' }}
-              icon={<Check />}
-            />
-          ) : null}
+          <TextField
+            fullWidth
+            label={tCommon('organization')}
+            value={isEditing ? draftOrganization : (user?.organization ?? '')}
+            onChange={
+              isEditing
+                ? (e) => {
+                    setDraftOrganization(e.target.value);
+                  }
+                : undefined
+            }
+            disabled={!isEditing}
+            sx={{ mt: 1 }}
+            size='small'
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={
+                  isEditing
+                    ? draftIsRegisteredToReceiveAPIAnnouncements
+                    : (user?.isRegisteredToReceiveAPIAnnouncements ?? false)
+                }
+                onChange={
+                  isEditing
+                    ? (e) => {
+                        setDraftIsRegisteredToReceiveAPIAnnouncements(
+                          e.target.checked,
+                        );
+                      }
+                    : undefined
+                }
+                disabled={!isEditing}
+              />
+            }
+            label={t('registerApiAnnouncements')}
+            sx={{ mt: 0.5 }}
+          />
         </Box>
       </AccountSectionContainer>
       <AccountSectionContainer title={'Account Support'} sx={{ mt: 3 }}>
