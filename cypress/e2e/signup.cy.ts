@@ -72,3 +72,118 @@ describe('Sign up screen', () => {
       .contains('You must verify you are not a robot.');
   });
 });
+
+describe('Sign up full registration flow', () => {
+  const email = 'cypressSignUpFlowTest@mobilitydata.org';
+  const password = 'IloveOrangeCones123!';
+
+  const unverifiedUser = {
+    email,
+    isRegistered: false,
+    isEmailVerified: false,
+    isRegisteredToReceiveAPIAnnouncements: false,
+    isAnonymous: false,
+    refreshToken: '',
+  };
+
+  /**
+   * Fills and submits the complete-registration form.
+   * Intercepts PUT /v1/user so the saga succeeds without a real API.
+   */
+  const completeRegistration = (): void => {
+    cy.intercept('PUT', '**/v1/user', { statusCode: 200, body: {} }).as(
+      'updateUser',
+    );
+    cy.get('input[id="fullName"]').type('Test User');
+    cy.get('input[id="agreeToTerms"]').check({ force: true });
+    cy.get('input[id="agreeToPrivacyPolicy"]').check({ force: true });
+    cy.contains('button', 'Finish Account Setup').click();
+    cy.wait('@updateUser');
+  };
+
+  beforeEach(() => {
+    // Create a real Firebase emulator user and sign in so that the
+    // complete-registration saga can obtain an access token, but leave
+    // Redux state untouched so each test can set the exact status it needs.
+    cy.createNewFirebaseUser(email, password);
+  });
+
+  it('should redirect verify-email → complete-registration → contribute when signed up with add_feed=true', () => {
+    cy.visit('/verify-email?add_feed=true');
+    cy.contains('Check your email').should('exist');
+
+    // Simulate arriving here right after sign-up (email not yet verified)
+    cy.window().its('store').invoke('dispatch', {
+      type: 'userProfile/signUpSuccess',
+      payload: unverifiedUser,
+    });
+
+    // Simulate the user clicking the email verification link
+    cy.window().its('store').invoke('dispatch', {
+      type: 'userProfile/emailVerified',
+    });
+
+    cy.location('pathname', { timeout: 10000 }).should(
+      'eq',
+      '/complete-registration',
+    );
+    cy.location('search').should('include', 'add_feed=true');
+
+    completeRegistration();
+
+    cy.location('pathname', { timeout: 10000 }).should('eq', '/contribute');
+  });
+
+  it('should redirect verify-email → complete-registration → redirect_to path when signed up with redirect_to', () => {
+    const redirectPath = '/feeds';
+    cy.visit(
+      `/verify-email?redirect_to=${encodeURIComponent(redirectPath)}`,
+    );
+    cy.contains('Check your email').should('exist');
+
+    cy.window().its('store').invoke('dispatch', {
+      type: 'userProfile/signUpSuccess',
+      payload: unverifiedUser,
+    });
+
+    cy.window().its('store').invoke('dispatch', {
+      type: 'userProfile/emailVerified',
+    });
+
+    cy.location('pathname', { timeout: 10000 }).should(
+      'eq',
+      '/complete-registration',
+    );
+    cy.location('search').should(
+      'include',
+      `redirect_to=${encodeURIComponent(redirectPath)}`,
+    );
+
+    completeRegistration();
+
+    cy.location('pathname', { timeout: 10000 }).should('eq', redirectPath);
+  });
+
+  it('should redirect verify-email → complete-registration → account on normal sign up', () => {
+    cy.visit('/verify-email');
+    cy.contains('Check your email').should('exist');
+
+    cy.window().its('store').invoke('dispatch', {
+      type: 'userProfile/signUpSuccess',
+      payload: unverifiedUser,
+    });
+
+    cy.window().its('store').invoke('dispatch', {
+      type: 'userProfile/emailVerified',
+    });
+
+    cy.location('pathname', { timeout: 10000 }).should(
+      'eq',
+      '/complete-registration',
+    );
+
+    completeRegistration();
+
+    cy.location('pathname', { timeout: 10000 }).should('eq', '/account');
+  });
+});

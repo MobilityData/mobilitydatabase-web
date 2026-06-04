@@ -101,3 +101,23 @@ Cypress.Commands.add(
     });
   },
 );
+
+/**
+ * Wipes Firebase auth emulator accounts, creates a new user and signs in
+ * via Firebase, but does NOT inject any Redux state. Use this when a test
+ * needs Firebase auth active but controls the Redux state itself.
+ */
+Cypress.Commands.add(
+  'createNewFirebaseUser',
+  (email: string, password: string) => {
+    const auth = app.auth();
+    cy.then(async () => {
+      await fetch(
+        'http://localhost:9099/emulator/v1/projects/mobility-feeds-dev/accounts',
+        { method: 'DELETE' },
+      );
+      await auth.createUserWithEmailAndPassword(email, password);
+      await auth.signInWithEmailAndPassword(email, password);
+    });
+  },
+);
