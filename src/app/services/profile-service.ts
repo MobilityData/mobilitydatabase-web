@@ -135,6 +135,8 @@ export const populateUserWithAdditionalInfo = (
 ): User => {
   return {
     ...user,
+    // Organization is used to track if user completed registration, as it the indicator of whether the user filled in the additional information form after login with provider
+    // fullName is required but is possible to be pre-filled by the provider
     isRegistered: userData?.organization != undefined,
     fullName:
       userData?.fullName ??

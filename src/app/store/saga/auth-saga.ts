@@ -182,7 +182,12 @@ function* loginWithProviderSaga({
       userData,
       additionalUserInfo,
     );
-    yield put(loginSuccess(userEnhanced));
+    yield put(
+      loginSuccess({
+        ...userEnhanced,
+        fullName: user.fullName ?? (additionalUserInfo.profile?.name as string),
+      }),
+    );
     broadcastMessage(LOGIN_CHANNEL);
   } catch (error) {
     yield put(loginFail(getAppError(error) as ProfileError));

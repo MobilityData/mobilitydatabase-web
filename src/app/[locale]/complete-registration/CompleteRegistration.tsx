@@ -18,7 +18,10 @@ import {
 } from '@mui/material';
 import { useAppDispatch, useRegistrationFlowRedirect } from '../../hooks';
 import { refreshUserInformation } from '../../store/profile-reducer';
-import { selectRegistrationError } from '../../store/profile-selectors';
+import {
+  selectRegistrationError,
+  selectUserProfile,
+} from '../../store/profile-selectors';
 import { useSelector } from 'react-redux';
 
 export default function CompleteRegistration(): React.ReactElement {
@@ -27,6 +30,7 @@ export default function CompleteRegistration(): React.ReactElement {
   const dispatch = useAppDispatch();
 
   const registrationError = useSelector(selectRegistrationError);
+  const userProfile = useSelector(selectUserProfile);
 
   const [isSubmitted, setIsSubmitted] = React.useState(false);
 
@@ -73,7 +77,7 @@ export default function CompleteRegistration(): React.ReactElement {
 
   const formik = useFormik({
     initialValues: {
-      fullName: '',
+      fullName: userProfile?.fullName ?? '',
       organizationName: '',
       receiveAPIAnnouncements: false,
       agreeToTerms: false,
