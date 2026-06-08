@@ -192,6 +192,26 @@ export default function FAQ(): React.ReactElement {
             systems.csv catalog
           </Button>
         </Typography>
+        <Typography
+          variant='h5'
+          color='primary'
+          sx={{ fontWeight: 700, mt: 5, mb: 1 }}
+        >
+          How is the Mobility Database licensed? Can I use it for commercial purposes?
+        </Typography>
+        <Typography className='answer'>
+          Yes!
+           <Button
+            variant='text'
+            className='inline line-start'
+            href={'/terms-and-conditions'}
+            rel='noreferrer'
+            target='_blank'
+            endIcon={<OpenInNewIcon />}
+          >
+          You can look at our terms and conditions here for a full explanation.
+           </Button>
+        </Typography>
       </ColoredContainer>
     </Container>
   );
