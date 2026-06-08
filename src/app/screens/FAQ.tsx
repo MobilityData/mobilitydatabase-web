@@ -88,7 +88,9 @@ export default function FAQ(): React.ReactElement {
         </Typography>
         <Typography className='answer'>
           Yes. The Mobility Database was launched in February of 2024 to replace
-          Transitfeeds and provide the most up-to-date GTFS and GTFS-Realtime available. All historical data from TransitFeeds was migrated to the Mobility Database in December 2025. 
+          Transitfeeds and provide the most up-to-date GTFS and GTFS-Realtime
+          available. All historical data from TransitFeeds was migrated to the
+          Mobility Database in December 2025.
         </Typography>
         <Typography
           variant='h5'
@@ -197,11 +199,12 @@ export default function FAQ(): React.ReactElement {
           color='primary'
           sx={{ fontWeight: 700, mt: 5, mb: 1 }}
         >
-          How is the Mobility Database licensed? Can I use it for commercial purposes?
+          How is the Mobility Database licensed? Can I use it for commercial
+          purposes?
         </Typography>
         <Typography className='answer'>
           Yes!
-           <Button
+          <Button
             variant='text'
             className='inline line-start'
             href={'/terms-and-conditions'}
@@ -209,8 +212,9 @@ export default function FAQ(): React.ReactElement {
             target='_blank'
             endIcon={<OpenInNewIcon />}
           >
-          You can look at our terms and conditions here for a full explanation.
-           </Button>
+            You can look at our terms and conditions here for a full
+            explanation.
+          </Button>
         </Typography>
       </ColoredContainer>
     </Container>
