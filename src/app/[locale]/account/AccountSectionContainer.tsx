@@ -1,4 +1,4 @@
-import { Box, type SxProps, Typography } from '@mui/material';
+import { Box, LinearProgress, type SxProps, Typography } from '@mui/material';
 
 export interface AssociatedFeedsProps {
   title?: string;
@@ -12,16 +12,19 @@ export function AccountSectionContainer({
   action,
   children,
   sx,
+  loading,
 }: {
   title?: string;
   subtitle?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
   sx?: SxProps;
+  loading?: boolean;
 }): React.ReactElement {
   return (
     <Box
       sx={{
+        position: 'relative',
         backgroundColor: 'background.paper',
         px: 3,
         py: 2,
@@ -55,6 +58,17 @@ export function AccountSectionContainer({
           </Box>
           {action != null && <Box sx={{ flexShrink: 0, ml: 2 }}>{action}</Box>}
         </Box>
+      )}
+      {loading === true && (
+        <LinearProgress
+          sx={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: 0,
+            height: 2,
+          }}
+        />
       )}
       {children}
     </Box>

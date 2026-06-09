@@ -8,6 +8,7 @@ import {
 import {
   type ProfileError,
   USER_PROFILE_REFRESH_INFORMATION,
+  USER_PROFILE_SAVE_USER_PROFILE,
   USER_REQUEST_REFRESH_ACCESS_TOKEN,
   type User,
 } from '../../types';
@@ -17,6 +18,8 @@ import {
   refreshAccessTokenFail,
   refreshUserInformationFail,
   refreshUserInformationSuccess,
+  saveUserProfileFail,
+  saveUserProfileSuccess,
 } from '../profile-reducer';
 import { getAppError } from '../../utils/error';
 import { selectUserProfile } from '../profile-selectors';
@@ -52,7 +55,30 @@ function* refreshUserInformation(): Generator<StrictEffect, void, User> {
   }
 }
 
+interface SaveUserProfileAction {
+  type: string;
+  payload: {
+    fullName: string;
+    organization: string;
+    isRegisteredToReceiveAPIAnnouncements: boolean;
+  };
+}
+
+function* saveUserProfileSaga(
+  action: SaveUserProfileAction,
+): Generator<StrictEffect, void, void> {
+  try {
+    yield call(async () => {
+      await updateUserInformation(action.payload);
+    });
+    yield put(saveUserProfileSuccess(action.payload));
+  } catch (error) {
+    yield put(saveUserProfileFail(getAppError(error) as ProfileError));
+  }
+}
+
 export function* watchProfile(): Generator {
   yield takeLatest(USER_REQUEST_REFRESH_ACCESS_TOKEN, refreshAccessTokenSaga);
   yield takeLatest(USER_PROFILE_REFRESH_INFORMATION, refreshUserInformation);
+  yield takeLatest(USER_PROFILE_SAVE_USER_PROFILE, saveUserProfileSaga);
 }

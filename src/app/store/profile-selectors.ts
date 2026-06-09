@@ -69,3 +69,8 @@ export const selectRegistrationError = (
   state: RootState,
 ): ProfileError | null =>
   selectErrorBySource(state, ProfileErrorSource.Registration);
+
+export const selectSaveUserProfileStatus = (
+  state: RootState,
+): 'idle' | 'loading' | 'success' | 'fail' =>
+  state.userProfile.saveUserProfileStatus;

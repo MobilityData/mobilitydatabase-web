@@ -11,8 +11,7 @@ import Container from '@mui/material/Container';
 import GoogleIcon from '@mui/icons-material/Google';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import AppleIcon from '@mui/icons-material/Apple';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useAppDispatch } from '../../hooks';
+import { useAppDispatch, useRegistrationFlowRedirect } from '../../hooks';
 import {
   login,
   loginFail,
@@ -44,17 +43,10 @@ import {
   selectUserProfileStatus,
 } from '../../store/selectors';
 import { getAuth, signInWithPopup, type UserCredential } from 'firebase/auth';
-import {
-  ACCOUNT_TARGET,
-  ADD_FEED_TARGET,
-  COMPLETE_REGISTRATION_TARGET,
-  POST_REGISTRATION_TARGET,
-} from '../../constants/Navigation';
 import { VisibilityOffOutlined, VisibilityOutlined } from '@mui/icons-material';
 
 export default function SignIn(): React.ReactElement {
   const dispatch = useAppDispatch();
-  const router = useRouter();
   const theme = useTheme();
   const userProfileStatus = useSelector(selectUserProfileStatus);
   const emailLoginError = useSelector(selectEmailLoginError);
@@ -62,9 +54,9 @@ export default function SignIn(): React.ReactElement {
   const [showPassword, setShowPassword] = React.useState(false);
   const [showNoEmailSnackbar, setShowNoEmailSnackbar] = React.useState(false);
   const [isOAuthLoading, setIsOAuthLoading] = React.useState(false);
-  const searchParams = useSearchParams();
-
   const isLoading = userProfileStatus === 'login_in' || isOAuthLoading;
+
+  useRegistrationFlowRedirect();
 
   const SignInSchema = Yup.object().shape({
     email: Yup.string()
@@ -102,29 +94,6 @@ export default function SignIn(): React.ReactElement {
       setIsOAuthLoading(false);
     }
   }, [emailLoginError]);
-
-  React.useEffect(() => {
-    if (userProfileStatus === 'registered') {
-      const redirectTo = searchParams.get('redirect_to');
-      if (
-        redirectTo != null &&
-        redirectTo.startsWith('/') &&
-        !redirectTo.startsWith('//')
-      ) {
-        router.push(redirectTo);
-      } else if (searchParams.has('add_feed')) {
-        router.push(ADD_FEED_TARGET);
-      } else {
-        router.push(ACCOUNT_TARGET);
-      }
-    }
-    if (userProfileStatus === 'authenticated') {
-      router.push(COMPLETE_REGISTRATION_TARGET + '?' + searchParams.toString());
-    }
-    if (userProfileStatus === 'unverified') {
-      router.push(POST_REGISTRATION_TARGET + '?' + searchParams.toString());
-    }
-  }, [userProfileStatus, router, searchParams]);
 
   const signInWithProvider = (oauthProvider: OauthProvider): void => {
     const auth = getAuth();

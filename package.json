@@ -68,6 +68,8 @@
     "generate:api-types": "node scripts/generate-api-types.mjs src/app/services/feeds/types.ts",
     "generate:gbfs-validator-types:output": "npm exec -- openapi-typescript ./external_types/GbfsValidator.yaml -o $npm_config_output_path && eslint $npm_config_output_path --fix",
     "generate:gbfs-validator-types": "npm run generate:gbfs-validator-types:output -- --output-file=src/app/services/feeds/gbfs-validator-types.ts",
+    "generate:user-api-types:output": "npm exec -- openapi-typescript ./external_types/UserServiceAPI.yaml -o $npm_config_output_path && eslint $npm_config_output_path --fix",
+    "generate:user-api-types": "npm run generate:user-api-types:output -- --output-file=src/app/services/user-service-api-types.ts",
     "new-worktree": "bash scripts/new-worktree.sh",
     "remove-worktree": "bash scripts/remove-worktree.sh"
   },

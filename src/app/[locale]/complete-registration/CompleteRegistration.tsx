@@ -16,27 +16,25 @@ import {
   CssBaseline,
   FormControlLabel,
 } from '@mui/material';
-import { useAppDispatch } from '../../hooks';
+import { useAppDispatch, useRegistrationFlowRedirect } from '../../hooks';
 import { refreshUserInformation } from '../../store/profile-reducer';
-import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  selectUserProfileStatus,
   selectRegistrationError,
+  selectUserProfile,
 } from '../../store/profile-selectors';
 import { useSelector } from 'react-redux';
-import { ACCOUNT_TARGET, ADD_FEED_TARGET } from '../../constants/Navigation';
 
 export default function CompleteRegistration(): React.ReactElement {
   const auth = getAuth();
   const user = auth.currentUser;
   const dispatch = useAppDispatch();
-  const router = useRouter();
 
-  const userProfileStatus = useSelector(selectUserProfileStatus);
   const registrationError = useSelector(selectRegistrationError);
+  const userProfile = useSelector(selectUserProfile);
 
   const [isSubmitted, setIsSubmitted] = React.useState(false);
-  const searchParams = useSearchParams();
+
+  useRegistrationFlowRedirect();
 
   const termsAndConditionsElement = (
     <span>
@@ -66,16 +64,6 @@ export default function CompleteRegistration(): React.ReactElement {
     </span>
   );
 
-  React.useEffect(() => {
-    if (userProfileStatus === 'registered') {
-      if (searchParams.has('add_feed')) {
-        router.push(ADD_FEED_TARGET + '?from=registration');
-      } else {
-        router.push(ACCOUNT_TARGET);
-      }
-    }
-  }, [userProfileStatus]);
-
   const CompleteRegistrationSchema = Yup.object().shape({
     fullName: Yup.string().required('Your full name is required.'),
     requiredCheck: Yup.boolean().oneOf([true], 'This field must be checked'),
@@ -89,7 +77,7 @@ export default function CompleteRegistration(): React.ReactElement {
 
   const formik = useFormik({
     initialValues: {
-      fullName: '',
+      fullName: userProfile?.fullName ?? '',
       organizationName: '',
       receiveAPIAnnouncements: false,
       agreeToTerms: false,

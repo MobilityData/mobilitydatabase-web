@@ -27,6 +27,7 @@ interface UserProfileState {
   errors: ProfileErrors;
   user: User | undefined;
   changePasswordStatus: 'idle' | 'loading' | 'success' | 'fail';
+  saveUserProfileStatus: 'idle' | 'loading' | 'success' | 'fail';
   isSignedInWithProvider: boolean;
 }
 
@@ -48,6 +49,7 @@ const initialState: UserProfileState = {
   isVerificationEmailSent: false,
   isAppRefreshing: false,
   changePasswordStatus: 'idle',
+  saveUserProfileStatus: 'idle',
   isSignedInWithProvider: false,
   isRecoveryEmailSent: false,
 };
@@ -168,6 +170,56 @@ export const userProfileSlice = createSlice({
         state.status = 'registering';
       }
     },
+    updateUserProfile: (
+      state,
+      action: PayloadAction<{
+        fullName: string;
+        organization: string;
+        isRegisteredToReceiveAPIAnnouncements: boolean;
+      }>,
+    ) => {
+      if (state.user !== undefined) {
+        state.errors.Registration = null;
+        state.user.fullName = action.payload?.fullName ?? '';
+        state.user.organization = action.payload?.organization ?? 'Unknown';
+        state.user.isRegisteredToReceiveAPIAnnouncements =
+          action.payload?.isRegisteredToReceiveAPIAnnouncements ?? false;
+      }
+    },
+    saveUserProfile: (
+      state,
+      action: PayloadAction<{
+        fullName: string;
+        organization: string;
+        isRegisteredToReceiveAPIAnnouncements: boolean;
+      }>,
+    ) => {
+      state.saveUserProfileStatus = 'loading';
+      state.errors.Registration = null;
+    },
+    saveUserProfileSuccess: (
+      state,
+      action: PayloadAction<{
+        fullName: string;
+        organization: string;
+        isRegisteredToReceiveAPIAnnouncements: boolean;
+      }>,
+    ) => {
+      state.saveUserProfileStatus = 'success';
+      if (state.user !== undefined) {
+        state.user.fullName = action.payload?.fullName ?? '';
+        state.user.organization = action.payload?.organization ?? 'Unknown';
+        state.user.isRegisteredToReceiveAPIAnnouncements =
+          action.payload?.isRegisteredToReceiveAPIAnnouncements ?? false;
+      }
+    },
+    saveUserProfileFail: (state, action: PayloadAction<ProfileError>) => {
+      state.saveUserProfileStatus = 'fail';
+      state.errors.Registration = action.payload;
+    },
+    saveUserProfileReset: (state) => {
+      state.saveUserProfileStatus = 'idle';
+    },
     refreshUserInformationFail: (
       state,
       action: PayloadAction<ProfileError>,
@@ -282,6 +334,11 @@ export const {
   refreshUserInformation,
   refreshUserInformationFail,
   refreshUserInformationSuccess,
+  updateUserProfile,
+  saveUserProfile,
+  saveUserProfileSuccess,
+  saveUserProfileFail,
+  saveUserProfileReset,
   changePassword,
   changePasswordInit,
   changePasswordSuccess,

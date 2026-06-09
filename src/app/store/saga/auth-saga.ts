@@ -120,7 +120,13 @@ function* signUpSaga({
     if (user === null) {
       throw new Error('User not found');
     }
-    yield put(signUpSuccess(user as User));
+    const userData = (yield call(retrieveUserInformation)) as UserData;
+    const userEnhanced = populateUserWithAdditionalInfo(
+      user as User,
+      userData,
+      undefined,
+    );
+    yield put(signUpSuccess(userEnhanced));
   } catch (error) {
     yield put(signUpFail(getAppError(error) as ProfileError));
   }
@@ -176,7 +182,12 @@ function* loginWithProviderSaga({
       userData,
       additionalUserInfo,
     );
-    yield put(loginSuccess(userEnhanced));
+    yield put(
+      loginSuccess({
+        ...userEnhanced,
+        fullName: user.fullName ?? (additionalUserInfo.profile?.name as string),
+      }),
+    );
     broadcastMessage(LOGIN_CHANNEL);
   } catch (error) {
     yield put(loginFail(getAppError(error) as ProfileError));

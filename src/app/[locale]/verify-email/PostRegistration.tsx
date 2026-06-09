@@ -11,23 +11,20 @@ import { emailVerified, verifyEmail } from '../../store/profile-reducer';
 import {
   selectEmailVerificationError,
   selectIsVerificationEmailSent,
-  selectUserProfileStatus,
 } from '../../store/profile-selectors';
 import { type ProfileError } from '../../types';
 import { app } from '../../../firebase';
 import { useEffect } from 'react';
-import { ACCOUNT_TARGET, ADD_FEED_TARGET } from '../../constants/Navigation';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRegistrationFlowRedirect } from '../../hooks';
 export default function PostRegistration(): React.ReactElement {
   const dispatch = useDispatch();
-  const router = useRouter();
   const selectResendEmailSuccess = useSelector(selectIsVerificationEmailSent);
   const selectResendEmailError = useSelector(selectEmailVerificationError);
-  const userProfileStatus = useSelector(selectUserProfileStatus);
   const [resendEmailSuccess, setResendEmailSuccess] = React.useState(false);
-  const searchParams = useSearchParams();
   const [resendEmailError, setResendEmailError] =
     React.useState<ProfileError | null>(null);
+
+  useRegistrationFlowRedirect();
   React.useEffect(() => {
     setResendEmailSuccess(selectResendEmailSuccess);
   }, [selectResendEmailSuccess]);
@@ -54,19 +51,6 @@ export default function PostRegistration(): React.ReactElement {
       clearInterval(intervalId);
     };
   }, []);
-
-  useEffect(() => {
-    if (
-      userProfileStatus === 'registered' ||
-      userProfileStatus === 'authenticated'
-    ) {
-      if (searchParams.has('add_feed')) {
-        router.push(ADD_FEED_TARGET + '?from=registration');
-      } else {
-        router.push(ACCOUNT_TARGET);
-      }
-    }
-  }, [userProfileStatus]);
 
   return (
     <Container component='main' maxWidth='sm'>
