@@ -57,6 +57,7 @@ interface TableMeta {
   size_bytes: number;
   columns: string[];
   sort_columns: string[];
+  search_columns: string[];
 }
 
 interface GtfsMetadata {
@@ -120,19 +121,36 @@ function resolveParquetUrl(baseUrl: string, file: string): string {
   return `${base}/${file}`;
 }
 
-// Build a WHERE clause from search state
+// Build a WHERE clause from search state.
+// - searchColumn === '__searchable__': search only across the table's defined searchable columns
+// - searchColumn === '__all__': search across every column (slow on large files)
+// - anything else: search a specific single column
+// When a specific column is selected and the term has no wildcards/spaces, uses exact `=`
+// instead of ILIKE so DuckDB can skip row groups via Parquet min/max statistics.
 function buildWhere(
-  columns: string[],
+  allColumns: string[],
+  searchableColumns: string[],
   searchTerm: string,
   searchColumn: string,
 ): string {
   if (!searchTerm.trim()) return '';
   const escaped = searchTerm.replace(/'/g, "''");
+  const isExact = /^[^\s%*?]+$/.test(searchTerm); // no wildcards or spaces
+
+  const ilike = (c: string) => `CAST("${c}" AS VARCHAR) ILIKE '%${escaped}%'`;
+  const exact = (c: string) => `CAST("${c}" AS VARCHAR) = '${escaped}'`;
+
   if (searchColumn === '__all__') {
-    const parts = columns.map((c) => `CAST("${c}" AS VARCHAR) ILIKE '%${escaped}%'`);
-    return `WHERE (${parts.join(' OR ')})`;
+    return `WHERE (${allColumns.map(ilike).join(' OR ')})`;
   }
-  return `WHERE CAST("${searchColumn}" AS VARCHAR) ILIKE '%${escaped}%'`;
+  if (searchColumn === '__searchable__') {
+    const cols = (searchableColumns.length > 0 ? searchableColumns : allColumns.slice(0, 3))
+      .filter((c) => allColumns.includes(c));
+    if (cols.length === 0) return '';
+    return `WHERE (${cols.map(ilike).join(' OR ')})`;
+  }
+  // Single column — use exact match when possible (enables row-group skipping)
+  return `WHERE ${isExact ? exact(searchColumn) : ilike(searchColumn)}`;
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -160,12 +178,19 @@ export default function GtfsViewerClient({
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(50);
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchColumn, setSearchColumn] = useState('__all__');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [searchColumn, setSearchColumn] = useState('__searchable__');
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [queryLoading, setQueryLoading] = useState(false);
   const [queryError, setQueryError] = useState<string | null>(null);
   const [queryMs, setQueryMs] = useState<number | null>(null);
+
+  // Debounce search term — wait 500 ms after last keystroke before querying
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // ── Initialise DuckDB on mount
   useEffect(() => {
@@ -195,9 +220,7 @@ export default function GtfsViewerClient({
     setQueryError(null);
     const t0 = performance.now();
     try {
-      const where = buildWhere(columns, searchTerm, searchColumn);
-      const orderClause =
-        sortColumn ? `ORDER BY "${sortColumn}" ${sortDir.toUpperCase()}` : '';
+      const tableMeta = metadata && selectedTable ? metadata.tables[selectedTable] : null;
 
       // 1. Get column names if we don't have them yet
       let cols = columns;
@@ -209,35 +232,53 @@ export default function GtfsViewerClient({
         setColumns(cols);
       }
 
-      // 2. Count total rows (uses Parquet statistics — very fast)
-      const countResult = await conn.query(
-        `SELECT COUNT(*) as n FROM read_parquet('${parquetUrl}') ${buildWhere(cols, searchTerm, searchColumn)}`,
-      );
-      const total = Number(countResult.toArray()[0].n);
-      setTotalRows(total);
+      const searchCols = (tableMeta?.search_columns ?? []).filter((c) => cols.includes(c));
+      const where = buildWhere(cols, searchCols, debouncedSearchTerm, searchColumn);
+      const orderClause = sortColumn ? `ORDER BY "${sortColumn}" ${sortDir.toUpperCase()}` : '';
+      const hasFilter = debouncedSearchTerm.trim().length > 0;
 
-      // 3. Fetch current page
-      const dataResult = await conn.query(
-        `SELECT * FROM read_parquet('${parquetUrl}')
-         ${buildWhere(cols, searchTerm, searchColumn)}
-         ${orderClause}
-         LIMIT ${rowsPerPage} OFFSET ${page * rowsPerPage}`,
-      );
-      setRows(dataResult.toArray().map((r) => Object.fromEntries(
-        dataResult.schema.fields.map((f, i) => [f.name, r[f.name] ?? null]),
-      )));
+      let total: number;
+      let resultRows: Record<string, unknown>[];
+
+      if (!hasFilter && tableMeta) {
+        // No filter — row count comes from Parquet metadata (zero extra scan)
+        total = tableMeta.row_count;
+        const dataResult = await conn.query(
+          `SELECT * FROM read_parquet('${parquetUrl}')
+           ${orderClause}
+           LIMIT ${rowsPerPage} OFFSET ${page * rowsPerPage}`,
+        );
+        resultRows = dataResult.toArray().map((r) =>
+          Object.fromEntries(cols.map((f) => [f, r[f] ?? null])),
+        );
+      } else {
+        // Filter active — window function gives count + data in a single scan
+        const dataResult = await conn.query(
+          `SELECT *, COUNT(*) OVER() AS __total__
+           FROM read_parquet('${parquetUrl}')
+           ${where}
+           ${orderClause}
+           LIMIT ${rowsPerPage} OFFSET ${page * rowsPerPage}`,
+        );
+        const arr = dataResult.toArray();
+        total = arr.length > 0 ? Number(arr[0].__total__) : 0;
+        resultRows = arr.map((r) => Object.fromEntries(cols.map((f) => [f, r[f] ?? null])));
+      }
+
+      setTotalRows(total);
+      setRows(resultRows);
       setQueryMs(Math.round(performance.now() - t0));
     } catch (e) {
       setQueryError(String(e));
     } finally {
       setQueryLoading(false);
     }
-  }, [parquetUrl, columns, searchTerm, searchColumn, sortColumn, sortDir, page, rowsPerPage]);
+  }, [parquetUrl, columns, debouncedSearchTerm, searchColumn, sortColumn, sortDir, page, rowsPerPage, metadata, selectedTable]);
 
   useEffect(() => {
     if (parquetUrl) runQuery();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [parquetUrl, searchTerm, searchColumn, sortColumn, sortDir, page, rowsPerPage]);
+  }, [parquetUrl, debouncedSearchTerm, searchColumn, sortColumn, sortDir, page, rowsPerPage]);
 
   // ── Load URL (metadata.json or direct .parquet)
   const handleLoad = async (overrideUrl?: string): Promise<void> => {
@@ -251,7 +292,9 @@ export default function GtfsViewerClient({
     setTotalRows(0);
     setPage(0);
     setSearchTerm('');
+    setDebouncedSearchTerm('');
     setSortColumn(null);
+    setSearchColumn('__searchable__');
 
     if (url.endsWith('.parquet') || url.includes('.parquet?')) {
       setLoadedUrl(url);
@@ -284,7 +327,9 @@ export default function GtfsViewerClient({
     setTotalRows(0);
     setPage(0);
     setSearchTerm('');
+    setDebouncedSearchTerm('');
     setSortColumn(null);
+    setSearchColumn('__searchable__');
     setParquetUrl(resolveParquetUrl(loadedUrl, metadata.tables[tableName].file));
   };
 
@@ -416,23 +461,52 @@ export default function GtfsViewerClient({
             <Paper variant='outlined' sx={{ p: 1.5, mb: 1 }}>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems='center'>
                 {/* Global / column search */}
-                <FormControl size='small' sx={{ minWidth: 140 }}>
-                  <InputLabel>Search column</InputLabel>
+                <FormControl size='small' sx={{ minWidth: 160 }}>
+                  <InputLabel>Search in</InputLabel>
                   <Select
                     value={searchColumn}
-                    label='Search column'
+                    label='Search in'
                     onChange={(e) => { setSearchColumn(e.target.value); setPage(0); }}
                   >
-                    <MenuItem value='__all__'>All columns</MenuItem>
-                    {(currentTableMeta?.columns ?? columns).map((c) => (
-                      <MenuItem key={c} value={c}>{c}</MenuItem>
-                    ))}
+                    <MenuItem value='__searchable__'>
+                      <Stack direction='row' spacing={0.5} alignItems='center'>
+                        <SearchIcon fontSize='inherit' color='primary' />
+                        <span>Searchable columns</span>
+                      </Stack>
+                    </MenuItem>
+                    {(currentTableMeta?.search_columns ?? []).length > 0 && (
+                      currentTableMeta!.search_columns.map((c) => (
+                        <MenuItem key={c} value={c} sx={{ pl: 3 }}>
+                          <Stack direction='row' spacing={0.5} alignItems='center'>
+                            <SearchIcon fontSize='inherit' color='primary' sx={{ opacity: 0.6 }} />
+                            <span>{c}</span>
+                          </Stack>
+                        </MenuItem>
+                      ))
+                    )}
+                    <Divider />
+                    <MenuItem value='__all__'>
+                      <Typography variant='body2' color='text.secondary'>All columns (slow)</Typography>
+                    </MenuItem>
+                    {(currentTableMeta?.columns ?? columns)
+                      .filter((c) => !(currentTableMeta?.search_columns ?? []).includes(c))
+                      .map((c) => (
+                        <MenuItem key={c} value={c} sx={{ pl: 3 }}>
+                          <Typography variant='body2' color='text.secondary'>{c}</Typography>
+                        </MenuItem>
+                      ))}
                   </Select>
                 </FormControl>
 
                 <TextField
                   size='small'
-                  placeholder='Search…'
+                  placeholder={
+                    searchColumn === '__searchable__'
+                      ? `Search in: ${(currentTableMeta?.search_columns ?? []).join(', ') || 'columns'}…`
+                      : searchColumn === '__all__'
+                      ? 'Search all columns…'
+                      : `Search ${searchColumn}…`
+                  }
                   value={searchTerm}
                   onChange={(e) => { setSearchTerm(e.target.value); setPage(0); }}
                   sx={{ flex: 1 }}
@@ -508,7 +582,14 @@ export default function GtfsViewerClient({
                             direction={sortColumn === col ? sortDir : 'asc'}
                             onClick={() => handleSort(col)}
                           >
-                            {col}
+                            <Stack direction='row' spacing={0.5} alignItems='center'>
+                              <span>{col}</span>
+                              {(currentTableMeta?.search_columns ?? []).includes(col) && (
+                                <Tooltip title='Searchable column' placement='top'>
+                                  <SearchIcon sx={{ fontSize: 11, color: 'primary.main', opacity: 0.7 }} />
+                                </Tooltip>
+                              )}
+                            </Stack>
                           </TableSortLabel>
                         </TableCell>
                       ))}
