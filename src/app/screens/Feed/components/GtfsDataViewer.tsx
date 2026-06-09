@@ -13,7 +13,8 @@
  *   → https://files.mobilitydatabase.org/{feed}/{dataset}/gtfs_parquet/metadata.json
  */
 
-import React, { lazy, Suspense, useState } from 'react';
+import React, { useState } from 'react';
+import dynamic from 'next/dynamic';
 import {
   Accordion,
   AccordionDetails,
@@ -30,10 +31,27 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
-// Lazy-load the full viewer — DuckDB-WASM bundle is only fetched when the
-// accordion opens, not on initial page load.
-const GtfsViewerClient = lazy(
+// next/dynamic with ssr:false prevents Turbopack from statically analysing
+// the DuckDB-WASM package at build time (avoids the Turbopack WASM crash).
+// The component is only loaded client-side when the accordion is expanded.
+const GtfsViewerClient = dynamic(
   () => import('../../../components/gtfs-viewer/GtfsViewerClient'),
+  {
+    ssr: false,
+    loading: () => (
+      <Box sx={{ p: 3 }}>
+        <Stack direction='row' spacing={1} alignItems='center' mb={2}>
+          <CircularProgress size={16} />
+          <Typography variant='body2' color='text.secondary'>
+            Loading DuckDB-WASM engine…
+          </Typography>
+        </Stack>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} variant='rectangular' height={36} sx={{ mb: 0.5, borderRadius: 1 }} />
+        ))}
+      </Box>
+    ),
+  },
 );
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -115,25 +133,9 @@ export default function GtfsDataViewer({ hostedUrl }: GtfsDataViewerProps): Reac
               requests. Only the rows you see are downloaded — no full file transfer.
             </Alert>
 
-            <Suspense
-              fallback={
-                <Box sx={{ p: 3 }}>
-                  <Stack direction='row' spacing={1} alignItems='center' mb={2}>
-                    <CircularProgress size={16} />
-                    <Typography variant='body2' color='text.secondary'>
-                      Loading DuckDB-WASM engine…
-                    </Typography>
-                  </Stack>
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} variant='rectangular' height={36} sx={{ mb: 0.5, borderRadius: 1 }} />
-                  ))}
-                </Box>
-              }
-            >
-              <Box sx={{ p: 2 }}>
-                <GtfsViewerClient initialUrl={parquetMetaUrl} embedded />
-              </Box>
-            </Suspense>
+            <Box sx={{ p: 2 }}>
+              <GtfsViewerClient initialUrl={parquetMetaUrl} embedded />
+            </Box>
           </>
         )}
       </AccordionDetails>
