@@ -203,7 +203,7 @@ export default function FAQ(): React.ReactElement {
           purposes?
         </Typography>
         <Typography className='answer'>
-          Yes!
+          Yes!{' '}
           <Button
             variant='text'
             className='inline line-start'
