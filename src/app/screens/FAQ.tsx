@@ -88,19 +88,9 @@ export default function FAQ(): React.ReactElement {
         </Typography>
         <Typography className='answer'>
           Yes. The Mobility Database was launched in February of 2024 to replace
-          Transitfeeds. Currently, the TransitFeeds website remains accessible,
-          acting as a temporary archive for data from 2014 to February of 2024.
-          All historical data will be migrated to the Mobility Database before
-          deprecation. All data newer than February 2024 can be found in our
-          database, including 2500+ feeds not originally available on
-          TransitFeeds.
-          <br /> <br />
-          Likewise, the Mobility Database API replaces the TransitFeeds API to
-          provide the most up-to-date GTFS and GTFS-Realtime available. You can
-          still use the TransitFeeds API to access historical data; however,
-          support will cease when TransitFeeds is officially deprecated.
-          <br /> <br />
-          <b>Note: TransitFeeds will be deprecated in December 2025. </b>
+          Transitfeeds and provide the most up-to-date GTFS and GTFS-Realtime
+          available. All historical data from TransitFeeds was migrated to the
+          Mobility Database in December 2025.
         </Typography>
         <Typography
           variant='h5'
@@ -202,6 +192,28 @@ export default function FAQ(): React.ReactElement {
             endIcon={<OpenInNewIcon />}
           >
             systems.csv catalog
+          </Button>
+        </Typography>
+        <Typography
+          variant='h5'
+          color='primary'
+          sx={{ fontWeight: 700, mt: 5, mb: 1 }}
+        >
+          How is the Mobility Database licensed? Can I use it for commercial
+          purposes?
+        </Typography>
+        <Typography className='answer'>
+          Yes!{' '}
+          <Button
+            variant='text'
+            className='inline line-start'
+            href={'/terms-and-conditions'}
+            rel='noreferrer'
+            target='_blank'
+            endIcon={<OpenInNewIcon />}
+          >
+            You can look at our terms and conditions here for a full
+            explanation.
           </Button>
         </Typography>
       </ColoredContainer>
