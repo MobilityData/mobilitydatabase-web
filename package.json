@@ -3,6 +3,7 @@
   "version": "1.0.2",
   "private": true,
   "dependencies": {
+    "@duckdb/duckdb-wasm": "^1.33.1-dev45.0",
     "@emotion/cache": "11.14.0",
     "@emotion/react": "11.13.0",
     "@emotion/styled": "11.13.0",
