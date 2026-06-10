@@ -14,7 +14,12 @@ import {
   type EntityDiffRecord,
 } from '../lib/gtfs-types';
 import type { SemanticDiffResult } from '../lib/semantic-diff';
-import type { FileMetadata } from '../lib/worker-types';
+
+interface FileMetadata {
+  fileName: string;
+  rowCount: number;
+  columns: string[];
+}
 
 interface DiffOverviewProps {
   semantic: SemanticDiffResult;

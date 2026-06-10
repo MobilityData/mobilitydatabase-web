@@ -1,0 +1,56 @@
+{
+  "summary": {
+    "validatorVersion": "8.0.1",
+    "validatedAt": "2026-05-30T00:06:36Z",
+    "counts": {
+      "Shapes": 781,
+      "Stops": 9164,
+      "Routes": 229,
+      "Trips": 219869,
+      "Agencies": 1,
+      "Blocks": 0
+    },
+    "gtfsFeatures": [
+      "Shapes",
+      "Feed Information",
+      "Translations",
+      "Route Colors",
+      "Headsigns",
+      "Stops Wheelchair Accessibility",
+      "Trips Wheelchair Accessibility",
+      "Location Types"
+    ]
+  },
+  "notices": [
+    {
+      "code": "expired_calendar",
+      "severity": "WARNING",
+      "totalNotices": 114
+    },
+    {
+      "code": "feed_expiration_date30_days",
+      "severity": "WARNING",
+      "totalNotices": 1
+    },
+    {
+      "code": "missing_feed_contact_email_and_url",
+      "severity": "WARNING",
+      "totalNotices": 1
+    },
+    {
+      "code": "mixed_case_recommended_field",
+      "severity": "WARNING",
+      "totalNotices": 68
+    },
+    {
+      "code": "stop_too_far_from_shape",
+      "severity": "WARNING",
+      "totalNotices": 4
+    },
+    {
+      "code": "unknown_column",
+      "severity": "INFO",
+      "totalNotices": 2
+    }
+  ]
+}
