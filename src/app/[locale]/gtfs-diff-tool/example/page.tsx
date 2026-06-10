@@ -7,7 +7,7 @@ import GtfsDiffExampleView from '../../../screens/GtfsDiffTool/GtfsDiffExampleVi
 export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
-  title: 'GTFS Diff Tool – Example Report | MobilityDatabase',
+  title: 'GTFS Change Tracker – Example Report | MobilityDatabase',
   description:
     'A pre-rendered example of the GTFS Diff v2 report, showing all change types including added/deleted rows, column changes, and truncated files.',
 };

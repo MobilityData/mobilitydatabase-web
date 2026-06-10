@@ -26,14 +26,14 @@ export default function GtfsDiffExampleView(): React.ReactElement {
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1, flexWrap: 'wrap' }}>
         <Typography variant='h4' fontWeight={700}>
-          GTFS Diff Tool
+          GTFS Change Tracker
         </Typography>
         <Chip label='Example Report' size='small' color='primary' variant='outlined' />
       </Box>
       <Typography color='text.secondary' sx={{ mb: 1 }}>
         This is a pre-rendered example diff report. Upload your own feeds on the{' '}
         <Link href='../gtfs-diff-tool' style={{ color: 'inherit' }}>
-          GTFS Diff Tool
+          GTFS Change Tracker
         </Link>{' '}
         page to generate a live report.
       </Typography>
@@ -46,11 +46,11 @@ export default function GtfsDiffExampleView(): React.ReactElement {
       {/* Breaking / suspicious changes */}
       <BreakingChangesPanel report={breakingChanges} />
 
-      {/* Summary */}
-      <GtfsDiffSummaryPanel diff={diff} />
-
       {/* Validation report diff */}
       <ValidationReportDiffPanel baseReport={olderReport} newReport={latestReport} />
+
+      {/* Summary */}
+      <GtfsDiffSummaryPanel diff={diff} />
 
       {/* File diffs */}
       <Typography variant='h6' fontWeight={700} sx={{ mb: 2 }}>

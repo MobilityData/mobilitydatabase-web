@@ -83,7 +83,7 @@ export default function GtfsDiffTool(): React.ReactElement {
     <Box sx={{ maxWidth: 1200, mx: 'auto', py: 4, px: 2 }}>
       {/* Header */}
       <Typography variant='h4' fontWeight={700} sx={{ mb: 1 }}>
-        GTFS Diff Tool
+        GTFS Change Tracker
       </Typography>
       <Typography color='text.secondary' sx={{ mb: 3 }}>
         Compare two GTFS feeds and view the schema-compliant diff report —
