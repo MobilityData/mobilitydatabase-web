@@ -1,5 +1,5 @@
 /**
- * Core types for the GTFS Semantic Diff Tool.
+ * Core types for the GTFS Semantic Change Tracker.
  */
 
 // ── Raw CSV row types ──────────────────────────────────────────────

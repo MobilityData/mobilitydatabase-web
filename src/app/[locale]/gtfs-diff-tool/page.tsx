@@ -7,11 +7,11 @@ import { type Metadata } from 'next';
 export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
-  title: 'GTFS Diff Tool | MobilityDatabase',
+  title: 'GTFS Change Tracker | MobilityDatabase',
   description:
     'Compare two GTFS feeds side by side. View semantic entity-level changes across routes, service periods, and stops, or drill into raw per-file row diffs.',
   openGraph: {
-    title: 'GTFS Diff Tool | MobilityDatabase',
+    title: 'GTFS Change Tracker | MobilityDatabase',
     description:
       'Compare two GTFS feeds side by side. View semantic entity-level changes across routes, service periods, and stops, or drill into raw per-file row diffs.',
     url: 'https://mobilitydatabase.org/gtfs-diff-tool',

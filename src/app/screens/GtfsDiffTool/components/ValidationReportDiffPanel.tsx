@@ -302,7 +302,7 @@ export default function ValidationReportDiffPanel({
                       const bg = isBad ? COLORS.badBg : COLORS.goodBg;
                       const labelColor = isBad ? COLORS.bad : COLORS.good;
                       const label =
-                        kind === 'added' ? 'New' : kind === 'removed' ? 'Fixed' : 'Count';
+                        kind === 'added' ? 'New' : kind === 'removed' ? 'Fixed' : 'Occurrences';
                       return (
                         <TableRow key={`${kind}-${change.code}`} sx={{ bgcolor: bg }}>
                           <TableCell sx={{ py: 0.5 }}>
