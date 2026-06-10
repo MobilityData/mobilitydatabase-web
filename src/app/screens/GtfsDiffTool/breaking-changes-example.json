@@ -1,0 +1,48 @@
+{
+  "comparison": {
+    "old_feed_version": "202605041130_26M",
+    "new_feed_version": "20260602153030_26U",
+    "has_breaking_change": true,
+    "has_suspicious_change": true
+  },
+  "breaking_changes": [
+    {
+      "type": "removed_entity",
+      "where": "trips.txt",
+      "detail": "91,128 of 219,869 trip_ids (41.4%) from the old feed are absent in the new feed. No stop_id, route_id, or agency_id was removed.",
+      "note": "All old shape_ids were also replaced (781 old → 857 new, 0 in common). This is consistent with STM's booking-period rollover (service_id prefixes 26J/26M → 26M/26U) where trip and shape IDs are regenerated each schedule period — but per the strict definition, any disappeared trip_id is breaking."
+    }
+  ],
+  "suspicious_changes": [
+    {
+      "type": "large_entity_count_delta",
+      "where": "calendar_dates.txt",
+      "detail": "Rows dropped 82 → 40 (-51.2%), exceeding the 20% threshold.",
+      "note": "Small file of exception dates (exception_type=2 only in both); plausible for a new service period, but exceeds the threshold."
+    },
+    {
+      "type": "shape_geometry_distortion",
+      "where": "shapes.txt",
+      "detail": "0 of 781 old shape_ids exist in the new feed (857 new shape_ids). Geometry continuity cannot be verified because no shape_id is shared between versions; row count grew 181,301 → 211,100 (+16.4%).",
+      "note": "Flagged because complete shape namespace turnover prevents geometry validation, not because distortion was observed."
+    }
+  ],
+  "checks_passed": {
+    "removed_required_field": "none (trips.txt dropped note_fr/note_en, which are non-spec extension fields; new feed adds route_pattern_id, route_desc, directions.txt, route_patterns.txt)",
+    "removed_file": "none — 2 files added, 0 removed",
+    "changed_field_type_or_format": "none; all 7,151,705 new stop_times have valid HH:MM:SS times",
+    "referential_integrity_new_feed": "clean — all trips.route_id, trips.service_id, trips.shape_id, and stop_times.stop_id/trip_id resolve",
+    "enum_values": "identical sets: route_type {1,3}, pickup_type {0,1}, location_type {0,1,2}, exception_type {2}, direction_id {0,1}, wheelchair {1,2}",
+    "feed_validity_window": "new feed valid 2026-03-23 → 2026-08-23 (end date in future)",
+    "entity_count_deltas": "stops +0.3%, routes +0.9% (added 768, 815), trips -7.6%, stop_times -10.0%, shapes +16.4%, translations -6.9% — all under 20% except calendar_dates",
+    "geographic_bbox": "identical to 5 decimals: [45.40267, -73.9661] → [45.70112, -73.48058]",
+    "stops_moved_over_500m": 0,
+    "service_coverage_gap": "none — 83 days of overlap (old end 2026-06-14, new start 2026-03-23)",
+    "headsign_route_name_bulk_change": "2.5% of common-trip headsigns, 2.6% of route_long_names (e.g. route 69 'Henri-Bourassa' → 'Gouin') — below bulk threshold",
+    "calendar_flip": "no — both versions use calendar.txt + calendar_dates.txt",
+    "agency_timezone_change": "no (America/Montreal)",
+    "feed_publisher_change": "no",
+    "duplicate_ids": "none in stops, trips",
+    "stop_time_ordering": "0 violations across all 7.15M rows (arrival ≥ prior departure, departure ≥ arrival, stop_sequence strictly increasing)"
+  }
+}
