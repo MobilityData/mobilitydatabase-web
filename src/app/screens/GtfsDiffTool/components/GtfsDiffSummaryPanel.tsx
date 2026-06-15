@@ -38,6 +38,11 @@ function fmtNum(n: number | undefined): string {
   return n.toLocaleString();
 }
 
+function fmtNumOrNA(n: number | undefined, notCompared: boolean): string {
+  if (notCompared) return 'N/A';
+  return fmtNum(n);
+}
+
 const STATUS_COLORS: Record<FileSummary['status'], string> = {
   added: '#2e7d32',
   deleted: '#d32f2f',
@@ -205,6 +210,7 @@ export default function GtfsDiffSummaryPanel({
               {summary.files.map((file, idx) => {
                 const stats = statsByFile.get(file.file_name);
                 const isEven = idx % 2 === 1;
+                const isNotCompared = file.status === 'not_compared';
                 return (
                   <TableRow key={file.file_name} sx={{ bgcolor: isEven ? 'action.hover' : 'transparent' }}>
                     <TableCell
@@ -229,21 +235,21 @@ export default function GtfsDiffSummaryPanel({
                     </TableCell>
                     <TableCell
                       align='right'
-                      sx={{ color: '#2e7d32', fontFamily: 'var(--font-ibm-plex-mono)', fontSize: '0.75rem' }}
+                      sx={{ color: isNotCompared ? 'text.disabled' : '#2e7d32', fontFamily: 'var(--font-ibm-plex-mono)', fontSize: '0.75rem' }}
                     >
-                      {fmtNum(stats?.rows_added_count)}
+                      {fmtNumOrNA(stats?.rows_added_count, isNotCompared)}
                     </TableCell>
                     <TableCell
                       align='right'
-                      sx={{ color: '#d32f2f', fontFamily: 'var(--font-ibm-plex-mono)', fontSize: '0.75rem' }}
+                      sx={{ color: isNotCompared ? 'text.disabled' : '#d32f2f', fontFamily: 'var(--font-ibm-plex-mono)', fontSize: '0.75rem' }}
                     >
-                      {fmtNum(stats?.rows_deleted_count)}
+                      {fmtNumOrNA(stats?.rows_deleted_count, isNotCompared)}
                     </TableCell>
                     <TableCell
                       align='right'
-                      sx={{ color: '#ed6c02', fontFamily: 'var(--font-ibm-plex-mono)', fontSize: '0.75rem' }}
+                      sx={{ color: isNotCompared ? 'text.disabled' : '#ed6c02', fontFamily: 'var(--font-ibm-plex-mono)', fontSize: '0.75rem' }}
                     >
-                      {fmtNum(stats?.rows_modified_count)}
+                      {fmtNumOrNA(stats?.rows_modified_count, isNotCompared)}
                     </TableCell>
                     <TableCell
                       align='right'
