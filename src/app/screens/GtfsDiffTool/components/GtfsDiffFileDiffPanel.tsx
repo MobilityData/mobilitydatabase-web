@@ -32,6 +32,8 @@ import type {
   RowDeleted,
   RowModified,
 } from '../lib/gtfs-diff-types';
+import ColumnIntensityBar from './ColumnIntensityBar';
+import type { ColumnIntensity } from '../lib/gtfs-types';
 
 // ── Constants ──────────────────────────────────────────────────────
 
@@ -789,29 +791,39 @@ function FileDiffPanel({ diff }: FileDiffPanelProps): React.ReactElement {
 
         {/* Ignored columns */}
         {ignoredColumns.length > 0 && (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant='body2' fontWeight={600} sx={{ mb: 1 }}>
-              Ignored Columns
+          <Alert severity='info' sx={{ mb: 2 }}>
+            <Typography variant='body2' fontWeight={600} sx={{ mb: 0.5 }}>
+              {ignoredColumns.length === 1 ? '1 column was' : `${ignoredColumns.length} columns were`} excluded from row-level comparison
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              {ignoredColumns.map((ic) => (
-                <Chip
-                  key={ic.column}
-                  label={`${ic.column}: ${ic.reason.message}`}
-                  size='small'
-                  sx={{
-                    color: COLORS.not_compared,
-                    border: `1px solid ${COLORS.not_compared}`,
-                    bgcolor: 'transparent',
-                  }}
-                />
-              ))}
-            </Box>
-          </Box>
+            {ignoredColumns.map((ic) => (
+              <Box key={ic.column} sx={{ display: 'flex', gap: 0.5, alignItems: 'baseline', mt: 0.25 }}>
+                <Typography variant='caption' sx={{ fontFamily: MONO_FONT, fontWeight: 700 }}>
+                  {ic.column}
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  — {ic.reason.message}
+                </Typography>
+              </Box>
+            ))}
+          </Alert>
         )}
 
         {/* Column changes */}
         <ColumnChanges diff={diff} />
+
+        {/* Column modification intensity (from stats.column_stats) */}
+        {(diff.stats?.column_stats?.length ?? 0) > 0 && (
+          <ColumnIntensityBar
+            intensities={diff.stats!.column_stats!.map(
+              (cs): ColumnIntensity => ({
+                column: cs.column,
+                changedCount: cs.modifications_count,
+                totalModified: diff.stats?.rows_modified_count ?? 0,
+                percentage: cs.modifications_percentage,
+              }),
+            )}
+          />
+        )}
 
         {/* Row changes */}
         {rc && hasRowChanges ? (
