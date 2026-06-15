@@ -1,37 +1,31 @@
 {
   "summary": {
     "validatorVersion": "8.0.1",
-    "validatedAt": "2026-06-15T12:23:44Z",
+    "validatedAt": "2026-06-15T14:34:43Z",
     "counts": {
-      "Shapes": 0,
-      "Stops": 0,
-      "Routes": 0,
-      "Trips": 0,
-      "Agencies": 0,
+      "Shapes": 61,
+      "Stops": 1004,
+      "Routes": 7,
+      "Trips": 11528,
+      "Agencies": 1,
       "Blocks": 0
     },
-    "gtfsFeatures": []
+    "gtfsFeatures": [
+      "Shapes",
+      "Feed Information",
+      "Route Colors",
+      "Headsigns",
+      "Stops Wheelchair Accessibility",
+      "Trips Wheelchair Accessibility",
+      "Bike Allowed",
+      "Location Types"
+    ]
   },
   "notices": [
     {
-      "code": "invalid_input_files_in_subfolder",
-      "severity": "ERROR",
-      "totalNotices": 1
-    },
-    {
-      "code": "missing_calendar_and_calendar_date_files",
-      "severity": "ERROR",
-      "totalNotices": 1
-    },
-    {
-      "code": "missing_recommended_file",
+      "code": "missing_feed_contact_email_and_url",
       "severity": "WARNING",
       "totalNotices": 1
-    },
-    {
-      "code": "missing_required_file",
-      "severity": "ERROR",
-      "totalNotices": 5
     }
   ]
 }
