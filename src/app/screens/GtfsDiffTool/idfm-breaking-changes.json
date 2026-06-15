@@ -1,0 +1,80 @@
+{
+  "comparison": {
+    "old_feed_version": "IDFM_GTFS_IDFM_20260611 (Île-de-France Mobilités native export)",
+    "new_feed_version": "new_IDFM_GTFS_Google_maps_20260611 – Google LLC, pipeline frpridfm, exported 20260610",
+    "has_breaking_change": true,
+    "has_suspicious_change": true,
+    "important_caveat": "These are two DIFFERENT feed products for the same network on the same date — an IDFM-native export vs. a Google-Maps-formatted re-export — not two sequential versions of one feed. Many 'changes' below are export-format differences, not real schedule changes. Internal referential integrity of the new feed is fully intact."
+  },
+  "breaking_changes": [
+    {
+      "type": "removed_file",
+      "where": "pathways.txt, booking_rules.txt, object_codes_extension.txt",
+      "detail": "Three files present in the old feed are absent in the new one. pathways.txt (636 KB of in-station walking links) has no functional replacement; booking_rules.txt and object_codes_extension.txt are IDFM extensions. The new feed adds feed_info.txt, frequencies.txt, id_mappings.txt, and platform_groups.txt instead.",
+      "note": "pathways removal is the genuine functional loss — accessibility/in-station routing data is gone. The other two are non-standard extensions."
+    },
+    {
+      "type": "enum_value_changed",
+      "where": "routes.txt → route_type",
+      "detail": "135 routes had route_type remapped from basic to GTFS Extended Route Types (e.g. 3 'Bus' → 702 'Bus Service'; new values 108, 109, 200, 702, 715 appear). Old domain {0,1,2,3,6,7} → new {0,1,3,6,7,108,109,200,702,715}. Value 2 (rail) disappeared from the basic set, folded into extended codes.",
+      "note": "A consumer expecting standard route_type values (0–7, 11, 12) will fail to classify ~135 routes. This is the most consequential breaking change for downstream apps."
+    },
+    {
+      "type": "enum_value_changed",
+      "where": "stop_times.txt → pickup_type / drop_off_type",
+      "detail": "pickup_type domain shrank {0,1,2}→{0,1} (value 2 'phone agency' gone); drop_off_type changed {0,1,2}→{0,1,3} (2 removed, 3 'coordinate with driver' added).",
+      "note": "Tied to the dropped booking_rules.txt — the flex/on-demand semantics were re-expressed."
+    },
+    {
+      "type": "changed_primary_key_id_rename",
+      "where": "stops.txt (partial)",
+      "detail": "Old uses IDs like 'IDFM:monomodalStopPlace:473875'; new mixes in bare numeric platform IDs like '1371143468'. Stop count 53,979 → 40,772 with 38,781 IDs in common (15,198 old IDs absent). The new id_mappings.txt file exists specifically to bridge old↔new IDs.",
+      "note": "NOT internally breaking — all 10.38M new stop_times rows resolve against new stops (0 missing FKs). The id_mappings.txt is the publisher's explicit acknowledgment that IDs were remapped; external systems holding old stop IDs should use it to translate."
+    }
+  ],
+  "suspicious_changes": [
+    {
+      "type": "large_entity_count_delta",
+      "where": "calendar.txt / calendar_dates.txt",
+      "detail": "calendar services 989 → 9,780 (+889%); calendar_dates rows 2,067 → 27,009 (+1,207%); service_id overlap is 0 (entirely regenerated). exception_type domain {1,2}→{1} (no more 'service removed' exceptions).",
+      "note": "Different service-modeling strategy between the two exporters — Google explodes services into many granular service_ids. All trips' service_ids resolve, so it's consistent, but it's a total calendar reorganization."
+    },
+    {
+      "type": "large_entity_count_delta",
+      "where": "stops.txt",
+      "detail": "Stop count dropped 53,979 → 40,772 (-24.5%), exceeding the 20% threshold.",
+      "note": "Largely the entrance/quay nodes that move into platform_groups.txt under the Google format, not real stop removals."
+    },
+    {
+      "type": "geographic_bounding_box_shift",
+      "where": "stops.txt",
+      "detail": "Envelope contracted: old [47.96108, 1.14986]–[49.45933, 3.56067] → new [48.0067, 1.3474]–[49.2855, 3.56067]. The min-lat and max-lat edges moved ~5–18 km inward.",
+      "note": "Consistent with -24.5% fewer stops trimming a few outlying nodes; not a coordinate-system error (common stops are co-located)."
+    },
+    {
+      "type": "feed_publisher_change",
+      "where": "feed_info.txt",
+      "detail": "Old feed had no feed_info.txt; new feed declares feed_publisher_name 'Google LLC' (vs. the network operator IDFM). Publisher URL points to Google Maps transit.",
+      "note": "Expected given this is the Google-formatted product, but a publisher swap is exactly the kind of source-change the rule is meant to catch."
+    },
+    {
+      "type": "shape_geometry_distortion",
+      "where": "shapes.txt",
+      "detail": "Unique shape_ids 10,089 → 10,744, but 0 in common — every shape_id was regenerated under the new scheme. New shapes add shape_dist_traveled and shape_pt_source_google columns.",
+      "note": "Geometry continuity unverifiable due to total ID turnover; all trips.shape_id resolve against new shapes (0 missing)."
+    }
+  ],
+  "checks_passed": {
+    "removed_required_field": "none — routes.txt dropped route_desc/route_sort_order (optional); stops.txt dropped stop_timezone (optional); stop_times.txt dropped the flex-window and booking-rule fields (optional, tied to removed booking_rules.txt)",
+    "changed_field_type_or_format": "none; all 10,380,141 new stop_times rows have valid HH:MM:SS times (empty times handled as flex, none malformed). Note: new feed quotes all CSV fields, old does not — cosmetic only",
+    "referential_integrity_new_feed": "clean — stop_times→stops 0 missing, stop_times→trips 0 missing, trips→routes/service/shapes 0 missing, stops→parent_station 0 missing",
+    "feed_validity_window": "new feed valid 2026-06-05 → 2026-07-09 (in the future); old calendar spanned 2026-06-08 → 2026-07-10. Slight start-date shift earlier, no coverage gap",
+    "entity_count_deltas_within_threshold": "trips -0.2% (470,037→468,947, 447,255 common), stop_times -0.4%, routes -2.8% (56 removed, 0 added)",
+    "agency": "64 → 62 (2 removed: IDFM:1085, IDFM:93); timezone unchanged (Europe/Paris)",
+    "stops_moved_over_500m": "2 of 38,781 common stops — 'Les Chênes' (612 m) and 'Gare Montparnasse' (500.4 m, right at threshold). Both minor recentering, not coordinate errors",
+    "duplicate_ids": "none in stops or trips",
+    "calendar_flip": "no — both use calendar.txt + calendar_dates.txt",
+    "stop_time_ordering": "0 monotonicity violations across all 10.38M timed rows",
+    "headsign_route_name_bulk_change": "1.2% of common route_long_names changed — below bulk threshold"
+  }
+}

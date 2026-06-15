@@ -1,0 +1,112 @@
+{
+  "summary": {
+    "validatorVersion": "8.0.1",
+    "validatedAt": "2026-06-15T13:09:19Z",
+    "counts": {
+      "Shapes": 10089,
+      "Stops": 53979,
+      "Routes": 2013,
+      "Trips": 470037,
+      "Agencies": 64,
+      "Blocks": 0
+    },
+    "gtfsFeatures": [
+      "Pathway Connections",
+      "Pathway Details",
+      "Transfers",
+      "Shapes",
+      "Attributions",
+      "Booking Rules",
+      "Route Colors",
+      "Headsigns",
+      "Stops Wheelchair Accessibility",
+      "Trips Wheelchair Accessibility",
+      "Bike Allowed",
+      "Location Types",
+      "Stop Access",
+      "In-station Traversal Time"
+    ]
+  },
+  "notices": [
+    {
+      "code": "big_gap_in_service",
+      "severity": "INFO",
+      "totalNotices": 5
+    },
+    {
+      "code": "duplicate_route_name",
+      "severity": "WARNING",
+      "totalNotices": 6
+    },
+    {
+      "code": "expired_calendar",
+      "severity": "WARNING",
+      "totalNotices": 14
+    },
+    {
+      "code": "fast_travel_between_consecutive_stops",
+      "severity": "WARNING",
+      "totalNotices": 223
+    },
+    {
+      "code": "fast_travel_between_far_stops",
+      "severity": "WARNING",
+      "totalNotices": 66
+    },
+    {
+      "code": "missing_recommended_file",
+      "severity": "WARNING",
+      "totalNotices": 1
+    },
+    {
+      "code": "mixed_case_recommended_field",
+      "severity": "WARNING",
+      "totalNotices": 3731
+    },
+    {
+      "code": "pathway_unreachable_location",
+      "severity": "ERROR",
+      "totalNotices": 3926
+    },
+    {
+      "code": "route_color_contrast",
+      "severity": "WARNING",
+      "totalNotices": 15
+    },
+    {
+      "code": "route_long_name_contains_short_name",
+      "severity": "WARNING",
+      "totalNotices": 1943
+    },
+    {
+      "code": "stop_has_too_many_matches_for_shape",
+      "severity": "WARNING",
+      "totalNotices": 1
+    },
+    {
+      "code": "stop_too_far_from_shape",
+      "severity": "WARNING",
+      "totalNotices": 576
+    },
+    {
+      "code": "stop_without_stop_time",
+      "severity": "WARNING",
+      "totalNotices": 216
+    },
+    {
+      "code": "stops_match_shape_out_of_order",
+      "severity": "WARNING",
+      "totalNotices": 40
+    },
+    {
+      "code": "unknown_column",
+      "severity": "INFO",
+      "totalNotices": 2
+    },
+    {
+      "code": "unknown_file",
+      "severity": "INFO",
+      "totalNotices": 2
+    }
+  ]
+}
