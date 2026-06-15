@@ -22,8 +22,7 @@ import {
   Typography,
 } from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
-import React, { useMemo, useState } from 'react';
-import { List } from 'react-window';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import type {
   FileDiff,
@@ -105,107 +104,9 @@ const cellStyle: CSSProperties = {
   flexShrink: 0,
 };
 
-// ── Virtual row components (module-level — never re-created) ───────
+// ── Page size for added/deleted row tables ────────────────────────
 
-type VirtualBase = {
-  ariaAttributes: { 'aria-posinset': number; 'aria-setsize': number; role: 'listitem' };
-  index: number;
-  style: CSSProperties;
-};
-
-type AddedVirtualProps = {
-  rows: RowAdded[];
-  columns: string[];
-  colWidths: number[];
-  pkSet: Set<string>;
-};
-
-function AddedVirtualRow({
-  ariaAttributes,
-  index,
-  style,
-  rows,
-  columns,
-  colWidths,
-  pkSet,
-}: VirtualBase & AddedVirtualProps): React.ReactElement {
-  const row = rows[index];
-  const vals = parseCSVRow(row.raw_value);
-  return (
-    <Box
-      {...ariaAttributes}
-      style={style}
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        bgcolor: COLORS.addedBg,
-        borderBottom: '1px solid rgba(0,0,0,0.04)',
-      }}
-    >
-      <span style={{ ...cellStyle, width: LINE_COL_W, color: '#777' }}>{row.new_line_number}</span>
-      {columns.map((col, ci) => (
-        <span
-          key={col}
-          style={{
-            ...cellStyle,
-            width: colWidths[ci],
-            color: COLORS.added,
-            fontWeight: pkSet.has(col) ? 700 : 400,
-          }}
-        >
-          {vals[ci] ?? ''}
-        </span>
-      ))}
-    </Box>
-  );
-}
-
-type DeletedVirtualProps = {
-  rows: RowDeleted[];
-  columns: string[];
-  colWidths: number[];
-  pkSet: Set<string>;
-};
-
-function DeletedVirtualRow({
-  ariaAttributes,
-  index,
-  style,
-  rows,
-  columns,
-  colWidths,
-  pkSet,
-}: VirtualBase & DeletedVirtualProps): React.ReactElement {
-  const row = rows[index];
-  const vals = parseCSVRow(row.raw_value);
-  return (
-    <Box
-      {...ariaAttributes}
-      style={style}
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        bgcolor: COLORS.deletedBg,
-        borderBottom: '1px solid rgba(0,0,0,0.04)',
-      }}
-    >
-      <span style={{ ...cellStyle, width: LINE_COL_W, color: '#777' }}>{row.base_line_number}</span>
-      {columns.map((col, ci) => (
-        <span
-          key={col}
-          style={{
-            ...cellStyle,
-            width: colWidths[ci],
-            color: COLORS.deleted,
-            fontWeight: pkSet.has(col) ? 700 : 400,
-          }}
-        >
-          {vals[ci] ?? ''}
-        </span>
-      ))}
-    </Box>
-  );
-}
+const PAGE_SIZE = 50;
 
 // ── VirtualRowTable — used for added and deleted rows ──────────────
 
@@ -222,11 +123,28 @@ function VirtualRowTable({
   columns,
   primaryKey,
 }: VirtualRowTableProps): React.ReactElement {
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const pkSet = useMemo(() => new Set(primaryKey), [primaryKey]);
   const colWidths = useMemo(() => columns.map(colWidth), [columns]);
   const totalWidth = LINE_COL_W + colWidths.reduce((s, w) => s + w, 0);
-  const listHeight = Math.min(rows.length * ROW_H, MAX_LIST_H);
+  const color = rowType === 'added' ? COLORS.added : COLORS.deleted;
+  const bg = rowType === 'added' ? COLORS.addedBg : COLORS.deletedBg;
   const emptyLabel = rowType === 'added' ? 'No added rows.' : 'No deleted rows.';
+
+  // Reset when rows change (e.g. tab switch)
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [rows]);
+
+  // Load more when user scrolls to 90% of the container height
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (visibleCount >= rows.length) return;
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop - clientHeight < scrollHeight * 0.1) {
+      setVisibleCount((n) => Math.min(n + PAGE_SIZE, rows.length));
+    }
+  };
+
+  const visibleRows = rows.slice(0, visibleCount);
+  const remaining = rows.length - visibleCount;
 
   if (rows.length === 0) {
     return (
@@ -237,22 +155,10 @@ function VirtualRowTable({
   }
 
   return (
-    // Outer wrapper handles horizontal scroll for both header and body together.
-    <Box
-      sx={{
-        overflowX: 'auto',
-        borderRadius: '4px',
-      }}
-    >
-      {/* Header (always visible above the scrollable List) */}
-      <Box
-        sx={{
-          display: 'flex',
-          minWidth: totalWidth,
-          height: HDR_H,
-          bgcolor: 'background.paper',
-        }}
-      >
+    <Box sx={{ borderRadius: '4px', overflow: 'hidden' }}>
+      {/* Sticky header */}
+      <Box sx={{ overflowX: 'auto', bgcolor: 'background.paper' }}>
+        <Box sx={{ display: 'flex', minWidth: totalWidth, height: HDR_H }}>
         <Box
           sx={{
             fontFamily: MONO_FONT,
@@ -288,29 +194,62 @@ function VirtualRowTable({
           </Box>
         ))}
       </Box>
+      </Box>{/* end sticky header scroll wrapper */}
 
-      {/* Virtual body — List handles vertical scroll; outer Box handles horizontal */}
-      {rowType === 'added' ? (
-        <List<AddedVirtualProps>
-          rowCount={rows.length}
-          rowHeight={ROW_H}
-          rowComponent={AddedVirtualRow}
-          rowProps={{ rows: rows as RowAdded[], columns, colWidths, pkSet }}
-          style={{ height: listHeight, minWidth: totalWidth, overflowX: 'hidden' }}
-          defaultHeight={MAX_LIST_H}
-          overscanCount={8}
-        />
-      ) : (
-        <List<DeletedVirtualProps>
-          rowCount={rows.length}
-          rowHeight={ROW_H}
-          rowComponent={DeletedVirtualRow}
-          rowProps={{ rows: rows as RowDeleted[], columns, colWidths, pkSet }}
-          style={{ height: listHeight, minWidth: totalWidth, overflowX: 'hidden' }}
-          defaultHeight={MAX_LIST_H}
-          overscanCount={8}
-        />
-      )}
+      {/* Rows — scrollable body */}
+      <Box
+        onScroll={handleScroll}
+        sx={{ maxHeight: MAX_LIST_H, overflowY: 'auto', overflowX: 'auto' }}
+      >
+      <Box sx={{ minWidth: totalWidth }}>
+        {(visibleRows as (RowAdded | RowDeleted)[]).map((row, i) => {
+          const lineNum =
+            rowType === 'added'
+              ? (row as RowAdded).new_line_number
+              : (row as RowDeleted).base_line_number;
+          const vals = parseCSVRow(row.raw_value);
+          return (
+            <Box
+              key={i}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                height: ROW_H,
+                bgcolor: bg,
+                borderBottom: '1px solid rgba(0,0,0,0.04)',
+              }}
+            >
+              <span style={{ ...cellStyle, width: LINE_COL_W, color: '#777' }}>{lineNum}</span>
+              {columns.map((col, ci) => (
+                <span
+                  key={col}
+                  style={{
+                    ...cellStyle,
+                    width: colWidths[ci],
+                    color,
+                    fontWeight: pkSet.has(col) ? 700 : 400,
+                  }}
+                >
+                  {vals[ci] ?? ''}
+                </span>
+              ))}
+            </Box>
+          );
+        })}
+      </Box>
+      </Box>{/* end scrollable body */}
+
+      {/* Row count footer */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 1.5, py: 0.75, borderTop: '1px solid', borderColor: 'divider' }}>
+        <Typography variant='caption' color='text.secondary'>
+          Showing {Math.min(visibleCount, rows.length).toLocaleString()} of {rows.length.toLocaleString()} rows
+        </Typography>
+        {remaining > 0 && (
+          <Typography variant='caption' color='text.secondary' sx={{ fontStyle: 'italic' }}>
+            — scroll down to load more
+          </Typography>
+        )}
+      </Box>
     </Box>
   );
 }
@@ -355,7 +294,22 @@ interface ModifiedRowsTableProps {
 }
 
 function ModifiedRowsTable({ rows, columns, viewMode }: ModifiedRowsTableProps): React.ReactElement {
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
+
+  // Reset pagination when rows or viewMode changes
+  useEffect(() => { setVisibleCount(PAGE_SIZE); setExpanded(new Set()); }, [rows, viewMode]);
+
+  // Load more when user scrolls to 90% of the TableContainer height
+  const handleContainerScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (visibleCount >= rows.length) return;
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop - clientHeight < scrollHeight * 0.1) {
+      setVisibleCount((n) => Math.min(n + PAGE_SIZE, rows.length));
+    }
+  };
+
+  const visibleRows = rows.slice(0, visibleCount);
 
   const toggleRow = (i: number) =>
     setExpanded((prev) => {
@@ -375,6 +329,7 @@ function ModifiedRowsTable({ rows, columns, viewMode }: ModifiedRowsTableProps):
   return (
     <>
       <TableContainer
+        onScroll={handleContainerScroll}
         sx={{
           maxHeight: MAX_LIST_H + HDR_H,
           borderRadius: '4px',
@@ -401,7 +356,7 @@ function ModifiedRowsTable({ rows, columns, viewMode }: ModifiedRowsTableProps):
               </TableRow>
             </TableHead>
             <TableBody>
-              {rows.map((row, i) => {
+              {visibleRows.map((row, i) => {
                 const isExpanded = expanded.has(i);
                 const fcMap = new Map(row.field_changes.map((f) => [f.field, f]));
                 const baseVals = parseCSVRow(row.raw_value);
@@ -552,7 +507,7 @@ function ModifiedRowsTable({ rows, columns, viewMode }: ModifiedRowsTableProps):
               </TableRow>
             </TableHead>
             <TableBody>
-              {rows.map((row, i) => {
+              {visibleRows.map((row, i) => {
                 const fcMap = new Map(row.field_changes.map((f) => [f.field, f]));
                 const baseVals = parseCSVRow(row.raw_value);
                 return (
@@ -606,6 +561,17 @@ function ModifiedRowsTable({ rows, columns, viewMode }: ModifiedRowsTableProps):
           </Table>
         )}
       </TableContainer>
+      {/* Row count footer */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 0.5, py: 0.75, borderTop: '1px solid', borderColor: 'divider' }}>
+        <Typography variant='caption' color='text.secondary'>
+          Showing {Math.min(visibleCount, rows.length).toLocaleString()} of {rows.length.toLocaleString()} rows
+        </Typography>
+        {visibleCount < rows.length && (
+          <Typography variant='caption' color='text.secondary' sx={{ fontStyle: 'italic' }}>
+            — scroll down to load more
+          </Typography>
+        )}
+      </Box>
     </>
   );
 }
@@ -626,7 +592,7 @@ function ColumnChanges({ diff }: { diff: FileDiff }): React.ReactElement | null 
         {columnsAdded.map((col) => (
           <Chip
             key={`a-${col.name}`}
-            label={`+ ${col.name} (pos ${col.position})`}
+            label={`+ ${col.name}`}
             size='small'
             sx={{ color: COLORS.added, border: `1px solid ${COLORS.added}`, bgcolor: 'transparent' }}
           />
@@ -634,7 +600,7 @@ function ColumnChanges({ diff }: { diff: FileDiff }): React.ReactElement | null 
         {columnsDeleted.map((col) => (
           <Chip
             key={`d-${col.name}`}
-            label={`− ${col.name} (pos ${col.position})`}
+            label={`− ${col.name}`}
             size='small'
             sx={{ color: COLORS.deleted, border: `1px solid ${COLORS.deleted}`, bgcolor: 'transparent' }}
           />
@@ -897,7 +863,7 @@ function FileDiffPanel({ diff }: FileDiffPanelProps): React.ReactElement {
               />
             )}
           </>
-        ) : columnsAdded.length === 0 && columnsDeleted.length === 0 ? (
+        ) : columnsAdded.length === 0 && columnsDeleted.length === 0 && !diff.not_compared_reason ? (
           <Typography variant='body2' color='text.secondary'>
             No row or column changes in this file.
           </Typography>
