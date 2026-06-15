@@ -1,0 +1,55 @@
+{
+  "comparison": {
+    "old_feed_version": "V141_v3.20250927",
+    "new_feed_version": "V141_v3.20250927",
+    "feed": "Metro de Santiago / Red Metropolitana",
+    "has_breaking_change": true,
+    "has_suspicious_change": true
+  },
+  "breaking_changes": [
+    {
+      "type": "removed_entity",
+      "where": "stops.txt",
+      "detail": "609 of 1,004 stop_ids from the old feed are absent in the new feed. These are entrance/zone nodes whose ID separator changed (e.g. 'AG-A' → 'AG:A', 'LH-A' → 'LH:A'), so this is simultaneously a primary-key rename, not a clean deletion.",
+      "note": "CRITICAL TO VERIFY (and verified clean): stop_times.txt references only the 286 platform-level boarding stops (e.g. 'AG_L5_V1'), whose IDs were NOT changed and exist in both feeds. So despite 609 IDs disappearing, no stop_times foreign key is broken. The renamed entities are accessibility/entrance nodes consumed by pathways.txt, not the schedule."
+    },
+    {
+      "type": "changed_primary_key_id_rename",
+      "where": "stops.txt",
+      "detail": "Entrance and zone stop_ids switched separator from hyphen to colon ('-A'/'-ZP'/'-ZNP' → ':A' etc.). Any external system that hard-referenced the old entrance IDs (deep links, saved trips, third-party apps) breaks.",
+      "note": "Internal referential integrity is intact — parent_station chains for all schedule stops resolve, and the new entrance IDs are matched by pathways.txt."
+    }
+  ],
+  "suspicious_changes": [
+    {
+      "type": "large_entity_count_delta",
+      "where": "stops.txt",
+      "detail": "Stop count grew 1,004 → 6,275 (+525%), far exceeding the 20% threshold. Driven by 5,880 added stops: elevator/escalator/pathway nodes ('AG:ASC01_BOT', 'AG:ESCN01_TOP') introduced alongside the new pathways.txt and levels.txt files.",
+      "note": "Consistent and intentional — an accessibility-data expansion, not a data error. But it trips the count-delta rule hard."
+    },
+    {
+      "type": "shape_geometry_distortion",
+      "where": "shapes.txt",
+      "detail": "Unique shape_id count dropped 61 → 14 (-77%), with only 14 in common; file shrank 110,777 → 27,764 bytes. Geometry continuity for the 47 dropped shapes cannot be verified.",
+      "note": "All trips.shape_id values still resolve against the 14 remaining shapes — the schedule lost no references — but a 77% reduction in shape variety is a large geometry change worth flagging."
+    }
+  ],
+  "checks_passed": {
+    "removed_required_field": "none — stops.txt dropped stop_code and stop_url, both optional; new feed adds level_id, levels.txt, pathways.txt",
+    "removed_file": "none — 2 files added (levels.txt, pathways.txt), 0 removed. Note: old feed was nested under a gtfs_v4/ directory, new feed is flat — a packaging change, not a content change",
+    "changed_field_type_or_format": "none; all 246,099 stop_times rows have valid HH:MM:SS times",
+    "referential_integrity_new_feed": "clean — stop_times→stops (0 missing), stop_times→trips (0 missing), trips→shapes (0 missing), trips→routes/service (0 missing), stops→parent_station (0 missing), pathways→stops (0 missing), stops→levels (0 missing)",
+    "enum_values": "identical: route_type {1}, pickup_type {0,1}, drop_off_type {0}, timepoint {0}, exception_type {1,2}, direction_id {0,1}",
+    "feed_validity_window": "unchanged, valid 2025-10-27 → 2026-12-31 (end date in future)",
+    "entity_count_deltas": "trips 0%, stop_times 0%, routes 0%, calendar 0% — only stops (+525%) and shapes (-77%) exceed 20%",
+    "geographic_bbox": "effectively unchanged: [-33.60978, -70.7573]→[-33.36515, -70.54491] vs new max-lon -70.54439 (~50m, within noise)",
+    "stops_moved_over_500m": "0 of 395 common stops",
+    "service_coverage_gap": "none — identical service window, full overlap",
+    "headsign_route_name_bulk_change": "0% — route names and 100% of common-trip headsigns unchanged",
+    "calendar_flip": "no — both use calendar.txt + calendar_dates.txt with identical service definitions",
+    "agency_timezone_change": "no (America/Santiago)",
+    "feed_publisher_change": "no",
+    "duplicate_ids": "none in stops or trips",
+    "stop_time_ordering": "0 violations across all 246,099 rows"
+  }
+}

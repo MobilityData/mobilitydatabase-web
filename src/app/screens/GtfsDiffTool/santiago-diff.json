@@ -1,0 +1,6434 @@
+{
+  "metadata": {
+    "schema_version": "v2-rc1",
+    "generated_at": "2026-06-11T18:18:07.755589Z",
+    "row_changes_cap_per_file": 10000,
+    "base_feed": {
+      "source": "/Users/chaimaa/Downloads/2502027_Metro.zip",
+      "downloaded_at": "2026-06-11T18:18:07.755589Z"
+    },
+    "new_feed": {
+      "source": "/Users/chaimaa/Downloads/gtfs_v4_h2.zip",
+      "downloaded_at": "2026-06-11T18:18:07.755589Z"
+    },
+    "unsupported_files": []
+  },
+  "summary": {
+    "total_changes": 763,
+    "files_added_count": 1,
+    "files_deleted_count": 2,
+    "files_modified_count": 5,
+    "files_not_compared_count": 4,
+    "files": [
+      {
+        "file_name": "calendar.txt",
+        "status": "modified"
+      },
+      {
+        "file_name": "calendar_dates.txt",
+        "status": "modified"
+      },
+      {
+        "file_name": "feed_info.txt",
+        "status": "modified"
+      },
+      {
+        "file_name": "frequencies.txt",
+        "status": "deleted"
+      },
+      {
+        "file_name": "levels.txt",
+        "status": "added"
+      },
+      {
+        "file_name": "pathways.txt",
+        "status": "not_compared"
+      },
+      {
+        "file_name": "routes.txt",
+        "status": "modified"
+      },
+      {
+        "file_name": "shapes.txt",
+        "status": "modified"
+      },
+      {
+        "file_name": "stop_times.txt",
+        "status": "not_compared"
+      },
+      {
+        "file_name": "stops.txt",
+        "status": "not_compared"
+      },
+      {
+        "file_name": "transfers.txt",
+        "status": "deleted"
+      },
+      {
+        "file_name": "trips.txt",
+        "status": "not_compared"
+      }
+    ]
+  },
+  "file_diffs": [
+    {
+      "file_name": "calendar.txt",
+      "file_action": "modified",
+      "columns_added": [],
+      "columns_deleted": [],
+      "row_changes": {
+        "primary_key": [
+          "service_id"
+        ],
+        "columns": [
+          "service_id",
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday",
+          "start_date",
+          "end_date"
+        ],
+        "added": [
+          {
+            "identifier": {
+              "service_id": "F"
+            },
+            "raw_value": "F,0,0,0,0,0,0,1,20251027,20261231",
+            "new_line_number": 2
+          },
+          {
+            "identifier": {
+              "service_id": "LJ"
+            },
+            "raw_value": "LJ,1,1,1,1,0,0,0,20251027,20261231",
+            "new_line_number": 3
+          },
+          {
+            "identifier": {
+              "service_id": "V"
+            },
+            "raw_value": "V,0,0,0,0,1,0,0,20251027,20261231",
+            "new_line_number": 6
+          }
+        ],
+        "deleted": [
+          {
+            "identifier": {
+              "service_id": "D"
+            },
+            "raw_value": "D,0,0,0,0,0,0,1,20250201,20250301",
+            "base_line_number": 4
+          }
+        ],
+        "modified": [
+          {
+            "identifier": {
+              "service_id": "L"
+            },
+            "raw_value": "L,1,1,1,1,1,0,0,20250201,20250301",
+            "base_line_number": 2,
+            "new_line_number": 4,
+            "field_changes": [
+              {
+                "field": "start_date",
+                "base_value": "20250201",
+                "new_value": "20251027"
+              },
+              {
+                "field": "end_date",
+                "base_value": "20250301",
+                "new_value": "20261231"
+              }
+            ]
+          },
+          {
+            "identifier": {
+              "service_id": "S"
+            },
+            "raw_value": "S,0,0,0,0,0,1,0,20250201,20250301",
+            "base_line_number": 3,
+            "new_line_number": 5,
+            "field_changes": [
+              {
+                "field": "start_date",
+                "base_value": "20250201",
+                "new_value": "20251027"
+              },
+              {
+                "field": "end_date",
+                "base_value": "20250301",
+                "new_value": "20261231"
+              }
+            ]
+          }
+        ]
+      },
+      "stats": {
+        "total_rows_base": 3,
+        "total_rows_new": 5,
+        "columns_added_count": 0,
+        "columns_deleted_count": 0,
+        "rows_added_count": 3,
+        "rows_deleted_count": 1,
+        "rows_modified_count": 2,
+        "rows_changed_percentage": 100.0,
+        "column_stats": [
+          {
+            "column": "start_date",
+            "modifications_count": 2,
+            "modifications_percentage": 100.0
+          },
+          {
+            "column": "end_date",
+            "modifications_count": 2,
+            "modifications_percentage": 100.0
+          }
+        ]
+      }
+    },
+    {
+      "file_name": "calendar_dates.txt",
+      "file_action": "modified",
+      "columns_added": [],
+      "columns_deleted": [],
+      "row_changes": {
+        "primary_key": [
+          "service_id",
+          "date"
+        ],
+        "columns": [
+          "service_id",
+          "date",
+          "exception_type"
+        ],
+        "added": [
+          {
+            "identifier": {
+              "service_id": "F",
+              "date": "20251031"
+            },
+            "raw_value": "F,20251031,1",
+            "new_line_number": 2
+          },
+          {
+            "identifier": {
+              "service_id": "F",
+              "date": "20251208"
+            },
+            "raw_value": "F,20251208,1",
+            "new_line_number": 3
+          },
+          {
+            "identifier": {
+              "service_id": "F",
+              "date": "20251225"
+            },
+            "raw_value": "F,20251225,1",
+            "new_line_number": 4
+          },
+          {
+            "identifier": {
+              "service_id": "F",
+              "date": "20260101"
+            },
+            "raw_value": "F,20260101,1",
+            "new_line_number": 5
+          },
+          {
+            "identifier": {
+              "service_id": "LJ",
+              "date": "20251031"
+            },
+            "raw_value": "LJ,20251031,2",
+            "new_line_number": 6
+          },
+          {
+            "identifier": {
+              "service_id": "LJ",
+              "date": "20251208"
+            },
+            "raw_value": "LJ,20251208,2",
+            "new_line_number": 7
+          },
+          {
+            "identifier": {
+              "service_id": "LJ",
+              "date": "20251225"
+            },
+            "raw_value": "LJ,20251225,2",
+            "new_line_number": 8
+          },
+          {
+            "identifier": {
+              "service_id": "LJ",
+              "date": "20260101"
+            },
+            "raw_value": "LJ,20260101,2",
+            "new_line_number": 9
+          },
+          {
+            "identifier": {
+              "service_id": "L",
+              "date": "20251031"
+            },
+            "raw_value": "L,20251031,2",
+            "new_line_number": 10
+          },
+          {
+            "identifier": {
+              "service_id": "L",
+              "date": "20251208"
+            },
+            "raw_value": "L,20251208,2",
+            "new_line_number": 11
+          },
+          {
+            "identifier": {
+              "service_id": "L",
+              "date": "20251225"
+            },
+            "raw_value": "L,20251225,2",
+            "new_line_number": 12
+          },
+          {
+            "identifier": {
+              "service_id": "L",
+              "date": "20260101"
+            },
+            "raw_value": "L,20260101,2",
+            "new_line_number": 13
+          },
+          {
+            "identifier": {
+              "service_id": "S",
+              "date": "20251031"
+            },
+            "raw_value": "S,20251031,2",
+            "new_line_number": 14
+          },
+          {
+            "identifier": {
+              "service_id": "S",
+              "date": "20251208"
+            },
+            "raw_value": "S,20251208,2",
+            "new_line_number": 15
+          },
+          {
+            "identifier": {
+              "service_id": "S",
+              "date": "20251225"
+            },
+            "raw_value": "S,20251225,2",
+            "new_line_number": 16
+          },
+          {
+            "identifier": {
+              "service_id": "S",
+              "date": "20260101"
+            },
+            "raw_value": "S,20260101,2",
+            "new_line_number": 17
+          },
+          {
+            "identifier": {
+              "service_id": "V",
+              "date": "20251031"
+            },
+            "raw_value": "V,20251031,2",
+            "new_line_number": 18
+          },
+          {
+            "identifier": {
+              "service_id": "V",
+              "date": "20251208"
+            },
+            "raw_value": "V,20251208,2",
+            "new_line_number": 19
+          },
+          {
+            "identifier": {
+              "service_id": "V",
+              "date": "20251225"
+            },
+            "raw_value": "V,20251225,2",
+            "new_line_number": 20
+          },
+          {
+            "identifier": {
+              "service_id": "V",
+              "date": "20260101"
+            },
+            "raw_value": "V,20260101,2",
+            "new_line_number": 21
+          }
+        ],
+        "deleted": [],
+        "modified": []
+      },
+      "stats": {
+        "total_rows_base": 0,
+        "total_rows_new": 20,
+        "columns_added_count": 0,
+        "columns_deleted_count": 0,
+        "rows_added_count": 20,
+        "rows_deleted_count": 0,
+        "rows_modified_count": 0,
+        "rows_changed_percentage": 100.0
+      }
+    },
+    {
+      "file_name": "feed_info.txt",
+      "file_action": "modified",
+      "columns_added": [],
+      "columns_deleted": [],
+      "row_changes": {
+        "primary_key": [
+          "feed_publisher_name",
+          "feed_publisher_url",
+          "feed_lang",
+          "feed_start_date",
+          "feed_end_date",
+          "feed_version"
+        ],
+        "columns": [
+          "feed_publisher_name",
+          "feed_publisher_url",
+          "feed_lang",
+          "feed_start_date",
+          "feed_end_date",
+          "feed_version"
+        ],
+        "added": [
+          {
+            "identifier": {
+              "feed_publisher_name": "Red Metropolitana",
+              "feed_publisher_url": "http://www.red.cl",
+              "feed_lang": "es",
+              "feed_start_date": "20251027",
+              "feed_end_date": "20261231",
+              "feed_version": "V141_v3.20250927"
+            },
+            "raw_value": "Red Metropolitana,http://www.red.cl,es,20251027,20261231,V141_v3.20250927",
+            "new_line_number": 2
+          }
+        ],
+        "deleted": [
+          {
+            "identifier": {
+              "feed_publisher_name": "Red Metropolitana",
+              "feed_publisher_url": "http://www.red.cl",
+              "feed_lang": "es",
+              "feed_start_date": "20250201",
+              "feed_end_date": "20250301",
+              "feed_version": "V127.20250201"
+            },
+            "raw_value": "Red Metropolitana,http://www.red.cl,es,20250201,20250301,V127.20250201",
+            "base_line_number": 2
+          }
+        ],
+        "modified": []
+      },
+      "stats": {
+        "total_rows_base": 1,
+        "total_rows_new": 1,
+        "columns_added_count": 0,
+        "columns_deleted_count": 0,
+        "rows_added_count": 1,
+        "rows_deleted_count": 1,
+        "rows_modified_count": 0,
+        "rows_changed_percentage": 100.0
+      }
+    },
+    {
+      "file_name": "frequencies.txt",
+      "file_action": "deleted",
+      "columns_added": [],
+      "columns_deleted": [
+        {
+          "name": "trip_id",
+          "position": 1
+        },
+        {
+          "name": "start_time",
+          "position": 2
+        },
+        {
+          "name": "end_time",
+          "position": 3
+        },
+        {
+          "name": "headway_secs",
+          "position": 4
+        },
+        {
+          "name": "exact_times",
+          "position": 5
+        }
+      ],
+      "stats": {
+        "columns_added_count": 0,
+        "columns_deleted_count": 5
+      }
+    },
+    {
+      "file_name": "levels.txt",
+      "file_action": "added",
+      "columns_added": [
+        {
+          "name": "level_id",
+          "position": 1
+        },
+        {
+          "name": "level_index",
+          "position": 2
+        },
+        {
+          "name": "level_name",
+          "position": 3
+        }
+      ],
+      "columns_deleted": [],
+      "stats": {
+        "columns_added_count": 3,
+        "columns_deleted_count": 0
+      }
+    },
+    {
+      "file_name": "pathways.txt",
+      "file_action": "not_compared",
+      "not_compared_reason": {
+        "code": "id_churn",
+        "message": "100.0% of primary key values ['pathway_id'] differ between the base and new feed, indicating the identifiers are regenerated across versions and cannot be reliably matched. Row-level comparison was skipped to avoid a misleading diff."
+      },
+      "columns_added": [
+        {
+          "name": "length",
+          "position": 6
+        },
+        {
+          "name": "traversal_time",
+          "position": 7
+        },
+        {
+          "name": "stair_count",
+          "position": 8
+        },
+        {
+          "name": "max_slope",
+          "position": 9
+        },
+        {
+          "name": "min_width",
+          "position": 10
+        }
+      ],
+      "columns_deleted": [],
+      "stats": {
+        "total_rows_base": 920,
+        "total_rows_new": 7388,
+        "columns_added_count": 5,
+        "columns_deleted_count": 0
+      }
+    },
+    {
+      "file_name": "routes.txt",
+      "file_action": "modified",
+      "columns_added": [],
+      "columns_deleted": [
+        {
+          "name": "route_desc",
+          "position": 5
+        }
+      ],
+      "row_changes": {
+        "primary_key": [
+          "route_id"
+        ],
+        "columns": [
+          "route_id",
+          "agency_id",
+          "route_short_name",
+          "route_long_name",
+          "route_desc",
+          "route_type",
+          "route_url",
+          "route_color",
+          "route_text_color"
+        ],
+        "added": [],
+        "deleted": [
+          {
+            "identifier": {
+              "route_id": "L2V"
+            },
+            "raw_value": "L2V,M,L2,Línea 2 Ruta Verde (Expreso Vespucio Norte - Hospital El Pino) ,,1,https://www.metro.cl/el-viaje/ruta-expresa,F2A900,000000",
+            "base_line_number": 4
+          },
+          {
+            "identifier": {
+              "route_id": "L2R"
+            },
+            "raw_value": "L2R,M,L2,Línea 2 Ruta Roja (Expreso Vespucio Norte - Hospital El Pino) ,,1,https://www.metro.cl/el-viaje/ruta-expresa,F2A900,000000",
+            "base_line_number": 5
+          },
+          {
+            "identifier": {
+              "route_id": "L4V"
+            },
+            "raw_value": "L4V,M,L4,Línea 4 Ruta Verde (Expreso Tobalaba - Plaza de Puente Alto) ,,1,https://www.metro.cl/el-viaje/ruta-expresa,151F6D,FFFFFF",
+            "base_line_number": 8
+          },
+          {
+            "identifier": {
+              "route_id": "L4R"
+            },
+            "raw_value": "L4R,M,L4,Línea 4 Ruta Roja (Expreso Tobalaba - Plaza de Puente Alto) ,,1,https://www.metro.cl/el-viaje/ruta-expresa,151F6D,FFFFFF",
+            "base_line_number": 9
+          },
+          {
+            "identifier": {
+              "route_id": "L5V"
+            },
+            "raw_value": "L5V,M,L5,Línea 5 Ruta Verde (Expreso Plaza de Maipú - Vicente Valdés) ,,1,https://www.metro.cl/el-viaje/ruta-expresa,00965E,FFFFFF",
+            "base_line_number": 12
+          },
+          {
+            "identifier": {
+              "route_id": "L5R"
+            },
+            "raw_value": "L5R,M,L5,Línea 5 Ruta Roja (Expreso Plaza de Maipú - Vicente Valdés) ,,1,https://www.metro.cl/el-viaje/ruta-expresa,00965E,FFFFFF",
+            "base_line_number": 13
+          }
+        ],
+        "modified": [
+          {
+            "identifier": {
+              "route_id": "L1"
+            },
+            "raw_value": "L1,M,L1,Línea 1 (San Pablo - Los Dominicos) ,,1,https://www.metro.cl/el-viaje/plano-de-red,C8102E,FFFFFF",
+            "base_line_number": 2,
+            "new_line_number": 2,
+            "field_changes": [
+              {
+                "field": "route_long_name",
+                "base_value": "Línea 1 (San Pablo - Los Dominicos) ",
+                "new_value": "Línea 1"
+              }
+            ]
+          },
+          {
+            "identifier": {
+              "route_id": "L2"
+            },
+            "raw_value": "L2,M,L2,Línea 2 (Vespucio Norte - Hospital El Pino) ,,1,https://www.metro.cl/el-viaje/plano-de-red,F2A900,000000",
+            "base_line_number": 3,
+            "new_line_number": 3,
+            "field_changes": [
+              {
+                "field": "route_long_name",
+                "base_value": "Línea 2 (Vespucio Norte - Hospital El Pino) ",
+                "new_value": "Línea 2"
+              }
+            ]
+          },
+          {
+            "identifier": {
+              "route_id": "L3"
+            },
+            "raw_value": "L3,M,L3,Línea 3 (Plaza Quilicura - Fernando Castillo Velasco),,1,https://www.metro.cl/el-viaje/plano-de-red,703F2A,FFFFFF",
+            "base_line_number": 6,
+            "new_line_number": 4,
+            "field_changes": [
+              {
+                "field": "route_long_name",
+                "base_value": "Línea 3 (Plaza Quilicura - Fernando Castillo Velasco)",
+                "new_value": "Línea 3"
+              }
+            ]
+          },
+          {
+            "identifier": {
+              "route_id": "L4"
+            },
+            "raw_value": "L4,M,L4,Línea 4 (Tobalaba - Plaza de Puente Alto) ,,1,https://www.metro.cl/el-viaje/plano-de-red,151F6D,FFFFFF",
+            "base_line_number": 7,
+            "new_line_number": 5,
+            "field_changes": [
+              {
+                "field": "route_long_name",
+                "base_value": "Línea 4 (Tobalaba - Plaza de Puente Alto) ",
+                "new_value": "Línea 4"
+              }
+            ]
+          },
+          {
+            "identifier": {
+              "route_id": "L4A"
+            },
+            "raw_value": "L4A,M,L4A,Línea 4A (La Cisterna - Vicuña Mackenna) ,,1,https://www.metro.cl/el-viaje/plano-de-red,0072CE,FFFFFF",
+            "base_line_number": 10,
+            "new_line_number": 6,
+            "field_changes": [
+              {
+                "field": "route_long_name",
+                "base_value": "Línea 4A (La Cisterna - Vicuña Mackenna) ",
+                "new_value": "Línea 4A"
+              }
+            ]
+          },
+          {
+            "identifier": {
+              "route_id": "L5"
+            },
+            "raw_value": "L5,M,L5,Línea 5 (Plaza de Maipú - Vicente Valdés) ,,1,https://www.metro.cl/el-viaje/plano-de-red,00965E,FFFFFF",
+            "base_line_number": 11,
+            "new_line_number": 7,
+            "field_changes": [
+              {
+                "field": "route_long_name",
+                "base_value": "Línea 5 (Plaza de Maipú - Vicente Valdés) ",
+                "new_value": "Línea 5"
+              }
+            ]
+          },
+          {
+            "identifier": {
+              "route_id": "L6"
+            },
+            "raw_value": "L6,M,L6,Línea 6 (Cerrillos - Los Leones),,1,https://www.metro.cl/el-viaje/plano-de-red,8E3A80,FFFFFF",
+            "base_line_number": 14,
+            "new_line_number": 8,
+            "field_changes": [
+              {
+                "field": "route_long_name",
+                "base_value": "Línea 6 (Cerrillos - Los Leones)",
+                "new_value": "Línea 6"
+              }
+            ]
+          }
+        ]
+      },
+      "stats": {
+        "total_rows_base": 13,
+        "total_rows_new": 7,
+        "columns_added_count": 0,
+        "columns_deleted_count": 1,
+        "rows_added_count": 0,
+        "rows_deleted_count": 6,
+        "rows_modified_count": 7,
+        "rows_changed_percentage": 100.0,
+        "column_stats": [
+          {
+            "column": "route_long_name",
+            "modifications_count": 7,
+            "modifications_percentage": 100.0
+          }
+        ]
+      }
+    },
+    {
+      "file_name": "shapes.txt",
+      "file_action": "modified",
+      "columns_added": [],
+      "columns_deleted": [],
+      "row_changes": {
+        "primary_key": [
+          "shape_id",
+          "shape_pt_sequence"
+        ],
+        "columns": [
+          "shape_id",
+          "shape_pt_lat",
+          "shape_pt_lon",
+          "shape_pt_sequence"
+        ],
+        "added": [],
+        "deleted": [
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "0"
+            },
+            "raw_value": "L2V-R,-33.583604448,-70.6769585709999,0",
+            "base_line_number": 17
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "1"
+            },
+            "raw_value": "L2V-R,-33.5810323709999,-70.676247723,1",
+            "base_line_number": 18
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "2"
+            },
+            "raw_value": "L2V-R,-33.5771843329999,-70.675130281,2",
+            "base_line_number": 19
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "3"
+            },
+            "raw_value": "L2V-R,-33.5745611999999,-70.6743788799999,3",
+            "base_line_number": 20
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "4"
+            },
+            "raw_value": "L2V-R,-33.572597496,-70.67388091,4",
+            "base_line_number": 21
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "5"
+            },
+            "raw_value": "L2V-R,-33.571108516,-70.673483861,5",
+            "base_line_number": 22
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "6"
+            },
+            "raw_value": "L2V-R,-33.569873092,-70.673127015,6",
+            "base_line_number": 23
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "7"
+            },
+            "raw_value": "L2V-R,-33.566094521,-70.672085038,7",
+            "base_line_number": 24
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "8"
+            },
+            "raw_value": "L2V-R,-33.562163283,-70.671006543,8",
+            "base_line_number": 25
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "9"
+            },
+            "raw_value": "L2V-R,-33.560622892,-70.6705584979999,9",
+            "base_line_number": 26
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "10"
+            },
+            "raw_value": "L2V-R,-33.557589516,-70.6696837819999,10",
+            "base_line_number": 27
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "11"
+            },
+            "raw_value": "L2V-R,-33.553498792,-70.6685212419999,11",
+            "base_line_number": 28
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "12"
+            },
+            "raw_value": "L2V-R,-33.551382406,-70.667954735,12",
+            "base_line_number": 29
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "13"
+            },
+            "raw_value": "L2V-R,-33.548607746,-70.667238958,13",
+            "base_line_number": 30
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "14"
+            },
+            "raw_value": "L2V-R,-33.54224493,-70.665579608,14",
+            "base_line_number": 31
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "15"
+            },
+            "raw_value": "L2V-R,-33.537459,-70.664305,15",
+            "base_line_number": 32
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "16"
+            },
+            "raw_value": "L2V-R,-33.530153,-70.662434,16",
+            "base_line_number": 33
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "17"
+            },
+            "raw_value": "L2V-R,-33.526499,-70.661543,17",
+            "base_line_number": 34
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "18"
+            },
+            "raw_value": "L2V-R,-33.520975,-70.65985,18",
+            "base_line_number": 35
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "19"
+            },
+            "raw_value": "L2V-R,-33.517143,-70.65887,19",
+            "base_line_number": 36
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "20"
+            },
+            "raw_value": "L2V-R,-33.512421,-70.657444,20",
+            "base_line_number": 37
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "21"
+            },
+            "raw_value": "L2V-R,-33.510104,-70.656999,21",
+            "base_line_number": 38
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "22"
+            },
+            "raw_value": "L2V-R,-33.505917,-70.655662,22",
+            "base_line_number": 39
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "23"
+            },
+            "raw_value": "L2V-R,-33.502441,-70.654771,23",
+            "base_line_number": 40
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "24"
+            },
+            "raw_value": "L2V-R,-33.499323,-70.653702,24",
+            "base_line_number": 41
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "25"
+            },
+            "raw_value": "L2V-R,-33.497274,-70.653167,25",
+            "base_line_number": 42
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "26"
+            },
+            "raw_value": "L2V-R,-33.492997,-70.65192,26",
+            "base_line_number": 43
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "27"
+            },
+            "raw_value": "L2V-R,-33.488809,-70.651029,27",
+            "base_line_number": 44
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "28"
+            },
+            "raw_value": "L2V-R,-33.482661,-70.649514,28",
+            "base_line_number": 45
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "29"
+            },
+            "raw_value": "L2V-R,-33.479988,-70.648267,29",
+            "base_line_number": 46
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "30"
+            },
+            "raw_value": "L2V-R,-33.476156,-70.649603,30",
+            "base_line_number": 47
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "31"
+            },
+            "raw_value": "L2V-R,-33.474909,-70.652811,31",
+            "base_line_number": 48
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "32"
+            },
+            "raw_value": "L2V-R,-33.47375,-70.654593,32",
+            "base_line_number": 49
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "33"
+            },
+            "raw_value": "L2V-R,-33.471434,-70.656108,33",
+            "base_line_number": 50
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "34"
+            },
+            "raw_value": "L2V-R,-33.469919,-70.656464,34",
+            "base_line_number": 51
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "35"
+            },
+            "raw_value": "L2V-R,-33.46386,-70.656553,35",
+            "base_line_number": 52
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "36"
+            },
+            "raw_value": "L2V-R,-33.460385,-70.65691,36",
+            "base_line_number": 53
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "37"
+            },
+            "raw_value": "L2V-R,-33.457623,-70.656732,37",
+            "base_line_number": 54
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "38"
+            },
+            "raw_value": "L2V-R,-33.455841,-70.657177,38",
+            "base_line_number": 55
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "39"
+            },
+            "raw_value": "L2V-R,-33.454237,-70.658157,39",
+            "base_line_number": 56
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "40"
+            },
+            "raw_value": "L2V-R,-33.4529,-70.658603,40",
+            "base_line_number": 57
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "41"
+            },
+            "raw_value": "L2V-R,-33.450138,-70.659583,41",
+            "base_line_number": 58
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "42"
+            },
+            "raw_value": "L2V-R,-33.447732,-70.660207,42",
+            "base_line_number": 59
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "43"
+            },
+            "raw_value": "L2V-R,-33.446128,-70.660474,43",
+            "base_line_number": 60
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "44"
+            },
+            "raw_value": "L2V-R,-33.44399,-70.66083,44",
+            "base_line_number": 61
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "45"
+            },
+            "raw_value": "L2V-R,-33.441673,-70.660117,45",
+            "base_line_number": 62
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "46"
+            },
+            "raw_value": "L2V-R,-33.439624,-70.65985,46",
+            "base_line_number": 63
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "47"
+            },
+            "raw_value": "L2V-R,-33.438109,-70.65985,47",
+            "base_line_number": 64
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "48"
+            },
+            "raw_value": "L2V-R,-33.435347,-70.660296,48",
+            "base_line_number": 65
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "49"
+            },
+            "raw_value": "L2V-R,-33.432852,-70.660652,49",
+            "base_line_number": 66
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "50"
+            },
+            "raw_value": "L2V-R,-33.431516,-70.659583,50",
+            "base_line_number": 67
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "51"
+            },
+            "raw_value": "L2V-R,-33.431516,-70.656732,51",
+            "base_line_number": 68
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "52"
+            },
+            "raw_value": "L2V-R,-33.432674,-70.652633,52",
+            "base_line_number": 69
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "53"
+            },
+            "raw_value": "L2V-R,-33.432941,-70.64996,53",
+            "base_line_number": 70
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "54"
+            },
+            "raw_value": "L2V-R,-33.43205,-70.64791,54",
+            "base_line_number": 71
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "55"
+            },
+            "raw_value": "L2V-R,-33.429644,-70.647108,55",
+            "base_line_number": 72
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "56"
+            },
+            "raw_value": "L2V-R,-33.426259,-70.646128,56",
+            "base_line_number": 73
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "57"
+            },
+            "raw_value": "L2V-R,-33.424209,-70.645415,57",
+            "base_line_number": 74
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "58"
+            },
+            "raw_value": "L2V-R,-33.422427,-70.64497,58",
+            "base_line_number": 75
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "59"
+            },
+            "raw_value": "L2V-R,-33.420823,-70.644435,59",
+            "base_line_number": 76
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "60"
+            },
+            "raw_value": "L2V-R,-33.418507,-70.643812,60",
+            "base_line_number": 77
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "61"
+            },
+            "raw_value": "L2V-R,-33.417228,-70.643791,61",
+            "base_line_number": 78
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "62"
+            },
+            "raw_value": "L2V-R,-33.41407,-70.643603,62",
+            "base_line_number": 79
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "63"
+            },
+            "raw_value": "L2V-R,-33.409409,-70.643377,63",
+            "base_line_number": 80
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "64"
+            },
+            "raw_value": "L2V-R,-33.405688,-70.643227,64",
+            "base_line_number": 81
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "65"
+            },
+            "raw_value": "L2V-R,-33.401741,-70.642926,65",
+            "base_line_number": 82
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "66"
+            },
+            "raw_value": "L2V-R,-33.396816,-70.642738,66",
+            "base_line_number": 83
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "67"
+            },
+            "raw_value": "L2V-R,-33.392907,-70.642588,67",
+            "base_line_number": 84
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "68"
+            },
+            "raw_value": "L2V-R,-33.390952,-70.642475,68",
+            "base_line_number": 85
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "69"
+            },
+            "raw_value": "L2V-R,-33.388847,-70.642325,69",
+            "base_line_number": 86
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "70"
+            },
+            "raw_value": "L2V-R,-33.387546,-70.64255,70",
+            "base_line_number": 87
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "71"
+            },
+            "raw_value": "L2V-R,-33.385882,-70.643142,71",
+            "base_line_number": 88
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-R",
+              "shape_pt_sequence": "72"
+            },
+            "raw_value": "L2V-R,-33.380389,-70.646911,72",
+            "base_line_number": 89
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "0"
+            },
+            "raw_value": "L2R-R,-33.583604448,-70.6769585709999,0",
+            "base_line_number": 90
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "1"
+            },
+            "raw_value": "L2R-R,-33.5810323709999,-70.676247723,1",
+            "base_line_number": 91
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "2"
+            },
+            "raw_value": "L2R-R,-33.5771843329999,-70.675130281,2",
+            "base_line_number": 92
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "3"
+            },
+            "raw_value": "L2R-R,-33.5745611999999,-70.6743788799999,3",
+            "base_line_number": 93
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "4"
+            },
+            "raw_value": "L2R-R,-33.572597496,-70.67388091,4",
+            "base_line_number": 94
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "5"
+            },
+            "raw_value": "L2R-R,-33.571108516,-70.673483861,5",
+            "base_line_number": 95
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "6"
+            },
+            "raw_value": "L2R-R,-33.569873092,-70.673127015,6",
+            "base_line_number": 96
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "7"
+            },
+            "raw_value": "L2R-R,-33.566094521,-70.672085038,7",
+            "base_line_number": 97
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "8"
+            },
+            "raw_value": "L2R-R,-33.562163283,-70.671006543,8",
+            "base_line_number": 98
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "9"
+            },
+            "raw_value": "L2R-R,-33.560622892,-70.6705584979999,9",
+            "base_line_number": 99
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "10"
+            },
+            "raw_value": "L2R-R,-33.557589516,-70.6696837819999,10",
+            "base_line_number": 100
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "11"
+            },
+            "raw_value": "L2R-R,-33.553498792,-70.6685212419999,11",
+            "base_line_number": 101
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "12"
+            },
+            "raw_value": "L2R-R,-33.551382406,-70.667954735,12",
+            "base_line_number": 102
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "13"
+            },
+            "raw_value": "L2R-R,-33.548607746,-70.667238958,13",
+            "base_line_number": 103
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "14"
+            },
+            "raw_value": "L2R-R,-33.54224493,-70.665579608,14",
+            "base_line_number": 104
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "15"
+            },
+            "raw_value": "L2R-R,-33.537459,-70.664305,15",
+            "base_line_number": 105
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "16"
+            },
+            "raw_value": "L2R-R,-33.530153,-70.662434,16",
+            "base_line_number": 106
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "17"
+            },
+            "raw_value": "L2R-R,-33.526499,-70.661543,17",
+            "base_line_number": 107
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "18"
+            },
+            "raw_value": "L2R-R,-33.520975,-70.65985,18",
+            "base_line_number": 108
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "19"
+            },
+            "raw_value": "L2R-R,-33.517143,-70.65887,19",
+            "base_line_number": 109
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "20"
+            },
+            "raw_value": "L2R-R,-33.512421,-70.657444,20",
+            "base_line_number": 110
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "21"
+            },
+            "raw_value": "L2R-R,-33.510104,-70.656999,21",
+            "base_line_number": 111
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "22"
+            },
+            "raw_value": "L2R-R,-33.505917,-70.655662,22",
+            "base_line_number": 112
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "23"
+            },
+            "raw_value": "L2R-R,-33.502441,-70.654771,23",
+            "base_line_number": 113
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "24"
+            },
+            "raw_value": "L2R-R,-33.499323,-70.653702,24",
+            "base_line_number": 114
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "25"
+            },
+            "raw_value": "L2R-R,-33.497274,-70.653167,25",
+            "base_line_number": 115
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "26"
+            },
+            "raw_value": "L2R-R,-33.492997,-70.65192,26",
+            "base_line_number": 116
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "27"
+            },
+            "raw_value": "L2R-R,-33.488809,-70.651029,27",
+            "base_line_number": 117
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "28"
+            },
+            "raw_value": "L2R-R,-33.482661,-70.649514,28",
+            "base_line_number": 118
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "29"
+            },
+            "raw_value": "L2R-R,-33.479988,-70.648267,29",
+            "base_line_number": 119
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "30"
+            },
+            "raw_value": "L2R-R,-33.476156,-70.649603,30",
+            "base_line_number": 120
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "31"
+            },
+            "raw_value": "L2R-R,-33.474909,-70.652811,31",
+            "base_line_number": 121
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "32"
+            },
+            "raw_value": "L2R-R,-33.47375,-70.654593,32",
+            "base_line_number": 122
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "33"
+            },
+            "raw_value": "L2R-R,-33.471434,-70.656108,33",
+            "base_line_number": 123
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "34"
+            },
+            "raw_value": "L2R-R,-33.469919,-70.656464,34",
+            "base_line_number": 124
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "35"
+            },
+            "raw_value": "L2R-R,-33.46386,-70.656553,35",
+            "base_line_number": 125
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "36"
+            },
+            "raw_value": "L2R-R,-33.460385,-70.65691,36",
+            "base_line_number": 126
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "37"
+            },
+            "raw_value": "L2R-R,-33.457623,-70.656732,37",
+            "base_line_number": 127
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "38"
+            },
+            "raw_value": "L2R-R,-33.455841,-70.657177,38",
+            "base_line_number": 128
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "39"
+            },
+            "raw_value": "L2R-R,-33.454237,-70.658157,39",
+            "base_line_number": 129
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "40"
+            },
+            "raw_value": "L2R-R,-33.4529,-70.658603,40",
+            "base_line_number": 130
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "41"
+            },
+            "raw_value": "L2R-R,-33.450138,-70.659583,41",
+            "base_line_number": 131
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "42"
+            },
+            "raw_value": "L2R-R,-33.447732,-70.660207,42",
+            "base_line_number": 132
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "43"
+            },
+            "raw_value": "L2R-R,-33.446128,-70.660474,43",
+            "base_line_number": 133
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "44"
+            },
+            "raw_value": "L2R-R,-33.44399,-70.66083,44",
+            "base_line_number": 134
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "45"
+            },
+            "raw_value": "L2R-R,-33.441673,-70.660117,45",
+            "base_line_number": 135
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "46"
+            },
+            "raw_value": "L2R-R,-33.439624,-70.65985,46",
+            "base_line_number": 136
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "47"
+            },
+            "raw_value": "L2R-R,-33.438109,-70.65985,47",
+            "base_line_number": 137
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "48"
+            },
+            "raw_value": "L2R-R,-33.435347,-70.660296,48",
+            "base_line_number": 138
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "49"
+            },
+            "raw_value": "L2R-R,-33.432852,-70.660652,49",
+            "base_line_number": 139
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "50"
+            },
+            "raw_value": "L2R-R,-33.431516,-70.659583,50",
+            "base_line_number": 140
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "51"
+            },
+            "raw_value": "L2R-R,-33.431516,-70.656732,51",
+            "base_line_number": 141
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "52"
+            },
+            "raw_value": "L2R-R,-33.432674,-70.652633,52",
+            "base_line_number": 142
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "53"
+            },
+            "raw_value": "L2R-R,-33.432941,-70.64996,53",
+            "base_line_number": 143
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "54"
+            },
+            "raw_value": "L2R-R,-33.43205,-70.64791,54",
+            "base_line_number": 144
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "55"
+            },
+            "raw_value": "L2R-R,-33.429644,-70.647108,55",
+            "base_line_number": 145
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "56"
+            },
+            "raw_value": "L2R-R,-33.426259,-70.646128,56",
+            "base_line_number": 146
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "57"
+            },
+            "raw_value": "L2R-R,-33.424209,-70.645415,57",
+            "base_line_number": 147
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "58"
+            },
+            "raw_value": "L2R-R,-33.422427,-70.64497,58",
+            "base_line_number": 148
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "59"
+            },
+            "raw_value": "L2R-R,-33.420823,-70.644435,59",
+            "base_line_number": 149
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "60"
+            },
+            "raw_value": "L2R-R,-33.418507,-70.643812,60",
+            "base_line_number": 150
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "61"
+            },
+            "raw_value": "L2R-R,-33.417228,-70.643791,61",
+            "base_line_number": 151
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "62"
+            },
+            "raw_value": "L2R-R,-33.41407,-70.643603,62",
+            "base_line_number": 152
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "63"
+            },
+            "raw_value": "L2R-R,-33.409409,-70.643377,63",
+            "base_line_number": 153
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "64"
+            },
+            "raw_value": "L2R-R,-33.405688,-70.643227,64",
+            "base_line_number": 154
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "65"
+            },
+            "raw_value": "L2R-R,-33.401741,-70.642926,65",
+            "base_line_number": 155
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "66"
+            },
+            "raw_value": "L2R-R,-33.396816,-70.642738,66",
+            "base_line_number": 156
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "67"
+            },
+            "raw_value": "L2R-R,-33.392907,-70.642588,67",
+            "base_line_number": 157
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "68"
+            },
+            "raw_value": "L2R-R,-33.390952,-70.642475,68",
+            "base_line_number": 158
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "69"
+            },
+            "raw_value": "L2R-R,-33.388847,-70.642325,69",
+            "base_line_number": 159
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "70"
+            },
+            "raw_value": "L2R-R,-33.387546,-70.64255,70",
+            "base_line_number": 160
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "71"
+            },
+            "raw_value": "L2R-R,-33.385882,-70.643142,71",
+            "base_line_number": 161
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-R",
+              "shape_pt_sequence": "72"
+            },
+            "raw_value": "L2R-R,-33.380389,-70.646911,72",
+            "base_line_number": 162
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "0"
+            },
+            "raw_value": "L4V-R,-33.609465,-70.575997,0",
+            "base_line_number": 236
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "1"
+            },
+            "raw_value": "L4V-R,-33.605188,-70.57671,1",
+            "base_line_number": 237
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "2"
+            },
+            "raw_value": "L4V-R,-33.602069,-70.577155,2",
+            "base_line_number": 238
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "3"
+            },
+            "raw_value": "L4V-R,-33.592981,-70.579026,3",
+            "base_line_number": 239
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "4"
+            },
+            "raw_value": "L4V-R,-33.589239,-70.579828,4",
+            "base_line_number": 240
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "5"
+            },
+            "raw_value": "L4V-R,-33.579081,-70.581878,5",
+            "base_line_number": 241
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "6"
+            },
+            "raw_value": "L4V-R,-33.576497,-70.582412,6",
+            "base_line_number": 242
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "7"
+            },
+            "raw_value": "L4V-R,-33.569369,-70.583571,7",
+            "base_line_number": 243
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "8"
+            },
+            "raw_value": "L4V-R,-33.562686,-70.584996,8",
+            "base_line_number": 244
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "9"
+            },
+            "raw_value": "L4V-R,-33.560637,-70.585264,9",
+            "base_line_number": 245
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "10"
+            },
+            "raw_value": "L4V-R,-33.556181,-70.586155,10",
+            "base_line_number": 246
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "11"
+            },
+            "raw_value": "L4V-R,-33.55333,-70.5866,11",
+            "base_line_number": 247
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "12"
+            },
+            "raw_value": "L4V-R,-33.549944,-70.587135,12",
+            "base_line_number": 248
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "13"
+            },
+            "raw_value": "L4V-R,-33.548429,-70.587313,13",
+            "base_line_number": 249
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "14"
+            },
+            "raw_value": "L4V-R,-33.546915,-70.587669,14",
+            "base_line_number": 250
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "15"
+            },
+            "raw_value": "L4V-R,-33.535777,-70.592748,15",
+            "base_line_number": 251
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "16"
+            },
+            "raw_value": "L4V-R,-33.526154,-70.596758,16",
+            "base_line_number": 252
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "17"
+            },
+            "raw_value": "L4V-R,-33.519471,-70.596134,17",
+            "base_line_number": 253
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "18"
+            },
+            "raw_value": "L4V-R,-33.516798,-70.593907,18",
+            "base_line_number": 254
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "19"
+            },
+            "raw_value": "L4V-R,-33.513501,-70.591055,19",
+            "base_line_number": 255
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "20"
+            },
+            "raw_value": "L4V-R,-33.510828,-70.590164,20",
+            "base_line_number": 256
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "21"
+            },
+            "raw_value": "L4V-R,-33.50869,-70.589541,21",
+            "base_line_number": 257
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "22"
+            },
+            "raw_value": "L4V-R,-33.503967,-70.588917,22",
+            "base_line_number": 258
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "23"
+            },
+            "raw_value": "L4V-R,-33.500047,-70.587046,23",
+            "base_line_number": 259
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "24"
+            },
+            "raw_value": "L4V-R,-33.495324,-70.584105,24",
+            "base_line_number": 260
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "25"
+            },
+            "raw_value": "L4V-R,-33.4898,-70.58063,25",
+            "base_line_number": 261
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "26"
+            },
+            "raw_value": "L4V-R,-33.487929,-70.580274,26",
+            "base_line_number": 262
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "27"
+            },
+            "raw_value": "L4V-R,-33.484186,-70.579472,27",
+            "base_line_number": 263
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "28"
+            },
+            "raw_value": "L4V-R,-33.481335,-70.578937,28",
+            "base_line_number": 264
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "29"
+            },
+            "raw_value": "L4V-R,-33.479731,-70.57867,29",
+            "base_line_number": 265
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "30"
+            },
+            "raw_value": "L4V-R,-33.47492,-70.577512,30",
+            "base_line_number": 266
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "31"
+            },
+            "raw_value": "L4V-R,-33.468771,-70.576175,31",
+            "base_line_number": 267
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "32"
+            },
+            "raw_value": "L4V-R,-33.464762,-70.57475,32",
+            "base_line_number": 268
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "33"
+            },
+            "raw_value": "L4V-R,-33.462445,-70.573858,33",
+            "base_line_number": 269
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "34"
+            },
+            "raw_value": "L4V-R,-33.458792,-70.572255,34",
+            "base_line_number": 270
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "35"
+            },
+            "raw_value": "L4V-R,-33.455406,-70.571274,35",
+            "base_line_number": 271
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "36"
+            },
+            "raw_value": "L4V-R,-33.453268,-70.57074,36",
+            "base_line_number": 272
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "37"
+            },
+            "raw_value": "L4V-R,-33.449614,-70.571274,37",
+            "base_line_number": 273
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "38"
+            },
+            "raw_value": "L4V-R,-33.445961,-70.572076,38",
+            "base_line_number": 274
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "39"
+            },
+            "raw_value": "L4V-R,-33.440437,-70.572878,39",
+            "base_line_number": 275
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "40"
+            },
+            "raw_value": "L4V-R,-33.438209,-70.573324,40",
+            "base_line_number": 276
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "41"
+            },
+            "raw_value": "L4V-R,-33.436427,-70.577779,41",
+            "base_line_number": 277
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "42"
+            },
+            "raw_value": "L4V-R,-33.434734,-70.581343,42",
+            "base_line_number": 278
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "43"
+            },
+            "raw_value": "L4V-R,-33.433309,-70.583482,43",
+            "base_line_number": 279
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "44"
+            },
+            "raw_value": "L4V-R,-33.431437,-70.58464,44",
+            "base_line_number": 280
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "45"
+            },
+            "raw_value": "L4V-R,-33.426091,-70.591144,45",
+            "base_line_number": 281
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "46"
+            },
+            "raw_value": "L4V-R,-33.421903,-70.596936,46",
+            "base_line_number": 282
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-R",
+              "shape_pt_sequence": "47"
+            },
+            "raw_value": "L4V-R,-33.418161,-70.60148,47",
+            "base_line_number": 283
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "0"
+            },
+            "raw_value": "L4R-R,-33.609465,-70.575997,0",
+            "base_line_number": 284
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "1"
+            },
+            "raw_value": "L4R-R,-33.605188,-70.57671,1",
+            "base_line_number": 285
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "2"
+            },
+            "raw_value": "L4R-R,-33.602069,-70.577155,2",
+            "base_line_number": 286
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "3"
+            },
+            "raw_value": "L4R-R,-33.592981,-70.579026,3",
+            "base_line_number": 287
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "4"
+            },
+            "raw_value": "L4R-R,-33.589239,-70.579828,4",
+            "base_line_number": 288
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "5"
+            },
+            "raw_value": "L4R-R,-33.579081,-70.581878,5",
+            "base_line_number": 289
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "6"
+            },
+            "raw_value": "L4R-R,-33.576497,-70.582412,6",
+            "base_line_number": 290
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "7"
+            },
+            "raw_value": "L4R-R,-33.569369,-70.583571,7",
+            "base_line_number": 291
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "8"
+            },
+            "raw_value": "L4R-R,-33.562686,-70.584996,8",
+            "base_line_number": 292
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "9"
+            },
+            "raw_value": "L4R-R,-33.560637,-70.585264,9",
+            "base_line_number": 293
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "10"
+            },
+            "raw_value": "L4R-R,-33.556181,-70.586155,10",
+            "base_line_number": 294
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "11"
+            },
+            "raw_value": "L4R-R,-33.55333,-70.5866,11",
+            "base_line_number": 295
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "12"
+            },
+            "raw_value": "L4R-R,-33.549944,-70.587135,12",
+            "base_line_number": 296
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "13"
+            },
+            "raw_value": "L4R-R,-33.548429,-70.587313,13",
+            "base_line_number": 297
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "14"
+            },
+            "raw_value": "L4R-R,-33.546915,-70.587669,14",
+            "base_line_number": 298
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "15"
+            },
+            "raw_value": "L4R-R,-33.535777,-70.592748,15",
+            "base_line_number": 299
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "16"
+            },
+            "raw_value": "L4R-R,-33.526154,-70.596758,16",
+            "base_line_number": 300
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "17"
+            },
+            "raw_value": "L4R-R,-33.519471,-70.596134,17",
+            "base_line_number": 301
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "18"
+            },
+            "raw_value": "L4R-R,-33.516798,-70.593907,18",
+            "base_line_number": 302
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "19"
+            },
+            "raw_value": "L4R-R,-33.513501,-70.591055,19",
+            "base_line_number": 303
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "20"
+            },
+            "raw_value": "L4R-R,-33.510828,-70.590164,20",
+            "base_line_number": 304
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "21"
+            },
+            "raw_value": "L4R-R,-33.50869,-70.589541,21",
+            "base_line_number": 305
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "22"
+            },
+            "raw_value": "L4R-R,-33.503967,-70.588917,22",
+            "base_line_number": 306
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "23"
+            },
+            "raw_value": "L4R-R,-33.500047,-70.587046,23",
+            "base_line_number": 307
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "24"
+            },
+            "raw_value": "L4R-R,-33.495324,-70.584105,24",
+            "base_line_number": 308
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "25"
+            },
+            "raw_value": "L4R-R,-33.4898,-70.58063,25",
+            "base_line_number": 309
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "26"
+            },
+            "raw_value": "L4R-R,-33.487929,-70.580274,26",
+            "base_line_number": 310
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "27"
+            },
+            "raw_value": "L4R-R,-33.484186,-70.579472,27",
+            "base_line_number": 311
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "28"
+            },
+            "raw_value": "L4R-R,-33.481335,-70.578937,28",
+            "base_line_number": 312
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "29"
+            },
+            "raw_value": "L4R-R,-33.479731,-70.57867,29",
+            "base_line_number": 313
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "30"
+            },
+            "raw_value": "L4R-R,-33.47492,-70.577512,30",
+            "base_line_number": 314
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "31"
+            },
+            "raw_value": "L4R-R,-33.468771,-70.576175,31",
+            "base_line_number": 315
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "32"
+            },
+            "raw_value": "L4R-R,-33.464762,-70.57475,32",
+            "base_line_number": 316
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "33"
+            },
+            "raw_value": "L4R-R,-33.462445,-70.573858,33",
+            "base_line_number": 317
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "34"
+            },
+            "raw_value": "L4R-R,-33.458792,-70.572255,34",
+            "base_line_number": 318
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "35"
+            },
+            "raw_value": "L4R-R,-33.455406,-70.571274,35",
+            "base_line_number": 319
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "36"
+            },
+            "raw_value": "L4R-R,-33.453268,-70.57074,36",
+            "base_line_number": 320
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "37"
+            },
+            "raw_value": "L4R-R,-33.449614,-70.571274,37",
+            "base_line_number": 321
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "38"
+            },
+            "raw_value": "L4R-R,-33.445961,-70.572076,38",
+            "base_line_number": 322
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "39"
+            },
+            "raw_value": "L4R-R,-33.440437,-70.572878,39",
+            "base_line_number": 323
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "40"
+            },
+            "raw_value": "L4R-R,-33.438209,-70.573324,40",
+            "base_line_number": 324
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "41"
+            },
+            "raw_value": "L4R-R,-33.436427,-70.577779,41",
+            "base_line_number": 325
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "42"
+            },
+            "raw_value": "L4R-R,-33.434734,-70.581343,42",
+            "base_line_number": 326
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "43"
+            },
+            "raw_value": "L4R-R,-33.433309,-70.583482,43",
+            "base_line_number": 327
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "44"
+            },
+            "raw_value": "L4R-R,-33.431437,-70.58464,44",
+            "base_line_number": 328
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "45"
+            },
+            "raw_value": "L4R-R,-33.426091,-70.591144,45",
+            "base_line_number": 329
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "46"
+            },
+            "raw_value": "L4R-R,-33.421903,-70.596936,46",
+            "base_line_number": 330
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-R",
+              "shape_pt_sequence": "47"
+            },
+            "raw_value": "L4R-R,-33.418161,-70.60148,47",
+            "base_line_number": 331
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "0"
+            },
+            "raw_value": "L5V-R,-33.526387,-70.596703,0",
+            "base_line_number": 449
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "1"
+            },
+            "raw_value": "L5V-R,-33.522644,-70.598373,1",
+            "base_line_number": 450
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "2"
+            },
+            "raw_value": "L5V-R,-33.519704,-70.59971,2",
+            "base_line_number": 451
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "3"
+            },
+            "raw_value": "L5V-R,-33.517833,-70.60118,3",
+            "base_line_number": 452
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "4"
+            },
+            "raw_value": "L5V-R,-33.516095,-70.602584,4",
+            "base_line_number": 453
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "5"
+            },
+            "raw_value": "L5V-R,-33.512888,-70.606593,5",
+            "base_line_number": 454
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "6"
+            },
+            "raw_value": "L5V-R,-33.509613,-70.61067,6",
+            "base_line_number": 455
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "7"
+            },
+            "raw_value": "L5V-R,-33.507809,-70.612674,7",
+            "base_line_number": 456
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "8"
+            },
+            "raw_value": "L5V-R,-33.505269,-70.614479,8",
+            "base_line_number": 457
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "9"
+            },
+            "raw_value": "L5V-R,-33.498252,-70.616016,9",
+            "base_line_number": 458
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "10"
+            },
+            "raw_value": "L5V-R,-33.493842,-70.617018,10",
+            "base_line_number": 459
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "11"
+            },
+            "raw_value": "L5V-R,-33.49157,-70.61762,11",
+            "base_line_number": 460
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "12"
+            },
+            "raw_value": "L5V-R,-33.487092,-70.618555,12",
+            "base_line_number": 461
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "13"
+            },
+            "raw_value": "L5V-R,-33.485555,-70.619624,13",
+            "base_line_number": 462
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "14"
+            },
+            "raw_value": "L5V-R,-33.483484,-70.620694,14",
+            "base_line_number": 463
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "15"
+            },
+            "raw_value": "L5V-R,-33.479674,-70.621696,15",
+            "base_line_number": 464
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "16"
+            },
+            "raw_value": "L5V-R,-33.477469,-70.622298,16",
+            "base_line_number": 465
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "17"
+            },
+            "raw_value": "L5V-R,-33.472591,-70.623567,17",
+            "base_line_number": 466
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "18"
+            },
+            "raw_value": "L5V-R,-33.467111,-70.625171,18",
+            "base_line_number": 467
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "19"
+            },
+            "raw_value": "L5V-R,-33.458691,-70.62751,19",
+            "base_line_number": 468
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "20"
+            },
+            "raw_value": "L5V-R,-33.453679,-70.628847,20",
+            "base_line_number": 469
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "21"
+            },
+            "raw_value": "L5V-R,-33.449669,-70.629849,21",
+            "base_line_number": 470
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "22"
+            },
+            "raw_value": "L5V-R,-33.447063,-70.63045,22",
+            "base_line_number": 471
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "23"
+            },
+            "raw_value": "L5V-R,-33.443788,-70.631386,23",
+            "base_line_number": 472
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "24"
+            },
+            "raw_value": "L5V-R,-33.442786,-70.63172,24",
+            "base_line_number": 473
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "25"
+            },
+            "raw_value": "L5V-R,-33.43891,-70.632589,25",
+            "base_line_number": 474
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "26"
+            },
+            "raw_value": "L5V-R,-33.437097,-70.633742,26",
+            "base_line_number": 475
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "27"
+            },
+            "raw_value": "L5V-R,-33.436596,-70.644518,27",
+            "base_line_number": 476
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "28"
+            },
+            "raw_value": "L5V-R,-33.440355,-70.680404,28",
+            "base_line_number": 477
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "29"
+            },
+            "raw_value": "L5V-R,-33.438751,-70.685316,29",
+            "base_line_number": 478
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "30"
+            },
+            "raw_value": "L5V-R,-33.43825,-70.690879,30",
+            "base_line_number": 479
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "31"
+            },
+            "raw_value": "L5V-R,-33.439052,-70.697996,31",
+            "base_line_number": 480
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "32"
+            },
+            "raw_value": "L5V-R,-33.441458,-70.707318,32",
+            "base_line_number": 481
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "33"
+            },
+            "raw_value": "L5V-R,-33.442661,-70.71203,33",
+            "base_line_number": 482
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "34"
+            },
+            "raw_value": "L5V-R,-33.444214,-70.723357,34",
+            "base_line_number": 483
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "35"
+            },
+            "raw_value": "L5V-R,-33.444465,-70.726615,35",
+            "base_line_number": 484
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "36"
+            },
+            "raw_value": "L5V-R,-33.444715,-70.740799,36",
+            "base_line_number": 485
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "37"
+            },
+            "raw_value": "L5V-R,-33.445718,-70.740649,37",
+            "base_line_number": 486
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "38"
+            },
+            "raw_value": "L5V-R,-33.44647,-70.739596,38",
+            "base_line_number": 487
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "39"
+            },
+            "raw_value": "L5V-R,-33.447121,-70.739496,39",
+            "base_line_number": 488
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "40"
+            },
+            "raw_value": "L5V-R,-33.452634,-70.738995,40",
+            "base_line_number": 489
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "41"
+            },
+            "raw_value": "L5V-R,-33.462759,-70.737942,41",
+            "base_line_number": 490
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "42"
+            },
+            "raw_value": "L5V-R,-33.467921,-70.73729,42",
+            "base_line_number": 491
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "43"
+            },
+            "raw_value": "L5V-R,-33.470628,-70.73729,43",
+            "base_line_number": 492
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "44"
+            },
+            "raw_value": "L5V-R,-33.47168,-70.73699,44",
+            "base_line_number": 493
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "45"
+            },
+            "raw_value": "L5V-R,-33.481855,-70.745109,45",
+            "base_line_number": 494
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "46"
+            },
+            "raw_value": "L5V-R,-33.485614,-70.747916,46",
+            "base_line_number": 495
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "47"
+            },
+            "raw_value": "L5V-R,-33.489974,-70.752878,47",
+            "base_line_number": 496
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "48"
+            },
+            "raw_value": "L5V-R,-33.491929,-70.754682,48",
+            "base_line_number": 497
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "49"
+            },
+            "raw_value": "L5V-R,-33.493683,-70.757038,49",
+            "base_line_number": 498
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "50"
+            },
+            "raw_value": "L5V-R,-33.49654,-70.757639,50",
+            "base_line_number": 499
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "51"
+            },
+            "raw_value": "L5V-R,-33.504008,-70.757339,51",
+            "base_line_number": 500
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-R",
+              "shape_pt_sequence": "52"
+            },
+            "raw_value": "L5V-R,-33.510473,-70.757288,52",
+            "base_line_number": 501
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "0"
+            },
+            "raw_value": "L5R-R,-33.526387,-70.596703,0",
+            "base_line_number": 502
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "1"
+            },
+            "raw_value": "L5R-R,-33.522644,-70.598373,1",
+            "base_line_number": 503
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "2"
+            },
+            "raw_value": "L5R-R,-33.519704,-70.59971,2",
+            "base_line_number": 504
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "3"
+            },
+            "raw_value": "L5R-R,-33.517833,-70.60118,3",
+            "base_line_number": 505
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "4"
+            },
+            "raw_value": "L5R-R,-33.516095,-70.602584,4",
+            "base_line_number": 506
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "5"
+            },
+            "raw_value": "L5R-R,-33.512888,-70.606593,5",
+            "base_line_number": 507
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "6"
+            },
+            "raw_value": "L5R-R,-33.509613,-70.61067,6",
+            "base_line_number": 508
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "7"
+            },
+            "raw_value": "L5R-R,-33.507809,-70.612674,7",
+            "base_line_number": 509
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "8"
+            },
+            "raw_value": "L5R-R,-33.505269,-70.614479,8",
+            "base_line_number": 510
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "9"
+            },
+            "raw_value": "L5R-R,-33.498252,-70.616016,9",
+            "base_line_number": 511
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "10"
+            },
+            "raw_value": "L5R-R,-33.493842,-70.617018,10",
+            "base_line_number": 512
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "11"
+            },
+            "raw_value": "L5R-R,-33.49157,-70.61762,11",
+            "base_line_number": 513
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "12"
+            },
+            "raw_value": "L5R-R,-33.487092,-70.618555,12",
+            "base_line_number": 514
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "13"
+            },
+            "raw_value": "L5R-R,-33.485555,-70.619624,13",
+            "base_line_number": 515
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "14"
+            },
+            "raw_value": "L5R-R,-33.483484,-70.620694,14",
+            "base_line_number": 516
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "15"
+            },
+            "raw_value": "L5R-R,-33.479674,-70.621696,15",
+            "base_line_number": 517
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "16"
+            },
+            "raw_value": "L5R-R,-33.477469,-70.622298,16",
+            "base_line_number": 518
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "17"
+            },
+            "raw_value": "L5R-R,-33.472591,-70.623567,17",
+            "base_line_number": 519
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "18"
+            },
+            "raw_value": "L5R-R,-33.467111,-70.625171,18",
+            "base_line_number": 520
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "19"
+            },
+            "raw_value": "L5R-R,-33.458691,-70.62751,19",
+            "base_line_number": 521
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "20"
+            },
+            "raw_value": "L5R-R,-33.453679,-70.628847,20",
+            "base_line_number": 522
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "21"
+            },
+            "raw_value": "L5R-R,-33.449669,-70.629849,21",
+            "base_line_number": 523
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "22"
+            },
+            "raw_value": "L5R-R,-33.447063,-70.63045,22",
+            "base_line_number": 524
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "23"
+            },
+            "raw_value": "L5R-R,-33.443788,-70.631386,23",
+            "base_line_number": 525
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "24"
+            },
+            "raw_value": "L5R-R,-33.442786,-70.63172,24",
+            "base_line_number": 526
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "25"
+            },
+            "raw_value": "L5R-R,-33.43891,-70.632589,25",
+            "base_line_number": 527
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "26"
+            },
+            "raw_value": "L5R-R,-33.437097,-70.633742,26",
+            "base_line_number": 528
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "27"
+            },
+            "raw_value": "L5R-R,-33.436596,-70.644518,27",
+            "base_line_number": 529
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "28"
+            },
+            "raw_value": "L5R-R,-33.440355,-70.680404,28",
+            "base_line_number": 530
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "29"
+            },
+            "raw_value": "L5R-R,-33.438751,-70.685316,29",
+            "base_line_number": 531
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "30"
+            },
+            "raw_value": "L5R-R,-33.43825,-70.690879,30",
+            "base_line_number": 532
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "31"
+            },
+            "raw_value": "L5R-R,-33.439052,-70.697996,31",
+            "base_line_number": 533
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "32"
+            },
+            "raw_value": "L5R-R,-33.441458,-70.707318,32",
+            "base_line_number": 534
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "33"
+            },
+            "raw_value": "L5R-R,-33.442661,-70.71203,33",
+            "base_line_number": 535
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "34"
+            },
+            "raw_value": "L5R-R,-33.444214,-70.723357,34",
+            "base_line_number": 536
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "35"
+            },
+            "raw_value": "L5R-R,-33.444465,-70.726615,35",
+            "base_line_number": 537
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "36"
+            },
+            "raw_value": "L5R-R,-33.444715,-70.740799,36",
+            "base_line_number": 538
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "37"
+            },
+            "raw_value": "L5R-R,-33.445718,-70.740649,37",
+            "base_line_number": 539
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "38"
+            },
+            "raw_value": "L5R-R,-33.44647,-70.739596,38",
+            "base_line_number": 540
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "39"
+            },
+            "raw_value": "L5R-R,-33.447121,-70.739496,39",
+            "base_line_number": 541
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "40"
+            },
+            "raw_value": "L5R-R,-33.452634,-70.738995,40",
+            "base_line_number": 542
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "41"
+            },
+            "raw_value": "L5R-R,-33.462759,-70.737942,41",
+            "base_line_number": 543
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "42"
+            },
+            "raw_value": "L5R-R,-33.467921,-70.73729,42",
+            "base_line_number": 544
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "43"
+            },
+            "raw_value": "L5R-R,-33.470628,-70.73729,43",
+            "base_line_number": 545
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "44"
+            },
+            "raw_value": "L5R-R,-33.47168,-70.73699,44",
+            "base_line_number": 546
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "45"
+            },
+            "raw_value": "L5R-R,-33.481855,-70.745109,45",
+            "base_line_number": 547
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "46"
+            },
+            "raw_value": "L5R-R,-33.485614,-70.747916,46",
+            "base_line_number": 548
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "47"
+            },
+            "raw_value": "L5R-R,-33.489974,-70.752878,47",
+            "base_line_number": 549
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "48"
+            },
+            "raw_value": "L5R-R,-33.491929,-70.754682,48",
+            "base_line_number": 550
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "49"
+            },
+            "raw_value": "L5R-R,-33.493683,-70.757038,49",
+            "base_line_number": 551
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "50"
+            },
+            "raw_value": "L5R-R,-33.49654,-70.757639,50",
+            "base_line_number": 552
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "51"
+            },
+            "raw_value": "L5R-R,-33.504008,-70.757339,51",
+            "base_line_number": 553
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-R",
+              "shape_pt_sequence": "52"
+            },
+            "raw_value": "L5R-R,-33.510473,-70.757288,52",
+            "base_line_number": 554
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "0"
+            },
+            "raw_value": "L2V-I,-33.380389,-70.646911,0",
+            "base_line_number": 623
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "1"
+            },
+            "raw_value": "L2V-I,-33.385882,-70.643142,1",
+            "base_line_number": 624
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "2"
+            },
+            "raw_value": "L2V-I,-33.387546,-70.64255,2",
+            "base_line_number": 625
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "3"
+            },
+            "raw_value": "L2V-I,-33.388847,-70.642325,3",
+            "base_line_number": 626
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "4"
+            },
+            "raw_value": "L2V-I,-33.390952,-70.642475,4",
+            "base_line_number": 627
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "5"
+            },
+            "raw_value": "L2V-I,-33.392907,-70.642588,5",
+            "base_line_number": 628
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "6"
+            },
+            "raw_value": "L2V-I,-33.396816,-70.642738,6",
+            "base_line_number": 629
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "7"
+            },
+            "raw_value": "L2V-I,-33.401741,-70.642926,7",
+            "base_line_number": 630
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "8"
+            },
+            "raw_value": "L2V-I,-33.405688,-70.643227,8",
+            "base_line_number": 631
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "9"
+            },
+            "raw_value": "L2V-I,-33.409409,-70.643377,9",
+            "base_line_number": 632
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "10"
+            },
+            "raw_value": "L2V-I,-33.41407,-70.643603,10",
+            "base_line_number": 633
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "11"
+            },
+            "raw_value": "L2V-I,-33.417228,-70.643791,11",
+            "base_line_number": 634
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "12"
+            },
+            "raw_value": "L2V-I,-33.418507,-70.643812,12",
+            "base_line_number": 635
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "13"
+            },
+            "raw_value": "L2V-I,-33.420823,-70.644435,13",
+            "base_line_number": 636
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "14"
+            },
+            "raw_value": "L2V-I,-33.422427,-70.64497,14",
+            "base_line_number": 637
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "15"
+            },
+            "raw_value": "L2V-I,-33.424209,-70.645415,15",
+            "base_line_number": 638
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "16"
+            },
+            "raw_value": "L2V-I,-33.426259,-70.646128,16",
+            "base_line_number": 639
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "17"
+            },
+            "raw_value": "L2V-I,-33.429644,-70.647108,17",
+            "base_line_number": 640
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "18"
+            },
+            "raw_value": "L2V-I,-33.43205,-70.64791,18",
+            "base_line_number": 641
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "19"
+            },
+            "raw_value": "L2V-I,-33.432941,-70.64996,19",
+            "base_line_number": 642
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "20"
+            },
+            "raw_value": "L2V-I,-33.432674,-70.652633,20",
+            "base_line_number": 643
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "21"
+            },
+            "raw_value": "L2V-I,-33.431516,-70.656732,21",
+            "base_line_number": 644
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "22"
+            },
+            "raw_value": "L2V-I,-33.431516,-70.659583,22",
+            "base_line_number": 645
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "23"
+            },
+            "raw_value": "L2V-I,-33.432852,-70.660652,23",
+            "base_line_number": 646
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "24"
+            },
+            "raw_value": "L2V-I,-33.435347,-70.660296,24",
+            "base_line_number": 647
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "25"
+            },
+            "raw_value": "L2V-I,-33.438109,-70.65985,25",
+            "base_line_number": 648
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "26"
+            },
+            "raw_value": "L2V-I,-33.439624,-70.65985,26",
+            "base_line_number": 649
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "27"
+            },
+            "raw_value": "L2V-I,-33.441673,-70.660117,27",
+            "base_line_number": 650
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "28"
+            },
+            "raw_value": "L2V-I,-33.44399,-70.66083,28",
+            "base_line_number": 651
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "29"
+            },
+            "raw_value": "L2V-I,-33.446128,-70.660474,29",
+            "base_line_number": 652
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "30"
+            },
+            "raw_value": "L2V-I,-33.447732,-70.660207,30",
+            "base_line_number": 653
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "31"
+            },
+            "raw_value": "L2V-I,-33.450138,-70.659583,31",
+            "base_line_number": 654
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "32"
+            },
+            "raw_value": "L2V-I,-33.4529,-70.658603,32",
+            "base_line_number": 655
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "33"
+            },
+            "raw_value": "L2V-I,-33.454237,-70.658157,33",
+            "base_line_number": 656
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "34"
+            },
+            "raw_value": "L2V-I,-33.455841,-70.657177,34",
+            "base_line_number": 657
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "35"
+            },
+            "raw_value": "L2V-I,-33.457623,-70.656732,35",
+            "base_line_number": 658
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "36"
+            },
+            "raw_value": "L2V-I,-33.460385,-70.65691,36",
+            "base_line_number": 659
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "37"
+            },
+            "raw_value": "L2V-I,-33.46386,-70.656553,37",
+            "base_line_number": 660
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "38"
+            },
+            "raw_value": "L2V-I,-33.469919,-70.656464,38",
+            "base_line_number": 661
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "39"
+            },
+            "raw_value": "L2V-I,-33.471434,-70.656108,39",
+            "base_line_number": 662
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "40"
+            },
+            "raw_value": "L2V-I,-33.47375,-70.654593,40",
+            "base_line_number": 663
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "41"
+            },
+            "raw_value": "L2V-I,-33.474909,-70.652811,41",
+            "base_line_number": 664
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "42"
+            },
+            "raw_value": "L2V-I,-33.476156,-70.649603,42",
+            "base_line_number": 665
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "43"
+            },
+            "raw_value": "L2V-I,-33.479988,-70.648267,43",
+            "base_line_number": 666
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "44"
+            },
+            "raw_value": "L2V-I,-33.482661,-70.649514,44",
+            "base_line_number": 667
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "45"
+            },
+            "raw_value": "L2V-I,-33.488809,-70.651029,45",
+            "base_line_number": 668
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "46"
+            },
+            "raw_value": "L2V-I,-33.492997,-70.65192,46",
+            "base_line_number": 669
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "47"
+            },
+            "raw_value": "L2V-I,-33.497274,-70.653167,47",
+            "base_line_number": 670
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "48"
+            },
+            "raw_value": "L2V-I,-33.499323,-70.653702,48",
+            "base_line_number": 671
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "49"
+            },
+            "raw_value": "L2V-I,-33.502441,-70.654771,49",
+            "base_line_number": 672
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "50"
+            },
+            "raw_value": "L2V-I,-33.505917,-70.655662,50",
+            "base_line_number": 673
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "51"
+            },
+            "raw_value": "L2V-I,-33.510104,-70.656999,51",
+            "base_line_number": 674
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "52"
+            },
+            "raw_value": "L2V-I,-33.512421,-70.657444,52",
+            "base_line_number": 675
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "53"
+            },
+            "raw_value": "L2V-I,-33.517143,-70.65887,53",
+            "base_line_number": 676
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "54"
+            },
+            "raw_value": "L2V-I,-33.520975,-70.65985,54",
+            "base_line_number": 677
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "55"
+            },
+            "raw_value": "L2V-I,-33.526499,-70.661543,55",
+            "base_line_number": 678
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "56"
+            },
+            "raw_value": "L2V-I,-33.530153,-70.662434,56",
+            "base_line_number": 679
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "57"
+            },
+            "raw_value": "L2V-I,-33.537459,-70.664305,57",
+            "base_line_number": 680
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "58"
+            },
+            "raw_value": "L2V-I,-33.54224493,-70.665579608,58",
+            "base_line_number": 681
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "59"
+            },
+            "raw_value": "L2V-I,-33.54860775,-70.667238958,59",
+            "base_line_number": 682
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "60"
+            },
+            "raw_value": "L2V-I,-33.55138241,-70.667954735,60",
+            "base_line_number": 683
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "61"
+            },
+            "raw_value": "L2V-I,-33.55349879,-70.6685212419999,61",
+            "base_line_number": 684
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "62"
+            },
+            "raw_value": "L2V-I,-33.55758952,-70.6696837819999,62",
+            "base_line_number": 685
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "63"
+            },
+            "raw_value": "L2V-I,-33.56062289,-70.6705584979999,63",
+            "base_line_number": 686
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "64"
+            },
+            "raw_value": "L2V-I,-33.56216328,-70.671006543,64",
+            "base_line_number": 687
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "65"
+            },
+            "raw_value": "L2V-I,-33.56609452,-70.672085038,65",
+            "base_line_number": 688
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "66"
+            },
+            "raw_value": "L2V-I,-33.56987309,-70.673127015,66",
+            "base_line_number": 689
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "67"
+            },
+            "raw_value": "L2V-I,-33.57110852,-70.673483861,67",
+            "base_line_number": 690
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "68"
+            },
+            "raw_value": "L2V-I,-33.5725975,-70.67388091,68",
+            "base_line_number": 691
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "69"
+            },
+            "raw_value": "L2V-I,-33.5745612,-70.6743788799999,69",
+            "base_line_number": 692
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "70"
+            },
+            "raw_value": "L2V-I,-33.57718433,-70.675130281,70",
+            "base_line_number": 693
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "71"
+            },
+            "raw_value": "L2V-I,-33.58103237,-70.676247723,71",
+            "base_line_number": 694
+          },
+          {
+            "identifier": {
+              "shape_id": "L2V-I",
+              "shape_pt_sequence": "72"
+            },
+            "raw_value": "L2V-I,-33.58360445,-70.6769585709999,72",
+            "base_line_number": 695
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "0"
+            },
+            "raw_value": "L2R-I,-33.380389,-70.646911,0",
+            "base_line_number": 696
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "1"
+            },
+            "raw_value": "L2R-I,-33.385882,-70.643142,1",
+            "base_line_number": 697
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "2"
+            },
+            "raw_value": "L2R-I,-33.387546,-70.64255,2",
+            "base_line_number": 698
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "3"
+            },
+            "raw_value": "L2R-I,-33.388847,-70.642325,3",
+            "base_line_number": 699
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "4"
+            },
+            "raw_value": "L2R-I,-33.390952,-70.642475,4",
+            "base_line_number": 700
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "5"
+            },
+            "raw_value": "L2R-I,-33.392907,-70.642588,5",
+            "base_line_number": 701
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "6"
+            },
+            "raw_value": "L2R-I,-33.396816,-70.642738,6",
+            "base_line_number": 702
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "7"
+            },
+            "raw_value": "L2R-I,-33.401741,-70.642926,7",
+            "base_line_number": 703
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "8"
+            },
+            "raw_value": "L2R-I,-33.405688,-70.643227,8",
+            "base_line_number": 704
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "9"
+            },
+            "raw_value": "L2R-I,-33.409409,-70.643377,9",
+            "base_line_number": 705
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "10"
+            },
+            "raw_value": "L2R-I,-33.41407,-70.643603,10",
+            "base_line_number": 706
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "11"
+            },
+            "raw_value": "L2R-I,-33.417228,-70.643791,11",
+            "base_line_number": 707
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "12"
+            },
+            "raw_value": "L2R-I,-33.418507,-70.643812,12",
+            "base_line_number": 708
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "13"
+            },
+            "raw_value": "L2R-I,-33.420823,-70.644435,13",
+            "base_line_number": 709
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "14"
+            },
+            "raw_value": "L2R-I,-33.422427,-70.64497,14",
+            "base_line_number": 710
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "15"
+            },
+            "raw_value": "L2R-I,-33.424209,-70.645415,15",
+            "base_line_number": 711
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "16"
+            },
+            "raw_value": "L2R-I,-33.426259,-70.646128,16",
+            "base_line_number": 712
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "17"
+            },
+            "raw_value": "L2R-I,-33.429644,-70.647108,17",
+            "base_line_number": 713
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "18"
+            },
+            "raw_value": "L2R-I,-33.43205,-70.64791,18",
+            "base_line_number": 714
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "19"
+            },
+            "raw_value": "L2R-I,-33.432941,-70.64996,19",
+            "base_line_number": 715
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "20"
+            },
+            "raw_value": "L2R-I,-33.432674,-70.652633,20",
+            "base_line_number": 716
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "21"
+            },
+            "raw_value": "L2R-I,-33.431516,-70.656732,21",
+            "base_line_number": 717
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "22"
+            },
+            "raw_value": "L2R-I,-33.431516,-70.659583,22",
+            "base_line_number": 718
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "23"
+            },
+            "raw_value": "L2R-I,-33.432852,-70.660652,23",
+            "base_line_number": 719
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "24"
+            },
+            "raw_value": "L2R-I,-33.435347,-70.660296,24",
+            "base_line_number": 720
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "25"
+            },
+            "raw_value": "L2R-I,-33.438109,-70.65985,25",
+            "base_line_number": 721
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "26"
+            },
+            "raw_value": "L2R-I,-33.439624,-70.65985,26",
+            "base_line_number": 722
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "27"
+            },
+            "raw_value": "L2R-I,-33.441673,-70.660117,27",
+            "base_line_number": 723
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "28"
+            },
+            "raw_value": "L2R-I,-33.44399,-70.66083,28",
+            "base_line_number": 724
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "29"
+            },
+            "raw_value": "L2R-I,-33.446128,-70.660474,29",
+            "base_line_number": 725
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "30"
+            },
+            "raw_value": "L2R-I,-33.447732,-70.660207,30",
+            "base_line_number": 726
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "31"
+            },
+            "raw_value": "L2R-I,-33.450138,-70.659583,31",
+            "base_line_number": 727
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "32"
+            },
+            "raw_value": "L2R-I,-33.4529,-70.658603,32",
+            "base_line_number": 728
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "33"
+            },
+            "raw_value": "L2R-I,-33.454237,-70.658157,33",
+            "base_line_number": 729
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "34"
+            },
+            "raw_value": "L2R-I,-33.455841,-70.657177,34",
+            "base_line_number": 730
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "35"
+            },
+            "raw_value": "L2R-I,-33.457623,-70.656732,35",
+            "base_line_number": 731
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "36"
+            },
+            "raw_value": "L2R-I,-33.460385,-70.65691,36",
+            "base_line_number": 732
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "37"
+            },
+            "raw_value": "L2R-I,-33.46386,-70.656553,37",
+            "base_line_number": 733
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "38"
+            },
+            "raw_value": "L2R-I,-33.469919,-70.656464,38",
+            "base_line_number": 734
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "39"
+            },
+            "raw_value": "L2R-I,-33.471434,-70.656108,39",
+            "base_line_number": 735
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "40"
+            },
+            "raw_value": "L2R-I,-33.47375,-70.654593,40",
+            "base_line_number": 736
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "41"
+            },
+            "raw_value": "L2R-I,-33.474909,-70.652811,41",
+            "base_line_number": 737
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "42"
+            },
+            "raw_value": "L2R-I,-33.476156,-70.649603,42",
+            "base_line_number": 738
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "43"
+            },
+            "raw_value": "L2R-I,-33.479988,-70.648267,43",
+            "base_line_number": 739
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "44"
+            },
+            "raw_value": "L2R-I,-33.482661,-70.649514,44",
+            "base_line_number": 740
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "45"
+            },
+            "raw_value": "L2R-I,-33.488809,-70.651029,45",
+            "base_line_number": 741
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "46"
+            },
+            "raw_value": "L2R-I,-33.492997,-70.65192,46",
+            "base_line_number": 742
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "47"
+            },
+            "raw_value": "L2R-I,-33.497274,-70.653167,47",
+            "base_line_number": 743
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "48"
+            },
+            "raw_value": "L2R-I,-33.499323,-70.653702,48",
+            "base_line_number": 744
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "49"
+            },
+            "raw_value": "L2R-I,-33.502441,-70.654771,49",
+            "base_line_number": 745
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "50"
+            },
+            "raw_value": "L2R-I,-33.505917,-70.655662,50",
+            "base_line_number": 746
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "51"
+            },
+            "raw_value": "L2R-I,-33.510104,-70.656999,51",
+            "base_line_number": 747
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "52"
+            },
+            "raw_value": "L2R-I,-33.512421,-70.657444,52",
+            "base_line_number": 748
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "53"
+            },
+            "raw_value": "L2R-I,-33.517143,-70.65887,53",
+            "base_line_number": 749
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "54"
+            },
+            "raw_value": "L2R-I,-33.520975,-70.65985,54",
+            "base_line_number": 750
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "55"
+            },
+            "raw_value": "L2R-I,-33.526499,-70.661543,55",
+            "base_line_number": 751
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "56"
+            },
+            "raw_value": "L2R-I,-33.530153,-70.662434,56",
+            "base_line_number": 752
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "57"
+            },
+            "raw_value": "L2R-I,-33.537459,-70.664305,57",
+            "base_line_number": 753
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "58"
+            },
+            "raw_value": "L2R-I,-33.54224493,-70.665579608,58",
+            "base_line_number": 754
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "59"
+            },
+            "raw_value": "L2R-I,-33.54860775,-70.667238958,59",
+            "base_line_number": 755
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "60"
+            },
+            "raw_value": "L2R-I,-33.55138241,-70.667954735,60",
+            "base_line_number": 756
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "61"
+            },
+            "raw_value": "L2R-I,-33.55349879,-70.6685212419999,61",
+            "base_line_number": 757
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "62"
+            },
+            "raw_value": "L2R-I,-33.55758952,-70.6696837819999,62",
+            "base_line_number": 758
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "63"
+            },
+            "raw_value": "L2R-I,-33.56062289,-70.6705584979999,63",
+            "base_line_number": 759
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "64"
+            },
+            "raw_value": "L2R-I,-33.56216328,-70.671006543,64",
+            "base_line_number": 760
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "65"
+            },
+            "raw_value": "L2R-I,-33.56609452,-70.672085038,65",
+            "base_line_number": 761
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "66"
+            },
+            "raw_value": "L2R-I,-33.56987309,-70.673127015,66",
+            "base_line_number": 762
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "67"
+            },
+            "raw_value": "L2R-I,-33.57110852,-70.673483861,67",
+            "base_line_number": 763
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "68"
+            },
+            "raw_value": "L2R-I,-33.5725975,-70.67388091,68",
+            "base_line_number": 764
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "69"
+            },
+            "raw_value": "L2R-I,-33.5745612,-70.6743788799999,69",
+            "base_line_number": 765
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "70"
+            },
+            "raw_value": "L2R-I,-33.57718433,-70.675130281,70",
+            "base_line_number": 766
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "71"
+            },
+            "raw_value": "L2R-I,-33.58103237,-70.676247723,71",
+            "base_line_number": 767
+          },
+          {
+            "identifier": {
+              "shape_id": "L2R-I",
+              "shape_pt_sequence": "72"
+            },
+            "raw_value": "L2R-I,-33.58360445,-70.6769585709999,72",
+            "base_line_number": 768
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "0"
+            },
+            "raw_value": "L4V-I,-33.418161,-70.60148,0",
+            "base_line_number": 842
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "1"
+            },
+            "raw_value": "L4V-I,-33.421903,-70.596936,1",
+            "base_line_number": 843
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "2"
+            },
+            "raw_value": "L4V-I,-33.426091,-70.591144,2",
+            "base_line_number": 844
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "3"
+            },
+            "raw_value": "L4V-I,-33.431437,-70.58464,3",
+            "base_line_number": 845
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "4"
+            },
+            "raw_value": "L4V-I,-33.433309,-70.583482,4",
+            "base_line_number": 846
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "5"
+            },
+            "raw_value": "L4V-I,-33.434734,-70.581343,5",
+            "base_line_number": 847
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "6"
+            },
+            "raw_value": "L4V-I,-33.436427,-70.577779,6",
+            "base_line_number": 848
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "7"
+            },
+            "raw_value": "L4V-I,-33.438209,-70.573324,7",
+            "base_line_number": 849
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "8"
+            },
+            "raw_value": "L4V-I,-33.440437,-70.572878,8",
+            "base_line_number": 850
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "9"
+            },
+            "raw_value": "L4V-I,-33.445961,-70.572076,9",
+            "base_line_number": 851
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "10"
+            },
+            "raw_value": "L4V-I,-33.449614,-70.571274,10",
+            "base_line_number": 852
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "11"
+            },
+            "raw_value": "L4V-I,-33.453268,-70.57074,11",
+            "base_line_number": 853
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "12"
+            },
+            "raw_value": "L4V-I,-33.455406,-70.571274,12",
+            "base_line_number": 854
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "13"
+            },
+            "raw_value": "L4V-I,-33.458792,-70.572255,13",
+            "base_line_number": 855
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "14"
+            },
+            "raw_value": "L4V-I,-33.462445,-70.573858,14",
+            "base_line_number": 856
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "15"
+            },
+            "raw_value": "L4V-I,-33.464762,-70.57475,15",
+            "base_line_number": 857
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "16"
+            },
+            "raw_value": "L4V-I,-33.468771,-70.576175,16",
+            "base_line_number": 858
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "17"
+            },
+            "raw_value": "L4V-I,-33.47492,-70.577512,17",
+            "base_line_number": 859
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "18"
+            },
+            "raw_value": "L4V-I,-33.479731,-70.57867,18",
+            "base_line_number": 860
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "19"
+            },
+            "raw_value": "L4V-I,-33.481335,-70.578937,19",
+            "base_line_number": 861
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "20"
+            },
+            "raw_value": "L4V-I,-33.484186,-70.579472,20",
+            "base_line_number": 862
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "21"
+            },
+            "raw_value": "L4V-I,-33.487929,-70.580274,21",
+            "base_line_number": 863
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "22"
+            },
+            "raw_value": "L4V-I,-33.4898,-70.58063,22",
+            "base_line_number": 864
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "23"
+            },
+            "raw_value": "L4V-I,-33.495324,-70.584105,23",
+            "base_line_number": 865
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "24"
+            },
+            "raw_value": "L4V-I,-33.500047,-70.587046,24",
+            "base_line_number": 866
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "25"
+            },
+            "raw_value": "L4V-I,-33.503967,-70.588917,25",
+            "base_line_number": 867
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "26"
+            },
+            "raw_value": "L4V-I,-33.50869,-70.589541,26",
+            "base_line_number": 868
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "27"
+            },
+            "raw_value": "L4V-I,-33.510828,-70.590164,27",
+            "base_line_number": 869
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "28"
+            },
+            "raw_value": "L4V-I,-33.513501,-70.591055,28",
+            "base_line_number": 870
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "29"
+            },
+            "raw_value": "L4V-I,-33.516798,-70.593907,29",
+            "base_line_number": 871
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "30"
+            },
+            "raw_value": "L4V-I,-33.519471,-70.596134,30",
+            "base_line_number": 872
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "31"
+            },
+            "raw_value": "L4V-I,-33.526154,-70.596758,31",
+            "base_line_number": 873
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "32"
+            },
+            "raw_value": "L4V-I,-33.535777,-70.592748,32",
+            "base_line_number": 874
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "33"
+            },
+            "raw_value": "L4V-I,-33.546915,-70.587669,33",
+            "base_line_number": 875
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "34"
+            },
+            "raw_value": "L4V-I,-33.548429,-70.587313,34",
+            "base_line_number": 876
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "35"
+            },
+            "raw_value": "L4V-I,-33.549944,-70.587135,35",
+            "base_line_number": 877
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "36"
+            },
+            "raw_value": "L4V-I,-33.55333,-70.5866,36",
+            "base_line_number": 878
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "37"
+            },
+            "raw_value": "L4V-I,-33.556181,-70.586155,37",
+            "base_line_number": 879
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "38"
+            },
+            "raw_value": "L4V-I,-33.560637,-70.585264,38",
+            "base_line_number": 880
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "39"
+            },
+            "raw_value": "L4V-I,-33.562686,-70.584996,39",
+            "base_line_number": 881
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "40"
+            },
+            "raw_value": "L4V-I,-33.569369,-70.583571,40",
+            "base_line_number": 882
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "41"
+            },
+            "raw_value": "L4V-I,-33.576497,-70.582412,41",
+            "base_line_number": 883
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "42"
+            },
+            "raw_value": "L4V-I,-33.579081,-70.581878,42",
+            "base_line_number": 884
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "43"
+            },
+            "raw_value": "L4V-I,-33.589239,-70.579828,43",
+            "base_line_number": 885
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "44"
+            },
+            "raw_value": "L4V-I,-33.592981,-70.579026,44",
+            "base_line_number": 886
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "45"
+            },
+            "raw_value": "L4V-I,-33.602069,-70.577155,45",
+            "base_line_number": 887
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "46"
+            },
+            "raw_value": "L4V-I,-33.605188,-70.57671,46",
+            "base_line_number": 888
+          },
+          {
+            "identifier": {
+              "shape_id": "L4V-I",
+              "shape_pt_sequence": "47"
+            },
+            "raw_value": "L4V-I,-33.609465,-70.575997,47",
+            "base_line_number": 889
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "0"
+            },
+            "raw_value": "L4R-I,-33.418161,-70.60148,0",
+            "base_line_number": 890
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "1"
+            },
+            "raw_value": "L4R-I,-33.421903,-70.596936,1",
+            "base_line_number": 891
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "2"
+            },
+            "raw_value": "L4R-I,-33.426091,-70.591144,2",
+            "base_line_number": 892
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "3"
+            },
+            "raw_value": "L4R-I,-33.431437,-70.58464,3",
+            "base_line_number": 893
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "4"
+            },
+            "raw_value": "L4R-I,-33.433309,-70.583482,4",
+            "base_line_number": 894
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "5"
+            },
+            "raw_value": "L4R-I,-33.434734,-70.581343,5",
+            "base_line_number": 895
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "6"
+            },
+            "raw_value": "L4R-I,-33.436427,-70.577779,6",
+            "base_line_number": 896
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "7"
+            },
+            "raw_value": "L4R-I,-33.438209,-70.573324,7",
+            "base_line_number": 897
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "8"
+            },
+            "raw_value": "L4R-I,-33.440437,-70.572878,8",
+            "base_line_number": 898
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "9"
+            },
+            "raw_value": "L4R-I,-33.445961,-70.572076,9",
+            "base_line_number": 899
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "10"
+            },
+            "raw_value": "L4R-I,-33.449614,-70.571274,10",
+            "base_line_number": 900
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "11"
+            },
+            "raw_value": "L4R-I,-33.453268,-70.57074,11",
+            "base_line_number": 901
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "12"
+            },
+            "raw_value": "L4R-I,-33.455406,-70.571274,12",
+            "base_line_number": 902
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "13"
+            },
+            "raw_value": "L4R-I,-33.458792,-70.572255,13",
+            "base_line_number": 903
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "14"
+            },
+            "raw_value": "L4R-I,-33.462445,-70.573858,14",
+            "base_line_number": 904
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "15"
+            },
+            "raw_value": "L4R-I,-33.464762,-70.57475,15",
+            "base_line_number": 905
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "16"
+            },
+            "raw_value": "L4R-I,-33.468771,-70.576175,16",
+            "base_line_number": 906
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "17"
+            },
+            "raw_value": "L4R-I,-33.47492,-70.577512,17",
+            "base_line_number": 907
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "18"
+            },
+            "raw_value": "L4R-I,-33.479731,-70.57867,18",
+            "base_line_number": 908
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "19"
+            },
+            "raw_value": "L4R-I,-33.481335,-70.578937,19",
+            "base_line_number": 909
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "20"
+            },
+            "raw_value": "L4R-I,-33.484186,-70.579472,20",
+            "base_line_number": 910
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "21"
+            },
+            "raw_value": "L4R-I,-33.487929,-70.580274,21",
+            "base_line_number": 911
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "22"
+            },
+            "raw_value": "L4R-I,-33.4898,-70.58063,22",
+            "base_line_number": 912
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "23"
+            },
+            "raw_value": "L4R-I,-33.495324,-70.584105,23",
+            "base_line_number": 913
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "24"
+            },
+            "raw_value": "L4R-I,-33.500047,-70.587046,24",
+            "base_line_number": 914
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "25"
+            },
+            "raw_value": "L4R-I,-33.503967,-70.588917,25",
+            "base_line_number": 915
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "26"
+            },
+            "raw_value": "L4R-I,-33.50869,-70.589541,26",
+            "base_line_number": 916
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "27"
+            },
+            "raw_value": "L4R-I,-33.510828,-70.590164,27",
+            "base_line_number": 917
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "28"
+            },
+            "raw_value": "L4R-I,-33.513501,-70.591055,28",
+            "base_line_number": 918
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "29"
+            },
+            "raw_value": "L4R-I,-33.516798,-70.593907,29",
+            "base_line_number": 919
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "30"
+            },
+            "raw_value": "L4R-I,-33.519471,-70.596134,30",
+            "base_line_number": 920
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "31"
+            },
+            "raw_value": "L4R-I,-33.526154,-70.596758,31",
+            "base_line_number": 921
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "32"
+            },
+            "raw_value": "L4R-I,-33.535777,-70.592748,32",
+            "base_line_number": 922
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "33"
+            },
+            "raw_value": "L4R-I,-33.546915,-70.587669,33",
+            "base_line_number": 923
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "34"
+            },
+            "raw_value": "L4R-I,-33.548429,-70.587313,34",
+            "base_line_number": 924
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "35"
+            },
+            "raw_value": "L4R-I,-33.549944,-70.587135,35",
+            "base_line_number": 925
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "36"
+            },
+            "raw_value": "L4R-I,-33.55333,-70.5866,36",
+            "base_line_number": 926
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "37"
+            },
+            "raw_value": "L4R-I,-33.556181,-70.586155,37",
+            "base_line_number": 927
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "38"
+            },
+            "raw_value": "L4R-I,-33.560637,-70.585264,38",
+            "base_line_number": 928
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "39"
+            },
+            "raw_value": "L4R-I,-33.562686,-70.584996,39",
+            "base_line_number": 929
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "40"
+            },
+            "raw_value": "L4R-I,-33.569369,-70.583571,40",
+            "base_line_number": 930
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "41"
+            },
+            "raw_value": "L4R-I,-33.576497,-70.582412,41",
+            "base_line_number": 931
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "42"
+            },
+            "raw_value": "L4R-I,-33.579081,-70.581878,42",
+            "base_line_number": 932
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "43"
+            },
+            "raw_value": "L4R-I,-33.589239,-70.579828,43",
+            "base_line_number": 933
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "44"
+            },
+            "raw_value": "L4R-I,-33.592981,-70.579026,44",
+            "base_line_number": 934
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "45"
+            },
+            "raw_value": "L4R-I,-33.602069,-70.577155,45",
+            "base_line_number": 935
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "46"
+            },
+            "raw_value": "L4R-I,-33.605188,-70.57671,46",
+            "base_line_number": 936
+          },
+          {
+            "identifier": {
+              "shape_id": "L4R-I",
+              "shape_pt_sequence": "47"
+            },
+            "raw_value": "L4R-I,-33.609465,-70.575997,47",
+            "base_line_number": 937
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "0"
+            },
+            "raw_value": "L5V-I,-33.510473,-70.757288,0",
+            "base_line_number": 1055
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "1"
+            },
+            "raw_value": "L5V-I,-33.504008,-70.757339,1",
+            "base_line_number": 1056
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "2"
+            },
+            "raw_value": "L5V-I,-33.49654,-70.757639,2",
+            "base_line_number": 1057
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "3"
+            },
+            "raw_value": "L5V-I,-33.493683,-70.757038,3",
+            "base_line_number": 1058
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "4"
+            },
+            "raw_value": "L5V-I,-33.491929,-70.754682,4",
+            "base_line_number": 1059
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "5"
+            },
+            "raw_value": "L5V-I,-33.489974,-70.752878,5",
+            "base_line_number": 1060
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "6"
+            },
+            "raw_value": "L5V-I,-33.485614,-70.747916,6",
+            "base_line_number": 1061
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "7"
+            },
+            "raw_value": "L5V-I,-33.481855,-70.745109,7",
+            "base_line_number": 1062
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "8"
+            },
+            "raw_value": "L5V-I,-33.47168,-70.73699,8",
+            "base_line_number": 1063
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "9"
+            },
+            "raw_value": "L5V-I,-33.470628,-70.73729,9",
+            "base_line_number": 1064
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "10"
+            },
+            "raw_value": "L5V-I,-33.467921,-70.73729,10",
+            "base_line_number": 1065
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "11"
+            },
+            "raw_value": "L5V-I,-33.462759,-70.737942,11",
+            "base_line_number": 1066
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "12"
+            },
+            "raw_value": "L5V-I,-33.452634,-70.738995,12",
+            "base_line_number": 1067
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "13"
+            },
+            "raw_value": "L5V-I,-33.447121,-70.739496,13",
+            "base_line_number": 1068
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "14"
+            },
+            "raw_value": "L5V-I,-33.44647,-70.739596,14",
+            "base_line_number": 1069
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "15"
+            },
+            "raw_value": "L5V-I,-33.445718,-70.740649,15",
+            "base_line_number": 1070
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "16"
+            },
+            "raw_value": "L5V-I,-33.444715,-70.740799,16",
+            "base_line_number": 1071
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "17"
+            },
+            "raw_value": "L5V-I,-33.444465,-70.726615,17",
+            "base_line_number": 1072
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "18"
+            },
+            "raw_value": "L5V-I,-33.444214,-70.723357,18",
+            "base_line_number": 1073
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "19"
+            },
+            "raw_value": "L5V-I,-33.442661,-70.71203,19",
+            "base_line_number": 1074
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "20"
+            },
+            "raw_value": "L5V-I,-33.441458,-70.707318,20",
+            "base_line_number": 1075
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "21"
+            },
+            "raw_value": "L5V-I,-33.439052,-70.697996,21",
+            "base_line_number": 1076
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "22"
+            },
+            "raw_value": "L5V-I,-33.43825,-70.690879,22",
+            "base_line_number": 1077
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "23"
+            },
+            "raw_value": "L5V-I,-33.438751,-70.685316,23",
+            "base_line_number": 1078
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "24"
+            },
+            "raw_value": "L5V-I,-33.440355,-70.680404,24",
+            "base_line_number": 1079
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "25"
+            },
+            "raw_value": "L5V-I,-33.436596,-70.644518,25",
+            "base_line_number": 1080
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "26"
+            },
+            "raw_value": "L5V-I,-33.437097,-70.633742,26",
+            "base_line_number": 1081
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "27"
+            },
+            "raw_value": "L5V-I,-33.43891,-70.632589,27",
+            "base_line_number": 1082
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "28"
+            },
+            "raw_value": "L5V-I,-33.442786,-70.63172,28",
+            "base_line_number": 1083
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "29"
+            },
+            "raw_value": "L5V-I,-33.443788,-70.631386,29",
+            "base_line_number": 1084
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "30"
+            },
+            "raw_value": "L5V-I,-33.447063,-70.63045,30",
+            "base_line_number": 1085
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "31"
+            },
+            "raw_value": "L5V-I,-33.449669,-70.629849,31",
+            "base_line_number": 1086
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "32"
+            },
+            "raw_value": "L5V-I,-33.453679,-70.628847,32",
+            "base_line_number": 1087
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "33"
+            },
+            "raw_value": "L5V-I,-33.458691,-70.62751,33",
+            "base_line_number": 1088
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "34"
+            },
+            "raw_value": "L5V-I,-33.467111,-70.625171,34",
+            "base_line_number": 1089
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "35"
+            },
+            "raw_value": "L5V-I,-33.472591,-70.623567,35",
+            "base_line_number": 1090
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "36"
+            },
+            "raw_value": "L5V-I,-33.477469,-70.622298,36",
+            "base_line_number": 1091
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "37"
+            },
+            "raw_value": "L5V-I,-33.479674,-70.621696,37",
+            "base_line_number": 1092
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "38"
+            },
+            "raw_value": "L5V-I,-33.483484,-70.620694,38",
+            "base_line_number": 1093
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "39"
+            },
+            "raw_value": "L5V-I,-33.485555,-70.619624,39",
+            "base_line_number": 1094
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "40"
+            },
+            "raw_value": "L5V-I,-33.487092,-70.618555,40",
+            "base_line_number": 1095
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "41"
+            },
+            "raw_value": "L5V-I,-33.49157,-70.61762,41",
+            "base_line_number": 1096
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "42"
+            },
+            "raw_value": "L5V-I,-33.493842,-70.617018,42",
+            "base_line_number": 1097
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "43"
+            },
+            "raw_value": "L5V-I,-33.498252,-70.616016,43",
+            "base_line_number": 1098
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "44"
+            },
+            "raw_value": "L5V-I,-33.505269,-70.614479,44",
+            "base_line_number": 1099
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "45"
+            },
+            "raw_value": "L5V-I,-33.507809,-70.612674,45",
+            "base_line_number": 1100
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "46"
+            },
+            "raw_value": "L5V-I,-33.509613,-70.61067,46",
+            "base_line_number": 1101
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "47"
+            },
+            "raw_value": "L5V-I,-33.512888,-70.606593,47",
+            "base_line_number": 1102
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "48"
+            },
+            "raw_value": "L5V-I,-33.516095,-70.602584,48",
+            "base_line_number": 1103
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "49"
+            },
+            "raw_value": "L5V-I,-33.517833,-70.60118,49",
+            "base_line_number": 1104
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "50"
+            },
+            "raw_value": "L5V-I,-33.519704,-70.59971,50",
+            "base_line_number": 1105
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "51"
+            },
+            "raw_value": "L5V-I,-33.522644,-70.598373,51",
+            "base_line_number": 1106
+          },
+          {
+            "identifier": {
+              "shape_id": "L5V-I",
+              "shape_pt_sequence": "52"
+            },
+            "raw_value": "L5V-I,-33.526387,-70.596703,52",
+            "base_line_number": 1107
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "0"
+            },
+            "raw_value": "L5R-I,-33.510473,-70.757288,0",
+            "base_line_number": 1108
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "1"
+            },
+            "raw_value": "L5R-I,-33.504008,-70.757339,1",
+            "base_line_number": 1109
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "2"
+            },
+            "raw_value": "L5R-I,-33.49654,-70.757639,2",
+            "base_line_number": 1110
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "3"
+            },
+            "raw_value": "L5R-I,-33.493683,-70.757038,3",
+            "base_line_number": 1111
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "4"
+            },
+            "raw_value": "L5R-I,-33.491929,-70.754682,4",
+            "base_line_number": 1112
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "5"
+            },
+            "raw_value": "L5R-I,-33.489974,-70.752878,5",
+            "base_line_number": 1113
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "6"
+            },
+            "raw_value": "L5R-I,-33.485614,-70.747916,6",
+            "base_line_number": 1114
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "7"
+            },
+            "raw_value": "L5R-I,-33.481855,-70.745109,7",
+            "base_line_number": 1115
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "8"
+            },
+            "raw_value": "L5R-I,-33.47168,-70.73699,8",
+            "base_line_number": 1116
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "9"
+            },
+            "raw_value": "L5R-I,-33.470628,-70.73729,9",
+            "base_line_number": 1117
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "10"
+            },
+            "raw_value": "L5R-I,-33.467921,-70.73729,10",
+            "base_line_number": 1118
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "11"
+            },
+            "raw_value": "L5R-I,-33.462759,-70.737942,11",
+            "base_line_number": 1119
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "12"
+            },
+            "raw_value": "L5R-I,-33.452634,-70.738995,12",
+            "base_line_number": 1120
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "13"
+            },
+            "raw_value": "L5R-I,-33.447121,-70.739496,13",
+            "base_line_number": 1121
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "14"
+            },
+            "raw_value": "L5R-I,-33.44647,-70.739596,14",
+            "base_line_number": 1122
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "15"
+            },
+            "raw_value": "L5R-I,-33.445718,-70.740649,15",
+            "base_line_number": 1123
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "16"
+            },
+            "raw_value": "L5R-I,-33.444715,-70.740799,16",
+            "base_line_number": 1124
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "17"
+            },
+            "raw_value": "L5R-I,-33.444465,-70.726615,17",
+            "base_line_number": 1125
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "18"
+            },
+            "raw_value": "L5R-I,-33.444214,-70.723357,18",
+            "base_line_number": 1126
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "19"
+            },
+            "raw_value": "L5R-I,-33.442661,-70.71203,19",
+            "base_line_number": 1127
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "20"
+            },
+            "raw_value": "L5R-I,-33.441458,-70.707318,20",
+            "base_line_number": 1128
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "21"
+            },
+            "raw_value": "L5R-I,-33.439052,-70.697996,21",
+            "base_line_number": 1129
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "22"
+            },
+            "raw_value": "L5R-I,-33.43825,-70.690879,22",
+            "base_line_number": 1130
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "23"
+            },
+            "raw_value": "L5R-I,-33.438751,-70.685316,23",
+            "base_line_number": 1131
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "24"
+            },
+            "raw_value": "L5R-I,-33.440355,-70.680404,24",
+            "base_line_number": 1132
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "25"
+            },
+            "raw_value": "L5R-I,-33.436596,-70.644518,25",
+            "base_line_number": 1133
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "26"
+            },
+            "raw_value": "L5R-I,-33.437097,-70.633742,26",
+            "base_line_number": 1134
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "27"
+            },
+            "raw_value": "L5R-I,-33.43891,-70.632589,27",
+            "base_line_number": 1135
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "28"
+            },
+            "raw_value": "L5R-I,-33.442786,-70.63172,28",
+            "base_line_number": 1136
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "29"
+            },
+            "raw_value": "L5R-I,-33.443788,-70.631386,29",
+            "base_line_number": 1137
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "30"
+            },
+            "raw_value": "L5R-I,-33.447063,-70.63045,30",
+            "base_line_number": 1138
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "31"
+            },
+            "raw_value": "L5R-I,-33.449669,-70.629849,31",
+            "base_line_number": 1139
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "32"
+            },
+            "raw_value": "L5R-I,-33.453679,-70.628847,32",
+            "base_line_number": 1140
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "33"
+            },
+            "raw_value": "L5R-I,-33.458691,-70.62751,33",
+            "base_line_number": 1141
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "34"
+            },
+            "raw_value": "L5R-I,-33.467111,-70.625171,34",
+            "base_line_number": 1142
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "35"
+            },
+            "raw_value": "L5R-I,-33.472591,-70.623567,35",
+            "base_line_number": 1143
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "36"
+            },
+            "raw_value": "L5R-I,-33.477469,-70.622298,36",
+            "base_line_number": 1144
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "37"
+            },
+            "raw_value": "L5R-I,-33.479674,-70.621696,37",
+            "base_line_number": 1145
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "38"
+            },
+            "raw_value": "L5R-I,-33.483484,-70.620694,38",
+            "base_line_number": 1146
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "39"
+            },
+            "raw_value": "L5R-I,-33.485555,-70.619624,39",
+            "base_line_number": 1147
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "40"
+            },
+            "raw_value": "L5R-I,-33.487092,-70.618555,40",
+            "base_line_number": 1148
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "41"
+            },
+            "raw_value": "L5R-I,-33.49157,-70.61762,41",
+            "base_line_number": 1149
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "42"
+            },
+            "raw_value": "L5R-I,-33.493842,-70.617018,42",
+            "base_line_number": 1150
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "43"
+            },
+            "raw_value": "L5R-I,-33.498252,-70.616016,43",
+            "base_line_number": 1151
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "44"
+            },
+            "raw_value": "L5R-I,-33.505269,-70.614479,44",
+            "base_line_number": 1152
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "45"
+            },
+            "raw_value": "L5R-I,-33.507809,-70.612674,45",
+            "base_line_number": 1153
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "46"
+            },
+            "raw_value": "L5R-I,-33.509613,-70.61067,46",
+            "base_line_number": 1154
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "47"
+            },
+            "raw_value": "L5R-I,-33.512888,-70.606593,47",
+            "base_line_number": 1155
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "48"
+            },
+            "raw_value": "L5R-I,-33.516095,-70.602584,48",
+            "base_line_number": 1156
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "49"
+            },
+            "raw_value": "L5R-I,-33.517833,-70.60118,49",
+            "base_line_number": 1157
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "50"
+            },
+            "raw_value": "L5R-I,-33.519704,-70.59971,50",
+            "base_line_number": 1158
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "51"
+            },
+            "raw_value": "L5R-I,-33.522644,-70.598373,51",
+            "base_line_number": 1159
+          },
+          {
+            "identifier": {
+              "shape_id": "L5R-I",
+              "shape_pt_sequence": "52"
+            },
+            "raw_value": "L5R-I,-33.526387,-70.596703,52",
+            "base_line_number": 1160
+          }
+        ],
+        "modified": []
+      },
+      "stats": {
+        "total_rows_base": 1574,
+        "total_rows_new": 878,
+        "columns_added_count": 0,
+        "columns_deleted_count": 0,
+        "rows_added_count": 0,
+        "rows_deleted_count": 696,
+        "rows_modified_count": 0,
+        "rows_changed_percentage": 44.22
+      }
+    },
+    {
+      "file_name": "stop_times.txt",
+      "file_action": "not_compared",
+      "not_compared_reason": {
+        "code": "id_churn",
+        "message": "100.0% of primary key values ['trip_id', 'stop_sequence'] differ between the base and new feed, indicating the identifiers are regenerated across versions and cannot be reliably matched. Row-level comparison was skipped to avoid a misleading diff."
+      },
+      "columns_added": [
+        {
+          "name": "pickup_type",
+          "position": 6
+        },
+        {
+          "name": "drop_off_type",
+          "position": 7
+        }
+      ],
+      "columns_deleted": [],
+      "stats": {
+        "total_rows_base": 2578,
+        "total_rows_new": 246099,
+        "columns_added_count": 2,
+        "columns_deleted_count": 0
+      }
+    },
+    {
+      "file_name": "stops.txt",
+      "file_action": "not_compared",
+      "not_compared_reason": {
+        "code": "id_churn",
+        "message": "89.1% of primary key values ['stop_id'] differ between the base and new feed, indicating the identifiers are regenerated across versions and cannot be reliably matched. Row-level comparison was skipped to avoid a misleading diff."
+      },
+      "columns_added": [
+        {
+          "name": "level_id",
+          "position": 8
+        }
+      ],
+      "columns_deleted": [
+        {
+          "name": "stop_code",
+          "position": 2
+        },
+        {
+          "name": "stop_url",
+          "position": 6
+        }
+      ],
+      "stats": {
+        "total_rows_base": 1004,
+        "total_rows_new": 6275,
+        "columns_added_count": 1,
+        "columns_deleted_count": 2
+      }
+    },
+    {
+      "file_name": "transfers.txt",
+      "file_action": "deleted",
+      "columns_added": [],
+      "columns_deleted": [
+        {
+          "name": "from_stop_id",
+          "position": 1
+        },
+        {
+          "name": "to_stop_id",
+          "position": 2
+        },
+        {
+          "name": "transfer_type",
+          "position": 3
+        }
+      ],
+      "stats": {
+        "columns_added_count": 0,
+        "columns_deleted_count": 3
+      }
+    },
+    {
+      "file_name": "trips.txt",
+      "file_action": "not_compared",
+      "not_compared_reason": {
+        "code": "id_churn",
+        "message": "100.0% of primary key values ['trip_id'] differ between the base and new feed, indicating the identifiers are regenerated across versions and cannot be reliably matched. Row-level comparison was skipped to avoid a misleading diff."
+      },
+      "columns_added": [
+        {
+          "name": "trip_short_name",
+          "position": 6
+        }
+      ],
+      "columns_deleted": [],
+      "stats": {
+        "total_rows_base": 138,
+        "total_rows_new": 11528,
+        "columns_added_count": 1,
+        "columns_deleted_count": 0
+      }
+    }
+  ]
+}
