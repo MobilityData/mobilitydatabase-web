@@ -1,0 +1,135 @@
+{
+  "summary": {
+    "validatorVersion": "8.0.1",
+    "validatedAt": "2026-06-15T13:10:20Z",
+    "counts": {
+      "Shapes": 10744,
+      "Stops": 40772,
+      "Routes": 1957,
+      "Trips": 468947,
+      "Agencies": 62,
+      "Blocks": 0
+    },
+    "gtfsFeatures": [
+      "Transfers",
+      "Shapes",
+      "Feed Information",
+      "Attributions",
+      "Route Colors",
+      "Headsigns",
+      "Stops Wheelchair Accessibility",
+      "Trips Wheelchair Accessibility",
+      "Bike Allowed",
+      "Location Types",
+      "Stop Access",
+      "Continuous Stops"
+    ]
+  },
+  "notices": [
+    {
+      "code": "big_gap_in_service",
+      "severity": "INFO",
+      "totalNotices": 9
+    },
+    {
+      "code": "equal_shape_distance_same_coordinates",
+      "severity": "WARNING",
+      "totalNotices": 1169078
+    },
+    {
+      "code": "expired_calendar",
+      "severity": "WARNING",
+      "totalNotices": 225
+    },
+    {
+      "code": "fast_travel_between_consecutive_stops",
+      "severity": "WARNING",
+      "totalNotices": 187
+    },
+    {
+      "code": "fast_travel_between_far_stops",
+      "severity": "WARNING",
+      "totalNotices": 31
+    },
+    {
+      "code": "feed_expiration_date30_days",
+      "severity": "WARNING",
+      "totalNotices": 1
+    },
+    {
+      "code": "missing_feed_contact_email_and_url",
+      "severity": "WARNING",
+      "totalNotices": 1
+    },
+    {
+      "code": "mixed_case_recommended_field",
+      "severity": "WARNING",
+      "totalNotices": 3564
+    },
+    {
+      "code": "platform_without_parent_station",
+      "severity": "INFO",
+      "totalNotices": 21
+    },
+    {
+      "code": "route_color_contrast",
+      "severity": "WARNING",
+      "totalNotices": 15
+    },
+    {
+      "code": "route_long_name_contains_short_name",
+      "severity": "WARNING",
+      "totalNotices": 1901
+    },
+    {
+      "code": "route_short_name_too_long",
+      "severity": "WARNING",
+      "totalNotices": 5
+    },
+    {
+      "code": "stop_has_too_many_matches_for_shape",
+      "severity": "WARNING",
+      "totalNotices": 60
+    },
+    {
+      "code": "stop_too_far_from_shape",
+      "severity": "WARNING",
+      "totalNotices": 54
+    },
+    {
+      "code": "stop_too_far_from_shape_using_user_distance",
+      "severity": "WARNING",
+      "totalNotices": 5
+    },
+    {
+      "code": "stop_without_stop_time",
+      "severity": "WARNING",
+      "totalNotices": 1303
+    },
+    {
+      "code": "trip_headsign_matches_intermediate_stop",
+      "severity": "INFO",
+      "totalNotices": 4
+    },
+    {
+      "code": "unexpected_enum_value",
+      "severity": "WARNING",
+      "totalNotices": 135
+    },
+    {
+      "code": "unknown_column",
+      "severity": "INFO",
+      "totalNotices": 8
+    },
+    {
+      "code": "unknown_file",
+      "severity": "INFO",
+      "totalNotices": 3
+    },
+    {
+      "code": "unused_station",
+      "severity": "INFO",
+      "totalNotices": 7
+    }
+  ]
+}
