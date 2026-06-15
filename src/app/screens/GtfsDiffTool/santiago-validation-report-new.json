@@ -1,0 +1,35 @@
+{
+  "summary": {
+    "validatorVersion": "8.0.1",
+    "validatedAt": "2026-06-15T12:22:25Z",
+    "counts": {
+      "Shapes": 14,
+      "Stops": 6275,
+      "Routes": 7,
+      "Trips": 11528,
+      "Agencies": 1,
+      "Blocks": 0
+    },
+    "gtfsFeatures": [
+      "Pathway Connections",
+      "Pathway Details",
+      "Levels",
+      "Shapes",
+      "Feed Information",
+      "Route Colors",
+      "Headsigns",
+      "Stops Wheelchair Accessibility",
+      "Trips Wheelchair Accessibility",
+      "Bike Allowed",
+      "Location Types",
+      "In-station Traversal Time"
+    ]
+  },
+  "notices": [
+    {
+      "code": "missing_feed_contact_email_and_url",
+      "severity": "WARNING",
+      "totalNotices": 1
+    }
+  ]
+}

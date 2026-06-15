@@ -1,0 +1,72 @@
+{
+  "validatorVersion": {
+    "baseVersion": "8.0.1",
+    "newVersion": "8.0.1",
+    "changed": false
+  },
+  "baseValidatedAt": "2026-06-15T12:23:44Z",
+  "newValidatedAt": "2026-06-15T12:22:25Z",
+  "features": {
+    "added": [
+      "Pathway Connections",
+      "Pathway Details",
+      "Levels",
+      "Shapes",
+      "Feed Information",
+      "Route Colors",
+      "Headsigns",
+      "Stops Wheelchair Accessibility",
+      "Trips Wheelchair Accessibility",
+      "Bike Allowed",
+      "Location Types",
+      "In-station Traversal Time"
+    ],
+    "removed": [],
+    "unchanged": []
+  },
+  "notices": {
+    "added": [
+      {
+        "code": "missing_feed_contact_email_and_url",
+        "severity": "WARNING",
+        "baseCount": 0,
+        "newCount": 1
+      }
+    ],
+    "removed": [
+      {
+        "code": "invalid_input_files_in_subfolder",
+        "severity": "ERROR",
+        "baseCount": 1,
+        "newCount": 0
+      },
+      {
+        "code": "missing_calendar_and_calendar_date_files",
+        "severity": "ERROR",
+        "baseCount": 1,
+        "newCount": 0
+      },
+      {
+        "code": "missing_recommended_file",
+        "severity": "WARNING",
+        "baseCount": 1,
+        "newCount": 0
+      },
+      {
+        "code": "missing_required_file",
+        "severity": "ERROR",
+        "baseCount": 5,
+        "newCount": 0
+      }
+    ],
+    "changed": [],
+    "unchanged": []
+  },
+  "counts": [
+    { "key": "Shapes", "baseValue": 0, "newValue": 14 },
+    { "key": "Stops", "baseValue": 0, "newValue": 6275 },
+    { "key": "Routes", "baseValue": 0, "newValue": 7 },
+    { "key": "Trips", "baseValue": 0, "newValue": 11528 },
+    { "key": "Agencies", "baseValue": 0, "newValue": 1 }
+  ]
+}
