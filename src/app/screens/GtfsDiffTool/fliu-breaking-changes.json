@@ -1,0 +1,67 @@
+{
+  "comparison": {
+    "old_feed_version": "c6c86559-e3ec-4cce-b9b0-df776b2d4dc9 (valid 2026-05-31 → 2026-07-31)",
+    "new_feed_version": "24e80396-7099-4d49-b052-3aacc8da2e77 (valid 2026-06-17 → 2026-08-17)",
+    "feed": "FlixBus / Distribusion (agency_id FLIU)",
+    "has_breaking_change": true,
+    "has_suspicious_change": true
+  },
+  "breaking_changes": [
+    {
+      "type": "removed_entity",
+      "where": "trips.txt",
+      "detail": "9,448 of 18,668 trip_ids (50.6%) from the old feed are absent in the new feed (9,220 common, 3,601 added). trip_ids are stable, content-derived hashes (e.g. 'FLIU-00:00-GBLONLOX-1613a153'), so their disappearance is a genuine deletion, not an ID regeneration.",
+      "note": "Consistent with a service-period rollover (old window 2026-05-31→2026-07-31 → new window 2026-06-17→2026-08-17): trips that no longer run in the new period drop out. Internal integrity is intact — every new stop_times.trip_id resolves against new trips (0 missing) — but any external system holding the 9,448 old trip_ids breaks."
+    },
+    {
+      "type": "removed_entity",
+      "where": "stops.txt",
+      "detail": "991 of 3,142 stop_ids (31.5%) from the old feed are absent in the new feed (2,151 common, 20 added). stop_ids are stable location codes (e.g. 'ATBICBIH', 'ESBCNBFA'), so these are real stop removals.",
+      "note": "VERIFIED CLEAN: none of the 991 removed stop_ids are referenced by the new stop_times.txt (0 orphan foreign keys), so the new feed's schedule does not point at any deleted stop. The removals still break deep links / saved trips that referenced those stop IDs."
+    },
+    {
+      "type": "removed_entity",
+      "where": "routes.txt",
+      "detail": "Compared by route_long_name (the stable identity — see id-reassignment below), 479 of 1,417 distinct FlixBus city-pair routes from the old feed are absent in the new feed (938 common, 65 added). e.g. whole 'FlixBus: <A> - <B>' lines discontinued for the new period.",
+      "note": "Cannot be measured by route_id because route_id is reassigned every period (next item). Route count by name 1,417 → 1,003."
+    },
+    {
+      "type": "changed_primary_key_id_reassignment",
+      "where": "routes.txt (route_id), shapes.txt (shape_id), calendar.txt/calendar_dates.txt (service_id)",
+      "detail": "route_id, shape_id and service_id are sequential integers that are regenerated and REASSIGNED each schedule period — the same numeric value points at a different entity across versions. Proof: route_id '0' = 'FlixBus: Biograd na Moru - Zagreb' in the old feed but 'FlixBus: Vukovar - Zagreb' in the new feed; a common trip ('FLIU-00:00-GBLONLOX-1613a153', headsign unchanged) moved from route_id 624→667, service_id 165→1214, shape_id 4104→5367. 100% of the 881 route_ids that exist in both feeds carry a different route_long_name.",
+      "note": "Internal referential integrity of the new feed is intact (all FKs resolve). But any external consumer that hard-referenced a numeric route_id, shape_id or service_id from the old feed now resolves to the wrong entity — a silent, breaking mismatch."
+    }
+  ],
+  "suspicious_changes": [
+    {
+      "type": "large_entity_count_delta",
+      "where": "trips.txt, stop_times.txt, stops.txt, routes.txt, shapes.txt, calendar_dates.txt",
+      "detail": "Counts drop ~30% across nearly every file, exceeding the 20% threshold: trips 18,668 → 12,821 (-31.3%), stop_times 130,714 → 89,882 (-31.2%), stops 3,142 → 2,171 (-30.9%), routes 1,417 → 1,003 (-29.2%), shapes(unique) 8,103 → 5,755 (-29.0%), calendar_dates 30,350 → 22,551 (-25.7%). calendar 756 → 740 (-2.1%) stays within threshold.",
+      "note": "Consistent and intentional — the new feed covers a later, shorter operating window, so the network is leaner across the board. Not a data error, but it trips the count-delta rule on six files."
+    },
+    {
+      "type": "shape_geometry_distortion",
+      "where": "shapes.txt",
+      "detail": "Geometry continuity cannot be verified because shape_id is a reassigned integer. Although 5,755 shape_ids appear in both feeds, they do NOT describe the same paths: spot-checking 5 'common' shape_ids (0, 1, 10, 100, 1000) showed completely different point sequences and row counts in each version (e.g. shape 0: 20,299 base points vs 1,943 new points). Unique shapes 8,103 → 5,755 (-29%); total shape points 38,553,896 → 27,348,354 (-29.1%).",
+      "note": "Flagged because the integer shape namespace is regenerated, preventing any geometry comparison — not because a distortion was directly observed. All new trips.shape_id resolve against the new shapes.txt (0 missing), so the new feed's schedule loses no shape references."
+    }
+  ],
+  "checks_passed": {
+    "removed_file": "none — both feeds contain the identical 9 files (agency, calendar, calendar_dates, feed_info, routes, shapes, stop_times, stops, trips); 0 added, 0 removed",
+    "removed_required_field": "none — every file's CSV header is byte-identical between the two feeds; 0 columns added or deleted in any file",
+    "changed_field_type_or_format": "none — all 89,882 new stop_times rows have valid HH:MM:SS arrival/departure times (0 malformed, 0 empty arrivals)",
+    "referential_integrity_new_feed": "clean — stop_times→stops 0 missing, stop_times→trips 0 missing, trips→routes 0 missing, trips→service (calendar+calendar_dates) 0 missing, trips→shapes 0 missing; 0 removed stop_ids referenced by new stop_times",
+    "enum_values": "identical: route_type {3}, exception_type {1,2}, pickup_type {0,1}, drop_off_type {0,1}; location_type empty in both",
+    "feed_validity_window": "new feed valid 2026-06-17 → 2026-08-17 (end date is in the future relative to 2026-06-19)",
+    "service_coverage_gap": "none — old window 2026-05-31→2026-07-31 and new window 2026-06-17→2026-08-17 overlap from 2026-06-17 to 2026-07-31",
+    "entity_count_deltas": "calendar -2.1% within threshold; trips -31.3%, stop_times -31.2%, stops -30.9%, routes -29.2%, shapes -29.0%, calendar_dates -25.7% exceed 20% (flagged above)",
+    "geographic_bbox": "effectively unchanged: base lat [36.07212, 66.54489] lon [-9.39494, 44.05570] → new lat [36.12602, 66.54489] lon [-9.39494, 44.05570] (only min-lat moved ~6 km north; all other edges identical to 5 decimals — pan-European FlixBus network)",
+    "stops_moved_over_500m": "1 of 2,151 common stops — 'ESBCNBFA' moved ~5,960 m; all others stable",
+    "headsign_route_name_bulk_change": "0% — 0 of 9,220 common (stable) trip_ids changed trip_headsign. route_long_name not comparable by id (route_id is reassigned), evaluated as removed_entity by name above",
+    "calendar_flip": "no — both feeds use calendar.txt + calendar_dates.txt with the same modeling strategy",
+    "agency_timezone_change": "no — agency.txt is byte-identical (FlixBus, Europe/Berlin)",
+    "feed_publisher_change": "no — feed_publisher_name 'Distribusion Technologies GmbH' unchanged in feed_info.txt",
+    "duplicate_ids": "none — 0 duplicate stop_ids and 0 duplicate trip_ids in either feed",
+    "stop_time_ordering": "0 violations across all 89,882 new rows (stop_sequence strictly increasing, departure ≥ arrival, arrival ≥ prior departure)"
+  }
+}

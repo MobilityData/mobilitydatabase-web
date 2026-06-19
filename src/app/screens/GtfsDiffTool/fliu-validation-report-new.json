@@ -1,0 +1,63 @@
+{
+  "summary": {
+    "validatorVersion": "8.0.1",
+    "validatedAt": "2026-06-19T10:57:36Z",
+    "counts": {
+      "Shapes": 5755,
+      "Stops": 2171,
+      "Routes": 1003,
+      "Trips": 12821,
+      "Agencies": 0,
+      "Blocks": 0
+    },
+    "gtfsFeatures": [
+      "Shapes",
+      "Feed Information",
+      "Route Colors",
+      "Headsigns",
+      "Continuous Stops"
+    ]
+  },
+  "notices": [
+    {
+      "code": "invalid_url",
+      "severity": "ERROR",
+      "totalNotices": 1
+    },
+    {
+      "code": "missing_feed_contact_email_and_url",
+      "severity": "WARNING",
+      "totalNotices": 1
+    },
+    {
+      "code": "mixed_case_recommended_field",
+      "severity": "WARNING",
+      "totalNotices": 1
+    },
+    {
+      "code": "route_long_name_contains_short_name",
+      "severity": "WARNING",
+      "totalNotices": 1
+    },
+    {
+      "code": "stop_has_too_many_matches_for_shape",
+      "severity": "WARNING",
+      "totalNotices": 10
+    },
+    {
+      "code": "big_gap_in_service",
+      "severity": "INFO",
+      "totalNotices": 10
+    },
+    {
+      "code": "service_window_outside_feed_period",
+      "severity": "INFO",
+      "totalNotices": 3
+    },
+    {
+      "code": "trip_headsign_matches_intermediate_stop",
+      "severity": "INFO",
+      "totalNotices": 105
+    }
+  ]
+}
