@@ -1,0 +1,77 @@
+{
+  "summary": {
+    "validatorVersion": "8.0.1",
+    "validatedAt": "2026-06-19T12:02:42Z",
+    "counts": {
+      "Shapes": 0,
+      "Stops": 12204,
+      "Routes": 9838,
+      "Trips": 65778,
+      "Agencies": 1,
+      "Blocks": 0
+    },
+    "gtfsFeatures": ["Fares V1"]
+  },
+  "notices": [
+    {
+      "code": "mixed_case_recommended_field",
+      "severity": "WARNING",
+      "totalNotices": 9074
+    },
+    {
+      "code": "stop_without_stop_time",
+      "severity": "WARNING",
+      "totalNotices": 3493
+    },
+    {
+      "code": "non_ascii_or_non_printable_char",
+      "severity": "WARNING",
+      "totalNotices": 2618
+    },
+    {
+      "code": "duplicate_route_name",
+      "severity": "WARNING",
+      "totalNotices": 2330
+    },
+    {
+      "code": "route_short_name_too_long",
+      "severity": "WARNING",
+      "totalNotices": 912
+    },
+    {
+      "code": "fast_travel_between_consecutive_stops",
+      "severity": "WARNING",
+      "totalNotices": 191
+    },
+    {
+      "code": "fast_travel_between_far_stops",
+      "severity": "WARNING",
+      "totalNotices": 41
+    },
+    {
+      "code": "expired_calendar",
+      "severity": "WARNING",
+      "totalNotices": 1
+    },
+    {
+      "code": "missing_recommended_file",
+      "severity": "WARNING",
+      "totalNotices": 1
+    },
+    {
+      "code": "trip_coverage_not_active_for_next7_days",
+      "severity": "WARNING",
+      "totalNotices": 1
+    },
+    {
+      "code": "unusable_trip",
+      "severity": "WARNING",
+      "totalNotices": 1
+    },
+    {
+      "code": "unused_trip",
+      "severity": "WARNING",
+      "totalNotices": 1
+    }
+  ]
+}
