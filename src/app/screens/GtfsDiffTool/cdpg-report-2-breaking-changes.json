@@ -1,0 +1,78 @@
+{
+  "comparison": {
+    "old_feed_version": "cdpg_GTFS_03_03_2026 (BMTC, dated 2026-03-03)",
+    "new_feed_version": "cdpg_GTFS_10_09_2025 (BMTC, dated 2025-10-09)",
+    "feed": "BMTC – Bengaluru Metropolitan Transport Corporation",
+    "has_breaking_change": true,
+    "has_suspicious_change": true
+  },
+  "breaking_changes": [
+    {
+      "type": "removed_file",
+      "where": "calendar_dates.txt",
+      "detail": "calendar_dates.txt (368 service-exception rows in the old feed) is absent from the new feed (9 files → 8). The old feed modeled service via calendar.txt + calendar_dates.txt; the new feed ships calendar.txt only.",
+      "note": "VERIFIED CLEAN internally: the new feed defines a single service_id 'general' in calendar.txt with no date exceptions, and every new trips.service_id resolves to it (0 orphans). But any consumer expecting calendar_dates.txt, or the holiday/exception service patterns it encoded, loses that data entirely."
+    },
+    {
+      "type": "changed_primary_key_id_rename",
+      "where": "stops.txt",
+      "detail": "The entire stop_id namespace was re-coded: 0 of 12,235 old stop_ids survive in the new feed (12,204 stops, 0 common). Old IDs are short numerics (e.g. '39712'), new IDs are unrelated numerics (e.g. '988334'). The physical network is largely the same — 6,613 stop_names are shared — so this is a wholesale primary-key rename, not a network rebuild.",
+      "note": "Internal integrity is intact — all 1,652,487 new stop_times.stop_id values resolve against new stops (0 missing). Any external system that hard-referenced old stop_ids (deep links, saved trips, real-time matching) breaks completely."
+    },
+    {
+      "type": "changed_primary_key_id_rename",
+      "where": "trips.txt",
+      "detail": "The entire trip_id namespace was re-coded: 0 of 84,391 old trip_ids survive in the new feed (65,778 trips, 0 common). Old IDs embed the service name (e.g. '328HS/4_1_Regular_4'), new IDs drop that suffix (e.g. 'KIA-6/6_5'). This is a complete trip-ID scheme change rather than a clean set of deletions/additions.",
+      "note": "Internal integrity is intact — every new stop_times.trip_id resolves against new trips (0 missing). All external references to old trip_ids break."
+    },
+    {
+      "type": "changed_primary_key_id_rename",
+      "where": "agency.txt",
+      "detail": "agency_ids changed and the agency count dropped 2 → 1: old feed had 'BMTC-Regular' and 'BMTC-AC', new feed has a single agency_id '1' (same agency_name 'BMTC', same url, same timezone). routes.agency_id was re-pointed from 'BMTC-Regular' to '1', and fare_attributes.agency_id from the old scheme to '1'.",
+      "note": "VERIFIED CLEAN: all new routes.agency_id and fare_attributes.agency_id values ('1') resolve against the new agency.txt (0 orphans). The old 'BMTC-AC' agency_id is gone, and any external reference to either old agency_id breaks."
+    },
+    {
+      "type": "removed_entity",
+      "where": "calendar.txt",
+      "detail": "All 23 named service_ids from the old feed are absent in the new feed (0 common, 1 added): the descriptive patterns ('Regular', 'Week Days', 'Holiday', 'Sat-Sun', 'Saturday', 'Sun-Mon', 'SAT, SUN, HOLIDAY', …) were collapsed into a single service_id 'general' that runs all 7 days.",
+      "note": "VERIFIED CLEAN: all 65,778 new trips reference the single 'general' service (0 orphan foreign keys). But the per-pattern scheduling semantics are lost, and any external reference to a named service_id (e.g. 'Sat-Sun') breaks."
+    },
+    {
+      "type": "changed_primary_key_id_rename",
+      "where": "fare_attributes.txt",
+      "detail": "The fare_id namespace was re-coded and shrank 36 → 11 (0 common). Old IDs are price-encoded (e.g. 'AC_104.76'), new IDs are index-style (e.g. 'fare_12'). The new fares also drop the AC/regular distinction, consistent with the agency collapse.",
+      "note": "VERIFIED CLEAN: all 4,975,143 new fare_rules.fare_id values resolve against the 11 new fares (0 missing) and all fare_rules.route_id values resolve against new routes (0 missing). Any external reference to an old fare_id breaks."
+    }
+  ],
+  "suspicious_changes": [
+    {
+      "type": "temporal_regression",
+      "where": "feed metadata / packaging",
+      "detail": "The 'new' feed (cdpg_GTFS_10_09_2025, dated 2025-10-09) is chronologically OLDER than the 'base' feed (cdpg_GTFS_03_03_2026, dated 2026-03-03). Comparing base → new therefore represents a roll-back to an earlier snapshot produced by a different ID-generation pipeline, which explains the wholesale primary-key re-coding across stops, trips, agencies, services and fares.",
+      "note": "Not a data error per se, but a strong signal that these two feeds come from different generations of the export pipeline rather than two consecutive releases of the same one."
+    },
+    {
+      "type": "large_entity_count_delta",
+      "where": "trips.txt / fare_attributes.txt / calendar.txt",
+      "detail": "trips dropped 84,391 → 65,778 (-22.1%, exceeds the 20% threshold), fare_attributes dropped 36 → 11 (-69.4%), and calendar service patterns dropped 23 → 1 (-95.7%). routes fell 12,264 → 9,838 (-19.8%, just under threshold) and stops held at 12,235 → 12,204 (-0.3%).",
+      "note": "Directionally consistent with rolling back to the older, less granular October-2025 snapshot — fewer trips, a single flat service, and a smaller flat fare table — rather than isolated data loss."
+    },
+    {
+      "type": "bulk_field_change",
+      "where": "routes.txt → route_long_name",
+      "detail": "Of the 9,123 route_ids common to both feeds, 1,319 (14.5%) carry a different route_long_name, while route_type is unchanged (all '3', bus) for 100% of routes.",
+      "note": "route_id is the only primary key that survives between the two feeds (9,123 common of 12,264 old / 9,838 new), but ~1 in 7 common routes was renamed, so even route-level joins are not fully stable."
+    }
+  ],
+  "checks_passed": {
+    "referential_integrity_new_feed": "clean — stop_times→stops 0 missing (of 1,652,487 rows), stop_times→trips 0 missing, trips→routes 0 missing, trips→service (calendar) 0 missing, fare_rules→routes 0 missing (of 4,975,143 rows), fare_rules→fare_attributes 0 missing, routes→agency 0 missing, fare_attributes→agency 0 missing",
+    "removed_required_field": "none — every common file has an identical column set; only column ORDER changed in calendar.txt (service_id moved to last) and routes.txt (route_short_name reordered). 0 columns added or deleted in any file",
+    "changed_field_type_or_format": "none — all 1,652,487 new stop_times rows have valid HH:MM:SS arrival/departure times (0 malformed)",
+    "enum_values": "identical: route_type {3} in both feeds; payment_method {0} in fare_attributes",
+    "geographic_bbox": "identical: [12.61221, 77.13306] – [13.48434, 78.00287] in both feeds",
+    "duplicate_ids": "none — new feed has 12,204 distinct stop_ids / 12,204 rows, 65,778 distinct trip_ids / 65,778 rows, 9,838 distinct route_ids / 9,838 rows (0 duplicates in any primary key)",
+    "agency_timezone_change": "no — both feeds use Asia/Kolkata and agency_name 'BMTC' (only the agency_id changed)",
+    "physical_network_continuity": "largely preserved despite the stop_id re-code — 6,613 stop_names are shared between feeds and the geographic bounding box is identical",
+    "files_added": "none — 0 files added; the only file-level change is the removal of calendar_dates.txt"
+  }
+}
