@@ -1,0 +1,68 @@
+{
+  "comparison": {
+    "old_feed_version": "cdpg_GTFS_03_03_2026 (BMTC, dated 2026-03-03)",
+    "new_feed_version": "cdpg_GTFS_10_03_2026 (BMTC, dated 2026-03-10)",
+    "feed": "BMTC – Bengaluru Metropolitan Transport Corporation (agencies BMTC-Regular, BMTC-AC)",
+    "has_breaking_change": true,
+    "has_suspicious_change": true
+  },
+  "breaking_changes": [
+    {
+      "type": "removed_entity",
+      "where": "calendar.txt / calendar_dates.txt",
+      "detail": "9 of 23 named service_ids from the old feed are absent in the new feed (14 common, 0 added): 'Fri-Sat', 'Fri-Sun', 'Holiday&Saturday', 'Mon-Tue', 'Sat-Sun', 'Sun-Mon', 'Test_Wed', 'Thu-Fri', 'Tue-Wed'. service_ids are stable human-readable names, so these are real service-pattern removals (-39.1%).",
+      "note": "VERIFIED CLEAN: none of the 9 removed service_ids are referenced by the new trips.txt (0 orphan foreign keys) — the new schedule was re-pointed onto the 14 surviving services. Any external system that referenced the dropped service_ids (e.g. 'Sat-Sun') breaks."
+    },
+    {
+      "type": "removed_entity",
+      "where": "trips.txt",
+      "detail": "9,621 of 84,391 trip_ids (11.4%) from the old feed are absent in the new feed (74,770 common, 3,370 added). trip_ids are stable composite keys (e.g. '328HS/4_1_Regular_4'), so their disappearance is a genuine deletion.",
+      "note": "Internal integrity is intact — every new stop_times.trip_id resolves against new trips (0 missing). The removals still break any external reference to the 9,621 old trip_ids."
+    },
+    {
+      "type": "removed_entity",
+      "where": "routes.txt",
+      "detail": "1,045 of 12,264 route_ids (8.5%) from the old feed are absent in the new feed (11,219 common, 755 added). route_ids are stable descriptive keys (e.g. '104_BSMCL2_KBS3_DOWN') and all 11,219 common routes keep an identical route_long_name, confirming these are real route removals, not ID reassignments.",
+      "note": "Internal integrity is intact — every new trips.route_id and fare_rules.route_id resolves against new routes (0 missing)."
+    },
+    {
+      "type": "removed_entity",
+      "where": "stops.txt",
+      "detail": "43 of 12,235 stop_ids (0.35%) from the old feed are absent in the new feed, with 43 added (total stop count unchanged at 12,235). stop_ids are stable, so this is a small genuine churn of individual stops.",
+      "note": "VERIFIED CLEAN: every new stop_times.stop_id resolves against new stops (0 missing); none of the 43 removed stop_ids are referenced by the new schedule."
+    }
+  ],
+  "suspicious_changes": [
+    {
+      "type": "large_entity_count_delta",
+      "where": "calendar.txt / calendar_dates.txt",
+      "detail": "calendar rows dropped 23 → 14 (-39.1%) and calendar_dates rows dropped 368 → 224 (-39.1%), both far exceeding the 20% threshold. Driven by the 9 removed service patterns above.",
+      "note": "Consistent and intentional — a service-calendar consolidation between two weekly snapshots (2026-03-03 → 2026-03-10). All other files stay within threshold (routes -2.4%, trips -7.4%, stop_times -7.3%, fare_rules -2.2%, stops 0%, fare_attributes 0%)."
+    },
+    {
+      "type": "bulk_field_change",
+      "where": "stops.txt → stop_code",
+      "detail": "2,032 of 12,192 common stops (16.7%) changed their stop_code value, while stop_name, stop_lat, stop_lon and zone_id were left unchanged for 100% of common stops.",
+      "note": "An identifier-style field (stop_code) was re-coded in bulk without moving the stops. stop_code is optional and not a primary key, so referential integrity is unaffected, but a consumer keying on stop_code rather than stop_id would mismatch ~1 in 6 stops."
+    }
+  ],
+  "checks_passed": {
+    "removed_file": "none — both feeds contain the identical 9 files (agency, calendar, calendar_dates, fare_attributes, fare_rules, routes, stop_times, stops, trips); 0 added, 0 removed",
+    "removed_required_field": "none — every file's CSV header is byte-identical between the two feeds; 0 columns added or deleted in any file",
+    "changed_field_type_or_format": "none — all 1,902,591 new stop_times rows have valid HH:MM:SS arrival/departure times (0 malformed, 0 empty arrivals)",
+    "referential_integrity_new_feed": "clean — stop_times→stops 0 missing, stop_times→trips 0 missing, trips→routes 0 missing, trips→service (calendar+calendar_dates) 0 missing, fare_rules→routes 0 missing, fare_rules→fare_attributes 0 missing",
+    "enum_values": "identical: route_type {3}, exception_type {1,2}, payment_method {0}; fare_attributes.txt is byte-identical (36 fares unchanged)",
+    "feed_validity_window": "unchanged — calendar window 2026-01-01 → 2026-12-31 (full year; end date in the future relative to 2026-03-10)",
+    "service_coverage_gap": "none — identical full-year service window, complete overlap",
+    "entity_count_deltas": "calendar -39.1% and calendar_dates -39.1% exceed 20% (flagged above); routes -2.4%, trips -7.4%, stop_times -7.3%, fare_rules -2.2%, stops 0%, fare_attributes 0% within threshold",
+    "geographic_bbox": "identical: [12.61221, 77.13306] – [13.48434, 78.00287] in both feeds",
+    "stops_moved_over_500m": "0 of 12,192 common stops — all common stops have unchanged coordinates",
+    "headsign_route_name_bulk_change": "0% — route_long_name unchanged for all 11,219 common routes; stop_name unchanged for all 12,192 common stops (this feed has no trip_headsign field)",
+    "trip_route_reassignment": "1,535 of 74,770 common trips (2.1%) were re-pointed to a different route_id; service_id unchanged for 100% of common trips — below a bulk-change concern",
+    "calendar_flip": "no — both feeds use calendar.txt + calendar_dates.txt with the same modeling strategy",
+    "agency_timezone_change": "no — agency.txt is byte-identical (BMTC-Regular, BMTC-AC; Asia/Kolkata)",
+    "feed_publisher_change": "no — neither feed includes feed_info.txt",
+    "duplicate_ids": "none — 0 duplicate stop_ids, route_ids, or trip_ids in either feed",
+    "stop_time_ordering": "0 violations across all 1,902,591 new rows (stop_sequence strictly increasing, departure ≥ arrival, arrival ≥ prior departure)"
+  }
+}

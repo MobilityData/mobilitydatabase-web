@@ -1,0 +1,62 @@
+{
+  "summary": {
+    "validatorVersion": "8.0.1",
+    "validatedAt": "2026-06-19T11:50:14Z",
+    "counts": {
+      "Shapes": 0,
+      "Stops": 12235,
+      "Routes": 12264,
+      "Trips": 84391,
+      "Agencies": 2,
+      "Blocks": 0
+    },
+    "gtfsFeatures": ["Fares V1"]
+  },
+  "notices": [
+    {
+      "code": "foreign_key_violation",
+      "severity": "ERROR",
+      "totalNotices": 27076
+    },
+    {
+      "code": "fast_travel_between_consecutive_stops",
+      "severity": "WARNING",
+      "totalNotices": 16187
+    },
+    {
+      "code": "mixed_case_recommended_field",
+      "severity": "WARNING",
+      "totalNotices": 6511
+    },
+    {
+      "code": "route_short_name_too_long",
+      "severity": "WARNING",
+      "totalNotices": 3455
+    },
+    {
+      "code": "stop_without_stop_time",
+      "severity": "WARNING",
+      "totalNotices": 2901
+    },
+    {
+      "code": "non_ascii_or_non_printable_char",
+      "severity": "WARNING",
+      "totalNotices": 897
+    },
+    {
+      "code": "fast_travel_between_far_stops",
+      "severity": "WARNING",
+      "totalNotices": 77
+    },
+    {
+      "code": "duplicate_route_name",
+      "severity": "WARNING",
+      "totalNotices": 15
+    },
+    {
+      "code": "missing_recommended_file",
+      "severity": "WARNING",
+      "totalNotices": 1
+    }
+  ]
+}
