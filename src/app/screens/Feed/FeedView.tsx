@@ -64,6 +64,11 @@ const PreviousDatasets = dynamic(
   {},
 );
 
+const GtfsDataViewer = dynamic(
+  async () =>
+    await import('./components/GtfsDataViewer').then((mod) => mod.default),
+);
+
 interface Props {
   feed: BasicFeedType;
   initialDatasets?: Array<components['schemas']['GtfsDataset']>;
@@ -419,6 +424,12 @@ export default async function FeedView({
                   initialDatasets={initialDatasets}
                   feedId={feed.id ?? ''}
                 />
+              </Grid>
+            )}
+
+            {feed.data_type === 'gtfs' && latestDataset?.hosted_url != null && (
+              <Grid size={12} sx={{ mt: 2 }}>
+                <GtfsDataViewer hostedUrl={latestDataset.hosted_url} />
               </Grid>
             )}
           </Box>
