@@ -10,12 +10,6 @@
   },
   "breaking_changes": [
     {
-      "type": "changed_primary_key_id_rename",
-      "where": "calendar.txt → service_id (cascades to trips.txt, calendar_dates.txt)",
-      "detail": "The 3 simple service_ids (Weekday, Saturday, Sunday) are entirely replaced by 74 granular MTA service_ids (e.g. 'ASP26GEN-1038-Sunday-00_C39'). service_id overlap between feeds is 0. Any consumer that hard-coded 'Weekday'/'Saturday'/'Sunday' to select service breaks completely.",
-      "note": "This is the single genuinely breaking change. It's intentional in the supplemented product, but a downstream system keying on the old service names will match nothing. Internal integrity is fine — all 80,731 new trips reference valid new service_ids."
-    },
-    {
       "type": "removed_entity",
       "where": "trips.txt → trip_id",
       "detail": "Of 20,309 base trip_ids, only 16,924 (83%) survive into the supplemented feed; ~3,385 base trip_ids are absent. Simultaneously 63,807 new trip_ids are added (20,309 → 80,731 total).",
@@ -30,16 +24,16 @@
       "note": "Coherent and proportional — the ~4x trips drive the ~4x stop_times, which is exactly what a service-pattern supplement looks like, not a corruption. But it's the largest count delta of any feed pair analyzed and must be surfaced."
     },
     {
-      "type": "calendar_reorganization / large_entity_count_delta",
+      "type": "large_entity_count_delta",
       "where": "calendar.txt and calendar_dates.txt",
-      "detail": "calendar services 3 → 74 (+2,367%); calendar_dates rows 4 → 373 (+9,225%). Service date range also extends: base ends 2026-09-07, supplemented runs to 2026-10-31 (calendar-level end date; feed_info still declares 2026-09-07).",
+      "detail": "calendar services 3 → 74 (+2,367%); calendar_dates rows 4 → 373 (+9,225%).",
       "note": "Full calendar model swap, tied to the service_id rename above. exception_type domain unchanged {1,2}, so the mechanism is the same, just far more granular."
     },
     {
-      "type": "feed_validity_window / date shift",
+      "type": "missing_feed_contact_email_and_url",
       "where": "feed_info.txt",
-      "detail": "feed_start_date moved earlier: 2026-05-26 → 2026-05-17 (base starts 9 days AFTER supplemented). No coverage gap; the windows overlap. feed_end_date unchanged (2026-09-07).",
-      "note": "Minor. Negative 'gap' (-113 days) just means heavy overlap, not a hole in coverage. Note calendar.txt end dates (2026-10-31) extend past feed_info's declared end (2026-09-07) — a mild internal inconsistency in the new feed worth a glance."
+      "detail": "The new feed's feed_info.txt dropped feed_contact_url (present in the base feed at column position 7). With no feed_contact_email supplied either, the new feed triggers a validation WARNING for missing feed contact information. The base feed had no such warning.",
+      "note": "feed_contact_url is optional per the GTFS spec, but its removal alongside absent feed_contact_email is a regression in feed metadata quality. Downstream tooling or portals that surface a contact link for this feed will lose that information."
     }
   ],
   "checks_passed": {

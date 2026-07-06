@@ -48,7 +48,7 @@ export default function GtfsDiffMtaView(): React.ReactElement {
       <BreakingChangesPanel report={breakingChanges} />
 
       {/* Validation report diff */}
-      <ValidationReportDiffPanel baseReport={oldReport} newReport={newReport} />
+      {/* <ValidationReportDiffPanel baseReport={oldReport} newReport={newReport} /> */}
 
       {/* Summary */}
       <GtfsDiffSummaryPanel diff={diff} />
