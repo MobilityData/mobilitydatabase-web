@@ -1,0 +1,235 @@
+{
+  "summary": {
+    "validatorVersion": "8.0.1",
+    "validatedAt": "2026-07-06T12:12:31Z",
+    "gtfsInput": "file:/tmp/gtfs-validator-temp2723070785487248224/50755f55-0a54-40b4-a837-d0aff71e2b047780340358306128794.zip",
+    "threads": 1,
+    "outputDirectory": "/tmp/gtfs-validator-temp50755f55-0a54-40b4-a837-d0aff71e2b04234152340230508201",
+    "systemErrorsReportName": "system_errors.json",
+    "validationReportName": "report.json",
+    "htmlReportName": "report.html",
+    "countryCode": "ZZ",
+    "dateForValidation": "2026-07-06",
+    "feedInfo": {
+      "publisherName": "MTA New York City Transit",
+      "publisherUrl": "https://www.mta.info/",
+      "feedLanguage": "English",
+      "feedStartDate": "2026-05-26",
+      "feedEndDate": "2026-09-07",
+      "feedEmail": "",
+      "feedServiceWindowStart": "2026-05-26",
+      "feedServiceWindowEnd": "2026-09-07"
+    },
+    "agencies": [
+      {
+        "name": "MTA New York City Transit",
+        "url": "http://www.mta.info",
+        "phone": "718-330-1234",
+        "email": "",
+        "timezone": "America/New_York"
+      }
+    ],
+    "files": [
+      "agency.txt",
+      "calendar.txt",
+      "calendar_dates.txt",
+      "feed_info.txt",
+      "routes.txt",
+      "shapes.txt",
+      "stop_times.txt",
+      "stops.txt",
+      "transfers.txt",
+      "trips.txt"
+    ],
+    "validationTimeSeconds": 4.744470763,
+    "memoryUsageRecords": [
+      {
+        "key": "GtfsFeedLoader.loadTables",
+        "totalMemory": 897581056,
+        "freeMemory": 405444608,
+        "maxMemory": 12884901888,
+        "diffMemory": 131572232
+      },
+      {
+        "key": "GtfsFeedLoader.executeMultiFileValidators",
+        "totalMemory": 897581056,
+        "freeMemory": 441237752,
+        "maxMemory": 12884901888,
+        "diffMemory": 35793144
+      },
+      {
+        "key": "org.mobilitydata.gtfsvalidator.table.GtfsFeedLoader.loadAndValidate",
+        "totalMemory": 897581056,
+        "freeMemory": 441237752,
+        "maxMemory": 12884901888,
+        "diffMemory": 167365376
+      },
+      {
+        "key": "ValidationRunner.run",
+        "totalMemory": 897581056,
+        "freeMemory": 226427088,
+        "maxMemory": 12884901888,
+        "diffMemory": 39614800
+      }
+    ],
+    "counts": {
+      "Shapes": 257,
+      "Stops": 1488,
+      "Routes": 29,
+      "Trips": 20309,
+      "Agencies": 1,
+      "Blocks": 0
+    },
+    "gtfsFeatures": [
+      "Transfers",
+      "Shapes",
+      "Feed Information",
+      "Route Colors",
+      "Headsigns",
+      "Location Types"
+    ]
+  },
+  "notices": [
+    {
+      "code": "stop_too_far_from_shape",
+      "severity": "WARNING",
+      "totalNotices": 12,
+      "sampleNotices": [
+        {
+          "tripCsvRowNumber": 14586,
+          "shapeId": "N..N16R",
+          "tripId": "BSP26GEN-N102-Weekday-00_045600_N..N16R",
+          "stopTimeCsvRowNumber": 407324,
+          "stopId": "Q05N",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 16339,
+          "shapeId": "R..N76R",
+          "tripId": "BSP26GEN-R097-Weekday-00_042350_R..N76R",
+          "stopTimeCsvRowNumber": 462356,
+          "stopId": "Q05N",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 15566,
+          "shapeId": "Q..S36R",
+          "tripId": "BSP26GEN-Q072-Weekday-00_033500_Q..S36R",
+          "stopTimeCsvRowNumber": 435442,
+          "stopId": "Q05S",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 14621,
+          "shapeId": "N..S16R",
+          "tripId": "BSP26GEN-N102-Weekday-00_052550_N..S16R",
+          "stopTimeCsvRowNumber": 408207,
+          "stopId": "Q05S",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 15807,
+          "shapeId": "Q..S37R",
+          "tripId": "BSP26GEN-Q072-Weekday-00_124800_Q..S37R",
+          "stopTimeCsvRowNumber": 442431,
+          "stopId": "Q05S",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 15564,
+          "shapeId": "Q..N36R",
+          "tripId": "BSP26GEN-Q072-Weekday-00_032200_Q..N36R",
+          "stopTimeCsvRowNumber": 435412,
+          "stopId": "Q05N",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 15535,
+          "shapeId": "Q..S39R",
+          "tripId": "BSP26GEN-Q072-Weekday-00_001300_Q..S39R",
+          "stopTimeCsvRowNumber": 434398,
+          "stopId": "Q05S",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 15540,
+          "shapeId": "Q..N39R",
+          "tripId": "BSP26GEN-Q072-Weekday-00_010100_Q..N39R",
+          "stopTimeCsvRowNumber": 434601,
+          "stopId": "Q05N",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 15022,
+          "shapeId": "Q..S16R",
+          "tripId": "BSP26GEN-Q022-Saturday-00_034500_Q..S16R",
+          "stopTimeCsvRowNumber": 419251,
+          "stopId": "Q05S",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 15020,
+          "shapeId": "Q..N16R",
+          "tripId": "BSP26GEN-Q022-Saturday-00_033100_Q..N16R",
+          "stopTimeCsvRowNumber": 419221,
+          "stopId": "Q05N",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 14991,
+          "shapeId": "Q..S19R",
+          "tripId": "BSP26GEN-Q022-Saturday-00_001300_Q..S19R",
+          "stopTimeCsvRowNumber": 418207,
+          "stopId": "Q05S",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 14996,
+          "shapeId": "Q..N19R",
+          "tripId": "BSP26GEN-Q022-Saturday-00_010100_Q..N19R",
+          "stopTimeCsvRowNumber": 418410,
+          "stopId": "Q05N",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        }
+      ]
+    },
+    {
+      "code": "stop_without_stop_time",
+      "severity": "WARNING",
+      "totalNotices": 3,
+      "sampleNotices": [
+        { "csvRowNumber": 489, "stopId": "711N", "stopName": "69 St" },
+        { "csvRowNumber": 495, "stopId": "713N", "stopName": "52 St" },
+        {
+          "csvRowNumber": 1045,
+          "stopId": "H01S",
+          "stopName": "Aqueduct Racetrack"
+        }
+      ]
+    }
+  ]
+}
