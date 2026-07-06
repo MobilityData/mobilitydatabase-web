@@ -1,0 +1,61 @@
+{
+  "comparison": {
+    "base_feed": "gtfs_subway (MTA NYC Transit — regular subway feed)",
+    "new_feed": "gtfs_supplemented (MTA NYC Transit — supplemented feed)",
+    "base_version": "20260526",
+    "new_version": "20260513",
+    "has_breaking_change": true,
+    "has_suspicious_change": true,
+    "important_caveat": "These are MTA's two parallel subway products, not sequential versions. The 'supplemented' feed is the base feed enriched with far more granular service patterns (planned service changes, work-train diversions, etc.). Stops, routes, and shapes are essentially identical; the entire difference is in the schedule (trips/stop_times) and how services are modeled (calendar). The new feed is fully self-consistent — every FK resolves."
+  },
+  "breaking_changes": [
+    {
+      "type": "changed_primary_key_id_rename",
+      "where": "calendar.txt → service_id (cascades to trips.txt, calendar_dates.txt)",
+      "detail": "The 3 simple service_ids (Weekday, Saturday, Sunday) are entirely replaced by 74 granular MTA service_ids (e.g. 'ASP26GEN-1038-Sunday-00_C39'). service_id overlap between feeds is 0. Any consumer that hard-coded 'Weekday'/'Saturday'/'Sunday' to select service breaks completely.",
+      "note": "This is the single genuinely breaking change. It's intentional in the supplemented product, but a downstream system keying on the old service names will match nothing. Internal integrity is fine — all 80,731 new trips reference valid new service_ids."
+    },
+    {
+      "type": "removed_entity",
+      "where": "trips.txt → trip_id",
+      "detail": "Of 20,309 base trip_ids, only 16,924 (83%) survive into the supplemented feed; ~3,385 base trip_ids are absent. Simultaneously 63,807 new trip_ids are added (20,309 → 80,731 total).",
+      "note": "The supplemented feed re-derives trip_ids around the new service_id scheme, so 'removed' trips are mostly re-expressed under new IDs rather than dropped service. Still flagged: any base trip_id held externally may not resolve."
+    }
+  ],
+  "suspicious_changes": [
+    {
+      "type": "massive_schedule_change / large_entity_count_delta",
+      "where": "trips.txt and stop_times.txt",
+      "detail": "trip count grew 20,309 → 80,731 (+297.5%); stop_times grew 563,533 → 2,375,743 rows (+321.6%). Both are ~4x, far beyond the 20% threshold.",
+      "note": "Coherent and proportional — the ~4x trips drive the ~4x stop_times, which is exactly what a service-pattern supplement looks like, not a corruption. But it's the largest count delta of any feed pair analyzed and must be surfaced."
+    },
+    {
+      "type": "calendar_reorganization / large_entity_count_delta",
+      "where": "calendar.txt and calendar_dates.txt",
+      "detail": "calendar services 3 → 74 (+2,367%); calendar_dates rows 4 → 373 (+9,225%). Service date range also extends: base ends 2026-09-07, supplemented runs to 2026-10-31 (calendar-level end date; feed_info still declares 2026-09-07).",
+      "note": "Full calendar model swap, tied to the service_id rename above. exception_type domain unchanged {1,2}, so the mechanism is the same, just far more granular."
+    },
+    {
+      "type": "feed_validity_window / date shift",
+      "where": "feed_info.txt",
+      "detail": "feed_start_date moved earlier: 2026-05-26 → 2026-05-17 (base starts 9 days AFTER supplemented). No coverage gap; the windows overlap. feed_end_date unchanged (2026-09-07).",
+      "note": "Minor. Negative 'gap' (-113 days) just means heavy overlap, not a hole in coverage. Note calendar.txt end dates (2026-10-31) extend past feed_info's declared end (2026-09-07) — a mild internal inconsistency in the new feed worth a glance."
+    }
+  ],
+  "checks_passed": {
+    "removed_required_field": "none — feed_info.txt dropped feed_contact_url (optional); routes.txt only reordered columns",
+    "removed_file": "none — same 10 files in both",
+    "changed_field_type_or_format": "none; all 2,375,743 new stop_times rows valid, including MTA after-midnight times up to hour 28 (28:xx:xx) correctly parsed",
+    "referential_integrity_new_feed": "clean — stop_times→stops 0 missing, stop_times→trips 0 missing, trips→routes/service/shapes 0 missing, stops→parent_station 0 missing, transfers→stops 0 missing",
+    "enum_values": "identical: route_type {1,2}, exception_type {1,2}, direction_id {0,1}",
+    "stops": "identical — 1,488 in both, 0 removed, 0 added, 0 moved >500m, bbox unchanged [40.51276,-74.25196]–[40.90313,-73.7554]",
+    "routes": "identical — 29 in both, 0 removed/added, 0 renamed, 0 type changes",
+    "agency_timezone_change": "no (America/New_York)",
+    "feed_publisher_change": "no (MTA New York City Transit in both)",
+    "geographic_bbox": "identical",
+    "duplicate_ids": "none in stops or trips",
+    "calendar_flip": "no — both use calendar.txt + calendar_dates.txt",
+    "shapes": "246 of 257 shapes common (255 new); trips resolve fully — a near-identical shape set",
+    "stop_time_ordering": "0 monotonicity violations across all 2.38M rows"
+  }
+}

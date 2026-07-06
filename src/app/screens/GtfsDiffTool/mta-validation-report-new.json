@@ -1,0 +1,900 @@
+{
+  "summary": {
+    "validatorVersion": "8.0.1",
+    "validatedAt": "2026-07-06T12:12:57Z",
+    "gtfsInput": "file:/tmp/gtfs-validator-temp11359969043634497535/394de36a-9349-41dd-8fb5-9b5d7c3dd4ef10774477325204109285.zip",
+    "threads": 1,
+    "outputDirectory": "/tmp/gtfs-validator-temp394de36a-9349-41dd-8fb5-9b5d7c3dd4ef12450839226345205898",
+    "systemErrorsReportName": "system_errors.json",
+    "validationReportName": "report.json",
+    "htmlReportName": "report.html",
+    "countryCode": "ZZ",
+    "dateForValidation": "2026-07-06",
+    "feedInfo": {
+      "publisherName": "MTA New York City Transit",
+      "publisherUrl": "https://www.mta.info/",
+      "feedLanguage": "English",
+      "feedStartDate": "2026-05-17",
+      "feedEndDate": "2026-09-07",
+      "feedEmail": "",
+      "feedServiceWindowStart": "2026-05-17",
+      "feedServiceWindowEnd": "2026-10-31"
+    },
+    "agencies": [
+      {
+        "name": "MTA New York City Transit",
+        "url": "http://www.mta.info",
+        "phone": "718-330-1234",
+        "email": "",
+        "timezone": "America/New_York"
+      }
+    ],
+    "files": [
+      "agency.txt",
+      "calendar.txt",
+      "calendar_dates.txt",
+      "feed_info.txt",
+      "routes.txt",
+      "shapes.txt",
+      "stop_times.txt",
+      "stops.txt",
+      "transfers.txt",
+      "trips.txt"
+    ],
+    "validationTimeSeconds": 16.438734143,
+    "memoryUsageRecords": [
+      {
+        "key": "GtfsFeedLoader.loadTables",
+        "totalMemory": 2071986176,
+        "freeMemory": 1368670392,
+        "maxMemory": 12884901888,
+        "diffMemory": 1219276592
+      },
+      {
+        "key": "GtfsFeedLoader.executeMultiFileValidators",
+        "totalMemory": 2071986176,
+        "freeMemory": 1395146240,
+        "maxMemory": 12884901888,
+        "diffMemory": 26475848
+      },
+      {
+        "key": "org.mobilitydata.gtfsvalidator.table.GtfsFeedLoader.loadAndValidate",
+        "totalMemory": 2071986176,
+        "freeMemory": 1395146240,
+        "maxMemory": 12884901888,
+        "diffMemory": 1245752440
+      },
+      {
+        "key": "ValidationRunner.run",
+        "totalMemory": 2071986176,
+        "freeMemory": 1439261376,
+        "maxMemory": 12884901888,
+        "diffMemory": 1060482272
+      }
+    ],
+    "counts": {
+      "Shapes": 255,
+      "Stops": 1488,
+      "Routes": 29,
+      "Trips": 80731,
+      "Agencies": 1,
+      "Blocks": 0
+    },
+    "gtfsFeatures": [
+      "Transfers",
+      "Shapes",
+      "Feed Information",
+      "Route Colors",
+      "Headsigns",
+      "Location Types"
+    ]
+  },
+  "notices": [
+    {
+      "code": "big_gap_in_service",
+      "severity": "INFO",
+      "totalNotices": 19,
+      "sampleNotices": [
+        {
+          "serviceId": "ASP26GEN-1038-Sunday-00_C39",
+          "gapStartDate": "2026-06-28",
+          "gapEndDate": "2026-07-19",
+          "gapDurationDays": 20
+        },
+        {
+          "serviceId": "ASP26GEN-3044-Sunday-00_C26",
+          "gapStartDate": "2026-06-28",
+          "gapEndDate": "2026-07-19",
+          "gapDurationDays": 20
+        },
+        {
+          "serviceId": "ASP26GEN-4050-Sunday-00_C18",
+          "gapStartDate": "2026-06-28",
+          "gapEndDate": "2026-07-19",
+          "gapDurationDays": 20
+        },
+        {
+          "serviceId": "ASP26GEN-5049-Sunday-00_C64",
+          "gapStartDate": "2026-06-28",
+          "gapEndDate": "2026-07-19",
+          "gapDurationDays": 20
+        },
+        {
+          "serviceId": "ASP26GEN-6031-Sunday-00_C24",
+          "gapStartDate": "2026-06-28",
+          "gapEndDate": "2026-07-19",
+          "gapDurationDays": 20
+        },
+        {
+          "serviceId": "ASP26GEN-7026-Sunday-00_C43",
+          "gapStartDate": "2026-06-28",
+          "gapEndDate": "2026-07-19",
+          "gapDurationDays": 20
+        },
+        {
+          "serviceId": "BSP26GEN-A055-Sunday-00_C16",
+          "gapStartDate": "2026-06-28",
+          "gapEndDate": "2026-07-19",
+          "gapDurationDays": 20
+        },
+        {
+          "serviceId": "BSP26GEN-C028-Sunday-00_C48",
+          "gapStartDate": "2026-06-28",
+          "gapEndDate": "2026-07-19",
+          "gapDurationDays": 20
+        },
+        {
+          "serviceId": "BSP26GEN-D044-Sunday-00_C50",
+          "gapStartDate": "2026-06-28",
+          "gapEndDate": "2026-07-19",
+          "gapDurationDays": 20
+        },
+        {
+          "serviceId": "BSP26GEN-E049-Sunday-00_C20",
+          "gapStartDate": "2026-06-28",
+          "gapEndDate": "2026-07-19",
+          "gapDurationDays": 20
+        },
+        {
+          "serviceId": "BSP26GEN-F049-Sunday-00_C14",
+          "gapStartDate": "2026-06-28",
+          "gapEndDate": "2026-07-19",
+          "gapDurationDays": 20
+        },
+        {
+          "serviceId": "BSP26GEN-G039-Sunday-00_C3",
+          "gapStartDate": "2026-06-28",
+          "gapEndDate": "2026-07-19",
+          "gapDurationDays": 20
+        },
+        {
+          "serviceId": "BSP26GEN-H026-Sunday-00_C2",
+          "gapStartDate": "2026-06-28",
+          "gapEndDate": "2026-07-19",
+          "gapDurationDays": 20
+        },
+        {
+          "serviceId": "BSP26GEN-J034-Sunday-00_C37",
+          "gapStartDate": "2026-06-28",
+          "gapEndDate": "2026-07-19",
+          "gapDurationDays": 20
+        },
+        {
+          "serviceId": "BSP26GEN-L027-Sunday-00_C17",
+          "gapStartDate": "2026-06-28",
+          "gapEndDate": "2026-07-19",
+          "gapDurationDays": 20
+        },
+        {
+          "serviceId": "BSP26GEN-M027-Sunday-00_C12",
+          "gapStartDate": "2026-06-28",
+          "gapEndDate": "2026-07-19",
+          "gapDurationDays": 20
+        },
+        {
+          "serviceId": "BSP26GEN-N061-Sunday-00_C9",
+          "gapStartDate": "2026-06-28",
+          "gapEndDate": "2026-07-19",
+          "gapDurationDays": 20
+        },
+        {
+          "serviceId": "BSP26GEN-Q024-Sunday-00_C57",
+          "gapStartDate": "2026-06-28",
+          "gapEndDate": "2026-07-19",
+          "gapDurationDays": 20
+        },
+        {
+          "serviceId": "BSP26GEN-R053-Sunday-00_C51",
+          "gapStartDate": "2026-06-28",
+          "gapEndDate": "2026-07-19",
+          "gapDurationDays": 20
+        }
+      ]
+    },
+    {
+      "code": "missing_feed_contact_email_and_url",
+      "severity": "WARNING",
+      "totalNotices": 1,
+      "sampleNotices": [{ "csvRowNumber": 2 }]
+    },
+    {
+      "code": "service_window_outside_feed_period",
+      "severity": "INFO",
+      "totalNotices": 74,
+      "sampleNotices": [
+        {
+          "serviceId": "SIR-FA2017-SI017-Weekday-08_C68",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "ASP26GEN-GS013-Saturday-00",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "BSP26GEN-D085-Weekday-00_C27",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "BSP26GEN-F081-Weekday-00_C30",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "BSP26GEN-D044-Sunday-00_C50",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "BSP26GEN-FS013-Sunday-00",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "BSP26GEN-FS012-Saturday-00",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "ASP26GEN-1094-Weekday-00_C55",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "SIR-SP2026-SI017-Saturday-00_C28",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "BSP26GEN-G056-Weekday-00_C5",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "BSP26GEN-M027-Sunday-00_C12",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "ASP26GEN-1039-Saturday-00_C62",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "BSP26GEN-N061-Sunday-00_C9",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "BSP26GEN-M094-Weekday-00_C56",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "BSP26GEN-H026-Sunday-00_C2",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "ASP26GEN-6031-Sunday-00_C24",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "BSP26GEN-B088-Weekday-00_C52",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "ASP26GEN-5044-Saturday-00_C36",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "BSP26GEN-C026-Saturday-00_C61",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "ASP26GEN-3094-Weekday-00_C45",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "BSP26GEN-A055-Sunday-00_C16",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "SIR-SP2026-SI017-Sunday-00_C44",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "BSP26GEN-R053-Sunday-00_C51",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "ASP26GEN-2043-Saturday-00",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "BSP26GEN-J056-Weekday-00_C31",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "BSP26GEN-Q022-Saturday-00_C34",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "BSP26GEN-D042-Saturday-00_C13",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "ASP26GEN-6091-Weekday-00_C4",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "BSP26GEN-E043-Saturday-00_C1",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "ASP26GEN-3044-Sunday-00_C26",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "BSP26GEN-A087-Weekday-00_C8",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "BSP26GEN-G038-Saturday-00_C60",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "BSP26GEN-E049-Sunday-00_C20",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "BSP26GEN-N102-Weekday-00_C11",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "BSP26GEN-G039-Sunday-00_C3",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "BSP26GEN-E078-Weekday-00_C10",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "BSP26GEN-R097-Weekday-00_C59",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "SIR-FA2017-SI017-Weekday-08_C23",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "ASP26GEN-2049-Sunday-00_C32",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "ASP26GEN-GS013-Sunday-00",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "BSP26GEN-C028-Sunday-00_C48",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "BSP26GEN-J034-Saturday-00_C46",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "ASP26GEN-5049-Sunday-00_C64",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "ASP26GEN-7064-Weekday-00_C38",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "BSP26GEN-L027-Saturday-00_C33",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "BSP26GEN-L027-Sunday-00_C17",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "ASP26GEN-4044-Saturday-00_C29",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "BSP26GEN-N058-Saturday-00_C7",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "ASP26GEN-6034-Saturday-00_C40",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "BSP26GEN-M028-Saturday-00_C54",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "ASP26GEN-7026-Sunday-00_C43",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "BSP26GEN-L053-Weekday-00_C53",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "ASP26GEN-4105-Weekday-00_C15",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "BSP26GEN-A047-Saturday-00_C42",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "ASP26GEN-3043-Saturday-00_C49",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "BSP26GEN-Q024-Sunday-00_C57",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "ASP26GEN-GS022-Weekday-00",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "BSP26GEN-H043-Weekday-00_C58",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "ASP26GEN-1038-Sunday-00_C39",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "ASP26GEN-7024-Saturday-00_C47",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "BSP26GEN-FS012-Weekday-00",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "ASP26GEN-2101-Weekday-00_C19",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "BSP26GEN-F045-Saturday-00_C6",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "BSP26GEN-F049-Sunday-00_C14",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "BSP26GEN-H027-Saturday-00_C65",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        },
+        {
+          "serviceId": "SIR-FA2017-SI017-Weekday-08",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "BSP26GEN-C059-Weekday-00_C35",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "BSP26GEN-Q072-Weekday-00_C25",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "BSP26GEN-J034-Sunday-00_C37",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "ASP26GEN-4050-Sunday-00_C18",
+          "serviceWindowStartDate": "2026-05-17",
+          "serviceWindowEndDate": "2026-10-25",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 48
+        },
+        {
+          "serviceId": "SIR-FA2017-SI017-Weekday-08_C71",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "SIR-FA2017-SI017-Weekday-08_C70",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "ASP26GEN-5114-Weekday-00_C63",
+          "serviceWindowStartDate": "2026-05-18",
+          "serviceWindowEndDate": "2026-10-30",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 53
+        },
+        {
+          "serviceId": "BSP26GEN-R054-Saturday-00_C41",
+          "serviceWindowStartDate": "2026-05-23",
+          "serviceWindowEndDate": "2026-10-31",
+          "daysBeforeFeedStart": 0,
+          "daysAfterFeedEnd": 54
+        }
+      ]
+    },
+    {
+      "code": "stop_too_far_from_shape",
+      "severity": "WARNING",
+      "totalNotices": 12,
+      "sampleNotices": [
+        {
+          "tripCsvRowNumber": 17971,
+          "shapeId": "N..N16R",
+          "tripId": "BSP26GEN-N102-Weekday-00_045600_N..N16R",
+          "stopTimeCsvRowNumber": 490644,
+          "stopId": "Q05N",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 19724,
+          "shapeId": "R..N76R",
+          "tripId": "BSP26GEN-R097-Weekday-00_042350_R..N76R",
+          "stopTimeCsvRowNumber": 545676,
+          "stopId": "Q05N",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 18951,
+          "shapeId": "Q..S36R",
+          "tripId": "BSP26GEN-Q072-Weekday-00_033500_Q..S36R",
+          "stopTimeCsvRowNumber": 518762,
+          "stopId": "Q05S",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 18006,
+          "shapeId": "N..S16R",
+          "tripId": "BSP26GEN-N102-Weekday-00_052550_N..S16R",
+          "stopTimeCsvRowNumber": 491527,
+          "stopId": "Q05S",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 19192,
+          "shapeId": "Q..S37R",
+          "tripId": "BSP26GEN-Q072-Weekday-00_124800_Q..S37R",
+          "stopTimeCsvRowNumber": 525751,
+          "stopId": "Q05S",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 18949,
+          "shapeId": "Q..N36R",
+          "tripId": "BSP26GEN-Q072-Weekday-00_032200_Q..N36R",
+          "stopTimeCsvRowNumber": 518732,
+          "stopId": "Q05N",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 18920,
+          "shapeId": "Q..S39R",
+          "tripId": "BSP26GEN-Q072-Weekday-00_001300_Q..S39R",
+          "stopTimeCsvRowNumber": 517718,
+          "stopId": "Q05S",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 18925,
+          "shapeId": "Q..N39R",
+          "tripId": "BSP26GEN-Q072-Weekday-00_010100_Q..N39R",
+          "stopTimeCsvRowNumber": 517921,
+          "stopId": "Q05N",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 18407,
+          "shapeId": "Q..S16R",
+          "tripId": "BSP26GEN-Q022-Saturday-00_034500_Q..S16R",
+          "stopTimeCsvRowNumber": 502571,
+          "stopId": "Q05S",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 18405,
+          "shapeId": "Q..N16R",
+          "tripId": "BSP26GEN-Q022-Saturday-00_033100_Q..N16R",
+          "stopTimeCsvRowNumber": 502541,
+          "stopId": "Q05N",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 18376,
+          "shapeId": "Q..S19R",
+          "tripId": "BSP26GEN-Q022-Saturday-00_001300_Q..S19R",
+          "stopTimeCsvRowNumber": 501527,
+          "stopId": "Q05S",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        },
+        {
+          "tripCsvRowNumber": 18381,
+          "shapeId": "Q..N19R",
+          "tripId": "BSP26GEN-Q022-Saturday-00_010100_Q..N19R",
+          "stopTimeCsvRowNumber": 501730,
+          "stopId": "Q05N",
+          "stopName": "96 St",
+          "match": [40.78347099999999, -73.947656],
+          "geoDistanceToShape": 103.30026974551177
+        }
+      ]
+    },
+    {
+      "code": "stop_without_stop_time",
+      "severity": "WARNING",
+      "totalNotices": 1,
+      "sampleNotices": [
+        {
+          "csvRowNumber": 1045,
+          "stopId": "H01S",
+          "stopName": "Aqueduct Racetrack"
+        }
+      ]
+    },
+    {
+      "code": "trip_headsign_matches_intermediate_stop",
+      "severity": "INFO",
+      "totalNotices": 1,
+      "sampleNotices": [
+        {
+          "csvRowNumber": 73563,
+          "tripId": "L1S2-N-1102-S26_056850_N..S16X003",
+          "tripHeadsign": "86 St",
+          "stopId1": "Q04S",
+          "stopSequence": 2,
+          "stopId2": "N10S"
+        }
+      ]
+    }
+  ]
+}
