@@ -9,7 +9,8 @@ interface FeedVerificationChipProps {
 }
 
 const officialBadgeStyle = {
-  background: 'linear-gradient(25deg, var(--mui-palette-primary-light), var(--mui-palette-primary-dark))',
+  background:
+    'linear-gradient(25deg, var(--mui-palette-primary-light), var(--mui-palette-primary-dark))',
   color: 'white',
 };
 
@@ -23,7 +24,7 @@ export default function FeedVerificationChip({
     return null;
   }
 
-  if (status === false) {
+  if (!status) {
     return isLongDisplay ? (
       <Tooltip title={t('communityFeedTooltip')} placement='top'>
         <Chip

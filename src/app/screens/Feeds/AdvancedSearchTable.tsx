@@ -337,7 +337,10 @@ export default function AdvancedSearchTable({
                     ></ProviderTitle>
                   </Typography>
 
-                  <FeedVerificationChip isLongDisplay={false} status={feed.official}></FeedVerificationChip>
+                  <FeedVerificationChip
+                    isLongDisplay={false}
+                    status={feed.official}
+                  ></FeedVerificationChip>
                   {feed.data_type !== 'gbfs' && (
                     <FeedStatusIndicator
                       status={feed.status}

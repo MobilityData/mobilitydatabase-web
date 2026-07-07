@@ -216,7 +216,10 @@ export default function SearchTable({
                       setAnchorEl(el);
                     }}
                   ></ProviderTitle>
-                  <FeedVerificationChip isLongDisplay={false} status={feed.official}></FeedVerificationChip>
+                  <FeedVerificationChip
+                    isLongDisplay={false}
+                    status={feed.official}
+                  ></FeedVerificationChip>
                 </Box>
               </TableCell>
               <TableCell className='feed-column' component={Box}>
