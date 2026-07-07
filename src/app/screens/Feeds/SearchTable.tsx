@@ -24,7 +24,7 @@ import GtfsRtEntities from './GtfsRtEntities';
 import NextLinkComposed from 'next/link';
 import { useRouter } from '../../../i18n/navigation';
 import { getEmojiFlag, type TCountryCode } from 'countries-list';
-import OfficialChip from '../../components/OfficialChip';
+import FeedVerificationChip from '../../components/FeedVerificationChip';
 import ProviderTitle from './ProviderTitle';
 
 export interface SearchTableProps {
@@ -216,9 +216,7 @@ export default function SearchTable({
                       setAnchorEl(el);
                     }}
                   ></ProviderTitle>
-                  {feed.official === true && (
-                    <OfficialChip isLongDisplay={false}></OfficialChip>
-                  )}
+                  <FeedVerificationChip isLongDisplay={false} status={feed.official}></FeedVerificationChip>
                 </Box>
               </TableCell>
               <TableCell className='feed-column' component={Box}>

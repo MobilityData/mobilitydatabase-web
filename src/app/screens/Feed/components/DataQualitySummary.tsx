@@ -5,13 +5,13 @@ import { type components } from '../../../services/feeds/types';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { WarningContentBox } from '../../../components/WarningContentBox';
 import { FeedStatusChip } from '../../../components/FeedStatus';
-import OfficialChip from '../../../components/OfficialChip';
+import FeedVerificationChip from '../../../components/FeedVerificationChip';
 import { getTranslations } from 'next-intl/server';
 import { getUserRemoteConfigValues } from '../../../../lib/remote-config.server';
 
 export interface DataQualitySummaryProps {
   feedStatus: components['schemas']['Feed']['status'];
-  isOfficialFeed: boolean;
+  isOfficialFeed: boolean | undefined;
   latestDataset: components['schemas']['GtfsDataset'] | undefined;
 }
 
@@ -36,7 +36,7 @@ export default async function DataQualitySummary({
         {config.enableFeedStatusBadge && (
           <FeedStatusChip status={feedStatus ?? ''}></FeedStatusChip>
         )}
-        {isOfficialFeed && <OfficialChip></OfficialChip>}
+        <FeedVerificationChip status={isOfficialFeed}></FeedVerificationChip>
         {latestDataset?.validation_report !== undefined &&
           latestDataset.validation_report !== null && (
             <>

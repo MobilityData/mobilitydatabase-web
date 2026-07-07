@@ -7,7 +7,7 @@ import Typography from '@mui/material/Typography';
 
 // Components
 import FeedTitle from './components/FeedTitle';
-import OfficialChip from '../../components/OfficialChip';
+import FeedVerificationChip from '../../components/FeedVerificationChip';
 import DataQualitySummary from './components/DataQualitySummary';
 import FeedSummary from './components/FeedSummary';
 import FeedNavigationControls from './components/FeedNavigationControls';
@@ -194,14 +194,14 @@ export default async function FeedView({
             {feed?.data_type === 'gtfs' && (
               <DataQualitySummary
                 feedStatus={feed?.status}
-                isOfficialFeed={feed.official === true}
+                isOfficialFeed={feed.official}
                 latestDataset={latestDataset}
               />
             )}
 
             {feed?.data_type === 'gtfs_rt' && feed.official === true && (
               <Box sx={{ my: 1 }}>
-                <OfficialChip></OfficialChip>
+                <FeedVerificationChip status={feed.official}></FeedVerificationChip>
               </Box>
             )}
 
