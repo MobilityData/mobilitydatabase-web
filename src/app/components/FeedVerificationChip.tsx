@@ -1,3 +1,4 @@
+'use client';
 import { Chip, Tooltip } from '@mui/material';
 import { useTranslations } from 'next-intl';
 import VerifiedIcon from '@mui/icons-material/Verified';
@@ -8,11 +9,6 @@ interface FeedVerificationChipProps {
   status?: boolean;
 }
 
-const officialBadgeStyle = {
-  background:
-    'linear-gradient(25deg, var(--mui-palette-primary-light), var(--mui-palette-primary-dark))',
-  color: 'white',
-};
 
 export default function FeedVerificationChip({
   isLongDisplay = true,
@@ -28,6 +24,7 @@ export default function FeedVerificationChip({
     return isLongDisplay ? (
       <Tooltip title={t('communityFeedTooltip')} placement='top'>
         <Chip
+          data-testid='community-feed-chip'
           sx={{ opacity: 0.8 }}
           icon={<GroupsIcon></GroupsIcon>}
           label={t('communityFeed')}
@@ -37,16 +34,17 @@ export default function FeedVerificationChip({
     ) : (
       <Tooltip title={t('communityFeedTooltipShort')} placement='top'>
         <GroupsIcon
-          sx={{
+          data-testid='community-feed-icon'
+          sx={(theme) => ({
             display: 'block',
             ml: 0,
             mr: 2,
             opacity: 0.6,
-            backgroundColor: 'var(--mui-palette-grey-400)',
-            color: 'var(--mui-palette-text-primary)',
+            backgroundColor: theme.vars.palette.grey[400],
+            color: theme.vars.palette.text.primary,
             borderRadius: '50%',
             padding: '0.2rem',
-          }}
+          })}
         ></GroupsIcon>
       </Tooltip>
     );
@@ -55,7 +53,11 @@ export default function FeedVerificationChip({
   return isLongDisplay ? (
     <Tooltip title={t('officialFeedTooltip')} placement='top'>
       <Chip
-        sx={officialBadgeStyle}
+        data-testid='official-feed-chip'
+        sx={(theme) => ({
+          background: `linear-gradient(25deg, ${theme.vars.palette.primary.light}, ${theme.vars.palette.primary.dark})`,
+          color: 'white',
+        })}
         icon={<VerifiedIcon sx={{ fill: 'white' }}></VerifiedIcon>}
         label={t('officialFeed')}
       ></Chip>
@@ -63,14 +65,16 @@ export default function FeedVerificationChip({
   ) : (
     <Tooltip title={t('officialFeedTooltipShort')} placement='top'>
       <VerifiedIcon
-        sx={{
+        data-testid='official-feed-icon'
+        sx={(theme) => ({
           display: 'block',
           borderRadius: '50%',
           padding: '0.1rem',
           ml: 0,
           mr: 2,
-          ...officialBadgeStyle,
-        }}
+          background: `linear-gradient(25deg, ${theme.vars.palette.primary.light}, ${theme.vars.palette.primary.dark})`,
+          color: 'white',
+        })}
       ></VerifiedIcon>
     </Tooltip>
   );
