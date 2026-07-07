@@ -9,7 +9,6 @@ interface FeedVerificationChipProps {
   status?: boolean;
 }
 
-
 export default function FeedVerificationChip({
   isLongDisplay = true,
   status,

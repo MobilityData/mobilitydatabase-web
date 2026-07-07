@@ -26,9 +26,13 @@ describe('FeedVerificationChip', () => {
     });
 
     it('renders the official icon in short display mode', () => {
-      render(<FeedVerificationChip status={true} isLongDisplay={false} />, { wrapper });
+      render(<FeedVerificationChip status={true} isLongDisplay={false} />, {
+        wrapper,
+      });
       expect(screen.getByTestId('official-feed-icon')).toBeInTheDocument();
-      expect(screen.queryByTestId('official-feed-chip')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('official-feed-chip'),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -40,37 +44,57 @@ describe('FeedVerificationChip', () => {
     });
 
     it('renders the community icon in short display mode', () => {
-      render(<FeedVerificationChip status={false} isLongDisplay={false} />, { wrapper });
+      render(<FeedVerificationChip status={false} isLongDisplay={false} />, {
+        wrapper,
+      });
       expect(screen.getByTestId('community-feed-icon')).toBeInTheDocument();
-      expect(screen.queryByTestId('community-feed-chip')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('community-feed-chip'),
+      ).not.toBeInTheDocument();
     });
   });
 
   describe('long display mode (isLongDisplay=true)', () => {
     it('renders official chip — not icon — for status=true', () => {
-      render(<FeedVerificationChip status={true} isLongDisplay={true} />, { wrapper });
+      render(<FeedVerificationChip status={true} isLongDisplay={true} />, {
+        wrapper,
+      });
       expect(screen.getByTestId('official-feed-chip')).toBeInTheDocument();
-      expect(screen.queryByTestId('official-feed-icon')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('official-feed-icon'),
+      ).not.toBeInTheDocument();
     });
 
     it('renders community chip — not icon — for status=false', () => {
-      render(<FeedVerificationChip status={false} isLongDisplay={true} />, { wrapper });
+      render(<FeedVerificationChip status={false} isLongDisplay={true} />, {
+        wrapper,
+      });
       expect(screen.getByTestId('community-feed-chip')).toBeInTheDocument();
-      expect(screen.queryByTestId('community-feed-icon')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('community-feed-icon'),
+      ).not.toBeInTheDocument();
     });
   });
 
   describe('short display mode (isLongDisplay=false)', () => {
     it('renders official icon — not chip — for status=true', () => {
-      render(<FeedVerificationChip status={true} isLongDisplay={false} />, { wrapper });
+      render(<FeedVerificationChip status={true} isLongDisplay={false} />, {
+        wrapper,
+      });
       expect(screen.getByTestId('official-feed-icon')).toBeInTheDocument();
-      expect(screen.queryByTestId('official-feed-chip')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('official-feed-chip'),
+      ).not.toBeInTheDocument();
     });
 
     it('renders community icon — not chip — for status=false', () => {
-      render(<FeedVerificationChip status={false} isLongDisplay={false} />, { wrapper });
+      render(<FeedVerificationChip status={false} isLongDisplay={false} />, {
+        wrapper,
+      });
       expect(screen.getByTestId('community-feed-icon')).toBeInTheDocument();
-      expect(screen.queryByTestId('community-feed-chip')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('community-feed-chip'),
+      ).not.toBeInTheDocument();
     });
   });
 });
