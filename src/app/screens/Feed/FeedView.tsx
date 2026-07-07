@@ -199,7 +199,7 @@ export default async function FeedView({
               />
             )}
 
-            {feed?.data_type === 'gtfs_rt' && feed.official === true && (
+            {feed?.data_type === 'gtfs_rt' && feed.official != null && (
               <Box sx={{ my: 1 }}>
                 <FeedVerificationChip
                   status={feed.official}
