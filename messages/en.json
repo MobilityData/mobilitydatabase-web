@@ -248,7 +248,7 @@
     "officialFeedTooltipShort": "Verified feed: Confirmed by the transit provider or the Mobility Database team for rider use.",
     "communityFeed": "Community Feed",
     "communityFeedTooltip": "This feed is not created on behalf of the transit authority. It may have been created by a community member or third party.",
-    "communityFeedTooltipShort": "Community feed: Not officially confirmed by the transit provider.",
+    "communityFeedTooltipShort": "Community feed: Created by a third party unaffiliated with the transit provider.",
     "seeDetailPageProviders": "See detail page to view {providersCount} others",
     "openFullQualityReport": "Open Full Quality Report",
     "subscribe": "Subscribe to get feed update notifications",
