@@ -95,7 +95,7 @@
     "@types/react-window": "^2.0.0",
     "@types/redux-saga": "^0.10.5",
     "concurrently": "^9.2.1",
-    "cypress": "^13.2.0",
+    "cypress": "^15.18.1",
     "dotenv": "^16.4.5",
     "env-cmd": "^10.1.0",
     "eslint": "^9.35.0",
