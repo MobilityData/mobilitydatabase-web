@@ -15,20 +15,18 @@ declare module '@mui/material/styles' {
   interface TypeText {
     lightContrast?: string;
   }
-}
 
-declare module '@mui/material/Typography' {
-  interface TypographyPropsVariantOverrides {
-    sectionTitle: true;
-  }
-}
-
-declare module '@mui/material/styles/createMixins' {
   // Allow for custom mixins to be added
   interface Mixins {
     code: Partial<PaletteColor> & {
       command: { fontWeight: Property.FontWeight; color: string };
     };
+  }
+}
+
+declare module '@mui/material/Typography' {
+  interface TypographyPropsVariantOverrides {
+    sectionTitle: true;
   }
 }
 
