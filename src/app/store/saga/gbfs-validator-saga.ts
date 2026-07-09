@@ -8,7 +8,7 @@ import {
 import type { components } from '../../services/feeds/gbfs-validator-types';
 
 const getValidatorBaseUrl =
-  String(process.env.NEXT_PUBLIC_GBFS_VALIDATOR_API_BASE_URL) ?? '';
+  process.env.NEXT_PUBLIC_GBFS_VALIDATOR_API_BASE_URL ?? '';
 
 function* runValidation(
   action: ReturnType<typeof validateStart>,

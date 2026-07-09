@@ -225,7 +225,6 @@ export default function AccountApiAccess(): React.ReactElement {
       })
       .catch((error) => {
         if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
           console.log('Could not copy text: ', error);
         }
       });

@@ -107,7 +107,6 @@ export default function FormFirstStep({
 
   return (
     <>
-      {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
       <form onSubmit={handleSubmit(onSubmit)}>
         <Grid container direction={'column'} rowSpacing={2}>
           <Grid>

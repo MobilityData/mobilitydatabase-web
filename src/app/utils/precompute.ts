@@ -43,7 +43,7 @@ export interface PrecomputeDeps {
 /** Small helper: wait once for a map event */
 async function once(map: maplibregl.Map, ev: string): Promise<void> {
   await new Promise<void>(
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises,no-async-promise-executor
+    // eslint-disable-next-line no-async-promise-executor
     async (resolve) =>
       await map.once(ev, () => {
         resolve();
