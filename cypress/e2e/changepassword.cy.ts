@@ -5,9 +5,9 @@ const email = 'cypressTestUser@mobilitydata.org';
 // tests are too flaky, to revisit
 describe.skip('Change Password Screen', () => {
   beforeEach(() => {
-    cy.visit('/');
-    cy.get('[data-testid="home-title"]').should('exist');
     cy.createNewUserAndSignIn(email, currentPassword);
+    cy.visit('/');  
+    cy.injectAuthenticatedUser(email);
     cy.get('[data-cy="accountHeader"]').should('exist').click(); // assures that the user is signed in
     cy.get('[data-cy="changePasswordButtonAccount"]').should('exist').click();
   });

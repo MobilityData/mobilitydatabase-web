@@ -6,13 +6,14 @@ describe('Add Feed Form', () => {
         result: { message: 'Data written to the new sheet successfully!' },
       },
     });
-    cy.visit('/');
-    cy.get('[data-testid="home-title"]').should('exist');
+
     cy.createNewUserAndSignIn(
       'cypressTestUser@mobilitydata.org',
       'BigCoolPassword123!',
     );
-
+    const email = 'cypressTestUser@mobilitydata.org';
+    cy.visit('/');
+    cy.injectAuthenticatedUser(email);
     cy.get('[data-cy="accountHeader"]').should('exist'); // assures that the user is signed in
     cy.get('[data-cy="header-add-a-feed"]').click();
     // Assures that the firebase remote config has loaded for the first test
