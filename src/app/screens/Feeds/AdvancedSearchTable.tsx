@@ -23,7 +23,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import GtfsRtEntities from './GtfsRtEntities';
 import { getEmojiFlag, type TCountryCode } from 'countries-list';
-import OfficialChip from '../../components/OfficialChip';
+import FeedVerificationChip from '../../components/FeedVerificationChip';
 import { getFeatureComponentDecorators } from '../../utils/consts';
 import PopoverList from './PopoverList';
 import ProviderTitle from './ProviderTitle';
@@ -337,9 +337,10 @@ export default function AdvancedSearchTable({
                     ></ProviderTitle>
                   </Typography>
 
-                  {feed.official === true && (
-                    <OfficialChip isLongDisplay={false}></OfficialChip>
-                  )}
+                  <FeedVerificationChip
+                    isLongDisplay={false}
+                    status={feed.official}
+                  ></FeedVerificationChip>
                   {feed.data_type !== 'gbfs' && (
                     <FeedStatusIndicator
                       status={feed.status}
