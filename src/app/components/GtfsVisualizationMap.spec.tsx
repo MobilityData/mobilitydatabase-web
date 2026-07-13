@@ -94,7 +94,7 @@ describe('generateStopColorExpression', () => {
 
 describe('generateRouteOutlineColorExpression', () => {
   // Helper to safely index into nested unknown arrays
-  type NestedArr = Array<unknown | NestedArr>;
+  type NestedArr = unknown[];
   const at = (arr: NestedArr, ...indices: number[]): NestedArr =>
     indices.reduce<NestedArr>((a, i) => (a as NestedArr[])[i], arr);
   it('returns an array expression starting with "let" and "rgba"', () => {

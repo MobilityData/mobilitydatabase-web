@@ -315,9 +315,7 @@ export default function AccountNotifications(): React.ReactElement {
             <Select
               value={defaultFrequency}
               onChange={(e) => {
-                setDefaultFrequency(
-                  e.target.value as NotificationSettings['frequency'],
-                );
+                setDefaultFrequency(e.target.value);
               }}
               size='small'
             >

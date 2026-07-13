@@ -78,19 +78,19 @@ export enum LicenseErrorSource {
 }
 
 export interface ProfileError {
-  code: string | 'unknown';
+  code: string;
   message: string;
   source?: ProfileErrorSource;
 }
 
 export interface FeedError {
-  code: string | 'unknown';
+  code: string;
   message: string;
   source?: FeedErrorSource;
 }
 
 export interface LicenseError {
-  code: string | 'unknown';
+  code: string;
   message: string;
   source?: LicenseErrorSource;
 }

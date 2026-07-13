@@ -1,6 +1,7 @@
 'use client';
 
 import { Typography, Box, Container, useTheme, Button } from '@mui/material';
+import Image from 'next/image';
 
 export default function FeedSubmitted(): React.ReactElement {
   const theme = useTheme();
@@ -21,10 +22,13 @@ export default function FeedSubmitted(): React.ReactElement {
         🚀 Your feed has been submitted!
       </Typography>
       <Box sx={{ display: 'flex', flexDirection: 'row', p: 2 }}>
-        <img
+        <Image
           src='/assets/rocket.gif'
           alt='rocket'
-          style={{ width: '300px', height: '300px', marginRight: '60px' }}
+          width={300}
+          height={300}
+          unoptimized
+          style={{ marginRight: '60px' }}
         />
         <Box sx={{ maxWidth: '615px', justifyContent: 'center' }}>
           <Typography variant='body1' sx={{ mb: 2, fontSize: '20px' }}>
