@@ -27,7 +27,7 @@ describe('Change Password Screen', () => {
     ).should('exist');
   });
 
-  it.only('should change password', () => {
+  it('should change password', () => {
     cy.intercept('GET', '**/v1/user', {
       statusCode: 200,
       body: {

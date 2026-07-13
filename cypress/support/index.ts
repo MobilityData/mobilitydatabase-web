@@ -24,7 +24,7 @@ declare global {
       assetMuiError(elementKey: string): void;
 
       /**
-       * Wipes the firebase auth state, creates a user and signs in. Injects the user into the store
+       * Wipes the firebase auth state, creates a user and signs in
        * @param email email of the new user
        * @param password password of the new user
        */
