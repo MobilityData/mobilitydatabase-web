@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import FormHelperText from '@mui/material/FormHelperText';
 import { mkConfig, generateCsv, download } from 'export-to-csv';
@@ -126,7 +126,7 @@ export default function GBFSFeedAnalytics(): React.ReactElement {
     return filters;
   }, [versionFilter]);
 
-  useMemo(() => {
+  useEffect(() => {
     if (
       schemaPathInitFilter != null &&
       schemaPathFilterOptions.includes(schemaPathInitFilter)

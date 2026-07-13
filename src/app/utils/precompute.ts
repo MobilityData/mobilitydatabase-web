@@ -300,7 +300,7 @@ export function createPrecomputation(deps: PrecomputeDeps): {
         .then(() => {})
         .catch((e) => {
           if (e.name === 'CancellationError') {
-            console.error('Precomputation cancelled by user.');
+            console.log('Precomputation cancelled by user.');
           }
         });
     });

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Box,
   Button,
@@ -16,19 +17,13 @@ interface ScanningOverlayProps {
     cols: number;
   } | null;
   handleCancelScan: () => void;
-  cancelRequestRef: React.MutableRefObject<boolean>;
 }
 
 export const ScanningOverlay = (
   props: React.PropsWithChildren<ScanningOverlayProps>,
 ): React.ReactElement => {
-  const {
-    totalTiles,
-    scannedTiles,
-    scanRowsCols,
-    handleCancelScan,
-    cancelRequestRef,
-  } = props;
+  const { totalTiles, scannedTiles, scanRowsCols, handleCancelScan } = props;
+  const [cancelClicked, setCancelClicked] = useState(false);
   const theme = useTheme();
   const t = useTranslations('feeds');
   const progressPct =
@@ -121,8 +116,11 @@ export const ScanningOverlay = (
           <Button
             size='small'
             variant='outlined'
-            onClick={handleCancelScan}
-            disabled={cancelRequestRef.current}
+            onClick={() => {
+              setCancelClicked(true);
+              handleCancelScan();
+            }}
+            disabled={cancelClicked}
             aria-label={t('scanning.cancel')}
           >
             {t('scanning.cancel')}

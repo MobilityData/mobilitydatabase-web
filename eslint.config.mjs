@@ -41,8 +41,6 @@ export default tseslint.config(
           ignoreRestSiblings: true,
         },
       ],
-      'react-hooks/refs': 'off',
-      'react-hooks/set-state-in-render': 'off',
       'react-hooks/set-state-in-effect': 'off',
       'react-hooks/immutability': 'off',
       'react-hooks/exhaustive-deps': 'off',
