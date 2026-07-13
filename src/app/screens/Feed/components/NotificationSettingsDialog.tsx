@@ -121,9 +121,7 @@ export default function NotificationSettingsDialog({
             <Select
               value={frequency}
               onChange={(e) => {
-                setFrequency(
-                  e.target.value as NotificationSettings['frequency'],
-                );
+                setFrequency(e.target.value);
               }}
               size='small'
             >

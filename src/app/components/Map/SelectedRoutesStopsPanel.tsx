@@ -79,7 +79,7 @@ export const SelectedRoutesStopsPanel = (
                 key={s.stopId}
                 role='button'
                 tabIndex={0}
-                aria-selected={isActive ? 'true' : 'false'}
+                aria-pressed={isActive ? 'true' : 'false'}
                 onClick={() => {
                   focusStopFromPanel(s);
                 }}

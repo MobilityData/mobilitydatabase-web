@@ -37,7 +37,7 @@ export default function GbfsFeedSearchInput({
     initialFeedUrl ?? '',
   );
   const [requiresAuth, setRequiresAuth] = useState(false);
-  const [authType, setAuthType] = useState<string>('');
+  const [authType, setAuthType] = useState<AuthTypeEnum | ''>('');
   const [basicAuthUsername, setBasicAuthUsername] = useState<
     string | undefined
   >(undefined);
@@ -65,7 +65,9 @@ export default function GbfsFeedSearchInput({
   // Used to keep the auth inputs up to date
   useEffect(() => {
     setRequiresAuth(auth !== undefined);
-    setAuthType(auth == undefined ? '' : (auth.authType ?? ''));
+    setAuthType(
+      auth == undefined ? '' : ((auth.authType as AuthTypeEnum) ?? ''),
+    );
     setBasicAuthUsername(
       auth != null && 'username' in auth ? auth.username : undefined,
     );
@@ -91,7 +93,7 @@ export default function GbfsFeedSearchInput({
   };
 
   const handleAuthTypeChange = (event: SelectChangeEvent<string>): void => {
-    setAuthType(event.target.value);
+    setAuthType(event.target.value as AuthTypeEnum);
     setBasicAuthUsername(undefined);
     setBasicAuthPassword(undefined);
     setBearerAuthValue(undefined);

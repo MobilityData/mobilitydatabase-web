@@ -24,9 +24,9 @@ interface Props {
  * from the clean URLs like /feeds/gtfs/mdb-123.
  * TODO: Now that legacy catch-all route is removed, change this to a private route `_static` and update proxy and links accordingly.
  */
-export default async function StaticFeedLayout({
+export default function StaticFeedLayout({
   children,
   params,
-}: Props): Promise<React.ReactElement> {
+}: Props): React.ReactElement {
   return <>{children}</>;
 }

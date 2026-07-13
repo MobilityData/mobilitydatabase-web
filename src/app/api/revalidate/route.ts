@@ -36,7 +36,7 @@ const defaultRevalidateOptions: RevalidateBody = {
  * Vercel automatically passes Authorization: Bearer <CRON_SECRET> with each invocation.
  * Configured in vercel.json under "crons" for 4am UTC Monday-Saturday and 7am UTC Sunday.
  */
-export async function GET(req: Request): Promise<NextResponse> {
+export function GET(req: Request): NextResponse {
   const authHeader = req.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 

@@ -22,7 +22,7 @@ export const sendEmailVerification = async (): Promise<void> => {
 /**
  * Return the current user or null if the user is not logged in.
  */
-export const getUserFromSession = async (): Promise<User | null> => {
+export const getUserFromSession = (): User | null => {
   const currentUser = app.auth().currentUser;
   if (currentUser === null) {
     return null;
