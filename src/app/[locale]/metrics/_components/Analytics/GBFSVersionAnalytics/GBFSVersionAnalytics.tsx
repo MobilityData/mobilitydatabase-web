@@ -39,6 +39,7 @@ import { GBFS_LINK } from '../../../../../constants/Navigation';
 
 export default function GBFSVersionAnalytics(): React.ReactElement {
   const router = useRouter();
+  const theme = useTheme();
   const [data, setData] = useState<GBFSVersionMetrics[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -157,7 +158,6 @@ export default function GBFSVersionAnalytics(): React.ReactElement {
     enableStickyFooter: true,
     muiTableContainerProps: { sx: { maxHeight: '70vh' } },
     renderDetailPanel: ({ row }) => {
-      const theme = useTheme();
       const metrics = row.original;
 
       const chartData = metrics.computed_on.map((date, index) => ({

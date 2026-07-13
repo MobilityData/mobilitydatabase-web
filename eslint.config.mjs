@@ -41,9 +41,6 @@ export default tseslint.config(
           ignoreRestSiblings: true,
         },
       ],
-      // TODO: hooks called inside render callbacks, incorrect hook usage patterns,
-      // and missing/extra effect dependencies — to be fixed in a separate ticket.
-      'react-hooks/rules-of-hooks': 'off',
       'react-hooks/refs': 'off',
       'react-hooks/set-state-in-render': 'off',
       'react-hooks/set-state-in-effect': 'off',

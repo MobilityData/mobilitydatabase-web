@@ -37,27 +37,30 @@ const HeaderTableCell = styled(TableCell)(() => ({
   border: 'none',
 }));
 
-export const getDataTypeElement = (
-  dataType: 'gtfs' | 'gtfs_rt' | 'gbfs',
-): React.ReactElement => {
+const DataTypeHolder = ({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.ReactElement => {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+      }}
+    >
+      {children}
+    </Box>
+  );
+};
+
+export const DataTypeElement = ({
+  dataType,
+}: {
+  dataType: 'gtfs' | 'gtfs_rt' | 'gbfs';
+}): React.ReactElement => {
   const tCommon = useTranslations('common');
-  const DataTypeHolder = ({
-    children,
-  }: {
-    children: React.ReactNode;
-  }): React.ReactElement => {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-        }}
-      >
-        {children}
-      </Box>
-    );
-  };
   if (dataType === 'gtfs') {
     return <DataTypeHolder>{tCommon('gtfsSchedule')}</DataTypeHolder>;
   } else if (dataType === 'gtfs_rt') {
@@ -268,7 +271,7 @@ export default function SearchTable({
               </TableCell>
               <TableCell className='feed-column' component={Box}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  {getDataTypeElement(feed.data_type)}
+                  <DataTypeElement dataType={feed.data_type} />
                   {feed.data_type === 'gtfs_rt' && (
                     <GtfsRtEntities
                       entities={feed.entity_types}

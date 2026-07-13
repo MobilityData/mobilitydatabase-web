@@ -41,6 +41,7 @@ import {
 
 export default function GTFSFeatureAnalytics(): React.ReactElement {
   const router = useRouter();
+  const theme = useTheme();
   const searchParams = useSearchParams();
   const featureName = searchParams.get('featureName');
   const [data, setData] = useState<FeatureMetrics[]>([]);
@@ -221,7 +222,6 @@ export default function GTFSFeatureAnalytics(): React.ReactElement {
     enableStickyFooter: true,
     muiTableContainerProps: { sx: { maxHeight: '70vh' } },
     renderDetailPanel: ({ row }) => {
-      const theme = useTheme();
       const metrics = row.original;
 
       const chartData = metrics.computed_on.map((date, index) => ({

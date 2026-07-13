@@ -32,26 +32,6 @@ const DetailPanel: React.FC<RenderDetailPanelProps> = ({ row }) => {
   const theme = useTheme();
   const { notices, metrics } = row.original;
 
-  if (metrics == null) {
-    return <div>No metrics available</div>;
-  }
-
-  const chartData = metrics.computed_on.map((date, index) => {
-    const utcDate = new Date(date).toLocaleDateString('en-CA', {
-      timeZone: 'UTC',
-    }); // Converts the date to UTC
-
-    return {
-      date: utcDate,
-      count: metrics.errors_count[index],
-    };
-  });
-
-  const domain = [
-    new Date(chartData[0]?.date ?? '').getTime(),
-    new Date().getTime(),
-  ];
-
   // Define the columns for the notices table
   const columns = useMemo<Array<MRT_ColumnDef<GBFSNotice>>>(
     () => [
@@ -90,6 +70,26 @@ const DetailPanel: React.FC<RenderDetailPanelProps> = ({ row }) => {
     enableStickyFooter: true,
     muiTableContainerProps: { sx: { maxHeight: '50vh' } },
   });
+
+  if (metrics == null) {
+    return <div>No metrics available</div>;
+  }
+
+  const chartData = metrics.computed_on.map((date, index) => {
+    const utcDate = new Date(date).toLocaleDateString('en-CA', {
+      timeZone: 'UTC',
+    }); // Converts the date to UTC
+
+    return {
+      date: utcDate,
+      count: metrics.errors_count[index],
+    };
+  });
+
+  const domain = [
+    new Date(chartData[0]?.date ?? '').getTime(),
+    new Date().getTime(),
+  ];
 
   return (
     <Grid container spacing={3} sx={{ maxWidth: '1200px' }}>

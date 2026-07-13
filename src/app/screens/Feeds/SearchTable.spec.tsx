@@ -1,4 +1,4 @@
-import SearchTable, { getDataTypeElement } from './SearchTable';
+import SearchTable, { DataTypeElement } from './SearchTable';
 import { render, cleanup, screen, within } from '@testing-library/react';
 import { type AllFeedsType } from '../../services/feeds/utils';
 import { ThemeProvider } from '@mui/material/styles';
@@ -160,12 +160,12 @@ describe('getProviderElement', () => {
   });
 
   it('should display the correct data type depending on the feed type', () => {
-    const { getByText } = render(getDataTypeElement('gtfs'));
+    const { getByText } = render(<DataTypeElement dataType='gtfs' />);
     expect(getByText('gtfsSchedule')).toBeInTheDocument();
   });
 
   it('should display the correct data type depending on the feed type', () => {
-    const { getByText } = render(getDataTypeElement('gtfs_rt'));
+    const { getByText } = render(<DataTypeElement dataType='gtfs_rt' />);
     expect(getByText('gtfsRealtime')).toBeInTheDocument();
   });
 });
