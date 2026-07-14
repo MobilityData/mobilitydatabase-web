@@ -11,6 +11,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
+import { type Theme } from '@mui/material/styles';
 import {
   type GTFSFeedType,
   type AllFeedType,
@@ -25,7 +26,7 @@ export interface AssociatedFeedsProps {
 
 const renderAssociatedGTFSFeedRow = (
   assocFeed: GTFSFeedType,
-  theme: ReturnType<typeof useTheme>,
+  theme: Theme,
 ): React.ReactElement | undefined => {
   if (assocFeed === undefined) {
     return undefined;
@@ -69,7 +70,7 @@ const renderAssociatedGTFSFeedRow = (
 
 const renderAssociatedGTFSRTFeedRow = (
   assocGTFSRTFeed: GTFSRTFeedType,
-  theme: ReturnType<typeof useTheme>,
+  theme: Theme,
 ): React.ReactElement | undefined => {
   if (assocGTFSRTFeed === undefined) {
     return undefined;
