@@ -39,7 +39,7 @@ export default function FeedVerificationChip({
             ml: 0,
             mr: 2,
             opacity: 0.6,
-            backgroundColor: theme.vars.palette.grey[400],
+            backgroundColor: theme.vars.palette.action.selected,
             color: theme.vars.palette.text.primary,
             borderRadius: '50%',
             padding: '0.2rem',
