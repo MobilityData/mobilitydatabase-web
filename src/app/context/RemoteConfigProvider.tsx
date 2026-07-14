@@ -2,8 +2,7 @@
 
 import React, {
   createContext,
-  useState,
-  useEffect,
+  useMemo,
   type ReactNode,
   useContext,
 } from 'react';
@@ -47,15 +46,11 @@ export const RemoteConfigProvider = ({
   config,
 }: RemoteConfigProviderProps): React.ReactElement => {
   const { email, isAuthReady } = useAuthSession();
-  const [effectiveConfig, setEffectiveConfig] = useState(config);
-
-  useEffect(() => {
-    if (!isAuthReady) return;
-    setEffectiveConfig(
-      matchesFeatureFlagBypass(email, config.featureFlagBypass)
-        ? applyAdminBypass(config)
-        : config,
-    );
+  const effectiveConfig = useMemo(() => {
+    if (!isAuthReady) return config;
+    return matchesFeatureFlagBypass(email, config.featureFlagBypass)
+      ? applyAdminBypass(config)
+      : config;
   }, [email, isAuthReady, config]);
 
   return (

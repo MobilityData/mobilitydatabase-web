@@ -7,7 +7,7 @@ import NestedCheckboxList, {
 import { useTranslations } from 'next-intl';
 import { useRemoteConfig } from '../../context/RemoteConfigProvider';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { useEffect, useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DATASET_FEATURES, groupFeaturesByComponent } from '../../utils/consts';
 import { type GbfsVersionConfig } from '../../interface/RemoteConfig';
 import { SearchHeader } from '../../styles/Filters.styles';
@@ -20,6 +20,38 @@ function setInitialExpandGroup(): Record<string, boolean> {
     expandGroup[featureGroup] = false;
   });
   return expandGroup;
+}
+
+function generateCheckboxStructure(
+  selectedFeatures: string[],
+  expandedElements: Record<string, boolean>,
+): CheckboxStructure[] {
+  const groupedFeatures = groupFeaturesByComponent(
+    Object.keys(DATASET_FEATURES),
+    true,
+  );
+  return Object.entries(groupedFeatures)
+    .filter(([parent]) => parent !== 'Other')
+    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+    .map(([parent, features]) => ({
+      title: parent,
+      checked: features.every((feature) =>
+        selectedFeatures.includes(feature.feature),
+      ),
+      seeChildren: expandedElements[parent],
+      type: 'checkbox',
+      children: features
+        .sort((a, b) => a.feature.localeCompare(b.feature))
+        .map((feature) => {
+          return {
+            title: feature.feature,
+            type: 'checkbox',
+            checked: selectedFeatures.some(
+              (selectedFeature) => selectedFeature === feature.feature,
+            ),
+          };
+        }),
+    }));
 }
 
 interface SearchFiltersProps {
@@ -81,9 +113,6 @@ export function SearchFilters({
     licenses: true,
     licenseTags: true,
   });
-  const [featureCheckboxData, setFeatureCheckboxData] = useState<
-    CheckboxStructure[]
-  >([]);
   const [expandedElements, setExpandedElements] = useState<
     Record<string, boolean>
   >(setInitialExpandGroup());
@@ -106,38 +135,10 @@ export function SearchFilters({
     },
   ];
 
-  function generateCheckboxStructure(): CheckboxStructure[] {
-    const groupedFeatures = groupFeaturesByComponent(
-      Object.keys(DATASET_FEATURES),
-      true,
-    );
-    return Object.entries(groupedFeatures)
-      .filter(([parent]) => parent !== 'Other')
-      .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
-      .map(([parent, features]) => ({
-        title: parent,
-        checked: features.every((feature) =>
-          selectedFeatures.includes(feature.feature),
-        ),
-        seeChildren: expandedElements[parent],
-        type: 'checkbox',
-        children: features
-          .sort((a, b) => a.feature.localeCompare(b.feature))
-          .map((feature) => {
-            return {
-              title: feature.feature,
-              type: 'checkbox',
-              checked: selectedFeatures.some(
-                (selectedFeature) => selectedFeature === feature.feature,
-              ),
-            };
-          }),
-      }));
-  }
-
-  useEffect(() => {
-    setFeatureCheckboxData(generateCheckboxStructure());
-  }, [selectedFeatures]);
+  const featureCheckboxData = useMemo(
+    () => generateCheckboxStructure(selectedFeatures, expandedElements),
+    [selectedFeatures, expandedElements],
+  );
 
   return (
     <>

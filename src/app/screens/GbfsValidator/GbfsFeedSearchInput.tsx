@@ -14,7 +14,7 @@ import {
   type SelectChangeEvent,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthTypeEnum, useGbfsAuth } from '../../context/GbfsAuthProvider';
 import { useSelector } from 'react-redux';
@@ -36,57 +36,28 @@ export default function GbfsFeedSearchInput({
   const [autoDiscoveryUrlInput, setAutoDiscoveryUrlInput] = useState<string>(
     initialFeedUrl ?? '',
   );
-  const [requiresAuth, setRequiresAuth] = useState(false);
-  const [authType, setAuthType] = useState<AuthTypeEnum | ''>('');
+  const [requiresAuth, setRequiresAuth] = useState(auth !== undefined);
+  const [authType, setAuthType] = useState<AuthTypeEnum | ''>(
+    auth == undefined ? '' : ((auth.authType as AuthTypeEnum) ?? ''),
+  );
   const [basicAuthUsername, setBasicAuthUsername] = useState<
     string | undefined
-  >(undefined);
+  >(auth != null && 'username' in auth ? auth.username : undefined);
   const [basicAuthPassword, setBasicAuthPassword] = useState<
     string | undefined
-  >(undefined);
+  >(auth != null && 'password' in auth ? auth.password : undefined);
   const [bearerAuthValue, setBearerAuthValue] = useState<string | undefined>(
-    undefined,
+    auth != null && 'token' in auth ? auth.token : undefined,
   );
   const [oauthClientId, setOauthClientId] = useState<string | undefined>(
-    undefined,
+    auth != null && 'clientId' in auth ? auth.clientId : undefined,
   );
   const [oauthClientSecret, setOauthClientSecret] = useState<
     string | undefined
-  >(undefined);
+  >(auth != null && 'clientSecret' in auth ? auth.clientSecret : undefined);
   const [oauthTokenUrl, setOauthTokenUrl] = useState<string | undefined>(
-    undefined,
+    auth != null && 'tokenUrl' in auth ? auth.tokenUrl : undefined,
   );
-
-  // Used to keep the text input up to date with back navigation in browser
-  useEffect(() => {
-    setAutoDiscoveryUrlInput(initialFeedUrl ?? '');
-  }, [initialFeedUrl]);
-
-  // Used to keep the auth inputs up to date
-  useEffect(() => {
-    setRequiresAuth(auth !== undefined);
-    setAuthType(
-      auth == undefined ? '' : ((auth.authType as AuthTypeEnum) ?? ''),
-    );
-    setBasicAuthUsername(
-      auth != null && 'username' in auth ? auth.username : undefined,
-    );
-    setBasicAuthPassword(
-      auth != null && 'password' in auth ? auth.password : undefined,
-    );
-    setBearerAuthValue(
-      auth != null && 'token' in auth ? auth.token : undefined,
-    );
-    setOauthClientId(
-      auth != null && 'clientId' in auth ? auth.clientId : undefined,
-    );
-    setOauthClientSecret(
-      auth != null && 'clientSecret' in auth ? auth.clientSecret : undefined,
-    );
-    setOauthTokenUrl(
-      auth != null && 'tokenUrl' in auth ? auth.tokenUrl : undefined,
-    );
-  }, [auth]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     setRequiresAuth(event.target.checked);

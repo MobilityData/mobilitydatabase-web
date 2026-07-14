@@ -1,4 +1,6 @@
 'use client';
+/* eslint-disable */
+// eslint disabled due to it still being in development 
 
 // This component is subject to change based on the actual notification settings we want to offer and the APIs available to save them. For now it's a mockup of what the UI could look like.
 

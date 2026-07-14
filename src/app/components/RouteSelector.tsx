@@ -1,7 +1,6 @@
 import React, {
   useState,
   useMemo,
-  useEffect,
   useCallback,
   useLayoutEffect,
   useRef,
@@ -14,10 +13,8 @@ import {
   Typography,
   Box,
   ListItemButton,
-  Skeleton,
 } from '@mui/material';
 import { type GtfsRoute } from '../types';
-import { debounce } from 'lodash';
 import { List, type RowComponentProps } from 'react-window';
 
 interface RouteSelectorProps {
@@ -96,10 +93,6 @@ export default function RouteSelector({
   onSelectionChange,
 }: RouteSelectorProps): React.ReactElement {
   const [search, setSearch] = useState('');
-  const [inputValue, setInputValue] = useState('');
-  const [selectedRoutes, setSelectedRoutes] =
-    useState<string[]>(selectedRouteIds);
-  const [isSearching, setIsSearching] = useState(false);
   const [listWidth, setListWidth] = useState<number>(0);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -122,29 +115,6 @@ export default function RouteSelector({
       ro.disconnect();
     };
   }, [listWidth]);
-
-  // Debounced search input -> committed search term
-  const debouncedSetSearch = useMemo(
-    () =>
-      debounce((val: string) => {
-        setSearch(val);
-        setIsSearching(false);
-      }, 500),
-    [],
-  );
-
-  useEffect(() => {
-    setIsSearching(true);
-    debouncedSetSearch(inputValue);
-    return () => {
-      debouncedSetSearch.cancel();
-    };
-  }, [inputValue, debouncedSetSearch]);
-
-  // Keep internal selection in sync with controlled prop
-  useEffect(() => {
-    setSelectedRoutes([...selectedRouteIds]);
-  }, [selectedRouteIds]);
 
   // Prepare routes for faster filtering (sorted + lowercase caches)
   const preparedRoutes = useMemo<PreparedRoute[]>(() => {
@@ -170,16 +140,12 @@ export default function RouteSelector({
   const handleToggle = useCallback(
     (routeId: string | undefined): void => {
       if (routeId == undefined) return;
-      setSelectedRoutes((prev) => {
-        const newSelection = prev.includes(routeId)
-          ? prev.filter((id) => id !== routeId)
-          : [...prev, routeId];
-
-        onSelectionChange?.(newSelection);
-        return newSelection;
-      });
+      const newSelection = selectedRouteIds.includes(routeId)
+        ? selectedRouteIds.filter((id) => id !== routeId)
+        : [...selectedRouteIds, routeId];
+      onSelectionChange?.(newSelection);
     },
-    [onSelectionChange],
+    [selectedRouteIds, onSelectionChange],
   );
 
   // Compute row height before render using an offscreen measurer
@@ -257,9 +223,9 @@ export default function RouteSelector({
         size='small'
         variant='outlined'
         placeholder='Search routes...'
-        value={inputValue}
+        value={search}
         onChange={(e) => {
-          setInputValue(e.target.value);
+          setSearch(e.target.value);
         }}
         sx={{ mb: 1 }}
       />
@@ -282,30 +248,16 @@ export default function RouteSelector({
           }}
         />
 
-        {/* Skeleton while debounce is active */}
-        {isSearching ? (
-          <Box sx={{ px: 0.5 }}>
-            {[...Array(6)].map((_, i) => (
-              <Skeleton
-                key={i}
-                variant='rectangular'
-                height={40}
-                sx={{ mb: 1, borderRadius: 1 }}
-              />
-            ))}
-          </Box>
-        ) : (
-          <List
-            rowCount={filteredRoutes.length}
-            rowProps={{
-              routes: filteredRoutes,
-              selectedRoutes,
-              onToggle: handleToggle,
-            }}
-            rowComponent={RowComponent}
-            rowHeight={rowHeight}
-          />
-        )}
+        <List
+          rowCount={filteredRoutes.length}
+          rowProps={{
+            routes: filteredRoutes,
+            selectedRoutes: selectedRouteIds,
+            onToggle: handleToggle,
+          }}
+          rowComponent={RowComponent}
+          rowHeight={rowHeight}
+        />
       </Box>
     </Box>
   );

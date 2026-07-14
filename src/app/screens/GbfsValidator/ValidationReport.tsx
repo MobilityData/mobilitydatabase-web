@@ -25,7 +25,7 @@ import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import LanguageIcon from '@mui/icons-material/Language';
 import { type components } from '../../services/feeds/gbfs-validator-types';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { OpenInNew } from '@mui/icons-material';
 import {
   ValidationReportTableStyles,
@@ -45,6 +45,9 @@ export type ValidationResult = components['schemas']['ValidationResult'];
 export type GbfsFile = components['schemas']['GbfsFile'];
 export type FileError = components['schemas']['FileError'];
 
+// needed as a module level constant to avoid re-rendering the component when the array is empty
+const EMPTY_FILES: GbfsFile[] = [];
+
 interface ValidationResultProps {
   validationResult: ValidationResult | undefined;
   loading: boolean;
@@ -61,11 +64,9 @@ export default function ValidationReport({
   const [groupedExpanded, setGroupedExpanded] = useState<
     Record<string, boolean>
   >({});
-  const allFiles: GbfsFile[] = validationResult?.summary?.files ?? [];
-  const baseFiles: GbfsFile[] = allFiles.filter((f) => f.language == null);
-  const languageSpecificFiles: GbfsFile[] = allFiles.filter(
-    (f) => f.language != null,
-  );
+  const allFiles = validationResult?.summary?.files ?? EMPTY_FILES;
+  const baseFiles = allFiles.filter((f) => f.language == null);
+  const languageSpecificFiles = allFiles.filter((f) => f.language != null);
   const languages = Array.from(
     new Set(languageSpecificFiles.map((f) => f.language ?? '')),
   ).sort();
@@ -73,14 +74,7 @@ export default function ValidationReport({
     languages[0] ?? '',
   );
 
-  // Adjust selectedLanguage if languages set changes (e.g., after loading finishes)
-  useEffect(() => {
-    if (languages.length > 0 && !languages.includes(selectedLanguage)) {
-      setSelectedLanguage(languages[0]);
-    }
-  }, [languages, selectedLanguage]);
-
-  const filesForLanguage: GbfsFile[] =
+  const filesForLanguage =
     selectedLanguage !== ''
       ? [
           ...baseFiles,
@@ -90,10 +84,7 @@ export default function ValidationReport({
         ]
       : [...baseFiles];
   // Group errors by fileName, normalized instancePath and message. Shared util ensures consistency.
-  const groupedByFile = useMemo(
-    () => groupErrorsByFile(filesForLanguage),
-    [filesForLanguage],
-  );
+  const groupedByFile = groupErrorsByFile(filesForLanguage);
   const fileGroupRefs = useRef<Array<HTMLDivElement | null>>([]);
 
   // Error details dialog selection state

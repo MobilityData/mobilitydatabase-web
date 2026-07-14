@@ -41,7 +41,6 @@ export default tseslint.config(
           ignoreRestSiblings: true,
         },
       ],
-      'react-hooks/set-state-in-effect': 'off',
       'react-hooks/immutability': 'off',
       'react-hooks/exhaustive-deps': 'off',
       // TypeScript handles these; disable the core JS versions.

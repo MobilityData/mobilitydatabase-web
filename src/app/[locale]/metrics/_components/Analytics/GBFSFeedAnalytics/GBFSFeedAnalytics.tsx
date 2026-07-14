@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import FormHelperText from '@mui/material/FormHelperText';
 import { mkConfig, generateCsv, download } from 'export-to-csv';
@@ -46,13 +46,14 @@ import { setAnalyticsBucketEndpoint } from '../../../../../utils/metricsUtils';
 export default function GBFSFeedAnalytics(): React.ReactElement {
   const searchParams = useSearchParams();
   const { config } = useRemoteConfig();
-  const [schemaPathFilters, setSchemaPathFilters] = React.useState<string[]>(
-    [],
-  );
 
   const versionFilter = searchParams.get('version');
   const schemaPathInitFilter = decodeURIComponent(
     searchParams.get('schemaPath') ?? '',
+  );
+
+  const [schemaPathFilters, setSchemaPathFilters] = React.useState<string[]>(
+    schemaPathInitFilter ? [schemaPathInitFilter] : [],
   );
 
   const dispatch = useDispatch();
@@ -125,15 +126,6 @@ export default function GBFSFeedAnalytics(): React.ReactElement {
     }
     return filters;
   }, [versionFilter]);
-
-  useEffect(() => {
-    if (
-      schemaPathInitFilter != null &&
-      schemaPathFilterOptions.includes(schemaPathInitFilter)
-    ) {
-      setSchemaPathFilters([schemaPathInitFilter]);
-    }
-  }, [schemaPathInitFilter, schemaPathFilterOptions]);
 
   const columns = useTableColumns();
   const csvConfig = mkConfig({
