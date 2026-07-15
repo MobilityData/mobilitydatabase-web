@@ -1,0 +1,22 @@
+{
+  "comparison": {
+    "old_feed_version": "Metrobus_GTFS_ESTATICO-11062026 (CDMX Metrobús, June 11)",
+    "new_feed_version": "Metrobus_GTFS_ESTATICO-18062026 (CDMX Metrobús, June 18)",
+    "has_breaking_change": false,
+    "has_suspicious_change": false
+  },
+  "breaking_changes": [],
+  "suspicious_changes": [],
+  "checks_passed": {
+    "new_validator_warnings": "None — same 4 WARNING codes in both feeds: expired_calendar, mixed_case_recommended_field, stop_too_far_from_shape, stops_match_shape_out_of_order. No new warning code appeared.",
+    "id_regeneration_required_files": "trips 0.2% new IDs (69 of 38,077 new, 67 removed, 38,008 kept); stops 0.0% (all 375 identical); routes 0.0% (all 87 identical); service_id 0.0% (all 259 identical across calendar + calendar_dates). Threshold: 80–90%.",
+    "stop_code_change": "0.0% — stop_code is empty in both feeds for all 375 stops, so there is nothing to change. Threshold: >5%.",
+    "entity_churn": "trips +0.4% net (38,075→38,077), stops 0%, routes 0%, services 0%. Well below the 20% floor. Threshold: 20–50%.",
+    "stop_coordinate_drift": "0 stops moved >100m and 0 moved >500m across all 375 common stops. Max shift 34.1m, mean 0.14m — sub-meter for virtually every stop, consistent with negligible coordinate re-rounding, not relocation.",
+    "notice_count_expired_calendar": "106 → 59 (improvement — newer feed refreshed some calendars forward).",
+    "notice_count_service_window_outside_feed_period": "161 → 204 (INFO; more services now extend past feed_end_date of 2026-12-31; feedServiceWindowEnd moved 2027-06-09 → 2027-06-13).",
+    "notice_count_mixed_case_recommended_field": "87 → 87 (unchanged).",
+    "notice_count_stop_too_far_from_shape": "2 → 2 (unchanged — same El Caminero stop).",
+    "notice_count_stops_match_shape_out_of_order": "83 → 83 (unchanged)."
+  }
+}
