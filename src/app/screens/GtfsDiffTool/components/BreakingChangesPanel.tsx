@@ -169,6 +169,30 @@ export default function BreakingChangesPanel({
       {/* ── Body ── */}
       <Collapse in={open}>
       <Box sx={{ p: 2 }}>
+        {/* All-clear state */}
+        {breaking_changes.length === 0 && suspicious_changes.length === 0 && (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              p: 1.5,
+              mb: checkEntries.length > 0 ? 2 : 0,
+              bgcolor: 'rgba(46,125,50,.07)',
+              borderRadius: '6px',
+              border: '1px solid',
+              borderColor: 'rgba(46,125,50,.25)',
+            }}
+          >
+            <CheckCircleOutline sx={{ fontSize: '1.25rem', color: COLORS.passed, flexShrink: 0 }} />
+            <Box>
+              <Typography variant='body2' fontWeight={700} sx={{ color: COLORS.passed }}>
+                No breaking or suspicious changes detected
+              </Typography>
+            </Box>
+          </Box>
+        )}
+
         {/* Breaking changes */}
         {breaking_changes.length > 0 && (
           <Box sx={{ mb: 3 }}>
