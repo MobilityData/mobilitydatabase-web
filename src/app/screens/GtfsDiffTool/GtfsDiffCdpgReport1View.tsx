@@ -48,7 +48,7 @@ export default function GtfsDiffCdpgReport1View(): React.ReactElement {
       {/* Feed comparison */}
       <FeedComparisonBanner baseFeed={diff.metadata.base_feed.source} newFeed={diff.metadata.new_feed.source} />
 
-      {/* Breaking / suspicious changes */}}
+      {/* Breaking / suspicious changes */}
       <BreakingChangesPanel report={breakingChanges} />
 
       {/* Validation report diff */}
