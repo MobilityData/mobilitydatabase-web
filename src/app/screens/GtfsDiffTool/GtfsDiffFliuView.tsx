@@ -10,6 +10,7 @@ import GtfsDiffSummaryPanel from './components/GtfsDiffSummaryPanel';
 import GtfsDiffFileDiffPanel from './components/GtfsDiffFileDiffPanel';
 import ValidationReportDiffPanel from './components/ValidationReportDiffPanel';
 import BreakingChangesPanel from './components/BreakingChangesPanel';
+import FeedComparisonBanner from './components/FeedComparisonBanner';
 import fliuDiff from './fliu-diff.json';
 import fliuValidationReportNew from './fliu-validation-report-new.json';
 import fliuValidationReportOld from './fliu-validation-report-old.json';
@@ -43,7 +44,10 @@ export default function GtfsDiffFliuView(): React.ReactElement {
         </Button>
       </Box>
 
-      {/* Breaking / suspicious changes */}
+      {/* Feed comparison */}
+      <FeedComparisonBanner baseFeed={diff.metadata.base_feed.source} newFeed={diff.metadata.new_feed.source} />
+
+      {/* Breaking / suspicious changes */}}
       <BreakingChangesPanel report={breakingChanges} />
 
       {/* Validation report diff */}

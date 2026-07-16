@@ -8,6 +8,7 @@ import type { BreakingChangeReport } from './lib/breaking-changes-types';
 import GtfsDiffSummaryPanel from './components/GtfsDiffSummaryPanel';
 import GtfsDiffFileDiffPanel from './components/GtfsDiffFileDiffPanel';
 import BreakingChangesPanel from './components/BreakingChangesPanel';
+import FeedComparisonBanner from './components/FeedComparisonBanner';
 import metrobusMexicoDiff from './metrobus-mexico-diff.json';
 import metrobusMexicoBreakingChanges from './metrobus-mexico-breaking-changes.json';
 
@@ -37,6 +38,9 @@ export default function GtfsDiffMetrobusMexicoView(): React.ReactElement {
           ← Back to tool
         </Button>
       </Box>
+
+      {/* Feed comparison */}
+      <FeedComparisonBanner baseFeed={diff.metadata.base_feed.source} newFeed={diff.metadata.new_feed.source} />
 
       {/* Breaking / suspicious changes */}
       <BreakingChangesPanel report={breakingChanges} />

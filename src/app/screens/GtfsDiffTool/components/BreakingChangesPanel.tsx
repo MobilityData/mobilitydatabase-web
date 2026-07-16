@@ -153,17 +153,6 @@ export default function BreakingChangesPanel({
             </IconButton>
           </Tooltip>
         </Box>
-        <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
-          Comparing{' '}
-          <Box component='span' sx={{ fontFamily: MONO_FONT }}>
-            {comparison.old_feed_version}
-          </Box>{' '}
-          (old) →{' '}
-          <Box component='span' sx={{ fontFamily: MONO_FONT }}>
-            {comparison.new_feed_version}
-          </Box>{' '}
-          (new)
-        </Typography>
       </Box>
 
       {/* ── Body ── */}
@@ -224,7 +213,7 @@ export default function BreakingChangesPanel({
         )}
 
         {/* Checks passed (collapsible) */}
-        {checkEntries.length > 0 && (
+        {/* {checkEntries.length > 0 && (
           <Box>
             <Box
               sx={{
@@ -279,7 +268,7 @@ export default function BreakingChangesPanel({
               </TableContainer>
             </Collapse>
           </Box>
-        )}
+        )} */}
       </Box>
       </Collapse>
     </Box>
