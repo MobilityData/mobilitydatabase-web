@@ -633,7 +633,7 @@ function FileDiffPanel({ diff }: FileDiffPanelProps): React.ReactElement {
     return 'deleted';
   });
   const [open, setOpen] = useState(false);
-  const [modifiedViewMode, setModifiedViewMode] = useState<'summary' | 'inline'>('summary');
+  const [modifiedViewMode, setModifiedViewMode] = useState<'summary' | 'inline'>('inline');
 
   const statusColor =
     diff.file_action === 'added'

@@ -10,6 +10,7 @@ import GtfsDiffSummaryPanel from './components/GtfsDiffSummaryPanel';
 import GtfsDiffFileDiffPanel from './components/GtfsDiffFileDiffPanel';
 import ValidationReportDiffPanel from './components/ValidationReportDiffPanel';
 import BreakingChangesPanel from './components/BreakingChangesPanel';
+import FeedComparisonBanner from './components/FeedComparisonBanner';
 import mtaDiff from './mta-diff.json';
 import mtaValidationReportNew from './mta-validation-report-new.json';
 import mtaValidationReportOld from './mta-validation-report-old.json';
@@ -43,6 +44,9 @@ export default function GtfsDiffMtaView(): React.ReactElement {
           ← Back to tool
         </Button>
       </Box>
+
+      {/* Feed comparison */}
+      <FeedComparisonBanner baseFeed={diff.metadata.base_feed.source} newFeed={diff.metadata.new_feed.source} />
 
       {/* Breaking / suspicious changes */}
       <BreakingChangesPanel report={breakingChanges} />

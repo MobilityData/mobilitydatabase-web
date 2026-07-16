@@ -10,6 +10,7 @@ import GtfsDiffSummaryPanel from './components/GtfsDiffSummaryPanel';
 import GtfsDiffFileDiffPanel from './components/GtfsDiffFileDiffPanel';
 import ValidationReportDiffPanel from './components/ValidationReportDiffPanel';
 import BreakingChangesPanel from './components/BreakingChangesPanel';
+import FeedComparisonBanner from './components/FeedComparisonBanner';
 import exampleDiff from './diff-example.json';
 import validationReportLatest from './validation-report-latest.json';
 import validationReportOlder from './validation-report-older.json';
@@ -42,6 +43,9 @@ export default function GtfsDiffExampleView(): React.ReactElement {
           ← Back to tool
         </Button>
       </Box>
+
+      {/* Feed comparison */}
+      <FeedComparisonBanner baseFeed={diff.metadata.base_feed.source} newFeed={diff.metadata.new_feed.source} />
 
       {/* Breaking / suspicious changes */}
       <BreakingChangesPanel report={breakingChanges} />

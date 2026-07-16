@@ -4,7 +4,6 @@ import {
   Box,
   Chip,
   Collapse,
-  Divider,
   IconButton,
   Table,
   TableBody,
@@ -52,23 +51,6 @@ const STATUS_COLORS: Record<FileSummary['status'], string> = {
 
 interface GtfsDiffSummaryPanelProps {
   diff: GtfsDiff;
-}
-
-// ── Metadata header ────────────────────────────────────────────────
-
-function MetadataRow({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <Box sx={{ display: 'flex', gap: 1, alignItems: 'baseline', mb: 0.5 }}>
-      <Typography
-        variant='caption'
-        color='text.secondary'
-        sx={{ minWidth: 160, flexShrink: 0 }}
-      >
-        {label}
-      </Typography>
-      <Typography variant='caption'>{value}</Typography>
-    </Box>
-  );
 }
 
 // ── Component ──────────────────────────────────────────────────────
@@ -127,39 +109,6 @@ export default function GtfsDiffSummaryPanel({
         </Tooltip>
       </Box>
       <Collapse in={open}>
-
-      {/* Feed info */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-          gap: 2,
-          mb: 2,
-        }}
-      >
-        <Box>
-          <Typography variant='caption' fontWeight={700} color='text.secondary'>
-            BASE FEED
-          </Typography>
-          <MetadataRow label='Source' value={metadata.base_feed.source} />
-          <MetadataRow
-            label='Downloaded at'
-            value={fmtDate(metadata.base_feed.downloaded_at)}
-          />
-        </Box>
-        <Box sx={{overflow: 'hidden'}}>
-          <Typography variant='caption' fontWeight={700} color='text.secondary'>
-            NEW FEED
-          </Typography>
-          <MetadataRow label='Source' value={metadata.new_feed.source} />
-          <MetadataRow
-            label='Downloaded at'
-            value={fmtDate(metadata.new_feed.downloaded_at)}
-          />
-        </Box>
-      </Box>
-
-      <Divider sx={{ mb: 2 }} />
 
       {/* Aggregate stats */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mb: 2 }}>

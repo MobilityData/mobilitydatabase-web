@@ -10,6 +10,7 @@ import GtfsDiffSummaryPanel from './components/GtfsDiffSummaryPanel';
 import GtfsDiffFileDiffPanel from './components/GtfsDiffFileDiffPanel';
 import ValidationReportDiffPanel from './components/ValidationReportDiffPanel';
 import BreakingChangesPanel from './components/BreakingChangesPanel';
+import FeedComparisonBanner from './components/FeedComparisonBanner';
 import santiagoDiff from './santiago-diff.json';
 import santiagoValidationReportNew from './santiago-validation-report-new.json';
 import santiagoValidationReportOld from './santiago-validation-report-old.json';
@@ -42,6 +43,9 @@ export default function GtfsDiffSantiagoView(): React.ReactElement {
           ← Back to tool
         </Button>
       </Box>
+
+      {/* Feed comparison */}
+      <FeedComparisonBanner baseFeed={diff.metadata.base_feed.source} newFeed={diff.metadata.new_feed.source} />
 
       {/* Breaking / suspicious changes */}
       <BreakingChangesPanel report={breakingChanges} />

@@ -10,6 +10,7 @@ import GtfsDiffSummaryPanel from './components/GtfsDiffSummaryPanel';
 import GtfsDiffFileDiffPanel from './components/GtfsDiffFileDiffPanel';
 import ValidationReportDiffPanel from './components/ValidationReportDiffPanel';
 import BreakingChangesPanel from './components/BreakingChangesPanel';
+import FeedComparisonBanner from './components/FeedComparisonBanner';
 import cdpgReport2Diff from './cdpg-report-2-diff.json';
 import cdpgReport2ValidationReportNew from './cdpg-report-2-validation-report-new.json';
 import cdpgReport2ValidationReportOld from './cdpg-report-2-validation-report-old.json';
@@ -44,7 +45,10 @@ export default function GtfsDiffCdpgReport2View(): React.ReactElement {
         </Button>
       </Box>
 
-      {/* Breaking / suspicious changes */}
+      {/* Feed comparison */}
+      <FeedComparisonBanner baseFeed={diff.metadata.base_feed.source} newFeed={diff.metadata.new_feed.source} />
+
+      {/* Breaking / suspicious changes */}}
       <BreakingChangesPanel report={breakingChanges} />
 
       {/* Validation report diff */}
