@@ -20,17 +20,19 @@ describe('Sign In page', () => {
 
   describe('redirect after sign-in', () => {
     it('should redirect to the contribute page when signed in with add_feed=true', () => {
-      cy.visit('/sign-in?add_feed=true');
-      cy.get('[data-testid=signin]').should('exist');
       cy.createNewUserAndSignIn(email, password);
+      cy.visit('/sign-in?add_feed=true');
+      cy.injectAuthenticatedUser(email);
+      cy.get('[data-testid=signin]').should('exist');
       cy.location('pathname', { timeout: 10000 }).should('eq', '/contribute');
     });
 
     it('should redirect to the redirect_to path after sign-in', () => {
       const redirectPath = '/feeds';
-      cy.visit(`/sign-in?redirect_to=${encodeURIComponent(redirectPath)}`);
-      cy.get('[data-testid=signin]').should('exist');
       cy.createNewUserAndSignIn(email, password);
+      cy.visit(`/sign-in?redirect_to=${encodeURIComponent(redirectPath)}`);
+      cy.injectAuthenticatedUser(email);
+      cy.get('[data-testid=signin]').should('exist');
       cy.location('pathname', { timeout: 10000 }).should('eq', redirectPath);
     });
 

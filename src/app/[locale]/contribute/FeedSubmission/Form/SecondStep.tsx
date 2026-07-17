@@ -59,7 +59,6 @@ export default function FormSecondStep({
   return (
     <>
       <Typography gutterBottom>{t('gtfsScheduleFeed')}</Typography>
-      {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
       <form onSubmit={handleSubmit(onSubmit)}>
         <Grid container direction={'column'} rowSpacing={2}>
           <Grid>

@@ -12,7 +12,6 @@ import {
 jest.mock('./session-jwt');
 
 // Helper to create mock NextRequest
-/* eslint-disable @typescript-eslint/consistent-type-assertions */
 function createMockNextRequest(
   overrides: Record<string, unknown> = {},
 ): Record<string, unknown> {
@@ -23,7 +22,6 @@ function createMockNextRequest(
         url.pathname = '/original';
         return url;
       }),
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     } as Record<string, unknown>,
     headers: new Headers(),
     cookies: {
@@ -32,7 +30,6 @@ function createMockNextRequest(
     ...overrides,
   };
 }
-/* eslint-enable @typescript-eslint/consistent-type-assertions */
 
 // Mock routing module
 jest.mock('../../i18n/routing', () => ({
@@ -43,7 +40,7 @@ jest.mock('../../i18n/routing', () => ({
 }));
 
 // Spy on NextResponse.rewrite
-/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+
 let rewriteSpy: jest.SpyInstance;
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 let NextResponse: any;

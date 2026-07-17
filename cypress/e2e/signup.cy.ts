@@ -105,7 +105,7 @@ describe('Sign up full registration flow', () => {
     // Create a real Firebase emulator user and sign in so that the
     // complete-registration saga can obtain an access token, but leave
     // Redux state untouched so each test can set the exact status it needs.
-    cy.createNewFirebaseUser(email, password);
+    cy.createNewUserAndSignIn(email, password);
   });
 
   it('should redirect verify-email → complete-registration → contribute when signed up with add_feed=true', () => {

@@ -24,19 +24,11 @@ declare global {
       assetMuiError(elementKey: string): void;
 
       /**
-       * Wipes the firebase auth state, creates a user and signs in. Injects the user into the store
+       * Wipes the firebase auth state, creates a user and signs in
        * @param email email of the new user
        * @param password password of the new user
        */
       createNewUserAndSignIn(email: string, password: string): void;
-
-      /**
-       * Wipes the firebase auth emulator, creates a user and signs in via Firebase only.
-       * Does NOT inject any Redux state — the test controls Redux state directly.
-       * @param email email of the new user
-       * @param password password of the new user
-       */
-      createNewFirebaseUser(email: string, password: string): void;
     }
   }
 }

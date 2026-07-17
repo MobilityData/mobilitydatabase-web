@@ -74,7 +74,6 @@ export default function FormThirdStep({
 
   return (
     <>
-      {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
       <form onSubmit={handleSubmit(onSubmit)}>
         <Grid container direction={'column'} rowSpacing={2}>
           {/* Show required emptyLicenseUsage if official producer and no license provided */}

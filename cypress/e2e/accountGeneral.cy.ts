@@ -2,9 +2,9 @@ describe('Account General Page', () => {
   const password = 'IloveOrangeCones123!';
   const email = 'cypressTestUser@mobilitydata.org';
   beforeEach(() => {
-    cy.visit('/');
-    cy.get('[data-testid="home-title"]').should('exist');
     cy.createNewUserAndSignIn(email, password);
+    cy.visit('/');
+    cy.injectAuthenticatedUser(email);
     cy.get('[data-cy="accountHeader"]').should('exist').click();
     cy.location('pathname').should('eq', '/account');
   });
@@ -47,7 +47,17 @@ describe('Account General Page', () => {
     it('should save updated full name and organization', () => {
       cy.intercept('PUT', '**/v1/user', {
         statusCode: 200,
-        body: {},
+        body: {
+          id: 'rcxs3svpuWf7CkZpSU7mGOHszh22',
+          email: 'cypressTestUser@mobilitydata.org',
+          full_name: 'Updated Name',
+          legacy_org_name: 'Updated Organization',
+          email_verified: null,
+          is_registered_to_receive_api_announcements: false,
+          features: [],
+          created_at: '2026-06-04T18:04:56.511967Z',
+          updated_at: '2026-07-10T13:11:26.556462Z',
+        },
       }).as('updateUser');
 
       cy.contains('button', 'Edit').click();

@@ -2,12 +2,11 @@ const currentPassword = 'IloveOrangeCones123!';
 const newPassword = currentPassword + 'TEST';
 const email = 'cypressTestUser@mobilitydata.org';
 
-// tests are too flaky, to revisit
-describe.skip('Change Password Screen', () => {
+describe('Change Password Screen', () => {
   beforeEach(() => {
-    cy.visit('/');
-    cy.get('[data-testid="home-title"]').should('exist');
     cy.createNewUserAndSignIn(email, currentPassword);
+    cy.visit('/');
+    cy.injectAuthenticatedUser(email);
     cy.get('[data-cy="accountHeader"]').should('exist').click(); // assures that the user is signed in
     cy.get('[data-cy="changePasswordButtonAccount"]').should('exist').click();
   });
@@ -29,6 +28,20 @@ describe.skip('Change Password Screen', () => {
   });
 
   it('should change password', () => {
+    cy.intercept('GET', '**/v1/user', {
+      statusCode: 200,
+      body: {
+        id: 'rcxs3svpuWf7CkZpSU7mGOHszh22',
+        email: 'cypressTestUser@mobilitydata.org',
+        full_name: 'Updated Name',
+        legacy_org_name: 'Updated Organization',
+        email_verified: null,
+        is_registered_to_receive_api_announcements: false,
+        features: [],
+        created_at: '2026-06-04T18:04:56.511967Z',
+        updated_at: '2026-07-10T13:11:26.556462Z',
+      },
+    }).as('updateUser');
     cy.intercept('POST', '/retrieveUserInformation', {
       statusCode: 200,
       body: {
@@ -53,7 +66,10 @@ describe.skip('Change Password Screen', () => {
     // logout
     cy.get('[data-cy="mobileNavTrigger"]').click();
     cy.get('[data-cy="mobile-signOutButton"]').click();
-    cy.get('[data-cy="confirmSignOutButton"]').should('exist').should('not.be.disabled').click();
+    cy.get('[data-cy="confirmSignOutButton"]')
+      .should('exist')
+      .should('not.be.disabled')
+      .click();
     cy.visit('/sign-in');
     cy.get('[data-cy="signInEmailInput"]').type(email);
     cy.get('[data-cy="signInPasswordInput"]').type(newPassword);

@@ -56,7 +56,6 @@ const sentryReduxEnhancer = createReduxEnhancer({
   stateTransformer: sanitizeState,
 });
 
-/* eslint-disable */
 const makeStore = () =>
   configureStore({
     reducer: persistedReducer,
@@ -71,7 +70,6 @@ const makeStore = () =>
     ],
     enhancers: (existing) => [...existing, sentryReduxEnhancer],
   });
-/* eslint-enable */
 
 export const store = makeStore();
 

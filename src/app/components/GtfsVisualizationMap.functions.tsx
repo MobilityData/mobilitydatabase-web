@@ -24,7 +24,9 @@ export function extractRouteIds(val: RouteIdsInput): string[] {
     try {
       const parsed = JSON.parse(val);
       if (Array.isArray(parsed)) return parsed.map(String);
-    } catch {}
+    } catch {
+      // JSON.parse failed — not valid JSON, fall through to regex fallback
+    }
     // fallback: pull "quoted" tokens
     const out: string[] = [];
     val.replace(/"([^"]+)"/g, (_: unknown, id: string) => {
