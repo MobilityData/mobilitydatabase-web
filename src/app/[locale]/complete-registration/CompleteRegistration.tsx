@@ -86,7 +86,7 @@ export default function CompleteRegistration(): React.ReactElement {
     validationSchema: CompleteRegistrationSchema,
     validateOnChange: isSubmitted,
     validateOnBlur: true,
-    onSubmit: async (values) => {
+    onSubmit: (values) => {
       if (user != null) {
         dispatch(
           refreshUserInformation({

@@ -43,7 +43,7 @@ describe('GET /api/revalidate', () => {
       },
     });
 
-    const response = await GET(request);
+    const response = GET(request);
     const json = await response.json();
 
     expect(response.status).toBe(500);
@@ -65,7 +65,7 @@ describe('GET /api/revalidate', () => {
       },
     });
 
-    const response = await GET(request);
+    const response = GET(request);
     const json = await response.json();
 
     expect(response.status).toBe(401);
@@ -87,7 +87,7 @@ describe('GET /api/revalidate', () => {
       },
     });
 
-    const response = await GET(request);
+    const response = GET(request);
     const json = await response.json();
 
     expect(response.status).toBe(200);
