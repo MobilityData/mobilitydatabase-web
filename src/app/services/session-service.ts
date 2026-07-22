@@ -7,6 +7,7 @@ import {
   FEATURE_FLAGS_CHANNEL,
   broadcastExtendedMessage,
 } from './channel-service';
+import { retrieveUserInformation } from './profile-service';
 
 const STORED_SESSION_KEY = 'md_session_meta';
 const SESSION_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour
@@ -18,17 +19,23 @@ interface SessionMeta {
   expiresAt: number;
 }
 
-function isCookieFresh(uid: string): boolean {
+type SessionStatus =
+  /** Session is valid — no POST needed. */
+  | 'fresh'
+  /** Prior session for this user existed but expired — a renewal. */
+  | 'renewal'
+  /** No prior session for this user — first login or identity change. */
+  | 'new';
+
+function getSessionStatus(uid: string): SessionStatus {
   try {
     const raw = localStorage.getItem(STORED_SESSION_KEY);
     const meta = raw != null ? (JSON.parse(raw) as SessionMeta) : null;
-    return (
-      meta !== null &&
-      meta.uid === uid &&
-      Date.now() < meta.expiresAt - RENEWAL_BUFFER_MS
-    );
+    if (meta === null || meta.uid !== uid) return 'new';
+    if (Date.now() < meta.expiresAt - RENEWAL_BUFFER_MS) return 'fresh';
+    return 'renewal';
   } catch {
-    return false;
+    return 'new';
   }
 }
 
@@ -41,14 +48,21 @@ function isCookieFresh(uid: string): boolean {
  *
  * Identity changes (e.g. anonymous → authenticated) are handled
  * automatically: a different uid always triggers a fresh POST.
+ *
+ * Returns true when an existing session was renewed (same uid, cookie was
+ * stale). Returns false when the session was freshly established (first login)
+ * or was still fresh (no-op). Callers can use this signal to re-fetch
+ * user-specific data (e.g. feature flags) that should stay in sync with the
+ * session renewal cycle without fetching on every login.
  */
-export const setUserCookieSession = async (): Promise<void> => {
-  if (typeof window === 'undefined') return;
+export const setUserCookieSession = async (): Promise<boolean> => {
+  if (typeof window === 'undefined') return false;
 
   const user = app.auth().currentUser;
-  if (user == null) return;
+  if (user == null) return false;
 
-  if (isCookieFresh(user.uid)) return;
+  const sessionStatus = getSessionStatus(user.uid);
+  if (sessionStatus === 'fresh') return false;
 
   const idToken = await user.getIdToken();
   const resp = await fetch('/api/session', {
@@ -69,7 +83,10 @@ export const setUserCookieSession = async (): Promise<void> => {
     } catch {
       // Private browsing or storage quota exceeded — best-effort.
     }
+    return sessionStatus === 'renewal';
   }
+
+  return false;
 };
 
 /**
@@ -93,12 +110,27 @@ export const clearUserCookieSession = async (): Promise<void> => {
 };
 
 /**
+ * Re-fetches the user profile and applies the latest feature flags.
+ * Called on session renewal (hourly) to keep flags current without re-login.
+ * Login and sign-up sagas handle the initial flag fetch themselves.
+ */
+export const refreshUserFeatureFlags = async (): Promise<void> => {
+  try {
+    const userData = await retrieveUserInformation();
+    if (userData != null) {
+      await applyUserFeatureFlags(userData.features);
+    }
+  } catch {
+    // Non-critical — best-effort flag refresh.
+  }
+};
+
+/**
  * Sends the resolved user feature flags to POST /api/feature-flags, which
  * HMAC-signs them and sets the httpOnly md_features cookie.
  *
  * Follows the same pattern as setUserCookieSession → POST /api/session.
  * Called by login and token-refresh sagas after fetching the user profile.
- * 
  * Distributes the flags to all tabs via the feature-flags channel so the UserFeatureFlagProvider updates.
  */
 export const applyUserFeatureFlags = async (

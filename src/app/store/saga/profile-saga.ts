@@ -14,7 +14,6 @@ import {
   type UserData,
 } from '../../types';
 import { generateUserAccessToken, updateUserInformation, retrieveUserInformation } from '../../services';
-import { applyUserFeatureFlags } from '../../services/session-service';
 import {
   refreshAccessToken,
   refreshAccessTokenFail,
@@ -35,17 +34,6 @@ function* refreshAccessTokenSaga(): Generator {
     }
   } catch (error) {
     yield put(refreshAccessTokenFail(getAppError(error) as ProfileError));
-    return;
-  }
-  
-  try {
-    // Ideal to have endpoint dedicated to feature flags, but for now we can reuse the user profile endpoint.
-    const userData: UserData | undefined = (yield call(retrieveUserInformation));
-    if (userData != null) {
-      yield call(applyUserFeatureFlags, userData.features);
-    }
-  } catch {
-    // Intentionally swallowed — feature flag refresh is non-critical.
   }
 }
 
