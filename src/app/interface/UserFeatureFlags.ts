@@ -32,7 +32,13 @@ export function toUserFeatureFlags(apiFlags: FeatureFlag[]): UserFeatureFlags {
   const result: UserFeatureFlags = { ...defaultUserFeatureFlags };
   for (const flag of apiFlags) {
     if (flag.id in result) {
-      (result as unknown as Record<string, unknown>)[flag.id] = flag.value;
+      // Writing through a union key requires widening to unknown — TypeScript
+      // computes the required type as the intersection of all property types,
+      // which collapses to never for mixed-type interfaces. value is unknown
+      // in the schema; consumers receive the fully-typed UserFeatureFlags object.
+      (result as Record<UserFeatureFlagId, unknown>)[
+        flag.id as UserFeatureFlagId
+      ] = flag.value;
     }
   }
   return result;
