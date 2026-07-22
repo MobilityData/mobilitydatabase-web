@@ -17,6 +17,12 @@ import {
   type UserFeatureFlags,
 } from '../interface/UserFeatureFlags';
 
+// Evaluated once at module load. False in production, so the Cypress
+// exposure useEffect below is a no-op without any per-render window access.
+const isCypress =
+  typeof window !== 'undefined' &&
+  (window as { Cypress?: unknown }).Cypress != null;
+
 interface UserFeatureFlagContextValue {
   flags: UserFeatureFlags;
 }
@@ -57,6 +63,13 @@ export function UserFeatureFlagProvider({
   useEffect(() => {
     createBroadcastChannel<UserFeatureFlags>(FEATURE_FLAGS_CHANNEL, setFlags);
   }, []);
+
+  // Expose the live flag values on window for Cypress e2e assertions.
+  // Mirrors the window.store pattern in store.ts — test-only, no prod impact.
+  useEffect(() => {
+    if (!isCypress) return;
+    (window as { __featureFlags?: UserFeatureFlags }).__featureFlags = flags;
+  }, [flags]);
 
   useEffect(() => {
     if (!isAuthReady || isAuthenticated) return;
