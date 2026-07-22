@@ -272,7 +272,8 @@ export default function DrawerAppBar(): React.ReactElement {
               </Typography>
             </Link>
             <Typography>
-              TO REMOVE: is notification enabled: {isNotificationsEnabled.toString()}
+              TO REMOVE: is notification enabled:{' '}
+              {isNotificationsEnabled.toString()}
             </Typography>
           </Box>
 
