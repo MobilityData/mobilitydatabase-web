@@ -48,6 +48,7 @@ import HeaderSearchBar from './HeaderSearchBar';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { useAuthSession } from './AuthSessionProvider';
+import { useUserFeatureFlags } from '../context/UserFeatureFlagProvider';
 
 // Lazy load components not needed for initial render
 const LogoutConfirmModal = dynamic(
@@ -83,6 +84,8 @@ export default function DrawerAppBar(): React.ReactElement {
     isAuthenticated,
     displayName: userDisplayName,
   } = useAuthSession();
+  // TO REMOVE: for PR testing
+  const { isNotificationsEnabled } = useUserFeatureFlags(); // Ensure feature flags are loaded for SSR hydration
   const clientSearchParams = useClientSearchParams();
   const hasTransitFeedsRedirectParam =
     clientSearchParams?.get('utm_source') === 'transitfeeds';
@@ -268,6 +271,9 @@ export default function DrawerAppBar(): React.ReactElement {
                 MobilityDatabase
               </Typography>
             </Link>
+            <Typography>
+              TO REMOVE: is notification enabled: {isNotificationsEnabled.toString()}
+            </Typography>
           </Box>
 
           <Box sx={{ display: { xs: 'none', md: 'block' } }}>
