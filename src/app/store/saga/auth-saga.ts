@@ -40,6 +40,7 @@ import {
   sendEmailVerification,
 } from '../../services';
 import { clearUserCookieSession } from '../../services/session-service';
+import { applyUserFeatureFlags } from '../../services/session-service';
 import {
   type AdditionalUserInfo,
   type UserCredential,
@@ -55,20 +56,26 @@ import { selectIsAnonymous, selectIsAuthenticated } from '../profile-selectors';
 import {
   LOGIN_CHANNEL,
   LOGOUT_CHANNEL,
+  FEATURE_FLAGS_CHANNEL,
   broadcastMessage,
+  broadcastExtendedMessage,
 } from '../../services/channel-service';
+import { defaultUserFeatureFlags } from '../../interface/UserFeatureFlags';
 
 function* emailLoginSaga({
   payload: { email, password },
-}: PayloadAction<{ email: string; password: string }>): Generator<
-  unknown,
-  void,
-  User
-> {
+}: PayloadAction<{ email: string; password: string }>): Generator {
   try {
     yield app.auth().signInWithEmailAndPassword(email, password);
     const user = yield call(getUserFromSession);
-    const userData = (yield call(retrieveUserInformation)) as UserData;
+    const userData = (yield call(retrieveUserInformation)) as UserData | undefined;
+    try {
+      if (userData != null) {
+        yield call(applyUserFeatureFlags, userData.features);
+      }
+    } catch {
+      // Swallowed — feature flag cookie is non-critical to login.
+    }
     const userEnhanced = populateUserWithAdditionalInfo(
       user,
       userData,
@@ -93,6 +100,17 @@ function* logoutSaga({
     // Clear the HTTP-only md_session cookie on logout so that
     // server-side requests immediately see the user as logged out.
     yield call(clearUserCookieSession);
+
+    // Reset feature flags to their defaults in this tab and every other open
+    // tab through the shared feature-flags channel.
+    try {
+      broadcastExtendedMessage(FEATURE_FLAGS_CHANNEL, {
+        ...defaultUserFeatureFlags,
+      });
+    } catch {
+      // Channel may not be initialised yet — non-critical to logout.
+    }
+
     yield put(logoutSuccess());
     if (propagate) {
       try {
@@ -116,13 +134,20 @@ function* signUpSaga({
   try {
     yield app.auth().createUserWithEmailAndPassword(email, password);
     yield call(sendEmailVerification);
-    const user = yield call(getUserFromSession);
+    const user = (yield call(getUserFromSession)) as User | null;
     if (user === null) {
       throw new Error('User not found');
     }
-    const userData = (yield call(retrieveUserInformation)) as UserData;
+    const userData = (yield call(retrieveUserInformation)) as UserData | undefined;
+    try {
+      if (userData != null) {
+        yield call(applyUserFeatureFlags, userData.features);
+      }
+    } catch {
+      // Swallowed — feature flag cookie is non-critical to sign-up.
+    }
     const userEnhanced = populateUserWithAdditionalInfo(
-      user as User,
+      user,
       userData,
       undefined,
     );
@@ -176,7 +201,14 @@ function* loginWithProviderSaga({
       getAdditionalUserInfo,
       userCredential,
     )) as AdditionalUserInfo;
-    const userData = (yield call(retrieveUserInformation)) as UserData;
+    const userData = (yield call(retrieveUserInformation)) as UserData | undefined;
+    try {
+      if (userData != null) {
+        yield call(applyUserFeatureFlags, userData.features);
+      }
+    } catch {
+      // Swallowed — feature flag cookie is non-critical to provider login.
+    }
     const userEnhanced = populateUserWithAdditionalInfo(
       user,
       userData,

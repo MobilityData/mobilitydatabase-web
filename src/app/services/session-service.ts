@@ -1,4 +1,12 @@
 import { app } from '../../firebase';
+import {
+  type FeatureFlag,
+  toUserFeatureFlags,
+} from '../interface/UserFeatureFlags';
+import {
+  FEATURE_FLAGS_CHANNEL,
+  broadcastExtendedMessage,
+} from './channel-service';
 
 const STORED_SESSION_KEY = 'md_session_meta';
 const SESSION_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour
@@ -82,4 +90,35 @@ export const clearUserCookieSession = async (): Promise<void> => {
   await fetch('/api/session', {
     method: 'DELETE',
   });
+};
+
+/**
+ * Sends the resolved user feature flags to POST /api/feature-flags, which
+ * HMAC-signs them and sets the httpOnly md_features cookie.
+ *
+ * Follows the same pattern as setUserCookieSession → POST /api/session.
+ * Called by login and token-refresh sagas after fetching the user profile.
+ * 
+ * Distributes the flags to all tabs via the feature-flags channel so the UserFeatureFlagProvider updates.
+ */
+export const applyUserFeatureFlags = async (
+  features: FeatureFlag[],
+): Promise<void> => {
+  if (typeof window === 'undefined') return;
+
+  // Sets the md_features cookie server-side, so it is httpOnly and not accessible to JS.
+  const resp = await fetch('/api/feature-flags', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(features),
+  });
+
+  if (resp.ok) {
+    // Deliver the resolved flags to this tab and every other open tab through
+    // the shared feature-flags channel (see UserFeatureFlagProvider listener).
+    broadcastExtendedMessage(
+      FEATURE_FLAGS_CHANNEL,
+      toUserFeatureFlags(features),
+    );
+  }
 };
