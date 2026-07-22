@@ -52,24 +52,6 @@ Note the read path (`getServerFlags`) and write path (`applyUserFeatureFlags`) a
 - **Reads** go through a Server Action (`src/app/actions/feature-flags.ts`), used for SSR hydration in `layout.tsx`.
 - **Writes** go through a plain API route (`POST /api/feature-flags`), called from the client via `fetch`. The client never gets the cookie value directly — the route sets it `httpOnly` — but the client *does* get the resolved flags back immediately via the `BroadcastChannel` push described below, so no read-after-write round trip is needed.
 
-### Key files
-
-| File | Purpose |
-|---|---|
-| `src/app/interface/UserFeatureFlags.ts` | `FeatureFlag` API type, `UserFeatureFlags` interface, `defaultUserFeatureFlags`, `UserFeatureFlagId`, and the `toUserFeatureFlags()` converter |
-| `src/app/actions/feature-flags.ts` | Server Action `getServerFlags()` — reads and HMAC-verifies the `md_features` cookie |
-| `src/app/api/feature-flags/route.ts` | `POST`/`DELETE` — HMAC-signs and sets (or clears) the `md_features` cookie |
-| `src/app/services/session-service.ts` | `applyUserFeatureFlags()` — posts flags to the route, then broadcasts resolved flags to every tab; `refreshUserFeatureFlags()` — re-fetches `GET /v1/user` and calls `applyUserFeatureFlags`, triggered on session renewal; `setUserCookieSession()` — returns `true` when an existing session was renewed (same uid, stale cookie) vs freshly established |
-| `src/app/services/channel-service.ts` | `FEATURE_FLAGS_CHANNEL`, `broadcastExtendedMessage()` (delivers to the current tab too, not just other tabs), `createBroadcastChannel()` |
-| `src/app/components/AuthSessionProvider.tsx` | Owns the 5-minute session renewal interval; calls `refreshUserFeatureFlags()` when `setUserCookieSession()` signals a renewal (`wasRenewal=true`) for a non-anonymous user |
-| `src/app/context/UserFeatureFlagProvider.tsx` | Client provider + `useUserFeatureFlags()` hook; listens on `FEATURE_FLAGS_CHANNEL`; resets to defaults when `isAuthenticated` goes false |
-| `src/app/[locale]/layout.tsx` | SSR hydration — reads cookie via `getServerFlags()`, passes `initialFlags` to `<Providers>` |
-| `src/app/store/saga/auth-saga.ts` | Calls `applyUserFeatureFlags` after login (email, provider, sign-up); broadcasts `defaultUserFeatureFlags` on logout |
-| `src/app/store/saga/profile-saga.ts` | `refreshAccessTokenSaga` — refreshes the Redux access token only; feature flag refresh is handled separately by `AuthSessionProvider` |
-| `src/app/api/session/route.ts` | Clears `md_features` alongside `md_session` on logout |
-
----
-
 ## Data flow in detail
 
 ### On login
