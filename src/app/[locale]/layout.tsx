@@ -8,6 +8,7 @@ import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { getRemoteConfigValues } from '../../lib/remote-config.server';
+import { getServerFlags } from '../actions/feature-flags';
 import { Mulish, IBM_Plex_Mono } from 'next/font/google';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
@@ -89,10 +90,12 @@ export default async function LocaleLayout({
   // Enable static rendering for this locale
   setRequestLocale(validLocale);
 
-  const [messages, remoteConfig] = await Promise.all([
+  const [messages, remoteConfig, featureFlags] = await Promise.all([
     getMessages(),
     getRemoteConfigValues(),
+    getServerFlags(),
   ]);
+  
 
   return (
     <html lang={validLocale} suppressHydrationWarning>
@@ -106,7 +109,7 @@ export default async function LocaleLayout({
         <InitColorSchemeScript attribute='class' />
         <ThemeRegistry>
           <NextIntlClientProvider messages={messages}>
-            <Providers remoteConfig={remoteConfig}>
+            <Providers remoteConfig={remoteConfig} featureFlags={featureFlags}>
               <Header />
               <Container
                 maxWidth={false}
