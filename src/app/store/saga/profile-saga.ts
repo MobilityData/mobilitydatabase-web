@@ -11,9 +11,8 @@ import {
   USER_PROFILE_SAVE_USER_PROFILE,
   USER_REQUEST_REFRESH_ACCESS_TOKEN,
   type User,
-  type UserData,
 } from '../../types';
-import { generateUserAccessToken, updateUserInformation, retrieveUserInformation } from '../../services';
+import { generateUserAccessToken, updateUserInformation } from '../../services';
 import {
   refreshAccessToken,
   refreshAccessTokenFail,

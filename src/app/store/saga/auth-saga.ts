@@ -68,7 +68,9 @@ function* emailLoginSaga({
   try {
     yield app.auth().signInWithEmailAndPassword(email, password);
     const user = yield call(getUserFromSession);
-    const userData = (yield call(retrieveUserInformation)) as UserData | undefined;
+    const userData = (yield call(retrieveUserInformation)) as
+      | UserData
+      | undefined;
     try {
       if (userData != null) {
         yield call(applyUserFeatureFlags, userData.features);
@@ -138,7 +140,9 @@ function* signUpSaga({
     if (user === null) {
       throw new Error('User not found');
     }
-    const userData = (yield call(retrieveUserInformation)) as UserData | undefined;
+    const userData = (yield call(retrieveUserInformation)) as
+      | UserData
+      | undefined;
     try {
       if (userData != null) {
         yield call(applyUserFeatureFlags, userData.features);
@@ -201,7 +205,9 @@ function* loginWithProviderSaga({
       getAdditionalUserInfo,
       userCredential,
     )) as AdditionalUserInfo;
-    const userData = (yield call(retrieveUserInformation)) as UserData | undefined;
+    const userData = (yield call(retrieveUserInformation)) as
+      | UserData
+      | undefined;
     try {
       if (userData != null) {
         yield call(applyUserFeatureFlags, userData.features);

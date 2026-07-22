@@ -95,7 +95,6 @@ export default async function LocaleLayout({
     getRemoteConfigValues(),
     getServerFlags(),
   ]);
-  
 
   return (
     <html lang={validLocale} suppressHydrationWarning>

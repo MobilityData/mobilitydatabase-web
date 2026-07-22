@@ -72,4 +72,3 @@ export async function getServerFlags(): Promise<UserFeatureFlags> {
     return { ...defaultUserFeatureFlags };
   }
 }
-
