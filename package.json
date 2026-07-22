@@ -24,6 +24,7 @@
     "country-flag-emoji-polyfill": "^0.1.8",
     "date-fns": "^2.30.0",
     "date-fns-tz": "^2.0.0",
+    "earcut": "^3.0.2",
     "export-to-csv": "^1.3.0",
     "firebase": "^10.4.0",
     "firebase-admin": "^13.0.2",
@@ -49,6 +50,7 @@
     "redux-saga": "^1.2.3",
     "server-only": "^0.0.1",
     "swr": "^2.4.0",
+    "three": "^0.183.2",
     "yup": "^1.3.2"
   },
   "scripts": {
@@ -69,7 +71,8 @@
     "generate:api-types:output": "node scripts/generate-api-types.mjs",
     "generate:api-types": "node scripts/generate-api-types.mjs src/app/services/feeds/types.ts",
     "generate:gbfs-validator-types:output": "npm exec -- openapi-typescript ./external_types/GbfsValidator.yaml -o $npm_config_output_path && eslint $npm_config_output_path --fix",
-    "generate:gbfs-validator-types": "npm run generate:gbfs-validator-types:output -- --output-file=src/app/services/feeds/gbfs-validator-types.ts"
+    "generate:gbfs-validator-types": "npm run generate:gbfs-validator-types:output -- --output-file=src/app/services/feeds/gbfs-validator-types.ts",
+    "generate:montreal-routes": "node scripts/preprocess-routes.mjs"
   },
   "resolutions": {
     "tar": "^7.5.7"
@@ -96,6 +99,7 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^13.5.0",
     "@types/cypress": "^1.1.3",
+    "@types/earcut": "^3.0.0",
     "@types/jest": "^30.0.0",
     "@types/material-ui": "^0.21.12",
     "@types/node": "^24.0.0",
@@ -106,6 +110,7 @@
     "@types/react-router-dom": "^5.3.3",
     "@types/react-window": "^2.0.0",
     "@types/redux-saga": "^0.10.5",
+    "@types/three": "^0.183.1",
     "@typescript-eslint/eslint-plugin": "^6.7.0",
     "@typescript-eslint/parser": "^6.7.0",
     "concurrently": "^9.2.1",
