@@ -292,15 +292,31 @@ describe('User Feature Flags — session renewal', () => {
     // next tick: same uid, but expiresAt in the past (1ms since epoch is always
     // < the real Date.now()). This drives setUserCookieSession() → wasRenewed
     // === true → refreshUserFeatureFlags().
-    cy.window().then((win) => {
-      const raw = win.localStorage.getItem('md_session_meta');
-      cy.wrap(raw).should('not.be.null');
-      const meta = JSON.parse(raw!);
-      win.localStorage.setItem(
-        'md_session_meta',
-        JSON.stringify({ ...meta, expiresAt: 1 }),
-      );
-    });
+    //
+    // md_session_meta is written asynchronously by AuthSessionProvider
+    // (onIdTokenChanged → setUserCookieSession → POST /api/session → setItem),
+    // which is a SEPARATE chain from the login saga's POST /api/feature-flags
+    // that loginViaSaga waits on. In the CI production build (next start),
+    // hydration — and therefore that chain — completes later than in the local
+    // dev server, so the key may not exist yet at this point. Re-read
+    // localStorage with a retrying assertion instead of a one-shot .then(),
+    // which would capture a stale null and never recover.
+    cy.window()
+      .its('localStorage')
+      .invoke({ timeout: 15000 }, 'getItem', 'md_session_meta')
+      .should('not.be.null')
+      .then((raw) => {
+        const meta = JSON.parse(raw as string) as {
+          uid: string;
+          expiresAt: number;
+        };
+        cy.window().then((win) => {
+          win.localStorage.setItem(
+            'md_session_meta',
+            JSON.stringify({ ...meta, expiresAt: 1 }),
+          );
+        });
+      });
 
     // Fire AuthSessionProvider's 5-minute renewal interval.
     cy.tick(5 * 60 * 1000);
