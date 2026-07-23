@@ -242,83 +242,89 @@ describe('User Feature Flags', () => {
 describe('User Feature Flags — session renewal', () => {
   beforeEach(() => {
     cy.createNewUserAndSignIn(TEST_EMAIL, TEST_PASSWORD);
-    // Fake setInterval before visiting so cy.tick() controls the AuthSessionProvider
-    // interval. Leave Date.now() and setTimeout on real timers.
-    cy.clock(0, ['setInterval', 'clearInterval']);
+
+    // Fake ONLY setInterval/clearInterval so cy.tick() can drive the renewal
+    // interval AuthSessionProvider registers on mount. Date.now() and
+    // setTimeout stay real so the Firebase SDK internals are unaffected.
+    // Must run before cy.visit() so Sinon patches setInterval before the
+    // provider mounts and schedules its callback.
+    cy.clock(Date.now(), ['setInterval', 'clearInterval']);
+
+    // Initial login returns isNotificationsEnabled: true.
+    cy.intercept('GET', '**/v1/user', {
+      statusCode: 200,
+      body: mockUserProfile([
+        { id: 'isNotificationsEnabled', value_type: 'boolean', value: true },
+      ]),
+    }).as('getUserInitial');
+    cy.intercept('POST', '**/api/feature-flags').as('setFlags');
+
     cy.visit('/');
+    loginViaSaga('@setFlags');
   });
 
-  afterEach(() => {
-    cy.clock().invoke('restore');
-  });
+  it('updates the feature flags cookie and provider when the session token expires', () => {
+    // Sanity check: the initial flags were applied on login.
+    cy.getCookie('md_features').should('exist');
+    cy.window()
+      .its('__featureFlags')
+      .should('deep.equal', {
+        isNotificationsEnabled: true,
+        isSealOfReliabilityFilterEnabled: false,
+      });
 
-  it('re-fetches and applies updated feature flags when the session renews', () => {
+    // The backend now returns DIFFERENT flags — this is the change that should
+    // be picked up on the next hourly renewal (not on the current session).
     cy.intercept('GET', '**/v1/user', {
       statusCode: 200,
       body: mockUserProfile([
         { id: 'isNotificationsEnabled', value_type: 'boolean', value: false },
+        {
+          id: 'isSealOfReliabilityFilterEnabled',
+          value_type: 'boolean',
+          value: true,
+        },
       ]),
-    });
-    cy.intercept('POST', '**/api/feature-flags').as('setFlagsLogin');
-    loginViaSaga('@setFlagsLogin');
-    cy.getCookie('md_features').should('exist');
-    cy.window()
-      .its('__featureFlags')
-      .should('deep.include', { isNotificationsEnabled: false });
+    }).as('getUserRenewed');
+    cy.intercept('POST', '**/api/feature-flags').as('renewFlags');
 
-    // Wait until AuthSessionProvider's setUserCookieSession() has persisted the
-    // session meta to localStorage. This runs in a SEPARATE async flow from the
-    // login saga — loginViaSaga only waits on the feature-flags POST, not on the
-    // POST /api/session that writes md_session_meta. Locally that write finishes
-    // before the backdate below runs, but in slower CI it may not: the old code
-    // guarded the backdate with `if (raw != null)`, so a missing key silently
-    // no-oped, getSessionStatus() then returned 'new'/'fresh' instead of
-    // 'renewal', and the renewal feature-flags POST never fired.
-    cy.window()
-      .its('localStorage')
-      .invoke('getItem', 'md_session_meta')
-      .should('not.be.null');
-
-    // Backdate the session meta so getSessionStatus() returns 'renewal' on the
-    // next interval. expiresAt=1 is always in the past for any real Date.now().
+    // Expire the stored session so getSessionStatus() returns 'renewal' on the
+    // next tick: same uid, but expiresAt in the past (1ms since epoch is always
+    // < the real Date.now()). This drives setUserCookieSession() → wasRenewed
+    // === true → refreshUserFeatureFlags().
     cy.window().then((win) => {
       const raw = win.localStorage.getItem('md_session_meta');
-      const meta = JSON.parse(raw as string) as {
-        uid: string;
-        expiresAt: number;
-      };
+      cy.wrap(raw).should('not.be.null');
+      const meta = JSON.parse(raw!);
       win.localStorage.setItem(
         'md_session_meta',
         JSON.stringify({ ...meta, expiresAt: 1 }),
       );
     });
 
-    // New flags returned by the user service after renewal.
-    cy.intercept('GET', '**/v1/user', {
-      statusCode: 200,
-      body: mockUserProfile([
-        { id: 'isNotificationsEnabled', value_type: 'boolean', value: true },
-      ]),
-    });
-    cy.intercept('POST', '**/api/feature-flags').as('setFlagsRenewal');
+    // Fire AuthSessionProvider's 5-minute renewal interval.
+    cy.tick(5 * 60 * 1000);
 
-    // Advance one interval period. The AuthSessionProvider setInterval fires,
-    // sees the stale session, and calls refreshUserFeatureFlags() — the full
-    // production code path, with no service functions exposed on window.
-    cy.tick(5 * 60 * 1000 + 1);
+    // Renewal re-fetches the profile and re-writes the md_features cookie.
+    cy.wait('@getUserRenewed');
+    cy.wait('@renewFlags');
 
-    cy.wait('@setFlagsRenewal');
-
+    // Cookie payload reflects the NEW flag values.
     cy.getCookie('md_features').then((cookie) => {
       cy.wrap(cookie).should('not.be.null');
       const flags = decodeCookiePayload(cookie!.value);
       cy.wrap(
         flags.find((f) => f.id === 'isNotificationsEnabled')?.value,
+      ).should('equal', false);
+      cy.wrap(
+        flags.find((f) => f.id === 'isSealOfReliabilityFilterEnabled')?.value,
       ).should('equal', true);
     });
 
-    cy.window()
-      .its('__featureFlags')
-      .should('deep.include', { isNotificationsEnabled: true });
+    // Provider state reflects the NEW flag values.
+    cy.window().its('__featureFlags').should('deep.equal', {
+      isNotificationsEnabled: false,
+      isSealOfReliabilityFilterEnabled: true,
+    });
   });
 });
