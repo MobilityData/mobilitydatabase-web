@@ -61,18 +61,17 @@ function decodeCookiePayload(
   return JSON.parse(atob(base64));
 }
 
-type CypressWindow = Window & {
-  store: { dispatch: (a: unknown) => void };
-  __featureFlags?: Record<string, unknown>;
-};
-
 /** Dispatch the login saga and wait for POST /api/feature-flags to complete. */
 function loginViaSaga(alias: `@${string}`) {
-  cy.window().then((win) => {
+  // Wait for window.store to be exposed by ContextProviders' useEffect.
+  // In production builds (next start), React hydration completes after
+  // Cypress marks the page as loaded, so a direct .then() races the useEffect.
+  // .its('store').should('exist') retries until the property is defined.
+  cy.window().its('store').should('exist').then((storeObj) => {
     // Dispatching 'userProfile/login' triggers emailLoginSaga, which calls
     // signInWithEmailAndPassword (Firebase emulator), GET /v1/user, and
     // POST /api/feature-flags (applyUserFeatureFlags) before dispatching loginSuccess.
-    (win as unknown as CypressWindow).store.dispatch({
+    (storeObj as { dispatch: (a: unknown) => void }).dispatch({
       type: 'userProfile/login',
       payload: { email: TEST_EMAIL, password: TEST_PASSWORD },
     });
@@ -183,16 +182,18 @@ describe('User Feature Flags', () => {
         ]),
       });
       cy.intercept('POST', '**/api/feature-flags').as('setFlags');
+      // Intercept the logout request so tests can wait for cookie clearance.
+      cy.intercept('DELETE', '**/api/session').as('logoutRequest');
 
       loginViaSaga('@setFlags');
       cy.getCookie('md_features').should('exist');
     });
 
     it('clears the md_features cookie', () => {
-      // Navigate to the account page where the sign-out button is accessible.
       cy.visit('/account');
       cy.get('[data-cy="desktop-signOutButton"]').click({ force: true });
       cy.get('[data-cy="confirmSignOutButton"]').click();
+      cy.wait('@logoutRequest');
 
       cy.getCookie('md_features').should('be.null');
 
@@ -208,6 +209,7 @@ describe('User Feature Flags', () => {
       cy.visit('/account');
       cy.get('[data-cy="desktop-signOutButton"]').click({ force: true });
       cy.get('[data-cy="confirmSignOutButton"]').click();
+      cy.wait('@logoutRequest');
 
       cy.getCookie('md_session').should('be.null');
       cy.getCookie('md_features').should('be.null');
