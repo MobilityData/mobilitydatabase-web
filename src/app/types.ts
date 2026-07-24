@@ -4,6 +4,7 @@ import {
   OAuthProvider,
 } from 'firebase/auth';
 import { type ReactElement } from 'react';
+import { type FeatureFlag } from './interface/UserFeatureFlags';
 
 export type ChildrenElement =
   | string
@@ -33,6 +34,7 @@ export interface UserData {
   fullName: string;
   organization?: string;
   isRegisteredToReceiveAPIAnnouncements: boolean;
+  features: FeatureFlag[];
 }
 
 export const USER_PROFILE = 'userProfile';

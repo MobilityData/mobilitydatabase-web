@@ -85,8 +85,8 @@ export interface paths {
     put?: never;
     post?: never;
     /**
-     * Delete a notification subscription
-     * @description Removes a notification subscription by ID.
+     * Delete or disable a notification subscription
+     * @description Removes a notification subscription by ID. The announcements subscription (`api.announcements`) cannot be deleted; calling this endpoint for it disables the subscription (sets it inactive) instead of removing it.
      */
     delete: operations['deleteUserSubscription'];
     options?: never;
@@ -96,6 +96,33 @@ export interface paths {
      * @description Activates or deactivates a notification subscription by ID.
      */
     patch: operations['updateUserSubscription'];
+    trace?: never;
+  };
+  '/v1/subscriptions/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a subscription by ID
+     * @description Returns a single notification subscription identified by its ID.
+     */
+    get: operations['getSubscription'];
+    put?: never;
+    post?: never;
+    /**
+     * Delete or disable a subscription by ID
+     * @description Removes a notification subscription identified by its ID. The
+     *     announcements subscription (`api.announcements`) cannot be deleted;
+     *     calling this endpoint for it disables the subscription (sets it inactive)
+     *     instead of removing it.
+     */
+    delete: operations['deleteSubscription'];
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
 }
@@ -132,6 +159,11 @@ export interface components {
        * @default false
        */
       is_registered_to_receive_api_announcements: boolean;
+      /**
+       * @description All active feature flags for this user. Each flag's value is resolved to the user's override when set, otherwise the global default. Disabled flags are not included.
+       * @default []
+       */
+      features: components['schemas']['FeatureFlag'][];
       /**
        * Format: date-time
        * @description Timestamp when the user record was created.
@@ -191,11 +223,6 @@ export interface components {
       active: boolean;
       /**
        * Format: date-time
-       * @description Timestamp of the last notification sent for this subscription.
-       */
-      last_notified_at?: string | null;
-      /**
-       * Format: date-time
        * @description Timestamp when the subscription was created.
        */
       created_at: string;
@@ -210,6 +237,25 @@ export interface components {
     UpdateNotificationSubscriptionRequest: {
       /** @description Whether the subscription should be active. */
       active: boolean;
+    };
+    FeatureFlag: {
+      /**
+       * @description Unique slug identifier for the feature flag.
+       * @example beta_editor
+       */
+      id: string;
+      /**
+       * @description Optional human-readable display name.
+       * @example Beta Editor
+       */
+      name?: string | null;
+      /**
+       * @description The type of value this flag carries.
+       * @enum {string}
+       */
+      value_type: 'boolean' | 'string' | 'numeric' | 'array' | 'json';
+      /** @description Resolved flag value — the user's override if set, otherwise the global default. */
+      value: unknown;
     };
   };
   responses: never;
@@ -231,19 +277,25 @@ export interface operations {
     responses: {
       /** @description User profile retrieved (or created) successfully. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['UserProfile'];
         };
       };
       /** @description Unauthorized — missing or invalid token. */
       401: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Internal server error. */
       500: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
     };
@@ -263,34 +315,46 @@ export interface operations {
     responses: {
       /** @description User profile updated successfully. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['UserProfile'];
         };
       };
       /** @description Invalid request body. */
       400: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Unauthorized — missing or invalid token. */
       401: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Forbidden — insufficient permissions to update this profile. */
       403: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description User not found. */
       404: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Internal server error. */
       500: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
     };
@@ -306,19 +370,25 @@ export interface operations {
     responses: {
       /** @description List of notification types. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
-          'application/json': Array<components['schemas']['NotificationType']>;
+          'application/json': components['schemas']['NotificationType'][];
         };
       };
       /** @description Unauthorized. */
       401: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Not yet implemented. */
       501: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
     };
@@ -334,21 +404,25 @@ export interface operations {
     responses: {
       /** @description List of subscriptions. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
-          'application/json': Array<
-            components['schemas']['NotificationSubscription']
-          >;
+          'application/json': components['schemas']['NotificationSubscription'][];
         };
       };
       /** @description Unauthorized. */
       401: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Not yet implemented. */
       501: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
     };
@@ -368,24 +442,32 @@ export interface operations {
     responses: {
       /** @description Subscription created. */
       201: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['NotificationSubscription'];
         };
       };
       /** @description Invalid request. */
       400: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Unauthorized. */
       401: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Not yet implemented. */
       501: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
     };
@@ -402,24 +484,32 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Subscription deleted. */
+      /** @description Subscription deleted, or disabled for the announcements type. */
       204: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Unauthorized. */
       401: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Subscription not found. */
       404: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Not yet implemented. */
       501: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
     };
@@ -442,24 +532,90 @@ export interface operations {
     responses: {
       /** @description Subscription updated. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['NotificationSubscription'];
         };
       };
       /** @description Unauthorized. */
       401: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Subscription not found. */
       404: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Not yet implemented. */
       501: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getSubscription: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Subscription ID. */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Subscription retrieved. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['NotificationSubscription'];
+        };
+      };
+      /** @description Subscription not found. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  deleteSubscription: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Subscription ID. */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Subscription deleted, or disabled for the announcements type. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Subscription not found. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
     };

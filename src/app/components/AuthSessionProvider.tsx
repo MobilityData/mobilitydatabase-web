@@ -12,7 +12,10 @@ import {
 import { useDispatch } from 'react-redux';
 import { app } from '../../firebase';
 import { anonymousLogin } from '../store/profile-reducer';
-import { setUserCookieSession } from '../services/session-service';
+import {
+  setUserCookieSession,
+  refreshUserFeatureFlags,
+} from '../services/session-service';
 
 interface AuthSession {
   isAuthReady: boolean;
@@ -78,18 +81,36 @@ export function AuthSessionProvider({
           isAuthenticated: !user.isAnonymous,
           displayName: user.displayName ?? null,
         });
-        setUserCookieSession().catch(() => {
-          console.error('Failed to establish session cookie');
-        });
+        setUserCookieSession()
+          .then((wasRenewed) => {
+            if (wasRenewed && !user.isAnonymous) {
+              // The user feature flags will refresh with the session token ~1 hour
+              refreshUserFeatureFlags().catch(() => {
+                console.error('Failed to refresh feature flags');
+              });
+            }
+          })
+          .catch(() => {
+            console.error('Failed to establish session cookie');
+          });
 
         // Check every 5 minutes; the cookie lasts 60 minutes, so this ensures renewal well before expiry
         // If the cookie is not expired, it will return early and skip the POST
         // The token will refresh 5 minutes before expiry which is why the 5 minute interval is used here.
         intervalRef.current = setInterval(
           () => {
-            setUserCookieSession().catch(() => {
-              console.error('Failed to establish session cookie');
-            });
+            setUserCookieSession()
+              .then((wasRenewed) => {
+                if (wasRenewed && !user.isAnonymous) {
+                  // The user feature flags will refresh with the session token ~1 hour
+                  refreshUserFeatureFlags().catch(() => {
+                    console.error('Failed to refresh feature flags');
+                  });
+                }
+              })
+              .catch(() => {
+                console.error('Failed to establish session cookie');
+              });
           },
           5 * 60 * 1000,
         ); // 5 minutes
