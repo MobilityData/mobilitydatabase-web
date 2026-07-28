@@ -81,7 +81,7 @@ function ChangeCard({ entry, variant }: ChangeCardProps): React.ReactElement {
           sx={{ fontFamily: MONO_FONT, fontSize: '0.65rem' }}
         />
       </Box>
-      <Typography variant='body2' sx={{ mt: 0.5 }}>
+      <Typography variant='body2' sx={{ mt: 0.5, whiteSpace: 'pre-line' }}>
         {entry.detail}
       </Typography>
       {entry.note != null && (
