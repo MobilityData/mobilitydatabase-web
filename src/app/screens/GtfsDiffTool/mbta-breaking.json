@@ -1,0 +1,21 @@
+{
+  "comparison": {
+    "old_feed_version": "Summer 2026, 2026-07-15T15:16:59+00:00, version G (MBTA, published July 15)",
+    "new_feed_version": "Summer 2026, 2026-07-21T20:42:09+00:00, version G (MBTA, published July 21)",
+    "has_breaking_change": false,
+    "has_suspicious_change": false
+  },
+  "breaking_changes": [],
+  "suspicious_changes": [],
+  "checks_passed": {
+    "new_validator_warnings": "None — same 4 notice codes in both feeds, same counts and severities. Caveat: both hosted reports (gtfs-validator 8.0.1) show ERROR-severity invalid_input_files_in_subfolder / missing_calendar_and_calendar_date_files / missing_required_file because the source zips nest all GTFS files one directory level down (e.g. Massachusetts_BOSTON_MBTA_20260715-000/) instead of at the zip root — the validator can't find calendar.txt, stops.txt, routes.txt, trips.txt, stop_times.txt, agency.txt at the top level, so it never reaches row-level content rules (expired_calendar, stop_too_far_from_shape, etc. are not present in either report as a result). This packaging defect is identical in both feeds (not introduced by this version) — no delta to flag between old and new — but it means this validator run does not confirm content-level checks the way a correctly-packaged feed would.",
+    "id_regeneration_required_files": "trips 1.5% new IDs (1,280 of 82,725 new, 62 removed, 81,445 kept); stops 0.0% (all 10,293 identical); routes 0.0% (0 of 401 new, 1 removed — Shuttle-WonderlandAirport, 401 kept); service_id (calendar+calendar_dates union) 22.5% new (31 of 138 new, 5 removed, 107 kept) — consistent with MBTA's normal weekly service-window rollover, not ID regeneration. Threshold: 80–90%.",
+    "stop_code_change": "0.0% — stop_code unchanged for all 10,293 common stops (populated on 7,068, empty on 3,225 in both feeds). Threshold: >5%.",
+    "entity_churn": "trips +1.5% net (81,507→82,725), stops 0% (10,293→10,293), routes -0.2% (402→401, single expired shuttle route removed), calendar services +23.2% net unique service_id (112→138, driven by the weekly service-window roll: new week's calendar rows added, past week's removed). Maximum single-file entity loss is 4.5% (calendar.txt, 5 of 112 rows); calendar_dates.txt swings look large in percentage terms (8 of 14 rows removed) but the file only has 14 rows total, so the ratio isn't meaningful. All well below the 20–50% floor used to flag suspicious entity loss.",
+    "stop_coordinate_drift": "0 stops moved at all across all 10,293 common stops — every stop_lat/stop_lon pair is byte-identical between feeds. Max shift 0.0m, mean shift 0.0m.",
+    "notice_count_invalid_input_files_in_subfolder": "1 → 1 (unchanged; ERROR — GTFS files nested under a subfolder in both zips, see caveat above).",
+    "notice_count_missing_calendar_and_calendar_date_files": "1 → 1 (unchanged; ERROR — consequence of the same subfolder nesting, calendar.txt/calendar_dates.txt not found at zip root).",
+    "notice_count_missing_recommended_file": "1 → 1 (unchanged; WARNING — feed_info.txt not found at zip root, same cause).",
+    "notice_count_missing_required_file": "5 → 5 (unchanged; ERROR — stop_times.txt, agency.txt, routes.txt, trips.txt, stops.txt not found at zip root, same cause)."
+  }
+}
