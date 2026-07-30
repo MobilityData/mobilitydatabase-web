@@ -1,0 +1,50 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(yarn install)",
+      "Bash(yarn lint)",
+      "Bash(yarn lint:fix)",
+      "Bash(yarn test)",
+      "Bash(yarn test:ci)",
+      "Bash(yarn test:watch)",
+      "Bash(yarn build:prod)",
+      "Bash(yarn build:analyze)",
+      "Bash(yarn e2e:run)",
+      "Bash(yarn generate:api-types)",
+      "Bash(yarn generate:gbfs-validator-types)",
+      "Bash(yarn generate:user-api-types)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npx jest:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx prettier --check:*)",
+      "Bash(git status)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git stash list)",
+      "Bash(git worktree list)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh issue list:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(vercel:*)",
+      "Bash(npx firebase:*)",
+      "Bash(firebase:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./cypress.env.json)"
+    ]
+  }
+}
