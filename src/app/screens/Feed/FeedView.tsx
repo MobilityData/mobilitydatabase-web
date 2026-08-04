@@ -361,7 +361,7 @@ export default async function FeedView({
                   />
                 )}
               {feed?.data_type === 'gbfs' && <>{gbfsOpenFeedUrlElement()}</>}
-              <ClientSubscribeControls />
+              <ClientSubscribeControls feedId={feed.id ?? ''} />
             </Box>
 
             <Grid size={12}>
