@@ -134,6 +134,9 @@ export default function NotificationSettingsDialog({
     applySettingsChange({ addedTypes, removedTypes })
       .then(() => {
         onSave({ changeTypes });
+      })
+      .catch(() => {
+        // Already captured in `saveError` and rendered above.
       });
   };
 

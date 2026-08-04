@@ -90,7 +90,7 @@ export default function AccountNotifications(): React.ReactElement {
         {index > 0 && ', '}
         <Link
           component={LocaleLink}
-          href={`/feeds/${feed.data_type != null && feed.data_type !== "" ? feed.data_type + "/" : ""}${feed.feed_id}`}
+          href={`/feeds/${feed.data_type != null && feed.data_type !== '' ? feed.data_type + '/' : ''}${feed.feed_id}`}
           target='_blank'
           rel='noreferrer'
         >
