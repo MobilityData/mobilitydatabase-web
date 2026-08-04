@@ -1,90 +1,70 @@
 # User Feature Flags
 
-User-based feature flags are per-user configuration values resolved by the backend (`GET /v1/user`) and made available across the entire app — both on the server (Server Components, middleware) and on the client (React components).
+User feature flags are per-user configuration values resolved from the backend (`GET /v1/user`) and consumed
+on the client only, via a plain reusable [SWR](https://swr.vercel.app/) hook.
+
+This is the "User feature flags" row in the CLAUDE.md two-feature-flag-systems table — global flags are a
+different mechanism (Firebase Remote Config, see `src/lib/remote-config.server.ts`).
 
 ---
 
 ## Architecture overview
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│  Login (Redux Saga — client)                                  │
-│                                                               │
-│  1. GET /v1/user  →  UserProfile.features[]                   │
-│  2. yield call(applyUserFeatureFlags, features)                │
-│     → POST /api/feature-flags → HMAC-signs → sets             │
-│        md_features httpOnly cookie                             │
-│     → on success, broadcasts the resolved flags on the         │
-│        FEATURE_FLAGS_CHANNEL BroadcastChannel                  │
-└──────────────────────────┬───────────────────────────────────-┘
-                           │
-┌──────────────────────────────────────────────────────────────┐
-│  Session renewal (AuthSessionProvider — client, ~hourly)      │
-│                                                               │
-│  setUserCookieSession() returns wasRenewal=true when an       │
-│  existing session is stale (same uid, cookie expired).        │
-│  AuthSessionProvider then calls refreshUserFeatureFlags():    │
-│  1. GET /v1/user  →  UserProfile.features[]                   │
-│  2. applyUserFeatureFlags(features)  (same path as login)     │
-└──────────────────────────┬───────────────────────────────────-┘
-                           │ cookie written + flags broadcast
-          ┌────────────────┴───────────────┐
-          ▼                                ▼
-┌─────────────────┐             ┌──────────────────────────┐
-│  Server side    │             │  Client side              │
-│                 │             │                           │
-│ getServerFlags()│             │ UserFeatureFlagProvider    │
-│ (Server Action) │             │ listens on                │
-│ reads & verifies│             │ FEATURE_FLAGS_CHANNEL,     │
-│ md_features     │             │ holds flags in React       │
-│ cookie directly │             │ state (ephemeral)          │
-│                 │             │                            │
-│ Used in:        │             │ useUserFeatureFlags()       │
-│ - layout.tsx    │             │ → typed map                 │
-│   (SSR hydrate) │             │ { isNotifications           │
-│ - Server        │             │   Enabled: boolean, … }     │
-│   Components    │             │                             │
-└─────────────────┘             └──────────────────────────┘
+┌───────────────────────────────────────────────────────────────────┐
+│  Login / signup / OAuth login sagas (auth-saga.ts — client)       │
+│                                                                    │
+│  1. GET /v1/user  (retrieveUserInformation, already fetched for   │
+│     the profile itself)                                           │
+│  2. setUserFeatureFlagsCache(uid, userData.features)               │
+│     → seeds the SWR cache for [USER_FEATURE_FLAGS_SWR_KEY, uid]    │
+│       with revalidate: false, so useUserFeatureFlags() below       │
+│       never re-fetches data the saga already has                   │
+└───────────────────────────────┬────────────────────────────────────┘
+                                │ cache seeded (no network call)
+                                ▼
+┌───────────────────────────────────────────────────────────────────┐
+│  useUserFeatureFlags()  (src/app/hooks/useUserFeatureFlags.ts)    │
+│                                                                    │
+│  useSWR([USER_FEATURE_FLAGS_SWR_KEY, uid], fetchUserFeatureFlags)  │
+│  - No seed yet (e.g. page reload with an existing Firebase        │
+│    session, no login saga ran)? Fetches GET /v1/user itself,      │
+│    authenticated with the client's Firebase ID token.             │
+│  - Seed already present? Reuses it — no extra request.            │
+│  - Every caller shares this one cache entry per uid, whether it's │
+│    UserFeatureFlagsSync (below) or any future consumer.           │
+└───────────────────────────────┬────────────────────────────────────┘
+                                │
+                ┌───────────────┴────────────────┐
+                ▼                                 ▼
+┌────────────────────────────┐      ┌─────────────────────────────┐
+│ UserFeatureFlagsSync        │      │ Any other consumer           │
+│ (components/                │      │ (e.g. ClientSubscribeControls)│
+│  UserFeatureFlagsSync.tsx)   │      │                               │
+│                              │      │ const { flags, isResolved }  │
+│ Mounted once, globally, in   │      │   = useUserFeatureFlags();   │
+│ providers.tsx. Renders null; │      │                               │
+│ exists so flags resolve (and │      └───────────────────────────────┘
+│ expose window.__featureFlags/│
+│ __featureFlagsResolved for    │
+│ Cypress) on every page, not   │
+│ only ones with a real         │
+│ consumer.                     │
+└────────────────────────────┘
 ```
 
-Note the read path (`getServerFlags`) and write path (`applyUserFeatureFlags`) are two different mechanisms:
+Revalidation, once the initial value is in place:
 
-- **Reads** go through a Server Action (`src/app/actions/feature-flags.ts`), used for SSR hydration in `layout.tsx`.
-- **Writes** go through a plain API route (`POST /api/feature-flags`), called from the client via `fetch`. The client never gets the cookie value directly — the route sets it `httpOnly` — but the client *does* get the resolved flags back immediately via the `BroadcastChannel` push described below, so no read-after-write round trip is needed.
+- **Window focus** — `revalidateOnFocus: true`, throttled to once per 60s (`focusThrottleInterval`).
+- **Session renewal** — `AuthSessionProvider` calls `revalidateUserFeatureFlags(uid)` whenever it renews the
+  `md_session` cookie (~hourly). See [AuthSessionProvider.tsx](../src/app/components/AuthSessionProvider.tsx)
+  and the discussion of why this piggybacks on session renewal rather than polling on its own schedule.
+- **Identity change** — not a revalidation at all. The cache key is `[KEY, uid]`, so signing in as a different
+  user lands on a different key and resolves independently; there is nothing to invalidate.
 
-## Data flow in detail
-
-### On login
-
-1. Login saga calls `GET /v1/user` (`retrieveUserInformation`) and receives `UserProfile.features[]`.
-2. Saga calls `applyUserFeatureFlags(features)` (`session-service.ts`), which:
-   - `POST`s the raw `FeatureFlag[]` to `/api/feature-flags`, which HMAC-signs the payload and writes an `httpOnly` cookie (`md_features`, 1 hr TTL).
-   - On a successful response, converts the flags with `toUserFeatureFlags()` and calls `broadcastExtendedMessage(FEATURE_FLAGS_CHANNEL, flags)`.
-3. `broadcastExtendedMessage` delivers the resolved flags to every other open tab via the underlying `BroadcastChannel`, **and** invokes the listener in the current tab directly (a `BroadcastChannel` never delivers to its own sender), so all tabs update in the same call.
-4. `UserFeatureFlagProvider`'s channel listener calls `setFlags` with the pushed value — no extra fetch needed, in this tab or any other.
-5. The whole call is wrapped in try/catch in the saga — a failure (network error, channel not yet registered) is swallowed and never blocks `loginSuccess`.
-
-### On session renewal (~hourly cadence)
-
-`AuthSessionProvider` calls `setUserCookieSession()` on a 5-minute interval (and on every `onIdTokenChanged` event). `setUserCookieSession()` performs a single `localStorage` read to determine the session state:
-
-- **`'fresh'`** — same uid, cookie not yet stale → no-op, returns `false`.
-- **`'renewal'`** — same uid, cookie stale → POSTs `/api/session` to renew, returns `true`.
-- **`'new'`** — no prior record or different uid (fresh login / identity change) → POSTs `/api/session`, returns `false`. The login saga already handled the flag fetch in this case.
-
-When `wasRenewal === true` and the user is not anonymous, `AuthSessionProvider` calls `refreshUserFeatureFlags()`, which:
-1. Calls `retrieveUserInformation()` (`GET /v1/user`) to get the latest `features[]`.
-2. Calls `applyUserFeatureFlags(features)` — same POST + broadcast path as login.
-
-This keeps feature flags current for long-lived sessions without requiring re-login. A failure is silently swallowed — flag staleness is preferable to disrupting the session renewal.
-
-### On logout
-
-`logoutSaga` calls `clearUserCookieSession()` which hits `DELETE /api/session`. That route clears both `md_session` and `md_features` in a single response. The saga also directly broadcasts `defaultUserFeatureFlags` on `FEATURE_FLAGS_CHANNEL` so every open tab resets immediately. `UserFeatureFlagProvider` additionally resets to defaults on its own whenever `isAuthenticated` transitions to `false`, as a second line of defense.
-
-### On page load (SSR)
-
-`layout.tsx` calls `getServerFlags()` in its `Promise.all` alongside `getRemoteConfigValues()`. The result is passed as `initialFlags` to `<Providers>`, which forwards it to `<UserFeatureFlagProvider initialFlags={...}>`. The provider initialises its React state with these values, so the **first render is always flash-free** — no loading state, no client-side fetch on mount.
+On logout, `isAuthenticated` becomes `false`, the cache key becomes `null` (no fetch), and the hook falls
+back to `defaultUserFeatureFlags` with `isResolved: true` immediately — signed-out is a resolved answer, not
+a pending one.
 
 ---
 
@@ -107,97 +87,85 @@ export const defaultUserFeatureFlags: UserFeatureFlags = {
 ```
 
 - `UserFeatureFlagId` (`keyof UserFeatureFlags`) and `useUserFeatureFlags()` pick up the new flag automatically.
-- `toUserFeatureFlags()`, also in `UserFeatureFlags.ts`, already handles unknown keys gracefully — if the API returns the new flag it is merged; if not, the default is used.
-- All flags are typed as `boolean` today. `toUserFeatureFlags()` does not check the API's `value_type` before assigning `flag.value` — if a future flag ever carries a non-boolean value (the schema also allows `string` / `numeric` / `array` / `json`), add a `value_type === 'boolean'` guard before widening this pattern.
+- `toUserFeatureFlags()`, also in `UserFeatureFlags.ts`, already handles unknown keys gracefully — if the API
+  returns the new flag it is merged; if not, the default is used.
+- All flags are typed as `boolean` today. `toUserFeatureFlags()` does not check the API's `value_type` before
+  assigning `flag.value` — if a future flag ever carries a non-boolean value (the schema also allows `string`
+  / `numeric` / `array` / `json`), add a `value_type === 'boolean'` guard before widening this pattern.
+
+Note: `isNotificationsEnabled` also exists in the *other* flag system (Remote Config,
+`src/app/interface/RemoteConfig.ts`). That's real duplication, not a doc error — the two systems answer
+different questions ("is the feature live at all" vs. "is this specific user entitled to it") and the live
+UI consumer (`ClientSubscribeControls.tsx`) reads from both.
 
 ---
 
-## Usage — client side
+## Usage — client side only
 
 ```tsx
 'use client';
-import { useUserFeatureFlags } from '../context/UserFeatureFlagProvider';
+import { useUserFeatureFlags } from '../hooks/useUserFeatureFlags';
 
 export function MyComponent() {
-  const { isNotificationsEnabled } = useUserFeatureFlags();
+  const { flags, isResolved } = useUserFeatureFlags();
 
-  if (!isNotificationsEnabled) return null;
+  // isResolved is false while entitlement is genuinely unknown — render a
+  // pending state, not the not-entitled one, until it's true.
+  if (!isResolved) return null;
+  if (!flags.isNotificationsEnabled) return null;
   return <NotificationsBell />;
 }
 ```
 
-The hook returns a `UserFeatureFlags` object — the same shape as `RemoteConfigValues`. No string ID lookups, no casts, full IDE autocomplete.
+There is **no server-side equivalent**. `fetchUserFeatureFlags()` (`user-feature-flag-service.ts`) resolves
+the caller's Firebase ID token client-side (`getUserAccessToken()` → `currentUser.getIdTokenResult()`), and
+per this app's auth model the client's Firebase token is never forwarded to the server — a Server Component
+has no way to make the equivalent call. If you need this data during SSR, it isn't available; design the UI
+to tolerate the client-side resolution delay (see `isResolved` above) rather than looking for a seed.
 
 ---
 
-## Usage — server side
+## Why there is no cookie, no context, and no server read
 
-```ts
-// Any Server Component or server utility
-import { getServerFlags } from '../actions/feature-flags';
+This system used to work differently: a Server Action (`getServerFlags()`) read an HMAC-signed `md_features`
+cookie for SSR, a `POST /api/feature-flags` route wrote it, and a `BroadcastChannel` pushed resolved flags to
+every open tab. All of that was removed (see the `removed user feature flags from server` commit) in favor
+of the client-only SWR design above. The reasons:
 
-export default async function Page() {
-  const { isNotificationsEnabled } = await getServerFlags();
-  // ...
-}
-```
+**No cookie / no server read.** A per-user cookie read during render cannot work on statically rendered
+routes — Next hands those an empty cookie store at build/ISR time, so every read looked like a logged-out
+user regardless of actual entitlement. That was a real bug the old design had (`getServerFlags()` in
+`layout.tsx` on a `force-static` route), and it's what `cypress/e2e/userFeatureFlags.cy.ts` now locks down
+(*"resolves flags on a statically rendered route"*). A value computed once in the root layout would also go
+stale on client-side navigation, since layouts aren't re-rendered on navigation.
 
-`getServerFlags()` reads the `md_features` cookie, verifies the HMAC signature, and returns a `UserFeatureFlags` object with defaults applied for any missing flags. The `FeatureFlag[]` API array format is an internal detail — consumers always receive the typed map.
+**No React Context.** SWR's own cache — keyed by `[USER_FEATURE_FLAGS_SWR_KEY, uid]` — is what makes this
+"resolve once, shared by every caller," not a Provider. Multiple components calling `useUserFeatureFlags()`
+dedupe onto one request the same way whether or not a Context wraps them; the only thing a Context would add
+is a slightly more convenient seam for injecting a fixed value in component tests. Given there's a genuine
+need for the hook to resolve on *every* page (not just ones with a real consumer — see `UserFeatureFlagsSync`
+above), a Context provider wrapping `children` wasn't buying anything a plain hook plus one globally-mounted
+null-rendering sync component didn't already provide more simply.
+
+**No `BroadcastChannel` / no client-writable cookie signing.** The old `POST /api/feature-flags` route had a
+known gap: it signed whatever `FeatureFlag[]` array the client sent it, without verifying the caller. That's
+now moot — there is no such route. `fetchUserFeatureFlags()` calls `GET /v1/user` directly with the caller's
+Firebase ID token, so the backend resolves flags for the authenticated identity itself; nothing client-side
+can be forged into the cache except by seeding it with data the same request already legitimately fetched
+(`setUserFeatureFlagsCache`, called only from the login/signup sagas with their own `GET /v1/user` result).
+
+**Cross-tab consistency** falls out of the uid-keyed cache rather than a broadcast push: each tab has its own
+Firebase auth listener, so a login/logout in one tab changes that tab's own `uid`/cache key independently. No
+explicit tab-to-tab coordination is needed for flags specifically (contrast with `LOGIN_CHANNEL`/
+`LOGOUT_CHANNEL` in `channel-service.ts`, which exist for the broader auth session, not for flags).
 
 ---
 
-### The `UserFeatureFlags` interface mirrors `RemoteConfigValues`
+## Testing
 
-Both use a plain interface with an explicit defaults object. The difference is the data source:
-
-| | `RemoteConfigValues` | `UserFeatureFlags` |
-|---|---|---|
-| Source | Firebase Remote Config (global) | User service API (per-user) |
-| Definition | `export interface RemoteConfigValues` | `export interface UserFeatureFlags` |
-| Defaults | `defaultRemoteConfigValues` | `defaultUserFeatureFlags` |
-| Provider prop | `config: RemoteConfigValues` | `initialFlags: UserFeatureFlags` |
-| Hook | `useRemoteConfig()` → `{ config }` | `useUserFeatureFlags()` → flags directly |
-
-The `FeatureFlag[]` array (raw API format) is purely internal. `applyUserFeatureFlags()` accepts it (the saga passes the `GET /v1/user` response directly) and `toUserFeatureFlags()` converts it to `UserFeatureFlags` both when reading the cookie server-side (`getServerFlags()`) and when preparing the payload for the client broadcast. Consumers never interact with the array format.
-
----
-
-## Why the cookie is written from an API route, read from a Server Action
-
-### The alternatives considered
-
-**Option A — Store in Redux**
-
-Redux state is managed by `redux-persist`, which serialises it to `localStorage`. This creates two problems:
-
-1. **Cross-session leakage**: User A's flags persist in `localStorage` after logout. When User B logs in on the same device, they briefly see User A's flags until the login saga overwrites them.
-2. **PersistGate dependency**: Every component reading flags would need to be inside a `PersistGate` (or handle the rehydration window), spreading boilerplate.
-3. **Source-of-truth drift**: Redux and a potential server-side store would need to stay in sync, creating a class of bug that's hard to reproduce.
-
-**Option B — Store only in React context (client-fetched)**
-
-A context provider could call `GET /v1/user` directly when auth resolves. This avoids Redux but:
-
-1. The login saga already calls `GET /v1/user` — a second call from the provider doubles the network requests.
-2. The provider has no access to the result of the saga's fetch, so it can't reuse it.
-3. Server Components still can't read React context — server-side access would require a separate mechanism anyway.
-
-### Why the cookie + broadcast approach wins
-
-The `httpOnly` cookie is the **single source of truth on the server**; the `BroadcastChannel` push keeps every open tab's React state in sync with it without ever reading it back from the client:
-
-| Concern | Cookie + broadcast |
-|---|---|
-| Cross-session leakage | None — cookie is cleared on logout and is not in `localStorage` |
-| PersistGate | Not needed — provider holds ephemeral React state, not persisted state |
-| Source-of-truth drift | None on the server — there is only one cookie. The client mirrors it via the broadcast payload rather than re-reading it |
-| Server Components | `getServerFlags()` reads the cookie directly, no extra fetch |
-| Double network calls | None — the saga's single `GET /v1/user` result is reused for both the cookie write and the client broadcast; the hourly renewal call is the only extra network touch |
-| Flash on initial render | None — `layout.tsx` reads the cookie server-side and passes `initialFlags` |
-| Multi-tab consistency | `FEATURE_FLAGS_CHANNEL` (`broadcastExtendedMessage`) pushes the resolved flags to every tab, including the sender, immediately — no reload required |
-
-### Known limitation: `POST /api/feature-flags` does not verify the caller
-
-Unlike `POST /api/session`, which verifies a Firebase ID token via `getAuth(app).verifyIdToken(idToken)` before issuing a cookie, `POST /api/feature-flags` accepts the `FeatureFlag[]` body as-is and signs whatever it's given. This is called out in a comment on the route itself. The accepted tradeoff is that today's flags (`isNotificationsEnabled`, `isSealOfReliabilityFilterEnabled`) are UI-only conveniences, so a client setting its own values client-side has no real security impact — actual access is enforced independently wherever it matters.
-
-This does **not** extend automatically to future flags. Before adding a flag that gates real access (a paywalled feature, an admin capability, etc.), this route needs the same idToken-verification treatment as `/api/session`: accept a Firebase ID token in the request, verify it server-side, and resolve the flags from the user service directly rather than trusting the client-supplied array.
+`cypress/e2e/userFeatureFlags.cy.ts` covers: resolution on static and dynamic routes, defaults for
+flags the API omits, that the SWR entry survives client-side navigation without refetching, and that logout
+resets to defaults. It asserts against `window.__featureFlags` / `window.__featureFlagsResolved`, which
+`useUserFeatureFlags()` exposes only when `window.Cypress` is set (mirrors the `window.store` pattern in
+`store.ts` — test-only, no production impact). Those globals are populated by whichever mounted instance of
+the hook runs first — in practice `UserFeatureFlagsSync`, since it's mounted on every page.

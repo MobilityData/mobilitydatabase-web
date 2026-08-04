@@ -53,8 +53,9 @@ sits under the `[locale]` segment.
 
 Server Components are the default: data fetching, token minting, Firebase Admin, Remote Config.
 Add `'use client'` only for interactivity (hooks, state, events). Server→client data crosses the boundary
-in exactly three payloads, all set up in `[locale]/layout.tsx`: `messages` (next-intl), `remoteConfig`, and
-`featureFlags`. **Never pass tokens or credentials to the client.**
+in exactly two payloads, both set up in `[locale]/layout.tsx`: `messages` (next-intl) and `remoteConfig`.
+User feature flags are **not** part of this boundary — they resolve entirely client-side (see below).
+**Never pass tokens or credentials to the client.**
 
 ### i18n is path-prefixed, not subdomain-based
 
@@ -115,18 +116,24 @@ Full detail, env vars, and troubleshooting: `docs/Authentication.md` (or the `mo
 | | Firebase Remote Config | User feature flags |
 |---|---|---|
 | Scope | Global | Per-user |
-| Source | Firebase | `GET /v1/user` → HMAC-signed `md_features` cookie |
-| Server read | `getRemoteConfigValues()` / `getUserRemoteConfigValues()` (`src/lib/remote-config.server.ts`) | `getServerFlags()` (`src/app/actions/feature-flags.ts`) |
-| Client read | `useRemoteConfig()` → `{ config }` | `useUserFeatureFlags()` → flags |
+| Source | Firebase | `GET /v1/user`, resolved client-side only |
+| Server read | `getRemoteConfigValues()` / `getUserRemoteConfigValues()` (`src/lib/remote-config.server.ts`) | None — no server-side equivalent, see below |
+| Client read | `useRemoteConfig()` → `{ config }` | `useUserFeatureFlags()` (`src/app/hooks/useUserFeatureFlags.ts`) → `{ flags, isResolved }` |
 | Define a flag | `src/app/interface/RemoteConfig.ts` | `src/app/interface/UserFeatureFlags.ts` |
 
 Remote Config is cached 5 min (dev) / 1 hour (prod) and has an admin email-regex bypass that flips every
 boolean true (`featureFlagBypass`). Note `RemoteConfig.ts` carries a stale
 `// FEATUTRE BYPASS CURRENTLY DISABLED` comment — the bypass **is** active.
 
-`docs/user-feature-flags.md` explains the cookie + BroadcastChannel design and why Redux was rejected.
-Known gap: `POST /api/feature-flags` does not verify the caller — fine for UI-only flags, must be hardened
-before a flag gates real access.
+User feature flags resolve **entirely on the client**, via a plain SWR hook keyed by the live Firebase uid
+(`src/app/services/user-feature-flag-service.ts`) — there is no cookie, no React context, and no
+server-rendered seed. `UserFeatureFlagsSync` (`src/app/components/UserFeatureFlagsSync.tsx`) mounts the hook
+once, globally, in `providers.tsx` so flags resolve on every page, not only ones with a real consumer; the
+login/signup sagas seed the SWR cache from their own `GET /v1/user` call (`setUserFeatureFlagsCache()`) so
+the hook doesn't re-fetch on first render. A per-user cookie read during render can't work on statically
+rendered routes (Next hands those an empty cookie store), which is why that approach — and the
+`POST /api/feature-flags` route, `BroadcastChannel` push, and `getServerFlags()` server action that went with
+it — was removed. `docs/user-feature-flags.md` covers the full design.
 
 ### API layer
 
@@ -148,8 +155,9 @@ Prefer the ergonomic aliases and type guards in `src/app/services/feeds/utils.ts
 - `<Provider>` is mounted globally **without** `PersistGate` so SSG/SSR renders immediately.
   Wrap routes needing rehydrated state — or `useSearchParams()` — in `components/ReduxGateWrapper.tsx`.
   Check rehydration with `useRehydrated()`.
-- **React context** (not Redux) for theme, Remote Config, and user feature flags.
-- **SWR** for the `/feeds` search (`src/app/[locale]/feeds/lib/useFeedsSearch.ts`).
+- **React context** (not Redux) for theme and Remote Config.
+- **SWR** for the `/feeds` search (`src/app/[locale]/feeds/lib/useFeedsSearch.ts`) and for user feature flags
+  (`useUserFeatureFlags()` — no context, see the feature-flag section above).
 - Typed hooks: `useAppDispatch`, `useAppSelector` from `src/app/hooks/`.
 
 `profile-reducer` `status` is a 10-value union; the load-bearing distinction is
@@ -260,8 +268,10 @@ interval doesn't fire under CI's `next start`.
   actually a **feedId**. It looks up the feed and redirects to the canonical
   `/feeds/{data_type}/{feedId}`. Don't "fix" the naming.
 - `docs/feed-detail-caching-flow.md` writes the cookie as `session_md`; the code uses **`md_session`**.
-- `isNotificationsEnabled` exists in *both* flag systems; the live consumer reads it from
-  `useRemoteConfig()`. Real duplication, not a doc error.
+- `isNotificationsEnabled` exists in *both* flag systems, and the live consumer
+  (`ClientSubscribeControls.tsx`) reads **both**: `useRemoteConfig()` gates whether the feature is live at
+  all, `useUserFeatureFlags()` gates whether this specific user is entitled to it. Real duplication, not a
+  doc error.
 - `src/mocks/data/*.json` look like dead duplicates of `cypress/fixtures/*`.
 - Worktrees: `yarn new-worktree feat/x` / `yarn remove-worktree feat/x` (copies `.env*`, hard-links
   `node_modules`).
