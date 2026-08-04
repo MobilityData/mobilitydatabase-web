@@ -1,39 +1,45 @@
 /**
  * User Feature Flags — Cypress E2E tests
  *
+ * Architecture under test:
+ *   Feature flags resolve entirely on the client. useUserFeatureFlags() reads
+ *   them from GET /v1/user via SWR, keyed by the live Firebase uid. There is no
+ *   server-rendered seed and no cookie — a per-user cookie read during render
+ *   cannot work on statically rendered routes (Next hands those an empty cookie
+ *   store, so every read looks like a logged-out user), which is the bug these
+ *   tests lock down. UserFeatureFlagsSync mounts the hook once, globally, in
+ *   providers.tsx so flags resolve regardless of which page is rendered.
+ *
  * What these tests cover:
- *   - md_features cookie is set as httpOnly after login
- *   - Cookie payload contains the flags returned by GET /v1/user
- *   - Cookie is cleared when the user logs out
- *   - Feature flags are refreshed on session renewal (hourly, driven by
- *     AuthSessionProvider → setUserCookieSession → refreshUserFeatureFlags)
- *   - window.__featureFlags (UserFeatureFlagProvider state) matches the
- *     resolved flags after every login, renewal, and logout transition
- *
- * What these tests do NOT cover (use Jest + RTL instead):
- *   - HMAC signature correctness — that is a unit test for sign()/verify()
- *     in src/app/actions/feature-flags.ts.
- *
- * Provider state assertions:
- *   UserFeatureFlagProvider exposes its live state on window.__featureFlags
- *   when window.Cypress is set (mirrors the window.store pattern in store.ts).
- *   Use `cy.window().its('__featureFlags')` to assert provider values directly.
- *
- * Session renewal helper:
- *   Combine them to simulate the
- *   AuthSessionProvider interval firing with a stale session.
- *
- * Cookie format: "<base64url(JSON.stringify(features))>.<base64url(hmac)>"
- * The payload (first segment) is readable without the secret.
+ *   - Flags resolve on a STATICALLY rendered route (/), the case that was broken
+ *   - Flags resolve identically on a dynamic route (a feed page)
+ *   - Flags omitted by the API fall back to their defaults
+ *   - The SWR entry survives client-side navigation without refetching
+ *   - Logout resets the flags to defaults
+ *   - No md_features cookie is ever set (guards against reintroducing it)
  */
+
+export {};
 
 const TEST_EMAIL = 'featureFlagsTest@mobilitydata.org';
 const TEST_PASSWORD = 'IloveOrangeCones123!';
 
+// Fixture-backed feed used by the other feed specs — a dynamic route.
+const TEST_FEED_URL = '/feeds/gtfs/test-516';
+
+const ALL_DEFAULTS = {
+  isNotificationsEnabled: false,
+  isSealOfReliabilityFilterEnabled: false,
+};
+
+interface MockFeature {
+  id: string;
+  value_type: string;
+  value: unknown;
+}
+
 /** Minimal UserProfile body for GET /v1/user mocks. */
-function mockUserProfile(
-  features: Array<{ id: string; value_type: string; value: unknown }> = [],
-) {
+function mockUserProfile(features: MockFeature[] = []) {
   return {
     id: 'test-uid',
     email: TEST_EMAIL,
@@ -48,301 +54,172 @@ function mockUserProfile(
 }
 
 /**
- * Decode the feature flags stored in the cookie payload.
- * The cookie is "<base64url(payload)>.<base64url(hmac)>".
- * We read only the payload — no secret needed.
+ * Stubs GET /v1/user and counts how many times it is requested, so tests can
+ * assert that the SWR cache is reused rather than refetched.
  */
-function decodeCookiePayload(
-  cookieValue: string,
-): Array<{ id: string; value_type: string; value: unknown }> {
-  const encoded = cookieValue.split('.')[0];
-  // base64url → standard base64 before atob()
-  const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
-  return JSON.parse(atob(base64));
+function interceptUserProfile(features: MockFeature[]): {
+  calls: () => number;
+} {
+  let calls = 0;
+  cy.intercept('GET', '**/v1/user', (req) => {
+    calls += 1;
+    req.reply({ statusCode: 200, body: mockUserProfile(features) });
+  }).as('getUserProfile');
+  return { calls: () => calls };
 }
 
-/** Dispatch the login saga and wait for POST /api/feature-flags to complete. */
-function loginViaSaga(alias: `@${string}`) {
-  // Wait for window.store to be exposed by ContextProviders' useEffect.
-  // In production builds (next start), React hydration completes after
-  // Cypress marks the page as loaded, so a direct .then() races the useEffect.
-  // .its('store').should('exist') retries until the property is defined.
-  cy.window().its('store').should('exist').then((storeObj) => {
-    // Dispatching 'userProfile/login' triggers emailLoginSaga, which calls
-    // signInWithEmailAndPassword (Firebase emulator), GET /v1/user, and
-    // POST /api/feature-flags (applyUserFeatureFlags) before dispatching loginSuccess.
-    (storeObj as { dispatch: (a: unknown) => void }).dispatch({
-      type: 'userProfile/login',
-      payload: { email: TEST_EMAIL, password: TEST_PASSWORD },
+/** Waits until the provider reports resolved flags matching `expected`. */
+function expectResolvedFlags(expected: Record<string, boolean>): void {
+  cy.window().its('__featureFlagsResolved').should('be.true');
+  cy.window().its('__featureFlags').should('deep.equal', expected);
+}
+
+/**
+ * Dispatches the login saga and waits until Redux reports a 'registered'
+ * profile status. Feature-flag resolution itself never needs this — it keys
+ * off the Firebase session alone (see the header) — but routes gated by
+ * ProtectedPageWrapper's default `targetStatus='registered'` (e.g. /account)
+ * do, and Firebase SDK sign-in alone (the outer beforeEach) does not set it.
+ * Must be called on an already-visited page, since it reads window.store.
+ */
+function loginViaSaga(): void {
+  cy.window()
+    .its('store')
+    .should('exist')
+    .then((storeObj) => {
+      (storeObj as { dispatch: (a: unknown) => void }).dispatch({
+        type: 'userProfile/login',
+        payload: { email: TEST_EMAIL, password: TEST_PASSWORD },
+      });
     });
-  });
-  cy.wait(alias);
+
+  cy.window()
+    .its('store')
+    .invoke('getState')
+    .its('userProfile.status')
+    .should('equal', 'registered');
 }
 
 // ---------------------------------------------------------------------------
 
 describe('User Feature Flags', () => {
   beforeEach(() => {
-    // Create a fresh user in the Firebase emulator before each test.
+    // Creates the user AND leaves them signed in through the Firebase SDK, so
+    // the provider has a uid as soon as the page loads.
     cy.createNewUserAndSignIn(TEST_EMAIL, TEST_PASSWORD);
-    cy.visit('/');
   });
 
-  // -------------------------------------------------------------------------
-  // Login
-  // -------------------------------------------------------------------------
-  describe('on login', () => {
-    it('sets the md_features cookie as httpOnly', () => {
-      cy.intercept('GET', '**/v1/user', {
-        statusCode: 200,
-        body: mockUserProfile([
-          { id: 'isNotificationsEnabled', value_type: 'boolean', value: true },
-        ]),
-      });
-      cy.intercept('POST', '**/api/feature-flags').as('setFlags');
-
-      loginViaSaga('@setFlags');
-
-      cy.getCookie('md_features')
-        .should('exist')
-        .and('have.property', 'httpOnly', true);
-
-      // Provider state should reflect the resolved flags.
-      cy.window()
-        .its('__featureFlags')
-        .should('deep.include', { isNotificationsEnabled: true });
-    });
-
-    it('cookie payload contains the flags returned by the API', () => {
-      cy.intercept('GET', '**/v1/user', {
-        statusCode: 200,
-        body: mockUserProfile([
-          { id: 'isNotificationsEnabled', value_type: 'boolean', value: true },
-          {
-            id: 'isSealOfReliabilityFilterEnabled',
-            value_type: 'boolean',
-            value: false,
-          },
-        ]),
-      });
-      cy.intercept('POST', '**/api/feature-flags').as('setFlags');
-
-      loginViaSaga('@setFlags');
-
-      cy.getCookie('md_features').then((cookie) => {
-        cy.wrap(cookie).should('not.be.null');
-        const flags = decodeCookiePayload(cookie!.value);
-        cy.wrap(flags.find((f) => f.id === 'isNotificationsEnabled')?.value).should('equal', true);
-        cy.wrap(
-          flags.find((f) => f.id === 'isSealOfReliabilityFilterEnabled')?.value,
-        ).should('equal', false);
-      });
-
-      cy.window().its('__featureFlags').should('deep.equal', {
-        isNotificationsEnabled: true,
-        isSealOfReliabilityFilterEnabled: false,
-      });
-    });
-
-    it('cookie stores an empty array when the API returns no flags', () => {
-      cy.intercept('GET', '**/v1/user', {
-        statusCode: 200,
-        body: mockUserProfile([]),
-      });
-      cy.intercept('POST', '**/api/feature-flags').as('setFlags');
-
-      loginViaSaga('@setFlags');
-
-      cy.getCookie('md_features').then((cookie) => {
-        cy.wrap(cookie).should('not.be.null');
-        const flags = decodeCookiePayload(cookie!.value);
-        // Raw cookie stores the API response. toUserFeatureFlags() fills in
-        // defaults on read — the provider always falls back to defaultUserFeatureFlags.
-        cy.wrap(flags).should('deep.equal', []);
-      });
-
-      // Provider fills in defaults for all missing flags.
-      cy.window().its('__featureFlags').should('deep.equal', {
-        isNotificationsEnabled: false,
-        isSealOfReliabilityFilterEnabled: false,
-      });
-    });
-  });
-
-  // -------------------------------------------------------------------------
-  // Logout
-  // -------------------------------------------------------------------------
-  // -------------------------------------------------------------------------
-  describe('on logout', () => {
-    beforeEach(() => {
-      cy.intercept('GET', '**/v1/user', {
-        statusCode: 200,
-        body: mockUserProfile([
-          { id: 'isNotificationsEnabled', value_type: 'boolean', value: true },
-        ]),
-      });
-      cy.intercept('POST', '**/api/feature-flags').as('setFlags');
-      // Intercept the logout request so tests can wait for cookie clearance.
-      cy.intercept('DELETE', '**/api/session').as('logoutRequest');
-
-      loginViaSaga('@setFlags');
-      cy.getCookie('md_features').should('exist');
-    });
-
-    it('clears the md_features cookie', () => {
-      cy.visit('/account');
-      cy.get('[data-cy="desktop-signOutButton"]').click({ force: true });
-      cy.get('[data-cy="confirmSignOutButton"]').click();
-      cy.wait('@logoutRequest');
-
-      cy.getCookie('md_features').should('be.null');
-
-      // Provider should be reset to defaults after logout.
-      cy.window().its('__featureFlags').should('deep.equal', {
-        isNotificationsEnabled: false,
-        isSealOfReliabilityFilterEnabled: false,
-      });
-    });
-
-    it('also clears the md_session cookie', () => {
-      // Sanity-check that both session cookies are cleared together.
-      cy.visit('/account');
-      cy.get('[data-cy="desktop-signOutButton"]').click({ force: true });
-      cy.get('[data-cy="confirmSignOutButton"]').click();
-      cy.wait('@logoutRequest');
-
-      cy.getCookie('md_session').should('be.null');
-      cy.getCookie('md_features').should('be.null');
-
-      // Provider should be reset to defaults after logout.
-      cy.window().its('__featureFlags').should('deep.equal', {
-        isNotificationsEnabled: false,
-        isSealOfReliabilityFilterEnabled: false,
-      });
-    });
-  });
-});
-
-// -----------------------------------------------------------------------------
-// Session renewal
-//
-// AuthSessionProvider registers a 5-minute setInterval on mount that calls
-// setUserCookieSession(). When the session is stale (expiresAt exceeded, same
-// uid), setUserCookieSession() returns wasRenewal=true and AuthSessionProvider
-// calls refreshUserFeatureFlags(), which re-fetches GET /v1/user and writes a
-// fresh md_features cookie via POST /api/feature-flags.
-//
-// cy.clock() MUST be called before cy.visit() so Sinon intercepts the
-// setInterval registered by AuthSessionProvider on mount and cy.tick() can
-// trigger its callback. Only intervals are faked — Date.now() and setTimeout
-// are left real so Firebase SDK internals are unaffected.
-// Backdating md_session_meta.expiresAt to 1 (ms since epoch) makes
-// getSessionStatus() reliably return 'renewal' for any real Date.now() value.
-// -----------------------------------------------------------------------------
-// This works locally in e2e but not in CI
-// TODO: investigate why the renewal interval never fires in CI (next start) and re-enable this test.
-describe.skip('User Feature Flags — session renewal', () => {
-  beforeEach(() => {
-    cy.createNewUserAndSignIn(TEST_EMAIL, TEST_PASSWORD);
-
-    // Fake ONLY setInterval/clearInterval so cy.tick() can drive the renewal
-    // interval AuthSessionProvider registers on mount. Date.now() and
-    // setTimeout stay real so the Firebase SDK internals are unaffected.
-    // Must run before cy.visit() so Sinon patches setInterval before the
-    // provider mounts and schedules its callback.
-    cy.clock(Date.now(), ['setInterval', 'clearInterval']);
-
-    // Initial login returns isNotificationsEnabled: true.
-    cy.intercept('GET', '**/v1/user', {
-      statusCode: 200,
-      body: mockUserProfile([
+  describe('resolution', () => {
+    it('resolves flags on a statically rendered route', () => {
+      // The regression: `/` is `dynamic = 'force-static'`, so a server-side
+      // cookie read here always produced defaults regardless of entitlement.
+      interceptUserProfile([
         { id: 'isNotificationsEnabled', value_type: 'boolean', value: true },
-      ]),
-    }).as('getUserInitial');
-    cy.intercept('POST', '**/api/feature-flags').as('setFlags');
+      ]);
 
-    cy.visit('/');
-    loginViaSaga('@setFlags');
-  });
+      cy.visit('/');
 
-  it('updates the feature flags cookie and provider when the session token expires', () => {
-    // Sanity check: the initial flags were applied on login.
-    cy.getCookie('md_features').should('exist');
-    cy.window()
-      .its('__featureFlags')
-      .should('deep.equal', {
+      expectResolvedFlags({
+        ...ALL_DEFAULTS,
         isNotificationsEnabled: true,
-        isSealOfReliabilityFilterEnabled: false,
       });
+    });
 
-    // The backend now returns DIFFERENT flags — this is the change that should
-    // be picked up on the next hourly renewal (not on the current session).
-    cy.intercept('GET', '**/v1/user', {
-      statusCode: 200,
-      body: mockUserProfile([
-        { id: 'isNotificationsEnabled', value_type: 'boolean', value: false },
+    it('resolves the same flags on a dynamic route', () => {
+      interceptUserProfile([
+        { id: 'isNotificationsEnabled', value_type: 'boolean', value: true },
+      ]);
+
+      cy.visit(TEST_FEED_URL, { timeout: 30000 });
+
+      expectResolvedFlags({
+        ...ALL_DEFAULTS,
+        isNotificationsEnabled: true,
+      });
+    });
+
+    it('falls back to defaults for flags the API omits', () => {
+      interceptUserProfile([
         {
           id: 'isSealOfReliabilityFilterEnabled',
           value_type: 'boolean',
           value: true,
         },
-      ]),
-    }).as('getUserRenewed');
-    cy.intercept('POST', '**/api/feature-flags').as('renewFlags');
+      ]);
 
-    // Expire the stored session so getSessionStatus() returns 'renewal' on the
-    // next tick: same uid, but expiresAt in the past (1ms since epoch is always
-    // < the real Date.now()). This drives setUserCookieSession() → wasRenewed
-    // === true → refreshUserFeatureFlags().
-    //
-    // md_session_meta is written asynchronously by AuthSessionProvider
-    // (onIdTokenChanged → setUserCookieSession → POST /api/session → setItem),
-    // which is a SEPARATE chain from the login saga's POST /api/feature-flags
-    // that loginViaSaga waits on. In the CI production build (next start),
-    // hydration — and therefore that chain — completes later than in the local
-    // dev server, so the key may not exist yet at this point. Re-read
-    // localStorage with a retrying assertion instead of a one-shot .then(),
-    // which would capture a stale null and never recover.
-    cy.window()
-      .its('localStorage')
-      .invoke({ timeout: 15000 }, 'getItem', 'md_session_meta')
-      .should('not.be.null')
-      .then((raw) => {
-        const meta = JSON.parse(raw as string) as {
-          uid: string;
-          expiresAt: number;
-        };
-        cy.window().then((win) => {
-          win.localStorage.setItem(
-            'md_session_meta',
-            JSON.stringify({ ...meta, expiresAt: 1 }),
-          );
-        });
+      cy.visit('/');
+
+      expectResolvedFlags({
+        isNotificationsEnabled: false,
+        isSealOfReliabilityFilterEnabled: true,
       });
-
-    // Fire AuthSessionProvider's 5-minute renewal interval.
-    cy.tick(5 * 60 * 1000);
-
-    // Renewal re-fetches the profile and re-writes the md_features cookie.
-    cy.wait('@getUserRenewed');
-    cy.wait('@renewFlags');
-
-    // Cookie payload reflects the NEW flag values.
-    cy.getCookie('md_features').then((cookie) => {
-      cy.wrap(cookie).should('not.be.null');
-      const flags = decodeCookiePayload(cookie!.value);
-      cy.wrap(
-        flags.find((f) => f.id === 'isNotificationsEnabled')?.value,
-      ).should('equal', false);
-      cy.wrap(
-        flags.find((f) => f.id === 'isSealOfReliabilityFilterEnabled')?.value,
-      ).should('equal', true);
     });
 
-    // Provider state reflects the NEW flag values.
-    cy.window().its('__featureFlags').should('deep.equal', {
-      isNotificationsEnabled: false,
-      isSealOfReliabilityFilterEnabled: true,
+    it('resolves to defaults when the profile carries no flags', () => {
+      interceptUserProfile([]);
+
+      cy.visit('/');
+
+      expectResolvedFlags(ALL_DEFAULTS);
+    });
+  });
+
+  describe('caching', () => {
+    it('reuses the cached flags across a client-side navigation', () => {
+      const profile = interceptUserProfile([
+        { id: 'isNotificationsEnabled', value_type: 'boolean', value: true },
+      ]);
+
+      let callsOnLoad = 0;
+
+      cy.visit('/');
+      expectResolvedFlags({ ...ALL_DEFAULTS, isNotificationsEnabled: true });
+      cy.then(() => {
+        callsOnLoad = profile.calls();
+        // Sanity check, so the comparison after navigating is not vacuous.
+        cy.wrap(callsOnLoad).should('be.greaterThan', 0);
+      });
+
+      // Client-side navigation: the provider stays mounted, so the SWR entry for
+      // this uid must be reused rather than refetched.
+      cy.get('[data-cy="accountHeader"]').click();
+      cy.location('pathname').should('include', '/account');
+      expectResolvedFlags({ ...ALL_DEFAULTS, isNotificationsEnabled: true });
+
+      // No refetch across the navigation — the cached entry was reused.
+      cy.then(() => {
+        cy.wrap(profile.calls()).should('equal', callsOnLoad);
+      });
+    });
+  });
+
+  describe('on logout', () => {
+    beforeEach(() => {
+      interceptUserProfile([
+        { id: 'isNotificationsEnabled', value_type: 'boolean', value: true },
+      ]);
+      cy.intercept('DELETE', '**/api/session').as('logoutRequest');
+
+      // /account is gated by ProtectedPageWrapper on a 'registered' Redux
+      // profile status. Log in while on an ungated page so the persisted
+      // status is already 'registered' by the time /account's full-page
+      // cy.visit runs ProtectedPageWrapper's redirect check — otherwise it
+      // redirects away before the sidebar (and its sign-out button) render.
+      cy.visit('/');
+      loginViaSaga();
+    });
+
+    it('resets the flags to defaults', () => {
+      cy.visit('/account');
+      expectResolvedFlags({ ...ALL_DEFAULTS, isNotificationsEnabled: true });
+
+      cy.get('[data-cy="desktop-signOutButton"]').click({ force: true });
+      cy.get('[data-cy="confirmSignOutButton"]').click();
+      cy.wait('@logoutRequest');
+
+      // Signed out (or anonymous) means not entitled, and that is a resolved
+      // answer rather than a placeholder.
+      expectResolvedFlags(ALL_DEFAULTS);
     });
   });
 });

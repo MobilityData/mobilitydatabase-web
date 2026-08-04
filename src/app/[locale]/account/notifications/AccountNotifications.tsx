@@ -1,105 +1,143 @@
 'use client';
 
 import * as React from 'react';
+import useSWR from 'swr';
+import { useTranslations } from 'next-intl';
+import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
 import Chip from '@mui/material/Chip';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import FormGroup from '@mui/material/FormGroup';
-import FormLabel from '@mui/material/FormLabel';
-import FormControl from '@mui/material/FormControl';
 import IconButton from '@mui/material/IconButton';
+import Link from '@mui/material/Link';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
-import Tab from '@mui/material/Tab';
+import Snackbar from '@mui/material/Snackbar';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import Tabs from '@mui/material/Tabs';
+import TableSortLabel from '@mui/material/TableSortLabel';
 import Typography from '@mui/material/Typography';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import ChangeTypeInfoPopover, {
-  CHANGE_TYPE_INFO,
-} from '../../../components/ChangeTypeInfoPopover';
+import { Link as LocaleLink } from '../../../../i18n/navigation';
+import { useAuthSession } from '../../../components/AuthSessionProvider';
 import NotificationSettingsDialog, {
   defaultNotificationSettings,
   type NotificationSettings,
 } from '../../../screens/Feed/components/NotificationSettingsDialog';
 import { AccountSectionContainer } from '../AccountSectionContainer';
+import {
+  deleteUserSubscription,
+  getUserSubscriptions,
+  type NotificationSubscription,
+  type SubscriptionFeed,
+  updateUserSubscription,
+  USER_SUBSCRIPTIONS_SWR_KEY,
+} from '../../../services/notification-service';
+import { NOTIFICATION_TYPES } from '../../../utils/notificationTypes';
 
-interface NotificationSubscription {
-  id: string;
-  title: string;
-  status: 'active' | 'paused';
-  frequency: 'onChange' | 'weekly' | 'monthly' | 'quarterly';
-  lastSent: string | null;
-}
+const nonEmpty = (value?: string | null): string | undefined =>
+  value != null && value.trim() !== '' ? value : undefined;
 
-const MOCK_NOTIFICATIONS: NotificationSubscription[] = [
-  {
-    id: '1',
-    title: 'STM – Société de transport de Montréal',
-    status: 'active',
-    frequency: 'weekly',
-    lastSent: '2026-05-20',
-  },
-  {
-    id: '2',
-    title: 'TTC – Toronto Transit Commission',
-    status: 'paused',
-    frequency: 'monthly',
-    lastSent: '2026-04-15',
-  },
-  {
-    id: '3',
-    title: 'MTA New York City Transit',
-    status: 'active',
-    frequency: 'onChange',
-    lastSent: '2026-05-26',
-  },
-  {
-    id: '4',
-    title: 'OC Transpo Ottawa',
-    status: 'active',
-    frequency: 'quarterly',
-    lastSent: null,
-  },
-  {
-    id: '5',
-    title: 'TransLink – Metro Vancouver',
-    status: 'paused',
-    frequency: 'weekly',
-    lastSent: '2026-03-02',
-  },
-];
+const getFeedTitle = (feed: SubscriptionFeed): string => {
+  const titlePrefix =
+    feed.data_type != null && feed.data_type.trim() !== ''
+      ? `[${feed.data_type.toLocaleUpperCase()}]`
+      : '';
+  const provider = nonEmpty(feed.provider);
+  const feedName = nonEmpty(feed.feed_name);
+  if (provider != null && feedName != null) {
+    return `${titlePrefix} ${provider} - ${feedName}`;
+  }
+  return `${titlePrefix} ${provider ?? feedName ?? feed.feed_id}`;
+};
 
-const CHANGE_TYPE_OPTIONS = [
-  { value: 'any', label: 'Any Change' },
-  { value: 'features', label: 'Features Only' },
-  { value: 'expiry', label: '7 Days Before Expiry' },
-  { value: 'validation', label: 'New Validation Errors' },
-  { value: 'breaking', label: 'Breaking Changes' },
-  { value: 'suspicious', label: 'Suspicious Changes' },
-] as const;
-
-const SPECIFIC_TYPES = [
-  'features',
-  'expiry',
-  'validation',
-  'breaking',
-  'suspicious',
-];
+type SortKey = 'title' | 'type' | 'status' | 'subscribed';
 
 export default function AccountNotifications(): React.ReactElement {
-  const [tab, setTab] = React.useState(0);
-  const [notifications, setNotifications] =
-    React.useState<NotificationSubscription[]>(MOCK_NOTIFICATIONS);
+  const t = useTranslations('feeds');
+  const { isAuthenticated } = useAuthSession();
+  const [orderBy, setOrderBy] = React.useState<SortKey | null>(null);
+  const [order, setOrder] = React.useState<'asc' | 'desc'>('asc');
+
+  const getNotificationTypeLabel = (notificationId: string): string => {
+    const type = NOTIFICATION_TYPES.find(
+      (definition) => definition.id === notificationId,
+    );
+    return type != null ? t(type.labelKey) : notificationId;
+  };
+
+  const getSubscriptionTitle = (
+    subscription: NotificationSubscription,
+  ): string => {
+    const feeds = subscription.feeds ?? [];
+    if (feeds.length === 0) {
+      return getNotificationTypeLabel(subscription.notification_id);
+    }
+    return feeds.map(getFeedTitle).join(', ');
+  };
+
+  const renderSubscriptionTitle = (
+    subscription: NotificationSubscription,
+  ): React.ReactNode => {
+    const feeds = subscription.feeds ?? [];
+    if (feeds.length === 0) {
+      return getNotificationTypeLabel(subscription.notification_id);
+    }
+    return feeds.map((feed, index) => (
+      <React.Fragment key={feed.feed_id}>
+        {index > 0 && ', '}
+        <Link
+          component={LocaleLink}
+          href={`/feeds/${feed.data_type != null && feed.data_type !== '' ? feed.data_type + '/' : ''}${feed.feed_id}`}
+          target='_blank'
+          rel='noreferrer'
+        >
+          {getFeedTitle(feed)}
+        </Link>
+      </React.Fragment>
+    ));
+  };
+
+  const handleSortClick = (key: SortKey): void => {
+    if (orderBy === key) {
+      setOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setOrderBy(key);
+      setOrder('asc');
+    }
+  };
+
+  const getSortValue = (
+    subscription: NotificationSubscription,
+    key: SortKey,
+  ): string | number => {
+    switch (key) {
+      case 'title':
+        return getSubscriptionTitle(subscription).toLowerCase();
+      case 'type':
+        return getNotificationTypeLabel(
+          subscription.notification_id,
+        ).toLowerCase();
+      case 'status':
+        return subscription.active ? 'active' : 'paused';
+      case 'subscribed':
+        return new Date(subscription.created_at).getTime();
+    }
+  };
+
+  const {
+    data: notifications = [],
+    error: loadError,
+    isLoading,
+    mutate,
+  } = useSWR<NotificationSubscription[]>(
+    isAuthenticated ? USER_SUBSCRIPTIONS_SWR_KEY : null,
+    getUserSubscriptions,
+  );
+
+  const [actionError, setActionError] = React.useState<string | null>(null);
   const [menuState, setMenuState] = React.useState<{
     anchor: HTMLElement;
     id: string;
@@ -109,22 +147,20 @@ export default function AccountNotifications(): React.ReactElement {
     Record<string, NotificationSettings>
   >({});
 
-  // Default settings state for the Settings tab
-  const [defaultFrequency, setDefaultFrequency] =
-    React.useState<NotificationSettings['frequency']>('onChange');
-  const [defaultChangeTypes, setDefaultChangeTypes] = React.useState<string[]>(
-    [],
-  );
-  const [infoPopover, setInfoPopover] = React.useState<{
-    anchor: HTMLElement;
-    type: string;
-  } | null>(null);
-
+  const sortedNotifications =
+    orderBy === null
+      ? notifications
+      : [...notifications].sort((a, b) => {
+          const valueA = getSortValue(a, orderBy);
+          const valueB = getSortValue(b, orderBy);
+          const comparison = valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+          return order === 'asc' ? comparison : -comparison;
+        });
   const selectedSubscription =
     menuState !== null
       ? notifications.find((n) => n.id === menuState.id)
       : undefined;
-  const isPaused = selectedSubscription?.status === 'paused';
+  const isPaused = selectedSubscription?.active === false;
 
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
@@ -138,24 +174,46 @@ export default function AccountNotifications(): React.ReactElement {
   };
 
   const handleTogglePause = (): void => {
-    if (menuState !== null) {
-      const { id } = menuState;
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === id
-            ? { ...n, status: n.status === 'paused' ? 'active' : 'paused' }
-            : n,
-        ),
-      );
-      handleMenuClose();
+    if (menuState === null) {
+      return;
     }
+    const { id } = menuState;
+    const subscription = notifications.find((n) => n.id === id);
+    handleMenuClose();
+    if (subscription === undefined) {
+      return;
+    }
+    const nextActive = !subscription.active;
+    const withToggledActive = (
+      current: NotificationSubscription[] | undefined,
+    ): NotificationSubscription[] =>
+      (current ?? []).map((n) =>
+        n.id === id ? { ...n, active: nextActive } : n,
+      );
+
+    mutate(
+      updateUserSubscription(id, nextActive).then((updated) => [updated]),
+      {
+        optimisticData: withToggledActive,
+        rollbackOnError: true,
+        populateCache: ([updated], current) =>
+          (current ?? []).map((n) => (n.id === id ? updated : n)),
+        revalidate: false,
+      },
+    ).catch(() => {
+      setActionError('Failed to update the subscription');
+    });
   };
 
   const handleUnsubscribe = (): void => {
     if (menuState !== null) {
       const { id } = menuState;
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
       handleMenuClose();
+      deleteUserSubscription(id)
+        .then(() => mutate())
+        .catch(() => {
+          setActionError('Failed to unsubscribe');
+        });
     }
   };
 
@@ -166,23 +224,6 @@ export default function AccountNotifications(): React.ReactElement {
     setSettingsDialogOpen(false);
   };
 
-  const handleDefaultChangeTypeToggle = (value: string): void => {
-    if (value === 'any') {
-      setDefaultChangeTypes((prev) =>
-        prev.includes('any') ? [] : ['any', ...SPECIFIC_TYPES],
-      );
-    } else {
-      setDefaultChangeTypes((prev) => {
-        if (prev.includes(value)) {
-          return prev.filter((t) => t !== value && t !== 'any');
-        }
-        const withNew = prev.filter((t) => t !== 'any').concat(value);
-        const allSpecific = SPECIFIC_TYPES.every((t) => withNew.includes(t));
-        return allSpecific ? ['any', ...withNew] : withNew;
-      });
-    }
-  };
-
   const selectedRowId = menuState?.id;
   const settingsInitial =
     selectedRowId !== undefined
@@ -190,209 +231,163 @@ export default function AccountNotifications(): React.ReactElement {
       : defaultNotificationSettings;
 
   return (
-    <AccountSectionContainer title='Notifications'>
-      <Tabs
-        value={tab}
-        onChange={(_, v: number) => {
-          setTab(v);
+    <AccountSectionContainer
+      title={'Notifications'}
+      subtitle='View and manage the feeds you are subscribed to for update notifications'
+      loading={isLoading}
+    >
+      <Snackbar
+        open={actionError !== null}
+        autoHideDuration={4000}
+        onClose={() => {
+          setActionError(null);
         }}
-        sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Tab label='Feeds' sx={{ textTransform: 'none' }} />
-        <Tab label='Settings' sx={{ textTransform: 'none' }} />
-      </Tabs>
+        <Alert
+          severity='error'
+          onClose={() => {
+            setActionError(null);
+          }}
+          sx={{ width: '100%' }}
+        >
+          {actionError}
+        </Alert>
+      </Snackbar>
 
-      {/* ── Feeds tab ─────────────────────────────────────────────── */}
-      {tab === 0 && (
-        <Box>
-          <TableContainer
-            sx={{ backgroundColor: 'background.default', borderRadius: 1 }}
-          >
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>
+      <Box>
+        {loadError !== undefined && (
+          <Alert severity='error' sx={{ mb: 2 }}>
+            Failed to load notification subscriptions.
+          </Alert>
+        )}
+        <TableContainer
+          sx={{ backgroundColor: 'background.default', borderRadius: 1 }}
+        >
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ minWidth: 200 }}>
+                  <TableSortLabel
+                    active={orderBy === 'title'}
+                    direction={orderBy === 'title' ? order : 'asc'}
+                    onClick={() => {
+                      handleSortClick('title');
+                    }}
+                  >
                     <Typography fontWeight={600}>Title</Typography>
-                  </TableCell>
-                  <TableCell>
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell sx={{ width: 250 }}>
+                  <TableSortLabel
+                    active={orderBy === 'type'}
+                    direction={orderBy === 'type' ? order : 'asc'}
+                    onClick={() => {
+                      handleSortClick('type');
+                    }}
+                  >
+                    <Typography fontWeight={600}>Type</Typography>
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell sx={{ width: 110 }}>
+                  <TableSortLabel
+                    active={orderBy === 'status'}
+                    direction={orderBy === 'status' ? order : 'asc'}
+                    onClick={() => {
+                      handleSortClick('status');
+                    }}
+                  >
                     <Typography fontWeight={600}>Status</Typography>
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell sx={{ width: 140 }}>
+                  <TableSortLabel
+                    active={orderBy === 'subscribed'}
+                    direction={orderBy === 'subscribed' ? order : 'asc'}
+                    onClick={() => {
+                      handleSortClick('subscribed');
+                    }}
+                  >
+                    <Typography fontWeight={600}>Subscribed</Typography>
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell sx={{ width: 56 }}>
+                  <Typography fontWeight={600}></Typography>
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {sortedNotifications.map((n) => (
+                <TableRow key={n.id} hover>
+                  <TableCell>{renderSubscriptionTitle(n)}</TableCell>
+                  <TableCell>
+                    {getNotificationTypeLabel(n.notification_id)}
                   </TableCell>
                   <TableCell>
-                    <Typography fontWeight={600}>Last Sent</Typography>
+                    <Chip
+                      label={n.active ? 'Active' : 'Paused'}
+                      color={n.active ? 'success' : 'default'}
+                      size='small'
+                      variant='outlined'
+                    />
                   </TableCell>
                   <TableCell>
-                    <Typography fontWeight={600}></Typography>
+                    {new Date(n.created_at).toLocaleDateString(undefined, {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </TableCell>
+                  <TableCell sx={{ textAlign: 'right' }}>
+                    <IconButton
+                      size='small'
+                      aria-label={`Actions for ${n.notification_id}`}
+                      onClick={(e) => {
+                        handleMenuOpen(e, n.id);
+                      }}
+                    >
+                      <MoreVertIcon fontSize='small' />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {notifications.map((n) => (
-                  <TableRow key={n.id} hover>
-                    <TableCell>{n.title}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={n.status === 'active' ? 'Active' : 'Paused'}
-                        color={n.status === 'active' ? 'success' : 'default'}
-                        size='small'
-                        variant='outlined'
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {n.lastSent !== null
-                        ? new Date(n.lastSent).toLocaleDateString(undefined, {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                          })
-                        : '—'}
-                    </TableCell>
-                    <TableCell sx={{ textAlign: 'right' }}>
-                      <IconButton
-                        size='small'
-                        aria-label={`Actions for ${n.title}`}
-                        onClick={(e) => {
-                          handleMenuOpen(e, n.id);
-                        }}
-                      >
-                        <MoreVertIcon fontSize='small' />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {notifications.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} align='center'>
-                      <Typography color='text.secondary' sx={{ py: 4 }}>
-                        No active subscriptions
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          <Menu
-            anchorEl={menuState?.anchor}
-            open={menuState !== null}
-            onClose={handleMenuClose}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-          >
-            <MenuItem onClick={handleTogglePause}>
-              {isPaused ? 'Resume Notifications' : 'Pause Notifications'}
-            </MenuItem>
-            <MenuItem onClick={handleUnsubscribe} sx={{ color: 'error.main' }}>
-              Unsubscribe
-            </MenuItem>
-          </Menu>
-
-          <NotificationSettingsDialog
-            open={settingsDialogOpen}
-            onClose={() => {
-              setSettingsDialogOpen(false);
-            }}
-            onSave={handleSaveSettings}
-            initialSettings={settingsInitial}
-          />
-        </Box>
-      )}
-
-      {/* ── Settings tab ──────────────────────────────────────────── */}
-      {tab === 1 && (
-        <Box sx={{ maxWidth: 480 }}>
-          <Typography variant='h6' gutterBottom>
-            Global Notification Preferences
-          </Typography>
-          <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
-            These settings will apply to all feed subscriptions you create
-          </Typography>
-
-          <FormControl component='fieldset' sx={{ mb: 3, display: 'block' }}>
-            <FormLabel component='legend' sx={{ fontWeight: 500, mb: 1 }}>
-              Notification Frequency
-            </FormLabel>
-            <Select
-              value={defaultFrequency}
-              onChange={(e) => {
-                setDefaultFrequency(
-                  e.target.value as NotificationSettings['frequency'],
-                );
-              }}
-              size='small'
-            >
-              <MenuItem value='onChange'>Whenever there is a change</MenuItem>
-              <MenuItem value='weekly'>Weekly digest</MenuItem>
-              <MenuItem value='monthly'>Monthly digest</MenuItem>
-              <MenuItem value='quarterly'>Quarterly digest</MenuItem>
-            </Select>
-          </FormControl>
-
-          <FormControl component='fieldset' sx={{ mb: 3, display: 'block' }}>
-            <FormLabel component='legend' sx={{ fontWeight: 500, mb: 1 }}>
-              Notify Me About
-            </FormLabel>
-            <FormGroup>
-              {CHANGE_TYPE_OPTIONS.map((opt) => (
-                <FormControlLabel
-                  key={opt.value}
-                  control={
-                    <Checkbox
-                      checked={defaultChangeTypes.includes(opt.value)}
-                      onChange={() => {
-                        handleDefaultChangeTypeToggle(opt.value);
-                      }}
-                    />
-                  }
-                  label={
-                    opt.value in CHANGE_TYPE_INFO ? (
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <span>{opt.label}</span>
-                        <IconButton
-                          size='small'
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setInfoPopover({
-                              anchor: e.currentTarget,
-                              type: opt.value,
-                            });
-                          }}
-                          sx={{ ml: 0.5 }}
-                          aria-label={`About ${opt.label}`}
-                        >
-                          <InfoOutlinedIcon fontSize='small' />
-                        </IconButton>
-                      </Box>
-                    ) : (
-                      opt.label
-                    )
-                  }
-                />
               ))}
-            </FormGroup>
-          </FormControl>
+              {notifications.length === 0 && loadError === undefined && (
+                <TableRow>
+                  <TableCell colSpan={5} align='center'>
+                    <Typography color='text.secondary' sx={{ py: 4 }}>
+                      No active subscriptions
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-          <Button
-            variant='contained'
-            onClick={() => {
-              // Settings saved in local state; in a real app this would persist
-            }}
-          >
-            Save Preferences
-          </Button>
-        </Box>
-      )}
+        <Menu
+          anchorEl={menuState?.anchor}
+          open={menuState !== null}
+          onClose={handleMenuClose}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        >
+          <MenuItem onClick={handleTogglePause}>
+            {isPaused ? 'Resume Notifications' : 'Pause Notifications'}
+          </MenuItem>
+          <MenuItem onClick={handleUnsubscribe} sx={{ color: 'error.main' }}>
+            Unsubscribe
+          </MenuItem>
+        </Menu>
 
-      {infoPopover != null && (
-        <ChangeTypeInfoPopover
-          anchor={infoPopover.anchor}
-          type={infoPopover.type}
+        <NotificationSettingsDialog
+          open={settingsDialogOpen}
           onClose={() => {
-            setInfoPopover(null);
+            setSettingsDialogOpen(false);
           }}
+          onSave={handleSaveSettings}
+          initialSettings={settingsInitial}
         />
-      )}
+      </Box>
     </AccountSectionContainer>
   );
 }

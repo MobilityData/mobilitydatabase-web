@@ -12,20 +12,37 @@ import {
 import { useDispatch } from 'react-redux';
 import { app } from '../../firebase';
 import { anonymousLogin } from '../store/profile-reducer';
-import {
-  setUserCookieSession,
-  refreshUserFeatureFlags,
-} from '../services/session-service';
+import { setUserCookieSession } from '../services/session-service';
+import { revalidateUserFeatureFlags } from '../services/user-feature-flag-service';
 
 interface AuthSession {
+  /**
+   * True once Firebase has reported an auth state at least once, whether or not
+   * a user was found. Use this to tell "still resolving" from "resolved: nobody
+   * is signed in" — `isAuthReady` cannot express that difference, since it is
+   * false in both cases.
+   */
+  isAuthResolved: boolean;
+  /**
+   * True while a Firebase user exists (anonymous included). Gates work that
+   * needs a session cookie; it is NOT "auth has resolved" — see isAuthResolved.
+   */
   isAuthReady: boolean;
+  /**
+   * Firebase uid of the current user, anonymous included. Null when signed out.
+   * Use this in cache keys for anything user-specific so an identity change
+   * becomes a different key rather than something that must be invalidated.
+   */
+  uid: string | null;
   email: string | null;
   isAuthenticated: boolean;
   displayName?: string | null;
 }
 
 const AuthReadyContext = createContext<AuthSession>({
+  isAuthResolved: false,
   isAuthReady: false,
+  uid: null,
   email: null,
   isAuthenticated: false,
   displayName: null,
@@ -51,7 +68,9 @@ export function useAuthSession(): AuthSession {
  * 4. Deduplicates POSTs across tabs — localStorage is shared across all
  *    tabs, so a renewal written by any tab is immediately visible to all
  *    others via the `isCookieFresh` check in setUserCookieSession.
- * 5. Exposes `isAuthReady` via context.
+ * 5. Exposes the session and the current `uid` via context. Consumers key
+ *    user-specific caches on `uid`, so an identity change lands on a different
+ *    key instead of needing invalidation.
  */
 export function AuthSessionProvider({
   children,
@@ -60,7 +79,9 @@ export function AuthSessionProvider({
 }): ReactElement {
   const dispatch = useDispatch();
   const [session, setSession] = useState<AuthSession>({
+    isAuthResolved: false,
     isAuthReady: false,
+    uid: null,
     email: null,
     isAuthenticated: false,
     displayName: null,
@@ -68,6 +89,23 @@ export function AuthSessionProvider({
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    /**
+     * Establishes or renews `md_session`. A renewal (~hourly) is also when
+     * user-specific data should be re-checked, so entitlements stay in step with
+     * the session without a poller of their own.
+     */
+    const syncSession = (uid: string, isAnonymous: boolean): void => {
+      setUserCookieSession()
+        .then((wasRenewed) => {
+          if (wasRenewed && !isAnonymous) {
+            void revalidateUserFeatureFlags(uid);
+          }
+        })
+        .catch(() => {
+          console.error('Failed to establish session cookie');
+        });
+    };
+
     const unsubscribe = app.auth().onIdTokenChanged((user) => {
       if (intervalRef.current != null) {
         clearInterval(intervalRef.current);
@@ -76,47 +114,29 @@ export function AuthSessionProvider({
 
       if (user != null) {
         setSession({
+          isAuthResolved: true,
           isAuthReady: true,
+          uid: user.uid,
           email: user.email ?? null,
           isAuthenticated: !user.isAnonymous,
           displayName: user.displayName ?? null,
         });
-        setUserCookieSession()
-          .then((wasRenewed) => {
-            if (wasRenewed && !user.isAnonymous) {
-              // The user feature flags will refresh with the session token ~1 hour
-              refreshUserFeatureFlags().catch(() => {
-                console.error('Failed to refresh feature flags');
-              });
-            }
-          })
-          .catch(() => {
-            console.error('Failed to establish session cookie');
-          });
+        syncSession(user.uid, user.isAnonymous);
 
         // Check every 5 minutes; the cookie lasts 60 minutes, so this ensures renewal well before expiry
         // If the cookie is not expired, it will return early and skip the POST
         // The token will refresh 5 minutes before expiry which is why the 5 minute interval is used here.
         intervalRef.current = setInterval(
           () => {
-            setUserCookieSession()
-              .then((wasRenewed) => {
-                if (wasRenewed && !user.isAnonymous) {
-                  // The user feature flags will refresh with the session token ~1 hour
-                  refreshUserFeatureFlags().catch(() => {
-                    console.error('Failed to refresh feature flags');
-                  });
-                }
-              })
-              .catch(() => {
-                console.error('Failed to establish session cookie');
-              });
+            syncSession(user.uid, user.isAnonymous);
           },
           5 * 60 * 1000,
         ); // 5 minutes
       } else {
         setSession({
+          isAuthResolved: true,
           isAuthReady: false,
+          uid: null,
           email: null,
           isAuthenticated: false,
           displayName: null,
