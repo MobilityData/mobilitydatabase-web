@@ -1,13 +1,4 @@
 import { app } from '../../firebase';
-import {
-  type FeatureFlag,
-  toUserFeatureFlags,
-} from '../interface/UserFeatureFlags';
-import {
-  FEATURE_FLAGS_CHANNEL,
-  broadcastExtendedMessage,
-} from './channel-service';
-import { retrieveUserInformation } from './profile-service';
 
 const STORED_SESSION_KEY = 'md_session_meta';
 const SESSION_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour
@@ -51,9 +42,7 @@ function getSessionStatus(uid: string): SessionStatus {
  *
  * Returns true when an existing session was renewed (same uid, cookie was
  * stale). Returns false when the session was freshly established (first login)
- * or was still fresh (no-op). Callers can use this signal to re-fetch
- * user-specific data (e.g. feature flags) that should stay in sync with the
- * session renewal cycle without fetching on every login.
+ * or was still fresh (no-op).
  */
 export const setUserCookieSession = async (): Promise<boolean> => {
   if (typeof window === 'undefined') return false;
@@ -107,50 +96,4 @@ export const clearUserCookieSession = async (): Promise<void> => {
   await fetch('/api/session', {
     method: 'DELETE',
   });
-};
-
-/**
- * Re-fetches the user profile and applies the latest feature flags.
- * Called on session renewal (hourly) to keep flags current without re-login.
- * Login and sign-up sagas handle the initial flag fetch themselves.
- */
-export const refreshUserFeatureFlags = async (): Promise<void> => {
-  try {
-    const userData = await retrieveUserInformation();
-    if (userData != null) {
-      await applyUserFeatureFlags(userData.features);
-    }
-  } catch {
-    // Non-critical — best-effort flag refresh.
-  }
-};
-
-/**
- * Sends the resolved user feature flags to POST /api/feature-flags, which
- * HMAC-signs them and sets the httpOnly md_features cookie.
- *
- * Follows the same pattern as setUserCookieSession → POST /api/session.
- * Called by login and token-refresh sagas after fetching the user profile.
- * Distributes the flags to all tabs via the feature-flags channel so the UserFeatureFlagProvider updates.
- */
-export const applyUserFeatureFlags = async (
-  features: FeatureFlag[],
-): Promise<void> => {
-  if (typeof window === 'undefined') return;
-
-  // Sets the md_features cookie server-side, so it is httpOnly and not accessible to JS.
-  const resp = await fetch('/api/feature-flags', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(features),
-  });
-
-  if (resp.ok) {
-    // Deliver the resolved flags to this tab and every other open tab through
-    // the shared feature-flags channel (see UserFeatureFlagProvider listener).
-    broadcastExtendedMessage(
-      FEATURE_FLAGS_CHANNEL,
-      toUserFeatureFlags(features),
-    );
-  }
 };
