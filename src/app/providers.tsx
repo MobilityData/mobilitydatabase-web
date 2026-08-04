@@ -3,7 +3,6 @@
 import * as React from 'react';
 import ContextProviders from './components/Context';
 import { RemoteConfigProvider } from './context/RemoteConfigProvider';
-import { UserFeatureFlagProvider } from './context/UserFeatureFlagProvider';
 import { type RemoteConfigValues } from './interface/RemoteConfig';
 
 // Look into this provider and see if it's client blocking. Niche provider might be able to isolate for single use
@@ -11,6 +10,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { AuthSessionProvider } from './components/AuthSessionProvider';
 import { AuthBroadcastChannelSync } from './components/AuthBroadcastChannelSync';
+import { UserFeatureFlagsSync } from './components/UserFeatureFlagsSync';
 import { polyfillCountryFlagEmojis } from 'country-flag-emoji-polyfill';
 
 interface ProvidersProps {
@@ -48,12 +48,11 @@ export function Providers({
     <ContextProviders>
       <AuthBroadcastChannelSync />
       <AuthSessionProvider>
+        <UserFeatureFlagsSync />
         <RemoteConfigProvider config={remoteConfig}>
-          <UserFeatureFlagProvider>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              {children}
-            </LocalizationProvider>
-          </UserFeatureFlagProvider>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            {children}
+          </LocalizationProvider>
         </RemoteConfigProvider>
       </AuthSessionProvider>
     </ContextProviders>
