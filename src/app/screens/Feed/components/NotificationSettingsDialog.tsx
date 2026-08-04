@@ -102,10 +102,8 @@ export default function NotificationSettingsDialog({
   }, [open, initialSettings, resetSaveError]);
 
   const handleChangeTypeToggle = (value: string): void => {
-    setChangeTypes(
-      changeTypes.includes(value)
-        ? changeTypes.filter((t) => t !== value)
-        : [...changeTypes, value],
+    setChangeTypes((prev) =>
+      prev.includes(value) ? prev.filter((t) => t !== value) : [...prev, value],
     );
   };
 
@@ -163,6 +161,7 @@ export default function NotificationSettingsDialog({
                   control={
                     <Checkbox
                       checked={changeTypes.includes(type.id)}
+                      disabled={isSaving}
                       onChange={() => {
                         handleChangeTypeToggle(type.id);
                       }}
