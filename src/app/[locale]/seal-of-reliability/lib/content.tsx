@@ -56,7 +56,7 @@ export const benefitEntries: BenefitEntry[] = [
     icon: GavelIcon,
     items: [
       'Reference the Seal definition in policy requirements',
-      'Use the Seal as a measureable, automated standard for GTFS Schedule data quality',
+      'Use the Seal as a measurable, automated standard for GTFS Schedule data quality',
     ],
   },
 ];
