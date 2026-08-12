@@ -1,3 +1,10 @@
+import { type ComponentType } from 'react';
+import { type SvgIconProps } from '@mui/material/SvgIcon';
+import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
+import AppsIcon from '@mui/icons-material/Apps';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import GavelIcon from '@mui/icons-material/Gavel';
+
 export interface HeroContent {
   title: string;
   paragraphs: string[];
@@ -13,12 +20,14 @@ export const heroContent: HeroContent = {
 
 export interface BenefitEntry {
   title: string;
+  icon: ComponentType<SvgIconProps>;
   items: string[];
 }
 
 export const benefitEntries: BenefitEntry[] = [
   {
     title: 'For Transit Agencies',
+    icon: DirectionsBusIcon,
     items: [
       'Use the Seal definition in procurement contracts to set a clear baseline for vendor GTFS data quality',
       'Triage data quality issues using Mobility Database analytics',
@@ -27,6 +36,7 @@ export const benefitEntries: BenefitEntry[] = [
   },
   {
     title: 'For Applications',
+    icon: AppsIcon,
     items: [
       'Quickly identify feeds that are ready to ingest without heavy pre-processing and testing',
       'Assess regional launch readiness based on how many feeds in an area have earned the Seal',
@@ -35,6 +45,7 @@ export const benefitEntries: BenefitEntry[] = [
   },
   {
     title: 'For Vendors',
+    icon: StorefrontIcon,
     items: [
       "Evaluate prospective clients' current data quality",
       "Adjust quotes based on the anticipated level of effort to bring a feed up to the Seal's standard",
@@ -42,6 +53,7 @@ export const benefitEntries: BenefitEntry[] = [
   },
   {
     title: 'For Regulators',
+    icon: GavelIcon,
     items: [
       'Reference the Seal definition in policy requirements',
       'Use the Seal as a measureable, automated standard for GTFS Schedule data quality',

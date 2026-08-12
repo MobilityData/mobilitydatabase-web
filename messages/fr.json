@@ -568,6 +568,7 @@
     "columns": {
       "platform": "Plateforme",
       "tools": "Outils",
+      "resources": "Ressources",
       "company": "Entreprise",
       "legal": "Légal"
     },
@@ -579,6 +580,7 @@
       "gtfsValidator": "Validateur GTFS",
       "gtfsRtValidator": "Validateur GTFS-RT",
       "gbfsValidator": "Validateur GBFS",
+      "sealOfReliability": "Sceau de fiabilité",
       "about": "À propos",
       "faq": "FAQ",
       "contactUs": "Contactez-nous",

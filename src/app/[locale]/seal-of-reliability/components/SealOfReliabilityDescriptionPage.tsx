@@ -41,7 +41,7 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
       }}
       maxWidth='lg'
     >
-      <SectionContainer sx={{ mt: 0 }} maxWidth='xl'>
+      <SectionContainer sx={{ mt: 0 }} maxWidth='lg'>
         <Container
           maxWidth='lg'
           sx={{
@@ -126,32 +126,35 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
             gap: 2,
           }}
         >
-          {benefitEntries.map((entry) => (
-            <Card variant='section' sx={{ mb: 0 }} key={entry.title}>
-              <CardSectionTitle component='h3'>
-                <LockIcon fontSize='inherit' aria-hidden />
-                {entry.title}
-              </CardSectionTitle>
-              <CardContent sx={{ '&:last-child': { pb: 2 } }}>
-                <Box
-                  component={'ul'}
-                  sx={{
-                    pl: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 1,
-                    m: 0,
-                  }}
-                >
-                  {entry.items.map((item) => (
-                    <li key={item}>
-                      <Typography variant='body1'>{item}</Typography>
-                    </li>
-                  ))}
-                </Box>
-              </CardContent>
-            </Card>
-          ))}
+          {benefitEntries.map((entry) => {
+            const BenefitIcon = entry.icon;
+            return (
+              <Card variant='section' sx={{ mb: 0 }} key={entry.title}>
+                <CardSectionTitle component='h3'>
+                  <BenefitIcon fontSize='inherit' aria-hidden />
+                  {entry.title}
+                </CardSectionTitle>
+                <CardContent sx={{ '&:last-child': { pb: 2 } }}>
+                  <Box
+                    component={'ul'}
+                    sx={{
+                      pl: 2,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 1,
+                      m: 0,
+                    }}
+                  >
+                    {entry.items.map((item) => (
+                      <li key={item}>
+                        <Typography variant='body1'>{item}</Typography>
+                      </li>
+                    ))}
+                  </Box>
+                </CardContent>
+              </Card>
+            );
+          })}
         </Box>
       </SectionContainer>
 
