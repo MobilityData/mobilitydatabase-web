@@ -557,6 +557,10 @@
       "openSource": "An open source community actively working to improve the tools"
     }
   },
+  "sealOfReliability": {
+    "title": "Seal of Reliability",
+    "description": "The Seal of Reliability is an indicator of feed quality and consistency, helping you identify GTFS, GTFS Realtime, and GBFS feeds that are reliably maintained and up to date."
+  },
   "footer": {
     "tagline": "An open catalog of transit and mobility data feeds, serving the global transportation community.",
     "maintainedBy": "Maintained with 💙 by MobilityData",
