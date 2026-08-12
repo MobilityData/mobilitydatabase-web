@@ -28,7 +28,7 @@ import {
   searchBarStyles,
   stickyHeaderStyles,
 } from '../../../screens/Feeds/Feeds.styles';
-import { ColoredContainer } from '../../../styles/PageLayout.style';
+import SectionContainer from '../../../components/SectionContainer';
 import AdvancedSearchTable from '../../../screens/Feeds/AdvancedSearchTable';
 import ViewHeadlineIcon from '@mui/icons-material/ViewHeadline';
 import GridViewIcon from '@mui/icons-material/GridView';
@@ -269,7 +269,7 @@ export default function FeedsScreen(): React.ReactElement {
             </Button>
           </Container>
         </Box>
-        <ColoredContainer maxWidth={'xl'} sx={{ pt: 2 }}>
+        <SectionContainer maxWidth={'xl'} sx={{ pt: 2 }}>
           {isValidating && !isLoading && (
             <LinearProgress
               sx={{
@@ -654,7 +654,7 @@ export default function FeedsScreen(): React.ReactElement {
               )}
             </Grid>
           </Grid>
-        </ColoredContainer>
+        </SectionContainer>
       </Box>
     </Container>
   );
