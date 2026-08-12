@@ -10,7 +10,7 @@ const defaultSectionContainerSx = {
 } as const;
 
 export default function SectionContainer({
-  sx,
+  sx = [],
   ...props
 }: ContainerProps): ReactElement {
   return (
