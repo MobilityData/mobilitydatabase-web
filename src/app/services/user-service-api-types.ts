@@ -59,13 +59,13 @@ export interface paths {
     };
     /**
      * List the current user's notification subscriptions
-     * @description Returns all notification subscriptions for the authenticated user.
+     * @description Returns all notification subscriptions for the authenticated user. This feature is available to selected users. To request access or learn more, contact us at api@mobilitydata.org.
      */
     get: operations['getUserSubscriptions'];
     put?: never;
     /**
      * Create a notification subscription
-     * @description Subscribes the authenticated user to a notification type.
+     * @description Subscribes the authenticated user to a notification type. This feature is available to selected users. To request access or learn more, contact us at api@mobilitydata.org.
      */
     post: operations['createUserSubscription'];
     delete?: never;
@@ -86,14 +86,14 @@ export interface paths {
     post?: never;
     /**
      * Delete or disable a notification subscription
-     * @description Removes a notification subscription by ID. The announcements subscription (`api.announcements`) cannot be deleted; calling this endpoint for it disables the subscription (sets it inactive) instead of removing it.
+     * @description Removes a notification subscription by ID. The announcements subscription (`api.announcements`) cannot be deleted; calling this endpoint for it disables the subscription (sets it inactive) instead of removing it. This feature is available to selected users. To request access or learn more, contact us at api@mobilitydata.org.
      */
     delete: operations['deleteUserSubscription'];
     options?: never;
     head?: never;
     /**
      * Toggle a notification subscription
-     * @description Activates or deactivates a notification subscription by ID.
+     * @description Activates or deactivates a notification subscription by ID. This feature is available to selected users. To request access or learn more, contact us at api@mobilitydata.org.
      */
     patch: operations['updateUserSubscription'];
     trace?: never;
@@ -117,7 +117,7 @@ export interface paths {
      * @description Removes a notification subscription identified by its ID. The
      *     announcements subscription (`api.announcements`) cannot be deleted;
      *     calling this endpoint for it disables the subscription (sets it inactive)
-     *     instead of removing it.
+     *     instead of removing it. This feature is available to selected users. To request access or learn more, contact us at api@mobilitydata.org.
      */
     delete: operations['deleteSubscription'];
     options?: never;
@@ -226,6 +226,28 @@ export interface components {
        * @description Timestamp when the subscription was created.
        */
       created_at: string;
+      /** @description The feeds this subscription targets (feed-scoped notification types: feed.url_updated, feed.url_availability, feed.coverage), each with its resolved metadata. Resolved from the feeds database at read time using the stable feed IDs — not persisted on the subscription. Consumers can build a human-readable description from these fields. */
+      feeds?: components['schemas']['SubscriptionFeed'][] | null;
+    };
+    /** @description Metadata for a feed targeted by a notification subscription, resolved from the feed's stable ID at read time (not persisted). */
+    SubscriptionFeed: {
+      /**
+       * @description The feed's stable ID.
+       * @example mdb-1
+       */
+      feed_id: string;
+      /**
+       * @description The feed's data type.
+       * @example gtfs
+       */
+      data_type?: string | null;
+      /**
+       * @description The transit/mobility data provider name.
+       * @example Metropolitan Transit Authority
+       */
+      provider?: string | null;
+      /** @description The feed's display name. */
+      feed_name?: string | null;
     };
     CreateNotificationSubscriptionRequest: {
       /**
@@ -233,6 +255,14 @@ export interface components {
        * @example feed.published
        */
       notification_id: string;
+      /**
+       * @description Feed stable IDs to subscribe to. Required (non-empty) for the feed-scoped notification types feed.url_updated, feed.url_availability and feed.coverage; must be omitted or empty for other types. Validation is enforced in code, not the schema.
+       * @example [
+       *       "mdb-1",
+       *       "mdb-42"
+       *     ]
+       */
+      feed_ids?: string[];
     };
     UpdateNotificationSubscriptionRequest: {
       /** @description Whether the subscription should be active. */
@@ -384,13 +414,6 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description Not yet implemented. */
-      501: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
     };
   };
   getUserSubscriptions: {
@@ -413,13 +436,6 @@ export interface operations {
       };
       /** @description Unauthorized. */
       401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Not yet implemented. */
-      501: {
         headers: {
           [name: string]: unknown;
         };
@@ -463,13 +479,6 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description Not yet implemented. */
-      501: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
     };
   };
   deleteUserSubscription: {
@@ -500,13 +509,6 @@ export interface operations {
       };
       /** @description Subscription not found. */
       404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Not yet implemented. */
-      501: {
         headers: {
           [name: string]: unknown;
         };
@@ -548,13 +550,6 @@ export interface operations {
       };
       /** @description Subscription not found. */
       404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Not yet implemented. */
-      501: {
         headers: {
           [name: string]: unknown;
         };

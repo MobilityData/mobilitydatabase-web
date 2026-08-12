@@ -4,7 +4,6 @@ import { getFirebaseAdminApp } from '../../../lib/firebase-admin';
 import { signSessionToken, verifySessionToken } from '../../utils/session-jwt';
 
 const COOKIE_NAME = 'md_session';
-const COOKIE_NAME_FEATURE_FLAGS = 'md_features';
 
 function isProduction(): boolean {
   return process.env.NODE_ENV === 'production';
@@ -90,9 +89,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function DELETE(req: NextRequest): Promise<NextResponse> {
-  // Clear both the session cookie and the feature flags cookie on logout.
   const response = NextResponse.json({ status: 'logged_out' });
   response.cookies.delete(COOKIE_NAME);
-  response.cookies.delete(COOKIE_NAME_FEATURE_FLAGS);
   return response;
 }
