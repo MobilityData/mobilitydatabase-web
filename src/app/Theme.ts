@@ -30,6 +30,12 @@ declare module '@mui/material/Typography' {
   }
 }
 
+declare module '@mui/material/Paper' {
+  interface PaperPropsVariantOverrides {
+    section: true;
+  }
+}
+
 export enum ThemeModeEnum {
   light = 'light',
   dark = 'dark',
@@ -245,6 +251,22 @@ export const theme = createTheme({
           },
         }),
       },
+    },
+    MuiCard: {
+      variants: [
+        {
+          props: { variant: 'section' },
+          style: ({ theme }) => ({
+            background: 'var(--mui-palette-background-default)',
+            border: 'none',
+            padding: theme.spacing(2),
+            marginBottom: theme.spacing(2),
+            '&:last-of-type': {
+              marginBottom: 0,
+            },
+          }),
+        },
+      ],
     },
     MuiTypography: {
       variants: [
