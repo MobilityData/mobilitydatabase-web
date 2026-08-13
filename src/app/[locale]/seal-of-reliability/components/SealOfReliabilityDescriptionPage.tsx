@@ -130,6 +130,7 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
       <SectionContainer sx={{ mt: 5 }} maxWidth='lg'>
         <Typography
           variant='h6'
+          component='h2'
           color='primary'
           sx={{ fontWeight: 700, mb: 1 }}
         >
@@ -178,6 +179,7 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
       <SectionContainer sx={{ mt: 5 }}>
         <Typography
           variant='h6'
+          component='h2'
           color='primary'
           sx={{ fontWeight: 700, mb: 1 }}
         >
@@ -212,6 +214,7 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
       <SectionContainer sx={{ mt: 5 }}>
         <Typography
           variant='h6'
+          component='h2'
           color='primary'
           sx={{ fontWeight: 700, mb: 1 }}
         >
@@ -295,6 +298,7 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
       <SectionContainer sx={{ mt: 5 }}>
         <Typography
           variant='h6'
+          component='h2'
           color='primary'
           sx={{ fontWeight: 700, mb: 1 }}
         >
