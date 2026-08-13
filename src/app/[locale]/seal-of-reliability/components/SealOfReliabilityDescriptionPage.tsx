@@ -20,6 +20,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { type ReactElement } from 'react';
 import Image from 'next/image';
 import LockIcon from '@mui/icons-material/Lock';
+import { getTranslations } from 'next-intl/server';
 import CardSectionTitle from '../../../components/CardSectionTitle';
 import SectionContainer from '../../../components/SectionContainer';
 import { accordionStyle } from '../../../components/accordionStyle';
@@ -31,7 +32,13 @@ import {
   heroContent,
 } from '../lib/content';
 
+const FEEDS_MEETING_STANDARD_PERCENT = 41;
+const FEEDS_BELOW_STANDARD_PERCENT = 100 - FEEDS_MEETING_STANDARD_PERCENT;
+
 export default async function SealOfReliabilityDescriptionPage(): Promise<ReactElement> {
+  const t = await getTranslations('sealOfReliability');
+  const heroParagraphs = t.raw(heroContent.paragraphsKey) as string[];
+
   return (
     <Container
       component='main'
@@ -53,9 +60,9 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
         >
           <Box sx={{ width: { xs: '100%', md: '55%' } }}>
             <Typography variant='h1' sx={{ mb: 2 }}>
-              {heroContent.title}
+              {t(heroContent.titleKey)}
             </Typography>
-            {heroContent.paragraphs.map((paragraph) => (
+            {heroParagraphs.map((paragraph) => (
               <Typography
                 variant='body2'
                 sx={{ mb: 1, color: 'text.secondary', lineHeight: '1.4rem' }}
@@ -65,7 +72,7 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
               </Typography>
             ))}
             <Button variant='text' sx={{ ml: -1 }}>
-              See a feed measured asainst the standard (todo)
+              {t(heroContent.ctaButtonKey)}
             </Button>
           </Box>
           <Box
@@ -78,7 +85,7 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
           >
             <Image
               src={'/assets/seal-reliability.png'}
-              alt={'current placeholder'}
+              alt={t('hero.imageAlt')}
               width={250}
               height={250}
               style={{
@@ -91,9 +98,12 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
                 variant='subtitle2'
                 sx={{ opacity: 0.7, fontWeight: 'bold', mb: 0.5 }}
               >
-                Feeds meeting the standard
+                {t('hero.feedsMeetingStandard')}
               </Typography>
-              <LinearProgress variant='determinate' value={41} />
+              <LinearProgress
+                variant='determinate'
+                value={FEEDS_MEETING_STANDARD_PERCENT}
+              />
               <Box
                 sx={{
                   display: 'flex',
@@ -102,9 +112,15 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
                 }}
               >
                 <Typography variant='caption' color='primary'>
-                  41% meets
+                  {t('hero.meetsPercent', {
+                    percent: FEEDS_MEETING_STANDARD_PERCENT,
+                  })}
                 </Typography>
-                <Typography variant='caption'>59% below standard</Typography>
+                <Typography variant='caption'>
+                  {t('hero.belowStandardPercent', {
+                    percent: FEEDS_BELOW_STANDARD_PERCENT,
+                  })}
+                </Typography>
               </Box>
             </Box>
           </Box>
@@ -117,7 +133,7 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
           color='primary'
           sx={{ fontWeight: 700, mb: 1 }}
         >
-          Benefits
+          {t('benefits.title')}
         </Typography>
         <Box
           sx={{
@@ -128,11 +144,12 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
         >
           {benefitEntries.map((entry) => {
             const BenefitIcon = entry.icon;
+            const items = t.raw(entry.itemsKey) as string[];
             return (
-              <Card variant='section' sx={{ mb: 0 }} key={entry.title}>
+              <Card variant='section' sx={{ mb: 0 }} key={entry.titleKey}>
                 <CardSectionTitle component='h3'>
                   <BenefitIcon fontSize='inherit' aria-hidden />
-                  {entry.title}
+                  {t(entry.titleKey)}
                 </CardSectionTitle>
                 <CardContent sx={{ '&:last-child': { pb: 2 } }}>
                   <Box
@@ -145,7 +162,7 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
                       m: 0,
                     }}
                   >
-                    {entry.items.map((item) => (
+                    {items.map((item) => (
                       <li key={item}>
                         <Typography variant='body1'>{item}</Typography>
                       </li>
@@ -164,7 +181,7 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
           color='primary'
           sx={{ fontWeight: 700, mb: 1 }}
         >
-          The criteria for the Seal of Reliability
+          {t('criteria.title')}
         </Typography>
         <Box
           sx={{
@@ -174,17 +191,17 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
           }}
         >
           {criteriaEntries.map((entry) => (
-            <Card variant='section' sx={{ mb: 0 }} key={entry.title}>
+            <Card variant='section' sx={{ mb: 0 }} key={entry.titleKey}>
               <CardSectionTitle component='h3'>
                 <LockIcon fontSize='inherit' aria-hidden />
-                {entry.title}
+                {t(entry.titleKey)}
               </CardSectionTitle>
               <CardContent sx={{ '&:last-child': { pb: 2 } }}>
                 <Typography variant='subtitle2' sx={{ fontWeight: 700 }}>
-                  {entry.subtitle}
+                  {t(entry.subtitleKey)}
                 </Typography>
                 <Typography variant='body2' sx={{ mt: 1 }}>
-                  {entry.description}
+                  {t(entry.descriptionKey)}
                 </Typography>
               </CardContent>
             </Card>
@@ -198,16 +215,15 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
           color='primary'
           sx={{ fontWeight: 700, mb: 1 }}
         >
-          Grace periods
+          {t('gracePeriods.title')}
         </Typography>
         <Typography variant='body2' sx={{ mb: 2 }}>
-          Temporary issues won&apos;t immediately cost an agency its Seal. The
-          following windows apply per violation type.
+          {t('gracePeriods.description')}
         </Typography>
         <TableContainer
           sx={{ backgroundColor: 'background.default', borderRadius: '6px' }}
         >
-          <Table aria-label='Grace periods'>
+          <Table aria-label={t('gracePeriods.tableAriaLabel')}>
             <TableHead>
               <TableRow>
                 <TableCell
@@ -215,28 +231,28 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
                   scope='col'
                   sx={{ fontWeight: 'bold', minWidth: '150px' }}
                 >
-                  Criterion
+                  {t('gracePeriods.columns.criterion')}
                 </TableCell>
                 <TableCell
                   component='th'
                   scope='col'
                   sx={{ fontWeight: 'bold', minWidth: '150px' }}
                 >
-                  Trigger Condition
+                  {t('gracePeriods.columns.triggerCondition')}
                 </TableCell>
                 <TableCell
                   component='th'
                   scope='col'
                   sx={{ fontWeight: 'bold', minWidth: '125px' }}
                 >
-                  Grace Period
+                  {t('gracePeriods.columns.gracePeriod')}
                 </TableCell>
                 <TableCell
                   component='th'
                   scope='col'
                   sx={{ fontWeight: 'bold', minWidth: '250px' }}
                 >
-                  Description
+                  {t('gracePeriods.columns.description')}
                 </TableCell>
               </TableRow>
             </TableHead>
@@ -248,24 +264,26 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
               }}
             >
               {gracePeriodEntries.map((entry) => (
-                <TableRow key={entry.criterion}>
+                <TableRow key={entry.criterionKey}>
                   <TableCell>
                     <Typography variant='body1' sx={{ fontWeight: 700 }}>
-                      {entry.criterion}
+                      {t(entry.criterionKey)}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant='body1'>
-                      {entry.triggerCondition}
+                      {t(entry.triggerConditionKey)}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant='body1' sx={{ fontWeight: 'bold' }}>
-                      {entry.gracePeriod}
+                      {t(entry.gracePeriodKey)}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant='body1'>{entry.consequence}</Typography>
+                    <Typography variant='body1'>
+                      {t(entry.consequenceKey)}
+                    </Typography>
                   </TableCell>
                 </TableRow>
               ))}
@@ -280,21 +298,21 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
           color='primary'
           sx={{ fontWeight: 700, mb: 1 }}
         >
-          Frequently asked questions
+          {t('faq.title')}
         </Typography>
         {faqEntries.map((entry, index) => (
-          <Accordion key={entry.question} sx={accordionStyle}>
+          <Accordion key={entry.questionKey} sx={accordionStyle}>
             <AccordionSummary
               aria-controls={`faq-panel-${index}-content`}
               id={`faq-panel-${index}-header`}
               expandIcon={<ExpandMoreIcon />}
             >
               <Typography sx={{ fontWeight: 'bold' }}>
-                {entry.question}
+                {t(entry.questionKey)}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Typography>{entry.answer}</Typography>
+              <Typography>{t(entry.answerKey)}</Typography>
             </AccordionDetails>
           </Accordion>
         ))}

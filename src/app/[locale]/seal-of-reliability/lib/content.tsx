@@ -6,163 +6,130 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import GavelIcon from '@mui/icons-material/Gavel';
 
 export interface HeroContent {
-  title: string;
-  paragraphs: string[];
+  titleKey: string;
+  paragraphsKey: string;
+  ctaButtonKey: string;
 }
 
 export const heroContent: HeroContent = {
-  title: 'The Benchmark for Reliable GTFS Schedule Data',
-  paragraphs: [
-    "It's hard to measure if data is trustworthy. Transit agencies struggle to know if their Glrs data works tor riders; data vendors lack a baseline bar ot quality to aspire to, and trip planning apps end up spending time pre-processing feeds rather than seamlessly consuming them",
-    "That's where the MobilityData Seal of Reliability comes in. As a clear measure of baseline quality, the Seal of Reliability is applied to feeds that meet five key criteria: they're official, stable, available, compliant, and fresh.",
-  ],
+  titleKey: 'hero.title',
+  paragraphsKey: 'hero.paragraphs',
+  ctaButtonKey: 'hero.ctaButton',
 };
 
 export interface BenefitEntry {
-  title: string;
+  titleKey: string;
   icon: ComponentType<SvgIconProps>;
-  items: string[];
+  itemsKey: string;
 }
 
 export const benefitEntries: BenefitEntry[] = [
   {
-    title: 'For Transit Agencies',
+    titleKey: 'benefits.agencies.title',
     icon: DirectionsBusIcon,
-    items: [
-      'Use the Seal definition in procurement contracts to set a clear baseline for vendor GTFS data quality',
-      'Triage data quality issues using Mobility Database analytics',
-      'Give riders a better experience by ensuring feeds meet a minimum reliability bar',
-    ],
+    itemsKey: 'benefits.agencies.items',
   },
   {
-    title: 'For Applications',
+    titleKey: 'benefits.applications.title',
     icon: AppsIcon,
-    items: [
-      'Quickly identify feeds that are ready to ingest without heavy pre-processing and testing',
-      'Assess regional launch readiness based on how many feeds in an area have earned the Seal',
-      'Reference a neutral, third-party standard when explaining data quality requirements to data producers',
-    ],
+    itemsKey: 'benefits.applications.items',
   },
   {
-    title: 'For Vendors',
+    titleKey: 'benefits.vendors.title',
     icon: StorefrontIcon,
-    items: [
-      "Evaluate prospective clients' current data quality",
-      "Adjust quotes based on the anticipated level of effort to bring a feed up to the Seal's standard",
-    ],
+    itemsKey: 'benefits.vendors.items',
   },
   {
-    title: 'For Regulators',
+    titleKey: 'benefits.regulators.title',
     icon: GavelIcon,
-    items: [
-      'Reference the Seal definition in policy requirements',
-      'Use the Seal as a measurable, automated standard for GTFS Schedule data quality',
-    ],
+    itemsKey: 'benefits.regulators.items',
   },
 ];
 
 export interface CriteriaEntry {
-  title: string;
-  subtitle: string;
-  description: string;
+  titleKey: string;
+  subtitleKey: string;
+  descriptionKey: string;
 }
 
 export const criteriaEntries: CriteriaEntry[] = [
   {
-    title: 'Official',
-    subtitle: 'Authorized by the transit agency.',
-    description:
-      'The feed has been confirmed as an official source, published by or on behalf of the transit agency.',
+    titleKey: 'criteria.official.title',
+    subtitleKey: 'criteria.official.subtitle',
+    descriptionKey: 'criteria.official.description',
   },
   {
-    title: 'Stable',
-    subtitle: "The download URL doesn't change",
-    description:
-      'For at least six uninterrupted months, the same URL serves the feed, and the URL appears to be permanent.',
+    titleKey: 'criteria.stable.title',
+    subtitleKey: 'criteria.stable.subtitle',
+    descriptionKey: 'criteria.stable.description',
   },
   {
-    title: 'Available',
-    subtitle: 'Can be downloaded from the URL each day.',
-    description:
-      'Once a day, the Mobility Database fetches the feed and downloads it cleanly.',
+    titleKey: 'criteria.available.title',
+    subtitleKey: 'criteria.available.subtitle',
+    descriptionKey: 'criteria.available.description',
   },
   {
-    title: 'Compliant',
-    subtitle:
-      'Adheres to every "must" in the General Transit Feed Specification.',
-    description:
-      'The feed has 0 errors in the Official GTFS Schedule Validator. Warnings and info notices do not affect compliance.',
+    titleKey: 'criteria.compliant.title',
+    subtitleKey: 'criteria.compliant.subtitle',
+    descriptionKey: 'criteria.compliant.description',
   },
   {
-    title: 'Fresh: Rolling 7 days of coverage',
-    subtitle: 'Always includes 7 days or more of service coverage.',
-    description:
-      'Following GTFS Best Practices, the feed provides at least 7 days of rolling future service coverage. This means at least a full week of service is covered every day it is fetched.',
+    titleKey: 'criteria.freshRolling.title',
+    subtitleKey: 'criteria.freshRolling.subtitle',
+    descriptionKey: 'criteria.freshRolling.description',
   },
   {
-    title: 'Fresh: Continuous coverage',
-    subtitle: 'A realistic service window with no gaps between feed versions.',
-    description:
-      'Service coverage is continuous across subsequent feed versions with no gaps, and the service window spans two years or less.',
+    titleKey: 'criteria.freshContinuous.title',
+    subtitleKey: 'criteria.freshContinuous.subtitle',
+    descriptionKey: 'criteria.freshContinuous.description',
   },
 ];
 
 export interface GracePeriodEntry {
-  criterion: string;
-  triggerCondition: string;
-  gracePeriod: string;
-  consequence: string;
+  criterionKey: string;
+  triggerConditionKey: string;
+  gracePeriodKey: string;
+  consequenceKey: string;
 }
 
 export const gracePeriodEntries: GracePeriodEntry[] = [
   {
-    criterion: 'Compliant',
-    triggerCondition: 'Validation error',
-    gracePeriod: '30 days',
-    consequence:
-      'If a feed develops a validation error, producers have 30 days to fix it. After 30 days, if the errors persist, the feed loses its Seal.',
+    criterionKey: 'gracePeriods.compliant.criterion',
+    triggerConditionKey: 'gracePeriods.compliant.triggerCondition',
+    gracePeriodKey: 'gracePeriods.compliant.gracePeriod',
+    consequenceKey: 'gracePeriods.compliant.consequence',
   },
   {
-    criterion: 'Available',
-    triggerCondition: 'Download failure',
-    gracePeriod: '14 days',
-    consequence:
-      'If a feed cannot be downloaded, producers have 14 days to restore access. After 14 days, if the feed remains unavailable, the feed loses its Seal.',
+    criterionKey: 'gracePeriods.available.criterion',
+    triggerConditionKey: 'gracePeriods.available.triggerCondition',
+    gracePeriodKey: 'gracePeriods.available.gracePeriod',
+    consequenceKey: 'gracePeriods.available.consequence',
   },
   {
-    criterion: 'Fresh (7‑day coverage)',
-    triggerCondition: 'Coverage gap',
-    gracePeriod: '14 days',
-    consequence:
-      'If a feed stops covering far enough into the future, producers have 14 days to publish an update before the feed loses its Seal.',
+    criterionKey: 'gracePeriods.freshCoverage.criterion',
+    triggerConditionKey: 'gracePeriods.freshCoverage.triggerCondition',
+    gracePeriodKey: 'gracePeriods.freshCoverage.gracePeriod',
+    consequenceKey: 'gracePeriods.freshCoverage.consequence',
   },
 ];
 
 export interface FaqEntry {
-  question: string;
-  answer: string;
+  questionKey: string;
+  answerKey: string;
 }
 
 export const faqEntries: FaqEntry[] = [
+  { questionKey: 'faq.coverage.question', answerKey: 'faq.coverage.answer' },
   {
-    question: 'What does the Seal cover?',
-    answer:
-      'The Seal evaluates GTFS Schedule feeds only. It does not cover GTFS Realtime or GBFS data. We focused on GTFS Schedule given the established state of the GTFS Schedule Validator and our existing processing pipeline for this data on the Mobility Database. We will explore extending the Seal to other data formats based on user feedback.',
+    questionKey: 'faq.definition.question',
+    answerKey: 'faq.definition.answer',
   },
   {
-    question: 'How do you define reliability?',
-    answer:
-      'A reliable feed is trustworthy. It is official, stable, available, compliant and fresh. We consulted a variety of consuming applications to finalize this definition and identify the most common pain points with data reliability. This does exclude other key aspects of data quality, such as accuracy relative to the real world service. These elements are more complex and require local knowledge of each transit network. Our goal for the Seal of Reliability is to define a minimum, measurable threshold that GTFS Schedule data should meet, so our scope is narrowly focused.',
+    questionKey: 'faq.agencyOrVendor.question',
+    answerKey: 'faq.agencyOrVendor.answer',
   },
   {
-    question: 'Can an agency or vendor earn the Seal?',
-    answer:
-      "No. Only a feed can earn the Seal, not an agency or a vendor. This keeps evaluation automated and consistent. An agency may have some feeds that earn the Seal and others that don't -- both outcomes will be visible on the Mobility Database.",
-  },
-  {
-    question:
-      "As a data producer, how do I know if I'm at risk of losing the Seal?",
-    answer:
-      "The best way is to check your feed on the Mobility Database 1-2 times a month to see your Seal status. Our team is working on email notifications, so in the future you can be notified when you've entered a grace period.",
+    questionKey: 'faq.riskAwareness.question',
+    answerKey: 'faq.riskAwareness.answer',
   },
 ];
