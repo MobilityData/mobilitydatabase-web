@@ -64,8 +64,8 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
             </Typography>
             {heroParagraphs.map((paragraph) => (
               <Typography
-                variant='body2'
-                sx={{ mb: 1, color: 'text.secondary', lineHeight: '1.4rem' }}
+                variant='body1'
+                sx={{ mb: 1, color: 'text.secondary'}}
                 key={paragraph}
               >
                 {paragraph}
@@ -128,14 +128,7 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
       </SectionContainer>
 
       <SectionContainer sx={{ mt: 5 }} maxWidth='lg'>
-        <Typography
-          variant='h6'
-          component='h2'
-          color='primary'
-          sx={{ fontWeight: 700, mb: 1 }}
-        >
-          {t('benefits.title')}
-        </Typography>
+        <Typography variant='sectionTitle'>{t('benefits.title')}</Typography>
         <Box
           sx={{
             display: 'grid',
@@ -177,14 +170,7 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
       </SectionContainer>
 
       <SectionContainer sx={{ mt: 5 }}>
-        <Typography
-          variant='h6'
-          component='h2'
-          color='primary'
-          sx={{ fontWeight: 700, mb: 1 }}
-        >
-          {t('criteria.title')}
-        </Typography>
+        <Typography variant='sectionTitle'>{t('criteria.title')}</Typography>
         <Box
           sx={{
             display: 'grid',
@@ -212,12 +198,7 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
       </SectionContainer>
 
       <SectionContainer sx={{ mt: 5 }}>
-        <Typography
-          variant='h6'
-          component='h2'
-          color='primary'
-          sx={{ fontWeight: 700, mb: 1 }}
-        >
+        <Typography variant='sectionTitle'>
           {t('gracePeriods.title')}
         </Typography>
         <Typography variant='body2' sx={{ mb: 2 }}>
@@ -296,14 +277,7 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
       </SectionContainer>
 
       <SectionContainer sx={{ mt: 5 }}>
-        <Typography
-          variant='h6'
-          component='h2'
-          color='primary'
-          sx={{ fontWeight: 700, mb: 1 }}
-        >
-          {t('faq.title')}
-        </Typography>
+        <Typography variant='sectionTitle'>{t('faq.title')}</Typography>
         {faqEntries.map((entry, index) => (
           <Accordion key={entry.questionKey} sx={accordionStyle}>
             <AccordionSummary
