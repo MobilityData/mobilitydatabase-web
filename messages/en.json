@@ -559,14 +559,13 @@
   },
   "sealOfReliability": {
     "title": "Seal of Reliability",
-    "description": "The Seal of Reliability is an indicator of feed quality and consistency, helping you identify GTFS, GTFS Realtime, and GBFS feeds that are reliably maintained and up to date.",
     "hero": {
       "title": "The Benchmark for Reliable GTFS Schedule Data",
       "paragraphs": [
-        "It's hard to measure if data is trustworthy. Transit agencies struggle to know if their Glrs data works tor riders; data vendors lack a baseline bar ot quality to aspire to, and trip planning apps end up spending time pre-processing feeds rather than seamlessly consuming them",
+        "It's hard to measure if data is trustworthy. Transit agencies struggle to know if their GTFS data works for riders; data vendors lack a baseline bar of quality to aspire to, and trip planning apps end up spending time pre-processing feeds rather than seamlessly consuming them",
         "That's where the MobilityData Seal of Reliability comes in. As a clear measure of baseline quality, the Seal of Reliability is applied to feeds that meet five key criteria: they're official, stable, available, compliant, and fresh."
       ],
-      "ctaButton": "See a feed measured asainst the standard (todo)",
+      "ctaButton": "See a feed measured against the standard (todo)",
       "imageAlt": "current placeholder",
       "feedsMeetingStandard": "Feeds meeting the standard",
       "meetsPercent": "{percent}% meets",
@@ -601,7 +600,7 @@
         "title": "For Regulators",
         "items": [
           "Reference the Seal definition in policy requirements",
-          "Use the Seal as a measureable, automated standard for GTFS Schedule data quality"
+          "Use the Seal as a measurable, automated standard for GTFS Schedule data quality"
         ]
       }
     },

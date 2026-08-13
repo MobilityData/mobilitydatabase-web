@@ -559,7 +559,6 @@
   },
   "sealOfReliability": {
     "title": "Sceau de fiabilité",
-    "description": "Le Sceau de fiabilité est un indicateur de la qualité et de la cohérence des flux, qui vous aide à identifier les flux GTFS, GTFS Realtime et GBFS maintenus de manière fiable et à jour.",
     "hero": {
       "title": "La référence pour des données GTFS Schedule fiables",
       "paragraphs": [
