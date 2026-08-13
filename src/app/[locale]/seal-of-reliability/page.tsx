@@ -9,11 +9,11 @@ export const dynamic = 'force-static';
 export const metadata: Metadata = {
   title: 'Seal of Reliability | MobilityDatabase',
   description:
-    'Learn about the Seal of Reliability, MobilityDatabase’s indicator of feed quality and consistency for GTFS, GTFS-RT, and GBFS feeds.',
+    'Learn about the Seal of Reliability, MobilityDatabase’s indicator of feed quality and consistency for GTFS feeds.',
   openGraph: {
     title: 'Seal of Reliability | MobilityDatabase',
     description:
-      'Learn about the Seal of Reliability, MobilityDatabase’s indicator of feed quality and consistency for GTFS, GTFS-RT, and GBFS feeds.',
+      'Learn about the Seal of Reliability, MobilityDatabase’s indicator of feed quality and consistency for GTFS feeds.',
     url: 'https://mobilitydatabase.org/seal-of-reliability',
     siteName: 'MobilityDatabase',
     type: 'website',
