@@ -65,7 +65,7 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
             {heroParagraphs.map((paragraph) => (
               <Typography
                 variant='body1'
-                sx={{ mb: 1, color: 'text.secondary'}}
+                sx={{ mb: 1, color: 'text.secondary' }}
                 key={paragraph}
               >
                 {paragraph}
