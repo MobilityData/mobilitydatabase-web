@@ -562,7 +562,7 @@
     "hero": {
       "title": "The Benchmark for Reliable GTFS Schedule Data",
       "paragraphs": [
-        "It's hard to measure if data is trustworthy. Transit agencies struggle to know if their GTFS data works for riders; data vendors lack a baseline bar of quality to aspire to, and trip planning apps end up spending time pre-processing feeds rather than seamlessly consuming them",
+        "It's hard to measure if data is trustworthy. Transit agencies struggle to know if their GTFS data works for riders; data vendors lack a baseline of quality to aspire to, and trip planning apps end up spending time pre-processing feeds rather than seamlessly consuming them",
         "That's where the MobilityData Seal of Reliability comes in. As a clear measure of baseline quality, the Seal of Reliability is applied to feeds that meet five key criteria: they're official, stable, available, compliant, and fresh."
       ],
       "ctaButton": "See a feed measured against the standard (todo)",
