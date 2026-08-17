@@ -1,7 +1,7 @@
 import { type ComponentType } from 'react';
 import { type SvgIconProps } from '@mui/material/SvgIcon';
 import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
-import AppsIcon from '@mui/icons-material/Apps';
+import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import GavelIcon from '@mui/icons-material/Gavel';
 
@@ -31,7 +31,7 @@ export const benefitEntries: BenefitEntry[] = [
   },
   {
     titleKey: 'benefits.applications.title',
-    icon: AppsIcon,
+    icon: PhoneAndroidIcon,
     itemsKey: 'benefits.applications.items',
   },
   {
