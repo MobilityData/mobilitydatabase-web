@@ -639,7 +639,7 @@
     },
     "gracePeriods": {
       "title": "Grace periods",
-      "description": "Temporary issues won't immediately cost an agency its Seal. The following windows apply per violation type.",
+      "description": "Temporary issues won't immediately cost a feed its Seal. The following windows apply per violation type.",
       "tableAriaLabel": "Grace periods",
       "columns": {
         "criterion": "Criterion",
