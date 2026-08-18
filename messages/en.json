@@ -605,7 +605,7 @@
       }
     },
     "criteria": {
-      "title": "The criteria for the Seal of Reliability",
+      "title": "The Criteria for the Seal of Reliability",
       "official": {
         "title": "Official",
         "subtitle": "Authorized by the transit agency.",
@@ -627,18 +627,18 @@
         "description": "The feed has 0 errors in the Official GTFS Schedule Validator. Warnings and info notices do not affect compliance."
       },
       "freshRolling": {
-        "title": "Fresh: Rolling 7 days of coverage",
+        "title": "Fresh: Rolling 7 Days of Coverage",
         "subtitle": "Always includes 7 days or more of service coverage.",
         "description": "Following GTFS Best Practices, the feed provides at least 7 days of rolling future service coverage. This means at least a full week of service is covered every day it is fetched."
       },
       "freshContinuous": {
-        "title": "Fresh: Continuous coverage",
+        "title": "Fresh: Continuous Coverage",
         "subtitle": "A realistic service window with no gaps between feed versions.",
         "description": "Service coverage is continuous across subsequent feed versions with no gaps, and the service window spans two years or less."
       }
     },
     "gracePeriods": {
-      "title": "Grace periods",
+      "title": "Grace Periods",
       "description": "Temporary issues won't immediately cost a feed its Seal. The following windows apply per violation type.",
       "tableAriaLabel": "Grace periods",
       "columns": {
@@ -667,7 +667,7 @@
       }
     },
     "faq": {
-      "title": "Frequently asked questions",
+      "title": "Frequently Asked Questions",
       "coverage": {
         "question": "What does the Seal cover?",
         "answer": "The Seal evaluates GTFS Schedule feeds only. It does not cover GTFS Realtime or GBFS data. We focused on GTFS Schedule given the established state of the GTFS Schedule Validator and our existing processing pipeline for this data on the Mobility Database. We will explore extending the Seal to other data formats based on user feedback."
