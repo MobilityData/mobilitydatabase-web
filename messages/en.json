@@ -751,6 +751,7 @@
       "freshRolling": {
         "title": "Fresh: Rolling 7 days of coverage",
         "description": "Each day the feed is downloaded, the Mobility Database looks at the last date of service coverage in the feed's `calendar.txt` and `calendar_dates.txt`. That date must be at least 7 days after the download date. This ensures riders and downstream applications always have at least a full week of service data available.",
+        "examplesTitle": "Examples",
         "minimumLabel": "Aug 13 (7d min)",
         "examples": {
           "pass": {
@@ -854,6 +855,7 @@
       },
       "earning": {
         "title": "How the Seal is earned over time",
+        "timelineTitle": "Timeline",
         "phases": {
           "added": {
             "title": "Feed added",

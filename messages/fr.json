@@ -751,6 +751,7 @@
       "freshRolling": {
         "title": "Récent : couverture glissante de 7 jours",
         "description": "Chaque jour où le flux est téléchargé, la Mobility Database examine la dernière date de couverture de service dans les fichiers `calendar.txt` et `calendar_dates.txt` du flux. Cette date doit se situer au moins 7 jours après la date de téléchargement. Cela garantit que les usagers et les applications en aval disposent toujours d'au moins une semaine complète de données de service.",
+        "examplesTitle": "Exemples",
         "minimumLabel": "13 août (min 7 j)",
         "examples": {
           "pass": {
@@ -854,6 +855,7 @@
       },
       "earning": {
         "title": "Comment le Sceau s'obtient dans le temps",
+        "timelineTitle": "Chronologie",
         "phases": {
           "added": {
             "title": "Flux ajouté",

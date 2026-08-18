@@ -237,7 +237,7 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
               component='h3'
               sx={{ fontWeight: 700, mb: 1 }}
             >
-              {t('freshContinuous.scenarios.title')}
+              {t('freshRolling.examplesTitle')}
             </Typography>
             <Box sx={twoColumnGrid}>
               {rollingCoverageExamples.map((example) => (
@@ -348,7 +348,7 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
           <Card variant='section' sx={{ mb: 0 }}>
             <CardSectionTitle component='h3'>
               <TimelineIcon></TimelineIcon>
-              Timeline
+              {t('earning.timelineTitle')}
             </CardSectionTitle>
             <CardContent sx={{ '&:last-child': { pb: 2 } }}>
               <Stepper
