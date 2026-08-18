@@ -699,7 +699,7 @@
     "howItIsCalculated": {
       "eyebrow": "Seal of Reliability",
       "title": "How it is calculated",
-      "intro": "The Seal of Reliability is made up of six criteria. This page documents the process that informed this definition, how each feed is evaluated against it, and the exact rules behind each criterion. This includes what triggers a pass or a violation, and how grace periods work.",
+      "intro": "The Seal of Reliability is made up of six criteria. This page documents the process that informed this definition, how each feed is evaluated when it's added to the Mobility Database, and the exact rules behind each criterion. This includes what triggers a pass or a violation, and how grace periods work.",
       "methodology": {
         "title": "Methodology",
         "description": "The six criteria were selected based on three research sources.",
@@ -720,18 +720,18 @@
         "title": "Official",
         "paragraphs": [
           "A feed is Official when MobilityData has confirmed it is authorized by the transit agency. This means it is published by, or on behalf of, the agency itself. MobilityData assesses this based on the domain of the producer URL, the feed submission contributor's personal information, the agency's website, and the `feed_info.txt` file. This determination is made manually and does not change based on automated checks.",
-          "Unlike the other five criteria, Official status is not subject to the six-month requirement."
+          "Unlike the other five criteria, Official status is not subject to the six-month probation."
         ],
         "notice": "There is no grace period for Official. The designation is either confirmed or it is not."
       },
       "stable": {
         "title": "Stable",
-        "description": "The Mobility Database evaluates stability based on two factors. A feed is considered Stable when:",
+        "description": "The Mobility Database evaluates stability based on the producer URL. A feed is considered Stable when:",
         "items": [
           "The same URL has served the feed without redirects for at least six months",
           "The URL appears to be permanent, meaning it does not look like a temporary file path with dates, times or seasons"
         ],
-        "notice": "There is no grace period for Stable. If the URL changes, the criterion fails immediately and the six-month window restarts from the date the new URL is added as a new feed."
+        "notice": "There is no grace period for Stable. If the URL changes, the criterion fails immediately and the six-month probation restarts from the date the new URL is added as a new feed."
       },
       "available": {
         "title": "Available",
@@ -756,7 +756,7 @@
             "axisStart": "Fetched: Aug 6",
             "axisEnd": "Aug 27",
             "lastService": "Last service: Aug 20 (14 days ahead)",
-            "caption": "Last service date is Aug 20: 14 days ahead. Above the 7 day minimum.",
+            "caption": "Last service date is Aug 20: 14 days ahead. Above the 7-day minimum.",
             "diagramAriaLabel": "Coverage from August 6 to August 20, 2026, extending past the 7 day minimum marked at August 13."
           },
           "fail": {
@@ -764,7 +764,7 @@
             "axisStart": "Fetched: Aug 6",
             "axisEnd": "Aug 27",
             "lastService": "Last service: Aug 10 (4 days ahead)",
-            "caption": "Last service date is Aug 10, only 4 days ahead. Below the 7 day minimum. Violation triggered.",
+            "caption": "Last service date is Aug 10: only 4 days ahead. Below the 7-day minimum. Violation triggered.",
             "diagramAriaLabel": "Coverage from August 6 to August 10, 2026, stopping short of the 7 day minimum marked at August 13."
           }
         },
@@ -777,7 +777,7 @@
         "rules": {
           "noGaps": {
             "title": "No gaps between datasets",
-            "description": "Service coverage must be continuous across consecutive feed versions. A gap occurs when a new version's first service date falls more than one day after the previous version's last service date. If v1 ends Aug 31, v2 must begin no later than Sept 1."
+            "description": "Service coverage must be continuous across consecutive feed versions. A gap occurs when a new version's first service date falls more than one day after the previous version's last service date. If v1 ends Aug 31, v2 must begin no later than Sept 1. A Sept 2 start is a violation."
           },
           "serviceWindow": {
             "title": "Two-year service window",
@@ -791,7 +791,7 @@
             "title": "Without `feed_info.txt`",
             "items": [
               "`calendar.txt` and `calendar_dates.txt` are the only source of truth",
-              "Any gap in calendar dates between consecutive datasets is a violation",
+              "Any gap in calendar data between consecutive datasets is a violation",
               "A service window over two years is a violation"
             ]
           },
@@ -826,29 +826,29 @@
           },
           "continuous": {
             "title": "Continuous, no gaps",
-            "caption": "Three consecutive datasets with no gaps between them, and a total service window under two years.",
+            "caption": "Three consecutive datasets with no gaps and a total service window under two years.",
             "diagramAriaLabel": "Three consecutive datasets covering January 1 to August 14, 2026 with no gaps."
           },
           "gap": {
             "title": "Gap between datasets",
-            "caption": "Service ends Apr 14 in v1, but v2 does not begin until May 15. One month gap triggers a violation.",
+            "caption": "Service ends Apr 14 in v1, but v2 does not begin until May 15. One-month gap triggers a violation.",
             "diagramAriaLabel": "Three datasets covering January 1 to August 14, 2026 with a one month gap between April 14 and May 15."
           },
           "declaredContinuous": {
             "title": "Calendar gap, declared range continuous",
-            "caption": "Calendar data has a gap between Apr 15 and May 14, but `feed_info.txt` declares an unbroken range of Jan 15 to Aug 14. A calendar gap alone is not enough to trigger a violation.",
+            "caption": "Calendar data has a gap between Apr 15 and May 14. But `feed_info.txt` declares an unbroken range of Jan 15 to Aug 14. Calendar gap alone is not enough to trigger a violation.",
             "diagramAriaLabel": "Calendar data with a gap between April 15 and May 14, 2026.",
             "declaredDiagramAriaLabel": "A single declared range covering January 15 to August 14, 2026 with no gap."
           },
           "declaredGap": {
             "title": "Gap in both calendar and declared range",
-            "caption": "Both calendar data and `feed_info.txt` show a gap between Apr 15 and May 14. Both conditions are present, so a violation is triggered.",
+            "caption": "Both calendar data and `feed_info.txt` show a gap between Apr 15 and May 14. Both conditions present — violation triggered.",
             "diagramAriaLabel": "Calendar data with a gap between April 15 and May 14, 2026.",
             "declaredDiagramAriaLabel": "Two declared ranges with a gap between April 15 and May 14, 2026."
           }
         },
         "noticeTitle": "No grace period.",
-        "notice": "Gaps between datasets and service windows over two years violate the Seal immediately. This must be fixed consistently for six months to earn back the Seal."
+        "notice": "Gaps between datasets and service windows over two years violate the Seal immediately. This must be fixed consistently for six months to pass probation and earn back the Seal."
       },
       "earning": {
         "title": "How the Seal is earned over time",
@@ -858,7 +858,7 @@
             "description": "Evaluated immediately against all criteria"
           },
           "window": {
-            "title": "Earning window",
+            "title": "Probation",
             "description": "6 months per criterion (except Official), from the first day each is satisfied"
           },
           "earned": {
@@ -867,16 +867,16 @@
           }
         },
         "paragraphs": [
-          "When a feed is added to the Mobility Database, it is evaluated against every criterion. If a feed meets a criterion (except Official), the six-month clock starts from the first day it is satisfied, not the day the feed was added. All five criteria must each complete their six-month window before the Seal is awarded.",
+          "When a feed is added to the Mobility Database, it is evaluated against every criterion. For each criterion (except Official), a six-month probation starts from the first day it is satisfied, not the day the feed was added. All five criteria must each complete their six-month probation before the Seal is awarded.",
           "Stable requires six months of uninterrupted URL history, so no newly added feed can satisfy Stable until it has been in the database for at least six months.",
           "MobilityData evaluates feeds over time to help ensure consistent trustworthiness. Some feeds may have met the Seal's criteria before being added to the Mobility Database, but the evaluation focuses on what can be measured from the date of addition."
         ],
         "clock": {
           "title": "When the clock starts",
-          "tableAriaLabel": "When the six-month clock starts for each criterion",
+          "tableAriaLabel": "When probation starts for each criterion",
           "columns": {
             "criterion": "Criterion",
-            "clockStarts": "Clock starts when…"
+            "clockStarts": "Probation starts when…"
           },
           "stable": {
             "criterion": "Stable",

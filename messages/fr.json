@@ -699,7 +699,7 @@
     "howItIsCalculated": {
       "eyebrow": "Sceau de fiabilité",
       "title": "Comment il est calculé",
-      "intro": "Le Sceau de fiabilité repose sur six critères. Cette page documente la démarche qui a mené à cette définition, la façon dont chaque flux est évalué, et les règles exactes derrière chaque critère. Cela inclut ce qui déclenche une réussite ou un manquement, ainsi que le fonctionnement des périodes de grâce.",
+      "intro": "Le Sceau de fiabilité repose sur six critères. Cette page documente la démarche qui a mené à cette définition, la façon dont chaque flux est évalué lors de son ajout à la Mobility Database, et les règles exactes derrière chaque critère. Cela inclut ce qui déclenche une réussite ou un manquement, ainsi que le fonctionnement des périodes de grâce.",
       "methodology": {
         "title": "Méthodologie",
         "description": "Les six critères ont été retenus à partir de trois sources de recherche.",
@@ -720,18 +720,18 @@
         "title": "Officiel",
         "paragraphs": [
           "Un flux est Officiel lorsque MobilityData a confirmé qu'il est autorisé par l'agence de transport. Cela signifie qu'il est publié par l'agence elle-même ou en son nom. MobilityData évalue ce point à partir du domaine de l'URL du producteur, des informations personnelles du contributeur ayant soumis le flux, du site web de l'agence et du fichier `feed_info.txt`. Cette détermination est faite manuellement et ne change pas en fonction de vérifications automatisées.",
-          "Contrairement aux cinq autres critères, le statut Officiel n'est pas soumis à l'exigence des six mois."
+          "Contrairement aux cinq autres critères, le statut Officiel n'est pas soumis à la période probatoire de six mois."
         ],
         "notice": "Il n'y a pas de période de grâce pour le critère Officiel. La désignation est soit confirmée, soit elle ne l'est pas."
       },
       "stable": {
         "title": "Stable",
-        "description": "La Mobility Database évalue la stabilité selon deux facteurs. Un flux est considéré comme Stable lorsque :",
+        "description": "La Mobility Database évalue la stabilité à partir de l'URL du producteur. Un flux est considéré comme Stable lorsque :",
         "items": [
           "La même URL sert le flux sans redirection depuis au moins six mois",
           "L'URL semble permanente, c'est-à-dire qu'elle ne ressemble pas à un chemin de fichier temporaire comportant des dates, des heures ou des saisons"
         ],
-        "notice": "Il n'y a pas de période de grâce pour le critère Stable. Si l'URL change, le critère échoue immédiatement et la fenêtre de six mois repart à la date à laquelle la nouvelle URL est ajoutée en tant que nouveau flux."
+        "notice": "Il n'y a pas de période de grâce pour le critère Stable. Si l'URL change, le critère échoue immédiatement et la période probatoire de six mois repart à la date à laquelle la nouvelle URL est ajoutée en tant que nouveau flux."
       },
       "available": {
         "title": "Disponible",
@@ -764,7 +764,7 @@
             "axisStart": "Récupéré : 6 août",
             "axisEnd": "27 août",
             "lastService": "Dernier service : 10 août (4 jours d'avance)",
-            "caption": "La dernière date de service est le 10 août, soit seulement 4 jours d'avance. En dessous du minimum de 7 jours. Manquement déclenché.",
+            "caption": "La dernière date de service est le 10 août : seulement 4 jours d'avance. En dessous du minimum de 7 jours. Manquement déclenché.",
             "diagramAriaLabel": "Couverture du 6 au 10 août 2026, s'arrêtant avant le minimum de 7 jours marqué au 13 août."
           }
         },
@@ -777,7 +777,7 @@
         "rules": {
           "noGaps": {
             "title": "Aucune interruption entre les jeux de données",
-            "description": "La couverture de service doit être continue d'une version de flux à la suivante. Une interruption survient lorsque la première date de service d'une nouvelle version se situe plus d'un jour après la dernière date de service de la version précédente. Si v1 se termine le 31 août, v2 doit commencer au plus tard le 1er septembre."
+            "description": "La couverture de service doit être continue d'une version de flux à la suivante. Une interruption survient lorsque la première date de service d'une nouvelle version se situe plus d'un jour après la dernière date de service de la version précédente. Si v1 se termine le 31 août, v2 doit commencer au plus tard le 1er septembre. Un début au 2 septembre constitue un manquement."
           },
           "serviceWindow": {
             "title": "Fenêtre de service de deux ans",
@@ -791,7 +791,7 @@
             "title": "Sans `feed_info.txt`",
             "items": [
               "`calendar.txt` et `calendar_dates.txt` sont la seule source de vérité",
-              "Toute interruption dans les dates du calendrier entre des jeux de données consécutifs constitue un manquement",
+              "Toute interruption dans les données du calendrier entre des jeux de données consécutifs constitue un manquement",
               "Une fenêtre de service de plus de deux ans constitue un manquement"
             ]
           },
@@ -826,29 +826,29 @@
           },
           "continuous": {
             "title": "Continu, sans interruption",
-            "caption": "Trois jeux de données consécutifs sans interruption entre eux, et une fenêtre de service totale inférieure à deux ans.",
+            "caption": "Trois jeux de données consécutifs sans interruption et une fenêtre de service totale inférieure à deux ans.",
             "diagramAriaLabel": "Trois jeux de données consécutifs couvrant du 1er janvier au 14 août 2026 sans interruption."
           },
           "gap": {
             "title": "Interruption entre les jeux de données",
-            "caption": "Le service se termine le 14 avr. dans v1, mais v2 ne commence que le 15 mai. Cette interruption d'un mois déclenche un manquement.",
+            "caption": "Le service se termine le 14 avr. dans v1, mais v2 ne commence que le 15 mai. Une interruption d'un mois déclenche un manquement.",
             "diagramAriaLabel": "Trois jeux de données couvrant du 1er janvier au 14 août 2026, avec une interruption d'un mois entre le 14 avril et le 15 mai."
           },
           "declaredContinuous": {
             "title": "Interruption du calendrier, plage déclarée continue",
-            "caption": "Les données du calendrier présentent une interruption entre le 15 avr. et le 14 mai, mais `feed_info.txt` déclare une plage ininterrompue du 15 janv. au 14 août. Une interruption du calendrier seule ne suffit pas à déclencher un manquement.",
+            "caption": "Les données du calendrier présentent une interruption entre le 15 avr. et le 14 mai. Mais `feed_info.txt` déclare une plage ininterrompue du 15 janv. au 14 août. Une interruption du calendrier seule ne suffit pas à déclencher un manquement.",
             "diagramAriaLabel": "Données de calendrier présentant une interruption entre le 15 avril et le 14 mai 2026.",
             "declaredDiagramAriaLabel": "Une seule plage déclarée couvrant du 15 janvier au 14 août 2026, sans interruption."
           },
           "declaredGap": {
             "title": "Interruption dans le calendrier et dans la plage déclarée",
-            "caption": "Les données du calendrier et `feed_info.txt` présentent tous deux une interruption entre le 15 avr. et le 14 mai. Les deux conditions étant réunies, un manquement est déclenché.",
+            "caption": "Les données du calendrier et `feed_info.txt` présentent tous deux une interruption entre le 15 avr. et le 14 mai. Les deux conditions sont réunies — manquement déclenché.",
             "diagramAriaLabel": "Données de calendrier présentant une interruption entre le 15 avril et le 14 mai 2026.",
             "declaredDiagramAriaLabel": "Deux plages déclarées séparées par une interruption entre le 15 avril et le 14 mai 2026."
           }
         },
         "noticeTitle": "Aucune période de grâce.",
-        "notice": "Les interruptions entre jeux de données et les fenêtres de service de plus de deux ans font perdre le Sceau immédiatement. La situation doit être corrigée de façon constante pendant six mois pour regagner le Sceau."
+        "notice": "Les interruptions entre jeux de données et les fenêtres de service de plus de deux ans font perdre le Sceau immédiatement. La situation doit être corrigée de façon constante pendant six mois pour réussir la période probatoire et regagner le Sceau."
       },
       "earning": {
         "title": "Comment le Sceau s'obtient dans le temps",
@@ -858,7 +858,7 @@
             "description": "Évalué immédiatement selon tous les critères"
           },
           "window": {
-            "title": "Période d'acquisition",
+            "title": "Période probatoire",
             "description": "6 mois par critère (sauf Officiel), à compter du premier jour où chacun est satisfait"
           },
           "earned": {
@@ -867,16 +867,16 @@
           }
         },
         "paragraphs": [
-          "Lorsqu'un flux est ajouté à la Mobility Database, il est évalué selon chaque critère. Si un flux satisfait un critère (sauf Officiel), le compte à rebours de six mois démarre le premier jour où il est satisfait, et non le jour où le flux a été ajouté. Les cinq critères doivent chacun compléter leur fenêtre de six mois avant que le Sceau ne soit attribué.",
+          "Lorsqu'un flux est ajouté à la Mobility Database, il est évalué selon chaque critère. Pour chaque critère (sauf Officiel), une période probatoire de six mois démarre le premier jour où il est satisfait, et non le jour où le flux a été ajouté. Les cinq critères doivent chacun compléter leur période probatoire de six mois avant que le Sceau ne soit attribué.",
           "Le critère Stable exige six mois d'historique d'URL ininterrompu : aucun flux nouvellement ajouté ne peut donc satisfaire Stable avant d'être présent dans la base de données depuis au moins six mois.",
           "MobilityData évalue les flux dans la durée afin de garantir une fiabilité constante. Certains flux respectaient peut-être déjà les critères du Sceau avant leur ajout à la Mobility Database, mais l'évaluation porte sur ce qui peut être mesuré à partir de la date d'ajout."
         ],
         "clock": {
           "title": "Quand le compte à rebours démarre",
-          "tableAriaLabel": "Quand le compte à rebours de six mois démarre pour chaque critère",
+          "tableAriaLabel": "Quand la période probatoire démarre pour chaque critère",
           "columns": {
             "criterion": "Critère",
-            "clockStarts": "Le compte à rebours démarre…"
+            "clockStarts": "La période probatoire démarre…"
           },
           "stable": {
             "criterion": "Stable",
