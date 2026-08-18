@@ -577,6 +577,7 @@
         "C'est là qu'intervient le Sceau de fiabilité de MobilityData. En tant que mesure claire de la qualité de référence, le Sceau de fiabilité est attribué aux flux qui répondent à cinq critères clés : ils sont officiels, stables, disponibles, conformes et récents."
       ],
       "ctaButton": "Voir un flux évalué selon la norme (à venir)",
+      "calculationButton": "Voir comment il est calculé",
       "imageAlt": "espace réservé actuel",
       "feedsMeetingStandard": "Flux respectant la norme",
       "meetsPercent": "{percent} % conformes",
@@ -617,6 +618,7 @@
     },
     "criteria": {
       "title": "Les critères du Sceau de fiabilité",
+      "calculationButton": "Voir comment chaque critère est calculé",
       "official": {
         "title": "Officiel",
         "subtitle": "Autorisé par l'agence de transport.",

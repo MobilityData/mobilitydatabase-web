@@ -17,6 +17,7 @@ import {
   CardContent,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { type ReactElement } from 'react';
 import Image from 'next/image';
 import LockIcon from '@mui/icons-material/Lock';
@@ -24,6 +25,7 @@ import { getTranslations } from 'next-intl/server';
 import CardSectionTitle from '../../../components/CardSectionTitle';
 import SectionContainer from '../../../components/SectionContainer';
 import { accordionStyle } from '../../../components/accordionStyle';
+import { Link as LocaleLink } from '../../../../i18n/navigation';
 import {
   benefitEntries,
   criteriaEntries,
@@ -56,6 +58,7 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
             flexWrap: { xs: 'wrap', md: 'nowrap' },
             gap: 2,
             p: 4,
+            pb: 0,
           }}
         >
           <Box sx={{ width: { xs: '100%', md: '55%' } }}>
@@ -71,9 +74,22 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
                 {paragraph}
               </Typography>
             ))}
-            <Button variant='text' sx={{ ml: -1 }}>
-              {t(heroContent.ctaButtonKey)}
-            </Button>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+              }}
+            >
+              <Button variant='text' sx={{ ml: -1 }}>
+                {t(heroContent.ctaButtonKey)}
+              </Button>
+              <LocaleLink href='/seal-of-reliability/how-it-is-calculated'>
+                <Button variant='text' sx={{ ml: -1 }}>
+                  {t('hero.calculationButton')}
+                </Button>
+              </LocaleLink>
+            </Box>
           </Box>
           <Box
             sx={{
@@ -194,6 +210,17 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
               </CardContent>
             </Card>
           ))}
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+          <LocaleLink href='/seal-of-reliability/how-it-is-calculated'>
+            <Button
+              component='span'
+              variant='outlined'
+              endIcon={<ArrowForwardIcon />}
+            >
+              {t('criteria.calculationButton')}
+            </Button>
+          </LocaleLink>
         </Box>
       </SectionContainer>
 

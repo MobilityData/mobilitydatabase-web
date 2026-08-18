@@ -577,6 +577,7 @@
         "That's where the MobilityData Seal of Reliability comes in. As a clear measure of baseline quality, the Seal of Reliability is applied to feeds that meet five key criteria: they're official, stable, available, compliant, and fresh."
       ],
       "ctaButton": "See a feed measured against the standard (todo)",
+      "calculationButton": "See how it's calculated",
       "imageAlt": "current placeholder",
       "feedsMeetingStandard": "Feeds meeting the standard",
       "meetsPercent": "{percent}% meets",
@@ -617,6 +618,7 @@
     },
     "criteria": {
       "title": "The Criteria for the Seal of Reliability",
+      "calculationButton": "See how each criterion is calculated",
       "official": {
         "title": "Official",
         "subtitle": "Authorized by the transit agency.",
