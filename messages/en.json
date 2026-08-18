@@ -757,7 +757,6 @@
           "pass": {
             "title": "Fetched Aug 6, 2026",
             "axisStart": "Fetched: Aug 6",
-            "axisEnd": "Aug 27",
             "lastService": "Last service: Aug 20 (14 days ahead)",
             "caption": "Last service date is Aug 20: 14 days ahead. Above the 7-day minimum.",
             "diagramAriaLabel": "Coverage from August 6 to August 20, 2026, extending past the 7 day minimum marked at August 13."
@@ -765,7 +764,6 @@
           "fail": {
             "title": "Fetched Aug 6, 2026",
             "axisStart": "Fetched: Aug 6",
-            "axisEnd": "Aug 27",
             "lastService": "Last service: Aug 10 (4 days ahead)",
             "caption": "Last service date is Aug 10: only 4 days ahead. Below the 7-day minimum. Violation triggered.",
             "diagramAriaLabel": "Coverage from August 6 to August 10, 2026, stopping short of the 7 day minimum marked at August 13."

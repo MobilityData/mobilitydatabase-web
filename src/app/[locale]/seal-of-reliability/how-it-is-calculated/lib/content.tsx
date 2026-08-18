@@ -1,22 +1,31 @@
+import { type ComponentType } from 'react';
+import { type SvgIconProps } from '@mui/material/SvgIcon';
+import ForumIcon from '@mui/icons-material/Forum';
+import QueryStatsIcon from '@mui/icons-material/QueryStats';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { type DateRange } from './timeline';
 
 export interface MethodologyEntry {
   titleKey: string;
   descriptionKey: string;
+  icon: ComponentType<SvgIconProps>;
 }
 
 export const methodologyEntries: MethodologyEntry[] = [
   {
     titleKey: 'methodology.consultation.title',
     descriptionKey: 'methodology.consultation.description',
+    icon: ForumIcon,
   },
   {
     titleKey: 'methodology.realWorldData.title',
     descriptionKey: 'methodology.realWorldData.description',
+    icon: QueryStatsIcon,
   },
   {
     titleKey: 'methodology.bestPractices.title',
     descriptionKey: 'methodology.bestPractices.description',
+    icon: MenuBookIcon,
   },
 ];
 

@@ -43,17 +43,13 @@ export default async function RollingCoverageCard({
         />
       </Box>
 
-      <Box
-        sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}
+      <Typography
+        variant='caption'
+        sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}
         aria-hidden
       >
-        <Typography variant='caption' sx={{ color: 'text.secondary' }}>
-          {t(`${prefix}.axisStart`)}
-        </Typography>
-        <Typography variant='caption' sx={{ color: 'text.secondary' }}>
-          {t(`${prefix}.axisEnd`)}
-        </Typography>
-      </Box>
+        {t(`${prefix}.axisStart`)}
+      </Typography>
 
       <TimelineTrack
         ariaLabel={t(`${prefix}.diagramAriaLabel`)}

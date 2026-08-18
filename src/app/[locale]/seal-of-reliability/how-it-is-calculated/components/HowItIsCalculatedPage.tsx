@@ -133,18 +133,22 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
           {t('methodology.description')}
         </Typography>
         <Box sx={threeColumnGrid}>
-          {methodologyEntries.map((entry) => (
-            <Card variant='section' sx={{ mb: 0 }} key={entry.titleKey}>
-              <CardSectionTitle component='h3' sx={{ mb: 0 }}>
-                {t(entry.titleKey)}
-              </CardSectionTitle>
-              <CardContent sx={{ '&:last-child': { pb: 2 } }}>
-                <Typography variant='body1'>
-                  {t(entry.descriptionKey)}
-                </Typography>
-              </CardContent>
-            </Card>
-          ))}
+          {methodologyEntries.map((entry) => {
+            const MethodologyIcon = entry.icon;
+            return (
+              <Card variant='section' sx={{ mb: 0 }} key={entry.titleKey}>
+                <CardSectionTitle component='h3' sx={{ mb: 0 }}>
+                  <MethodologyIcon fontSize='inherit' aria-hidden />
+                  {t(entry.titleKey)}
+                </CardSectionTitle>
+                <CardContent sx={{ '&:last-child': { pb: 2 } }}>
+                  <Typography variant='body1'>
+                    {t(entry.descriptionKey)}
+                  </Typography>
+                </CardContent>
+              </Card>
+            );
+          })}
         </Box>
       </SectionContainer>
 

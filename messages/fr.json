@@ -757,7 +757,6 @@
           "pass": {
             "title": "Récupéré le 6 août 2026",
             "axisStart": "Récupéré : 6 août",
-            "axisEnd": "27 août",
             "lastService": "Dernier service : 20 août (14 jours d'avance)",
             "caption": "La dernière date de service est le 20 août : 14 jours d'avance. Au-dessus du minimum de 7 jours.",
             "diagramAriaLabel": "Couverture du 6 au 20 août 2026, dépassant le minimum de 7 jours marqué au 13 août."
@@ -765,7 +764,6 @@
           "fail": {
             "title": "Récupéré le 6 août 2026",
             "axisStart": "Récupéré : 6 août",
-            "axisEnd": "27 août",
             "lastService": "Dernier service : 10 août (4 jours d'avance)",
             "caption": "La dernière date de service est le 10 août : seulement 4 jours d'avance. En dessous du minimum de 7 jours. Manquement déclenché.",
             "diagramAriaLabel": "Couverture du 6 au 10 août 2026, s'arrêtant avant le minimum de 7 jours marqué au 13 août."
