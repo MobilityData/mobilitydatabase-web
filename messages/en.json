@@ -853,7 +853,7 @@
       },
       "earning": {
         "title": "How the Seal is earned over time",
-        "timelineTitle": "Timeline",
+        "phaseLabel": "Phase {number}",
         "phases": {
           "added": {
             "title": "Feed added",

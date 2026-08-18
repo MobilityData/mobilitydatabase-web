@@ -853,7 +853,7 @@
       },
       "earning": {
         "title": "Comment le Sceau s'obtient dans le temps",
-        "timelineTitle": "Chronologie",
+        "phaseLabel": "Phase {number}",
         "phases": {
           "added": {
             "title": "Flux ajouté",

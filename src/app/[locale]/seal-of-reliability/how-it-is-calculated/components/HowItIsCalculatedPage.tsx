@@ -6,9 +6,6 @@ import {
   CardContent,
   Container,
   Link,
-  Step,
-  StepLabel,
-  Stepper,
   Table,
   TableBody,
   TableCell,
@@ -25,7 +22,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import RuleIcon from '@mui/icons-material/Rule';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import SyncAltIcon from '@mui/icons-material/SyncAlt';
-import Image from 'next/image';
+import { fontFamily, theme } from '../../../../Theme';
 import SectionContainer from '../../../../components/SectionContainer';
 import CardSectionTitle from '../../../../components/CardSectionTitle';
 import {
@@ -41,7 +38,8 @@ import {
 import RichText from '../../../../components/RichText';
 import RollingCoverageCard from './RollingCoverageCard';
 import ScenarioCard from './ScenarioCard';
-import TimelineIcon from '@mui/icons-material/Timeline';
+
+const { primary, success, divider } = theme.vars.palette;
 
 const twoColumnGrid = {
   display: 'grid',
@@ -54,9 +52,6 @@ const threeColumnGrid = {
   gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' },
   gap: 2,
 } as const;
-
-/** Diameter of the step circles, up from the 24px MUI default. */
-const STEP_ICON_SIZE = 40;
 
 /**
  * The four short criteria sit two-per-row, so each container stretches to its
@@ -331,87 +326,77 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
 
         <Box
           sx={{
-            display: 'grid',
-            gridTemplateColumns: {
-              xs: '1fr',
-              md: 'minmax(0, 1fr) minmax(0, 450px)',
-            },
-            gap: 3,
-            alignItems: 'start',
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            borderRadius: '12px',
+            overflow: 'hidden',
             mb: 3,
           }}
         >
-          <Box sx={{ maxWidth: '63ch' }}>
-            {earningParagraphs.map((paragraph) => (
-              <Typography variant='body1' sx={{ mb: 1.5 }} key={paragraph}>
-                <RichText text={paragraph} />
-              </Typography>
-            ))}
-          </Box>
-
-          <Card variant='section' sx={{ mb: 0 }}>
-            <CardSectionTitle component='h3'>
-              <TimelineIcon></TimelineIcon>
-              {t('earning.timelineTitle')}
-            </CardSectionTitle>
-            <CardContent sx={{ '&:last-child': { pb: 2 } }}>
-              <Stepper
-                orientation='vertical'
-                activeStep={-1}
+          {earningPhaseEntries.map((entry, index) => {
+            const isLast = index === earningPhaseEntries.length - 1;
+            const accentColor =
+              index === 0
+                ? 'text.secondary'
+                : index === 1
+                  ? 'primary.main'
+                  : 'success.main';
+            const backgroundColor =
+              index === 0
+                ? 'action.hover'
+                : `rgba(${index === 1 ? primary.mainChannel : success.mainChannel} / 0.08)`;
+            const dividerBorder = `1px solid ${divider}`;
+            return (
+              <Box
+                key={entry.titleKey}
                 sx={{
-                  backgroundColor: 'transparent',
-                  p: 0,
-                  '& .MuiStepIcon-root': {
-                    color: 'primary.main',
-                    fontSize: `${STEP_ICON_SIZE}px`,
+                  flex: { xs: '1 1 auto', md: index === 1 ? 2.5 : 1 },
+                  p: 2.5,
+                  borderBottom: {
+                    xs: isLast ? 'none' : dividerBorder,
+                    md: 'none',
                   },
-                  // MUI indents the vertical connector by half the default icon width, so it
-                  // has to follow the enlarged circles to stay centred under them.
-                  '& .MuiStepConnector-vertical': {
-                    ml: `${STEP_ICON_SIZE / 2}px`,
+                  borderRight: {
+                    xs: 'none',
+                    md: isLast ? 'none' : dividerBorder,
                   },
+                  backgroundColor,
                 }}
               >
-                {earningPhaseEntries.map((entry, index) => (
-                  <Step key={entry.titleKey}>
-                    <StepLabel
-                      // The closing phase is the earned state, so it shows the
-                      // Seal itself rather than another number in the sequence.
-                      icon={
-                        index === earningPhaseEntries.length - 1 ? (
-                          <Image
-                            src='/assets/seal-reliability.png'
-                            alt=''
-                            width={60}
-                            height={60}
-                            // The asset is not square, so fit it to the circle
-                            // box instead of stretching it.
-                            style={{ objectFit: 'contain', marginLeft: '-8px' }}
-                          />
-                        ) : undefined
-                      }
-                      optional={
-                        <Typography
-                          variant='body2'
-                          sx={{ color: 'text.secondary', display: 'block' }}
-                        >
-                          {t(entry.descriptionKey)}
-                        </Typography>
-                      }
-                    >
-                      <Typography
-                        variant='subtitle2'
-                        component='h3'
-                        sx={{ fontWeight: 700 }}
-                      >
-                        {t(entry.titleKey)}
-                      </Typography>
-                    </StepLabel>
-                  </Step>
-                ))}
-              </Stepper>
-            </CardContent>
-          </Card>
+                <Typography
+                  variant='caption'
+                  sx={{
+                    display: 'block',
+                    fontFamily: fontFamily.secondary,
+                    color: accentColor,
+                  }}
+                >
+                  {t('earning.phaseLabel', { number: index + 1 })}
+                </Typography>
+                <Typography
+                  variant='subtitle1'
+                  component='h3'
+                  sx={{ fontWeight: 700, mt: 0.5 }}
+                >
+                  {t(entry.titleKey)}
+                </Typography>
+                <Typography
+                  variant='body2'
+                  sx={{ color: 'text.secondary', mt: 0.5 }}
+                >
+                  {t(entry.descriptionKey)}
+                </Typography>
+              </Box>
+            );
+          })}
+        </Box>
+
+        <Box sx={{ mb: 3 }}>
+          {earningParagraphs.map((paragraph) => (
+            <Typography variant='body1' sx={{ mb: 1.5 }} key={paragraph}>
+              <RichText text={paragraph} />
+            </Typography>
+          ))}
         </Box>
 
         <Typography
