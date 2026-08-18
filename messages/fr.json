@@ -568,6 +568,135 @@
       "openSource": "Une communauté open source travaillant activement à améliorer les outils"
     }
   },
+  "sealOfReliability": {
+    "title": "Sceau de fiabilité",
+    "hero": {
+      "title": "La référence pour des données GTFS Schedule fiables",
+      "paragraphs": [
+        "Il est difficile de mesurer la fiabilité des données. Les agences de transport ont du mal à savoir si leurs données GTFS répondent aux besoins des usagers ; les fournisseurs de données manquent d'un niveau de qualité de référence à atteindre, et les applications de planification de trajets passent du temps à prétraiter les flux plutôt que de les consommer directement.",
+        "C'est là qu'intervient le Sceau de fiabilité de MobilityData. En tant que mesure claire de la qualité de référence, le Sceau de fiabilité est attribué aux flux qui répondent à cinq critères clés : ils sont officiels, stables, disponibles, conformes et récents."
+      ],
+      "ctaButton": "Voir un flux évalué selon la norme (à venir)",
+      "imageAlt": "espace réservé actuel",
+      "feedsMeetingStandard": "Flux respectant la norme",
+      "meetsPercent": "{percent} % conformes",
+      "belowStandardPercent": "{percent} % sous la norme"
+    },
+    "benefits": {
+      "title": "Avantages",
+      "agencies": {
+        "title": "Pour les agences de transport",
+        "items": [
+          "Utilisez la définition du Sceau dans les contrats d'approvisionnement pour établir une base claire de qualité des données GTFS des fournisseurs",
+          "Identifiez les problèmes de qualité des données à l'aide des analyses de la Mobility Database",
+          "Offrez une meilleure expérience aux usagers en garantissant que les flux respectent un niveau minimal de fiabilité"
+        ]
+      },
+      "applications": {
+        "title": "Pour les applications",
+        "items": [
+          "Identifiez rapidement les flux prêts à être intégrés sans prétraitement ni tests approfondis",
+          "Évaluez la disponibilité au lancement d'une région selon le nombre de flux ayant obtenu le Sceau",
+          "Faites référence à une norme neutre et tierce lorsque vous expliquez les exigences de qualité des données aux producteurs"
+        ]
+      },
+      "vendors": {
+        "title": "Pour les fournisseurs",
+        "items": [
+          "Évaluez la qualité actuelle des données des clients potentiels",
+          "Ajustez vos devis selon l'effort estimé pour amener un flux au niveau du Sceau"
+        ]
+      },
+      "regulators": {
+        "title": "Pour les régulateurs",
+        "items": [
+          "Faites référence à la définition du Sceau dans les exigences réglementaires",
+          "Utilisez le Sceau comme norme automatisée et mesurable pour la qualité des données GTFS Schedule"
+        ]
+      }
+    },
+    "criteria": {
+      "title": "Les critères du Sceau de fiabilité",
+      "official": {
+        "title": "Officiel",
+        "subtitle": "Autorisé par l'agence de transport.",
+        "description": "Le flux a été confirmé comme une source officielle, publiée par l'agence de transport ou en son nom."
+      },
+      "stable": {
+        "title": "Stable",
+        "subtitle": "L'URL de téléchargement ne change pas",
+        "description": "Pendant au moins six mois consécutifs, la même URL dessert le flux, et celle-ci semble permanente."
+      },
+      "available": {
+        "title": "Disponible",
+        "subtitle": "Peut être téléchargé depuis l'URL chaque jour.",
+        "description": "Une fois par jour, la Mobility Database récupère le flux et le télécharge sans erreur."
+      },
+      "compliant": {
+        "title": "Conforme",
+        "subtitle": "Respecte chaque « doit » de la General Transit Feed Specification.",
+        "description": "Le flux ne présente aucune erreur dans le Validateur officiel GTFS Schedule. Les avertissements et les notices d'information n'affectent pas la conformité."
+      },
+      "freshRolling": {
+        "title": "Récent : couverture glissante de 7 jours",
+        "subtitle": "Comprend toujours 7 jours ou plus de couverture de service.",
+        "description": "Conformément aux meilleures pratiques GTFS, le flux fournit au moins 7 jours de couverture de service future glissante. Cela signifie qu'au moins une semaine complète de service est couverte chaque jour où le flux est récupéré."
+      },
+      "freshContinuous": {
+        "title": "Récent : couverture continue",
+        "subtitle": "Une fenêtre de service réaliste, sans interruption entre les versions du flux.",
+        "description": "La couverture de service est continue entre les versions successives du flux, sans interruption, et la fenêtre de service s'étend sur deux ans ou moins."
+      }
+    },
+    "gracePeriods": {
+      "title": "Périodes de grâce",
+      "description": "Un problème temporaire ne fait pas immédiatement perdre le Sceau à une agence. Les délais suivants s'appliquent selon le type de manquement.",
+      "tableAriaLabel": "Périodes de grâce",
+      "columns": {
+        "criterion": "Critère",
+        "triggerCondition": "Condition déclenchante",
+        "gracePeriod": "Période de grâce",
+        "description": "Description"
+      },
+      "compliant": {
+        "criterion": "Conforme",
+        "triggerCondition": "Erreur de validation",
+        "gracePeriod": "30 jours",
+        "consequence": "Si un flux présente une erreur de validation, les producteurs ont 30 jours pour la corriger. Après 30 jours, si les erreurs persistent, le flux perd son Sceau."
+      },
+      "available": {
+        "criterion": "Disponible",
+        "triggerCondition": "Échec de téléchargement",
+        "gracePeriod": "14 jours",
+        "consequence": "Si un flux ne peut pas être téléchargé, les producteurs ont 14 jours pour rétablir l'accès. Après 14 jours, si le flux reste indisponible, il perd son Sceau."
+      },
+      "freshCoverage": {
+        "criterion": "Récent (couverture de 7 jours)",
+        "triggerCondition": "Interruption de couverture",
+        "gracePeriod": "14 jours",
+        "consequence": "Si un flux cesse de couvrir suffisamment loin dans le futur, les producteurs ont 14 jours pour publier une mise à jour avant que le flux ne perde son Sceau."
+      }
+    },
+    "faq": {
+      "title": "Questions fréquentes",
+      "coverage": {
+        "question": "Que couvre le Sceau ?",
+        "answer": "Le Sceau évalue uniquement les flux GTFS Schedule. Il ne couvre pas les données GTFS Realtime ou GBFS. Nous nous sommes concentrés sur GTFS Schedule en raison de l'état établi du Validateur GTFS Schedule et de notre pipeline de traitement existant pour ces données sur la Mobility Database. Nous explorerons l'extension du Sceau à d'autres formats de données selon les retours des utilisateurs."
+      },
+      "definition": {
+        "question": "Comment définissez-vous la fiabilité ?",
+        "answer": "Un flux fiable est digne de confiance. Il est officiel, stable, disponible, conforme et récent. Nous avons consulté diverses applications consommatrices pour finaliser cette définition et identifier les principaux points de friction liés à la fiabilité des données. Cela exclut d'autres aspects clés de la qualité des données, comme l'exactitude par rapport au service réel. Ces éléments sont plus complexes et nécessitent une connaissance locale de chaque réseau de transport. L'objectif du Sceau de fiabilité est de définir un seuil minimal et mesurable que les données GTFS Schedule doivent respecter ; notre périmètre est donc volontairement restreint."
+      },
+      "agencyOrVendor": {
+        "question": "Une agence ou un fournisseur peut-il obtenir le Sceau ?",
+        "answer": "Non. Seul un flux peut obtenir le Sceau, pas une agence ou un fournisseur. Cela garantit une évaluation automatisée et cohérente. Une agence peut avoir certains flux qui obtiennent le Sceau et d'autres non -- les deux résultats seront visibles sur la Mobility Database."
+      },
+      "riskAwareness": {
+        "question": "En tant que producteur de données, comment savoir si je risque de perdre le Sceau ?",
+        "answer": "La meilleure façon est de consulter le statut de votre flux sur la Mobility Database 1 à 2 fois par mois. Notre équipe travaille sur des notifications par courriel, afin qu'à l'avenir vous puissiez être averti dès l'entrée en période de grâce."
+      }
+    }
+  },
   "footer": {
     "tagline": "Le plus grand catalogue ouvert de flux de données de transit et de mobilité, au service de la communauté mondiale des transports.",
     "maintainedBy": "Maintenu avec 💙 par MobilityData",
@@ -575,6 +704,7 @@
     "columns": {
       "platform": "Plateforme",
       "tools": "Outils",
+      "resources": "Ressources",
       "company": "Entreprise",
       "legal": "Légal"
     },
@@ -586,6 +716,7 @@
       "gtfsValidator": "Validateur GTFS",
       "gtfsRtValidator": "Validateur GTFS-RT",
       "gbfsValidator": "Validateur GBFS",
+      "sealOfReliability": "Sceau de fiabilité",
       "about": "À propos",
       "faq": "FAQ",
       "contactUs": "Contactez-nous",

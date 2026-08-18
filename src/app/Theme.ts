@@ -30,6 +30,12 @@ declare module '@mui/material/Typography' {
   }
 }
 
+declare module '@mui/material/Paper' {
+  interface PaperPropsVariantOverrides {
+    section: true;
+  }
+}
+
 export enum ThemeModeEnum {
   light = 'light',
   dark = 'dark',
@@ -246,16 +252,44 @@ export const theme = createTheme({
         }),
       },
     },
-    MuiTypography: {
+    MuiCard: {
       variants: [
         {
+          props: { variant: 'section' },
+          style: ({ theme }) => ({
+            background: 'var(--mui-palette-background-default)',
+            border: 'none',
+            padding: theme.spacing(2),
+            marginBottom: theme.spacing(2),
+            '&:last-of-type': {
+              marginBottom: 0,
+            },
+          }),
+        },
+      ],
+    },
+    MuiTypography: {
+      // Only maps the custom variants; MUI falls back to its own mapping for
+      // every built-in variant.
+      defaultProps: {
+        variantMapping: {
+          sectionTitle: 'h2',
+        },
+      },
+      variants: [
+        {
+          // Heading for a page section. Laid out as a flex row so an optional
+          // leading icon aligns with the text.
           props: { variant: 'sectionTitle' },
           style: {
             color: 'var(--mui-palette-primary-main)',
-            fontWeight: 'bold',
-            fontSize: '1.5rem',
+            fontWeight: 700,
+            fontSize: '1.25rem', // h6 size
+            lineHeight: 1.6,
             marginBottom: '0.5rem',
-            marginTop: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
           },
         },
       ],

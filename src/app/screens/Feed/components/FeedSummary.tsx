@@ -13,6 +13,7 @@ import {
 import {
   Box,
   Button,
+  Card,
   Chip,
   Dialog,
   DialogTitle,
@@ -25,7 +26,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { useTranslations } from 'next-intl';
-import { GroupCard, GroupHeader } from '../FeedSummary.styles';
+import CardSectionTitle from '../../../components/CardSectionTitle';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import LinkIcon from '@mui/icons-material/Link';
 import DatasetIcon from '@mui/icons-material/Dataset';
@@ -115,11 +116,11 @@ export default function FeedSummary({
 
   return (
     <>
-      <GroupCard variant='outlined'>
-        <GroupHeader variant='body1' component='h3'>
+      <Card variant='section'>
+        <CardSectionTitle component='h3'>
           <BusinessIcon fontSize='inherit' aria-hidden />
           {feed?.data_type === 'gbfs' ? t('producer') : t('agency')}
-        </GroupHeader>
+        </CardSectionTitle>
         <Box sx={{ ml: 2 }}>
           <Typography
             variant='h6'
@@ -174,9 +175,9 @@ export default function FeedSummary({
             <ExternalIds externalIds={feed.external_ids} />
           )}
         </Box>
-      </GroupCard>
+      </Card>
 
-      <GroupCard variant='outlined'>
+      <Card variant='section'>
         <Box
           sx={{
             display: 'flex',
@@ -185,10 +186,10 @@ export default function FeedSummary({
             mb: 1,
           }}
         >
-          <GroupHeader variant='body1' component='h3' sx={{ mb: 0 }}>
+          <CardSectionTitle component='h3' sx={{ mb: 0 }}>
             <DatasetIcon fontSize='inherit' aria-hidden />
             {t('feedSummary.routes')}
-          </GroupHeader>
+          </CardSectionTitle>
           <Chip
             data-testid='data-type'
             size='small'
@@ -472,16 +473,16 @@ export default function FeedSummary({
               </Button>
             </Box>
           )}
-      </GroupCard>
+      </Card>
 
       {feed?.source_info?.authentication_info_url != undefined &&
         feed.source_info.authentication_type !== 0 &&
         feed?.source_info.authentication_info_url.trim() !== '' && (
-          <GroupCard variant='outlined'>
-            <GroupHeader variant='body1' component='h3'>
+          <Card variant='section'>
+            <CardSectionTitle component='h3'>
               <LockIcon fontSize='inherit' aria-hidden />
               {t('feedSummary.feedAuthentication')}
-            </GroupHeader>
+            </CardSectionTitle>
             <Box sx={{ ml: 2 }}>
               <Typography variant='h6' component='p' sx={{ fontWeight: 700 }}>
                 {feed?.source_info?.authentication_type === 1 &&
@@ -504,13 +505,13 @@ export default function FeedSummary({
                 </Button>
               )}
             </Box>
-          </GroupCard>
+          </Card>
         )}
 
       {latestDataset?.service_date_range_start != undefined &&
         latestDataset.service_date_range_end != undefined && (
-          <GroupCard variant='outlined'>
-            <GroupHeader variant='body1' component='h3'>
+          <Card variant='section'>
+            <CardSectionTitle component='h3'>
               <CalendarTodayIcon fontSize='inherit' aria-hidden />
               {t('serviceDateRange')}
               <Tooltip title={t('serviceDateRangeTooltip')} placement='top'>
@@ -518,7 +519,7 @@ export default function FeedSummary({
                   <InfoOutlinedIcon fontSize='inherit' />
                 </IconButton>
               </Tooltip>
-            </GroupHeader>
+            </CardSectionTitle>
             <Box
               sx={{
                 display: 'flex',
@@ -615,13 +616,13 @@ export default function FeedSummary({
                 </Typography>
               </Box>
             </Box>
-          </GroupCard>
+          </Card>
         )}
 
       {latestDataset?.validation_report?.features != undefined &&
         latestDataset?.validation_report?.features.length > 0 && (
-          <GroupCard variant='outlined'>
-            <GroupHeader variant='body1' component='h3'>
+          <Card variant='section'>
+            <CardSectionTitle component='h3'>
               <LayersIcon fontSize='inherit' aria-hidden />
               {t('features')}
               <Tooltip title={tCommon('moreInfo')} placement='top'>
@@ -634,7 +635,7 @@ export default function FeedSummary({
                   <OpenInNewIcon fontSize='inherit' />
                 </IconButton>
               </Tooltip>
-            </GroupHeader>
+            </CardSectionTitle>
             {(() => {
               const allFeatures =
                 latestDataset?.validation_report?.features ?? [];
@@ -696,12 +697,12 @@ export default function FeedSummary({
                 </>
               );
             })()}
-          </GroupCard>
+          </Card>
         )}
 
       {feed?.source_info?.license_url != undefined &&
         feed?.source_info?.license_url !== '' && (
-          <GroupCard variant='outlined'>
+          <Card variant='section'>
             <Box
               sx={{
                 display: 'flex',
@@ -710,10 +711,10 @@ export default function FeedSummary({
                 mb: 1,
               }}
             >
-              <GroupHeader variant='body1' component='h3' sx={{ mb: 0 }}>
+              <CardSectionTitle component='h3' sx={{ mb: 0 }}>
                 <GavelIcon fontSize='inherit' aria-hidden />
                 {tCommon('license')}
-              </GroupHeader>
+              </CardSectionTitle>
               {feed?.source_info?.license_is_spdx != undefined &&
                 feed.source_info.license_is_spdx && (
                   <Tooltip title={t('license.spdxTooltip')} placement='top'>
@@ -817,15 +818,15 @@ export default function FeedSummary({
                   </Box>
                 </>
               )}
-          </GroupCard>
+          </Card>
         )}
 
       {hasRelatedLinks() && (
-        <GroupCard variant='outlined'>
-          <GroupHeader variant='body1' component='h3'>
+        <Card variant='section'>
+          <CardSectionTitle component='h3'>
             <LinkIcon fontSize='inherit' aria-hidden />
             {t('relatedLinks')}
-          </GroupHeader>
+          </CardSectionTitle>
 
           {(feed as GTFSFeedType)?.related_links?.map(
             (link, index, allLinks) => (
@@ -839,7 +840,7 @@ export default function FeedSummary({
               />
             ),
           )}
-        </GroupCard>
+        </Card>
       )}
 
       <Dialog

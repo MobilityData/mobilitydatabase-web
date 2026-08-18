@@ -183,6 +183,16 @@ const Footer: React.FC = () => {
             )}
           </Box>
 
+          {/* Resources column */}
+          {config.enableSealOfReliability && (
+            <Box sx={{ width: FOOTER_COLUMN_WIDTH }}>
+              <FooterColumnTitle>{t('columns.resources')}</FooterColumnTitle>
+              <FooterLink href='/seal-of-reliability'>
+                {t('links.sealOfReliability')}
+              </FooterLink>
+            </Box>
+          )}
+
           {/* Company column */}
           <Box sx={{ width: FOOTER_COLUMN_WIDTH }}>
             <FooterColumnTitle>{t('columns.company')}</FooterColumnTitle>

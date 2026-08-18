@@ -15,7 +15,7 @@ import { selectIsAuthenticated } from '../../../store/profile-selectors';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import FeedSubmissionForm from './Form';
-import { ColoredContainer } from '../../../styles/PageLayout.style';
+import SectionContainer from '../../../components/SectionContainer';
 
 function Component(): React.ReactElement {
   const t = useTranslations('feeds');
@@ -57,7 +57,7 @@ function Component(): React.ReactElement {
               </Alert>
             )}
 
-            <ColoredContainer>
+            <SectionContainer>
               <Typography>
                 Do you have any questions about how to submit a feed?
                 <Button
@@ -86,7 +86,7 @@ function Component(): React.ReactElement {
                   GBFS systems catalog
                 </Button>
               </Typography>
-            </ColoredContainer>
+            </SectionContainer>
             <Container maxWidth='md'>
               <Typography variant='h1' sx={{ my: 3 }}>
                 Add or update a feed

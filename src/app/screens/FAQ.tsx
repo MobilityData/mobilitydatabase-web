@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Container from '@mui/material/Container';
 import { Button, Typography } from '@mui/material';
-import { ColoredContainer } from '../styles/PageLayout.style';
+import SectionContainer from '../components/SectionContainer';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import Link from 'next/link';
 
@@ -11,7 +11,7 @@ export default function FAQ(): React.ReactElement {
   return (
     <Container component='main'>
       <Typography variant='h1'>Frequently Asked Questions (FAQ) </Typography>
-      <ColoredContainer maxWidth={false} sx={{ mt: 3 }}>
+      <SectionContainer maxWidth={false} sx={{ mt: 3 }}>
         <Typography
           variant='h5'
           color='primary'
@@ -216,7 +216,7 @@ export default function FAQ(): React.ReactElement {
             explanation.
           </Button>
         </Typography>
-      </ColoredContainer>
+      </SectionContainer>
     </Container>
   );
 }
