@@ -1,5 +1,3 @@
-'use client';
-
 import { type PaletteColor, createTheme } from '@mui/material/styles';
 import type {} from '@mui/material/themeCssVarsAugmentation';
 import { type Property } from 'csstype';
@@ -286,7 +284,7 @@ export const theme = createTheme({
             fontWeight: 700,
             fontSize: '1.25rem', // h6 size
             lineHeight: 1.6,
-            marginBottom: '0.5rem',
+            marginBottom: '8px',
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
