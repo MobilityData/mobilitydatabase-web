@@ -577,6 +577,7 @@
         "C'est là qu'intervient le Sceau de fiabilité de MobilityData. En tant que mesure claire de la qualité de référence, le Sceau de fiabilité est attribué aux flux qui répondent à cinq critères clés : ils sont officiels, stables, disponibles, conformes et récents."
       ],
       "ctaButton": "Voir un flux évalué selon la norme (à venir)",
+      "calculationButton": "Voir comment il est calculé",
       "imageAlt": "espace réservé actuel",
       "feedsMeetingStandard": "Flux respectant la norme",
       "meetsPercent": "{percent} % conformes",
@@ -617,6 +618,7 @@
     },
     "criteria": {
       "title": "Les critères du Sceau de fiabilité",
+      "calculationButton": "Voir comment chaque critère est calculé",
       "official": {
         "title": "Officiel",
         "subtitle": "Autorisé par l'agence de transport.",
@@ -694,6 +696,217 @@
       "riskAwareness": {
         "question": "En tant que producteur de données, comment savoir si je risque de perdre le Sceau ?",
         "answer": "La meilleure façon est de consulter le statut de votre flux sur la Mobility Database 1 à 2 fois par mois. Notre équipe travaille sur des notifications par courriel, afin qu'à l'avenir vous puissiez être averti dès l'entrée en période de grâce."
+      }
+    },
+    "howItIsCalculated": {
+      "eyebrow": "Sceau de fiabilité",
+      "title": "Comment il est calculé",
+      "intro": "Le Sceau de fiabilité repose sur six critères. Cette page documente la démarche qui a mené à cette définition, la façon dont chaque flux est évalué lors de son ajout à la Mobility Database, et les règles exactes derrière chaque critère. Cela inclut ce qui déclenche une réussite ou un manquement, ainsi que le fonctionnement des périodes de grâce.",
+      "methodology": {
+        "title": "Méthodologie",
+        "description": "Les six critères ont été retenus à partir de trois sources de recherche.",
+        "consultation": {
+          "title": "Consultation",
+          "description": "Des entretiens avec des applications consommatrices ont permis d'identifier les problèmes de fiabilité les plus courants rencontrés avec les données GTFS Schedule."
+        },
+        "realWorldData": {
+          "title": "Données réelles",
+          "description": "L'analyse des flux de la Mobility Database a révélé des tendances : comment les flux échouent, à quelle fréquence, et quand ils sont corrigés."
+        },
+        "bestPractices": {
+          "title": "Bonnes pratiques GTFS",
+          "description": "Les critères reprennent les recommandations des bonnes pratiques GTFS, ancrant le Sceau dans les normes établies par la communauté elle-même."
+        }
+      },
+      "official": {
+        "title": "Officiel",
+        "paragraphs": [
+          "Un flux est Officiel lorsque MobilityData a confirmé qu'il est autorisé par l'agence de transport. Cela signifie qu'il est publié par l'agence elle-même ou en son nom. MobilityData évalue ce point à partir du domaine de l'URL du producteur, des informations personnelles du contributeur ayant soumis le flux, du site web de l'agence et du fichier `feed_info.txt`. Cette détermination est faite manuellement et ne change pas en fonction de vérifications automatisées.",
+          "Contrairement aux cinq autres critères, le statut Officiel n'est pas soumis à la période probatoire de six mois."
+        ],
+        "notice": "Il n'y a pas de période de grâce pour le critère Officiel. La désignation est soit confirmée, soit elle ne l'est pas."
+      },
+      "stable": {
+        "title": "Stable",
+        "description": "La Mobility Database évalue la stabilité à partir de l'URL du producteur. Un flux est considéré comme Stable lorsque :",
+        "items": [
+          "La même URL sert le flux sans redirection depuis au moins six mois",
+          "L'URL semble permanente, c'est-à-dire qu'elle ne ressemble pas à un chemin de fichier temporaire comportant des dates, des heures ou des saisons"
+        ],
+        "notice": "Il n'y a pas de période de grâce pour le critère Stable. Si l'URL change, le critère échoue immédiatement et la période probatoire de six mois repart à la date à laquelle la nouvelle URL est ajoutée en tant que nouveau flux."
+      },
+      "available": {
+        "title": "Disponible",
+        "description": "Une fois par jour, la Mobility Database tente de télécharger le flux depuis l'URL de son producteur. Une récupération est considérée comme réussie lorsque la réponse HTTP se situe dans la plage 200.",
+        "noticeTitle": "Période de grâce de 14 jours.",
+        "notice": "En cas d'échec de récupération, les producteurs disposent de 14 jours pour rétablir l'accès. Si le flux reste inaccessible après 14 jours, le Sceau est retiré."
+      },
+      "compliant": {
+        "title": "Conforme",
+        "description": "À chaque téléchargement, le flux est analysé par le <link>Validateur officiel GTFS Schedule</link>. Un flux est Conforme lorsque le rapport de validation ne comporte aucune erreur. Les avertissements et les notices d'information n'affectent pas la conformité.",
+        "validatorScope": "Le Validateur vérifie la conformité aux exigences « must » de la spécification GTFS. Une seule erreur déclenche un manquement.",
+        "noticeTitle": "Période de grâce de 30 jours.",
+        "notice": "Si une erreur de validation apparaît, les producteurs disposent de 30 jours pour la corriger. Si l'erreur persiste après 30 jours, le Sceau est retiré."
+      },
+      "freshRolling": {
+        "title": "Récent : couverture glissante de 7 jours",
+        "description": "Chaque jour où le flux est téléchargé, la Mobility Database examine la dernière date de couverture de service dans les fichiers `calendar.txt` et `calendar_dates.txt` du flux. Cette date doit se situer au moins 7 jours après la date de téléchargement. Cela garantit que les usagers et les applications en aval disposent toujours d'au moins une semaine complète de données de service.",
+        "examplesTitle": "Exemples",
+        "minimumLabel": "13 août (min 7 j)",
+        "examples": {
+          "pass": {
+            "title": "Récupéré le 6 août 2026",
+            "axisStart": "Récupéré : 6 août",
+            "lastService": "Dernier service : 20 août (14 jours d'avance)",
+            "caption": "La dernière date de service est le 20 août : 14 jours d'avance. Au-dessus du minimum de 7 jours.",
+            "diagramAriaLabel": "Couverture du 6 au 20 août 2026, dépassant le minimum de 7 jours marqué au 13 août."
+          },
+          "fail": {
+            "title": "Récupéré le 6 août 2026",
+            "axisStart": "Récupéré : 6 août",
+            "lastService": "Dernier service : 10 août (4 jours d'avance)",
+            "caption": "La dernière date de service est le 10 août : seulement 4 jours d'avance. En dessous du minimum de 7 jours. Manquement déclenché.",
+            "diagramAriaLabel": "Couverture du 6 au 10 août 2026, s'arrêtant avant le minimum de 7 jours marqué au 13 août."
+          }
+        },
+        "noticeTitle": "Période de grâce de 14 jours.",
+        "notice": "Si la couverture descend sous 7 jours, les producteurs disposent de 14 jours pour publier une mise à jour. Si la couverture reste insuffisante après 14 jours, le Sceau est retiré."
+      },
+      "freshContinuous": {
+        "title": "Récent : couverture continue",
+        "description": "Les flux doivent maintenir un calendrier de service continu et à jour, sans interruption entre les versions, avec une fenêtre de service de deux ans ou moins.",
+        "rules": {
+          "noGaps": {
+            "title": "Aucune interruption entre les jeux de données",
+            "description": "La couverture de service doit être continue d'une version de flux à la suivante. Une interruption survient lorsque la première date de service d'une nouvelle version se situe plus d'un jour après la dernière date de service de la version précédente. Si v1 se termine le 31 août, v2 doit commencer au plus tard le 1er septembre. Un début au 2 septembre constitue un manquement."
+          },
+          "serviceWindow": {
+            "title": "Fenêtre de service de deux ans",
+            "description": "L'étendue totale des dates de service d'un jeu de données ne doit pas dépasser deux ans. Les flux couvrant plus de deux ans à l'avance sont considérés comme contenant des données futures obsolètes et peu fiables."
+          }
+        },
+        "feedInfo": {
+          "title": "Comment `feed_info.txt` influence le calcul",
+          "description": "Lorsqu'un flux inclut `feed_info.txt`, les producteurs peuvent déclarer une date de début et de fin officielles pour leur flux. MobilityData considère cela comme une déclaration d'intention. La présence de ce fichier modifie ce qui constitue un manquement lié à une interruption.",
+          "without": {
+            "title": "Sans `feed_info.txt`",
+            "items": [
+              "`calendar.txt` et `calendar_dates.txt` sont la seule source de vérité",
+              "Toute interruption dans les données du calendrier entre des jeux de données consécutifs constitue un manquement",
+              "Une fenêtre de service de plus de deux ans constitue un manquement"
+            ]
+          },
+          "with": {
+            "title": "Avec `feed_info.txt`",
+            "items": [
+              "Une plage de dates déclarée de plus de deux ans constitue un manquement",
+              "Une interruption présente à la fois dans la plage déclarée et dans les données du calendrier constitue un manquement",
+              "Une interruption du calendrier seule — lorsque la plage déclarée dans `feed_info.txt` est continue — ne constitue pas un manquement"
+            ]
+          }
+        },
+        "scenarios": {
+          "title": "Scénarios",
+          "calendarSourceLabel": "Données du calendrier",
+          "declaredSourceLabel": "Plage déclarée d'après `feed_info.txt`",
+          "feedInfoPresent": "`feed_info.txt` présent",
+          "gapLabel": "Écart",
+          "ticks": {
+            "jan01": "1 janv.",
+            "jan15": "15 janv.",
+            "apr14": "14 avr.",
+            "apr15": "15 avr.",
+            "may15": "15 mai",
+            "jul20": "20 juill.",
+            "aug14": "14 août"
+          },
+          "versions": {
+            "v1": "v1",
+            "v2": "v2",
+            "v3": "v3"
+          },
+          "continuous": {
+            "title": "Continu, sans interruption",
+            "caption": "Trois jeux de données consécutifs sans interruption et une fenêtre de service totale inférieure à deux ans.",
+            "diagramAriaLabel": "Trois jeux de données consécutifs couvrant du 1er janvier au 14 août 2026 sans interruption."
+          },
+          "gap": {
+            "title": "Interruption entre les jeux de données",
+            "caption": "Le service se termine le 14 avr. dans v1, mais v2 ne commence que le 15 mai. Une interruption d'un mois déclenche un manquement.",
+            "diagramAriaLabel": "Trois jeux de données couvrant du 1er janvier au 14 août 2026, avec une interruption d'un mois entre le 14 avril et le 15 mai."
+          },
+          "declaredContinuous": {
+            "title": "Interruption du calendrier, plage déclarée continue",
+            "caption": "Les données du calendrier présentent une interruption entre le 15 avr. et le 14 mai. Mais `feed_info.txt` déclare une plage ininterrompue du 15 janv. au 14 août. Une interruption du calendrier seule ne suffit pas à déclencher un manquement.",
+            "diagramAriaLabel": "Données de calendrier présentant une interruption entre le 15 avril et le 14 mai 2026.",
+            "declaredDiagramAriaLabel": "Une seule plage déclarée couvrant du 15 janvier au 14 août 2026, sans interruption."
+          },
+          "declaredGap": {
+            "title": "Interruption dans le calendrier et dans la plage déclarée",
+            "caption": "Les données du calendrier et `feed_info.txt` présentent tous deux une interruption entre le 15 avr. et le 14 mai. Les deux conditions sont réunies — manquement déclenché.",
+            "diagramAriaLabel": "Données de calendrier présentant une interruption entre le 15 avril et le 14 mai 2026.",
+            "declaredDiagramAriaLabel": "Deux plages déclarées séparées par une interruption entre le 15 avril et le 14 mai 2026."
+          }
+        },
+        "noticeTitle": "Aucune période de grâce.",
+        "notice": "Les interruptions entre jeux de données et les fenêtres de service de plus de deux ans font perdre le Sceau immédiatement. La situation doit être corrigée de façon constante pendant six mois pour réussir la période probatoire et regagner le Sceau."
+      },
+      "earning": {
+        "title": "Comment le Sceau s'obtient dans le temps",
+        "phaseLabel": "Phase {number}",
+        "phases": {
+          "added": {
+            "title": "Flux ajouté",
+            "description": "Évalué immédiatement selon tous les critères"
+          },
+          "window": {
+            "title": "Période probatoire",
+            "description": "6 mois par critère (sauf Officiel), à compter du premier jour où chacun est satisfait"
+          },
+          "earned": {
+            "title": "Sceau obtenu",
+            "description": "Les périodes de grâce s'appliquent désormais"
+          }
+        },
+        "paragraphs": [
+          "Lorsqu'un flux est ajouté à la Mobility Database, il est évalué selon chaque critère. Pour chaque critère (sauf Officiel), une période probatoire de six mois démarre le premier jour où il est satisfait, et non le jour où le flux a été ajouté. Les cinq critères doivent chacun compléter leur période probatoire de six mois avant que le Sceau ne soit attribué.",
+          "Le critère Stable exige six mois d'historique d'URL ininterrompu : aucun flux nouvellement ajouté ne peut donc satisfaire Stable avant d'être présent dans la base de données depuis au moins six mois.",
+          "MobilityData évalue les flux dans la durée afin de garantir une fiabilité constante. Certains flux respectaient peut-être déjà les critères du Sceau avant leur ajout à la Mobility Database, mais l'évaluation porte sur ce qui peut être mesuré à partir de la date d'ajout."
+        ],
+        "clock": {
+          "title": "Quand le compte à rebours démarre",
+          "tableAriaLabel": "Quand la période probatoire démarre pour chaque critère",
+          "columns": {
+            "criterion": "Critère",
+            "clockStarts": "La période probatoire démarre…"
+          },
+          "stable": {
+            "criterion": "Stable",
+            "description": "Le premier jour où l'URL est ajoutée à la Mobility Database, à condition que MobilityData ne l'ait pas signalée avec `is_producer_url_unstable=true`. Une URL signalée reste en échec même après six mois, puisqu'elle semble temporaire."
+          },
+          "available": {
+            "criterion": "Disponible",
+            "description": "Au premier téléchargement quotidien réussi avec une réponse HTTP dans la plage 200"
+          },
+          "compliant": {
+            "criterion": "Conforme",
+            "description": "Au premier rapport de validation comportant 0 erreur"
+          },
+          "freshRolling": {
+            "criterion": "Récent : couverture glissante de 7 jours",
+            "description": "À la première récupération quotidienne où la dernière date de service issue de `calendar.txt` et `calendar_dates.txt` s'étend au moins 7 jours à l'avance"
+          },
+          "freshContinuous": {
+            "criterion": "Récent : couverture continue",
+            "description": "À la première version de jeu de données sans interruption entre jeux consécutifs et avec une fenêtre de service de deux ans ou moins, à partir des données de `feed_info.txt` et du calendrier"
+          }
+        },
+        "noticeTitle": "Les périodes de grâce ne s'appliquent qu'une fois le Sceau obtenu.",
+        "notice": "Pendant la période d'acquisition, avant que le flux n'ait le Sceau, un manquement à un critère réinitialise le compte à rebours de ce critère à la date où il est de nouveau satisfait. Il n'y a aucune marge. Les périodes de grâce ne deviennent disponibles qu'une fois le Sceau attribué."
+      },
+      "result": {
+        "pass": "Réussite",
+        "fail": "Échec"
       }
     }
   },
