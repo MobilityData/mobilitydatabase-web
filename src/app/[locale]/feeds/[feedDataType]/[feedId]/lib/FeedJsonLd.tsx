@@ -2,6 +2,7 @@ import { type ReactElement } from 'react';
 import { getTranslations } from 'next-intl/server';
 import type {
   AllFeedType,
+  GTFSFeedType,
   GTFSRTFeedType,
 } from '../../../../../services/feeds/utils';
 import {
@@ -12,7 +13,7 @@ import generateFeedStructuredData from './generate-feed-metadata';
 
 interface FeedJsonLdProps {
   feed: AllFeedType;
-  relatedFeeds?: AllFeedType[];
+  relatedFeeds?: GTFSFeedType[];
   relatedGtfsRtFeeds?: GTFSRTFeedType[];
 }
 

@@ -18,10 +18,13 @@ import { notFound } from 'next/navigation';
 
 // Utils
 import {
-  type BasicFeedType,
+  type AllFeedType,
   type GBFSFeedType,
   type GTFSFeedType,
   type GTFSRTFeedType,
+  isGtfsFeedType,
+  isGtfsOrGtfsRtFeedType,
+  isGtfsRtFeedType,
 } from '../../services/feeds/utils';
 import ClientDownloadButton from './components/ClientDownloadButton';
 import RevalidateCacheButton from './components/RevalidateCacheButton';
@@ -65,7 +68,7 @@ const PreviousDatasets = dynamic(
 );
 
 interface Props {
-  feed: BasicFeedType;
+  feed: AllFeedType;
   initialDatasets?: Array<components['schemas']['GtfsDataset']>;
   relatedFeeds?: GTFSFeedType[];
   relatedGtfsRtFeeds?: GTFSRTFeedType[];
@@ -135,10 +138,9 @@ export default async function FeedView({
   const boundingBox = getBoundingBox(feed);
 
   let latestDataset: LatestDatasetFull;
-  if (feed.data_type === 'gtfs') {
-    const gtfsFeed: GTFSFeedType = feed;
+  if (isGtfsFeedType(feed)) {
     latestDataset = initialDatasets?.find(
-      (dataset) => dataset.id === gtfsFeed.latest_dataset?.id,
+      (dataset) => dataset.id === feed.latest_dataset?.id,
     );
   }
 
@@ -173,10 +175,13 @@ export default async function FeedView({
             />
 
             <Box sx={{ mt: 1 }}>
-              <FeedTitle sortedProviders={sortedProviders} feed={feed} />
+              <FeedTitle
+                sortedProviders={sortedProviders}
+                feed={isGtfsOrGtfsRtFeedType(feed) ? feed : undefined}
+              />
             </Box>
 
-            {feed?.feed_name !== '' && feed?.data_type === 'gtfs' && (
+            {isGtfsFeedType(feed) && feed.feed_name !== '' && (
               <Grid size={12}>
                 <Typography
                   component={'h2'}
@@ -186,20 +191,20 @@ export default async function FeedView({
                   }}
                   data-testid='feed-name'
                 >
-                  {feed?.feed_name}
+                  {feed.feed_name}
                 </Typography>
               </Grid>
             )}
 
-            {feed?.data_type === 'gtfs' && (
+            {isGtfsFeedType(feed) && (
               <DataQualitySummary
-                feedStatus={feed?.status}
+                feedStatus={feed.status}
                 isOfficialFeed={feed.official}
                 latestDataset={latestDataset}
               />
             )}
 
-            {feed?.data_type === 'gtfs_rt' && feed.official != null && (
+            {isGtfsRtFeedType(feed) && feed.official != null && (
               <Box sx={{ my: 1 }}>
                 <FeedVerificationChip
                   status={feed.official}
@@ -220,18 +225,19 @@ export default async function FeedView({
                   ).toDateString()}`}
                 </Typography>
               )}
-              {feed?.official_updated_at != undefined && (
-                <Typography
-                  data-testid='last-updated'
-                  variant={'caption'}
-                  width={'100%'}
-                  component={'div'}
-                >
-                  {`${t('officialFeedUpdated')}: ${new Date(
-                    feed?.official_updated_at,
-                  ).toDateString()}`}
-                </Typography>
-              )}
+              {isGtfsOrGtfsRtFeedType(feed) &&
+                feed.official_updated_at != undefined && (
+                  <Typography
+                    data-testid='last-updated'
+                    variant={'caption'}
+                    width={'100%'}
+                    component={'div'}
+                  >
+                    {`${t('officialFeedUpdated')}: ${new Date(
+                      feed.official_updated_at,
+                    ).toDateString()}`}
+                  </Typography>
+                )}
               <Typography
                 data-testid='page-generated'
                 variant={'caption'}

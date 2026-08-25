@@ -264,7 +264,7 @@ export default function generateFeedStructuredData(
   feed: AllFeedType,
   description: string,
   // For gtfs rt
-  relatedFeeds?: AllFeedType[],
+  relatedFeeds?: GTFSRTFeedType[],
   relatedGtfsFeeds?: GTFSFeedType[],
 ): StructureDataInterface | undefined {
   let structuredData: StructureDataInterface | undefined;

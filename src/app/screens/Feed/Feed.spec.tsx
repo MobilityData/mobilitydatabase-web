@@ -53,6 +53,7 @@ const mockFeed: GTFSFeedType = {
     downloaded_at: '2024-07-03T17:38:24.963131Z',
     hash: 'x',
   },
+  seasonal: false,
 };
 
 const mockFeedOneProvider = {
@@ -89,6 +90,7 @@ const mockFeedRT: GTFSRTFeedType = {
   ],
   entity_types: ['vp'],
   feed_references: ['mdb-y'],
+  seasonal: false,
 };
 
 jest.mock('firebase/compat/app', () => ({
