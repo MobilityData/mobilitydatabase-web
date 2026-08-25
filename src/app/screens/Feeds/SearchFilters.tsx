@@ -317,7 +317,7 @@ export function SearchFilters({
 
       <Accordion
         disableGutters
-        sx={{ border: 0 }}
+        sx={{ border: 0, '&::before': { display: 'none' } }}
         variant={'outlined'}
         expanded={expandedCategories.features && areFeatureFiltersEnabled}
         onChange={() => {
