@@ -75,13 +75,13 @@ Edit `src/app/interface/UserFeatureFlags.ts` — one change updates everything:
 ```ts
 export interface UserFeatureFlags {
   isNotificationsEnabled: boolean;
-  isSealOfReliabilityFilterEnabled: boolean;
+  isSealFilterEnabled: boolean;
   myNewFlag: boolean; // add here
 }
 
 export const defaultUserFeatureFlags: UserFeatureFlags = {
   isNotificationsEnabled: false,
-  isSealOfReliabilityFilterEnabled: false,
+  isSealFilterEnabled: false,
   myNewFlag: false, // and here
 };
 ```
