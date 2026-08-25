@@ -291,6 +291,7 @@ export function SearchFilters({
             component={Link}
             href='/seal-of-reliability'
             target='_blank'
+            rel='noopener noreferrer'
             variant='caption'
             sx={{
               display: 'inline-flex',
