@@ -73,13 +73,12 @@ export default function FeedsScreen(): React.ReactElement {
     areGBFSFiltersEnabled,
   } = deriveFilterFlags(selectedFeedTypes);
 
-  const {
-    isFeatureLive: isSealOfReliabilityLive,
-    hasNoAccess: hasNoSealAccess,
-  } = useSealOfReliabilityFilterAccess();
-  // Access is either granted or still resolving — safe to keep the filter in
-  // the URL. Only a confirmed denial (or the feature being off) strips it.
-  const hasSealEntitlement = isSealOfReliabilityLive && !hasNoSealAccess;
+  const { isFeatureLive: isSealOfReliabilityLive, hasAccess: hasSealAccess } =
+    useSealOfReliabilityFilterAccess();
+  // Mirrors `canFilterBySeal` in useFeedsSearch: only a confirmed grant
+  // counts, so the chip never claims the filter is active while the fetcher
+  // is still omitting `has_seal` during the pending state.
+  const hasSealEntitlement = isSealOfReliabilityLive && hasSealAccess;
   // The seal filter additionally follows the same data-type relevance rule as
   // the Features filter: it only applies when GTFS Schedule is part of the
   // search. Unlike entitlement, this shouldn't rewrite the URL — like
