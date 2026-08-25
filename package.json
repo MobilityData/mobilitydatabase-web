@@ -67,6 +67,8 @@
     "firebase:auth:emulator:dev": "firebase emulators:start --only auth --project mobility-feeds-dev",
     "generate:api-types:output": "node scripts/generate-api-types.mjs",
     "generate:api-types": "node scripts/generate-api-types.mjs src/app/services/feeds/types.ts",
+    "generate:api-types-manual:output": "npm exec -- openapi-typescript ./external_types/DatabaseCatalogAPI.yaml -o $npm_config_output_file && eslint $npm_config_output_file --fix",
+    "generate:api-types-manual": "npm exec -- openapi-typescript ./external_types/DatabaseCatalogAPI.yaml -o src/app/services/feeds/types.ts && eslint src/app/services/feeds/types.ts --fix",
     "generate:gbfs-validator-types:output": "npm exec -- openapi-typescript ./external_types/GbfsValidator.yaml -o $npm_config_output_file && eslint $npm_config_output_file --fix",
     "generate:gbfs-validator-types": "npm exec -- openapi-typescript ./external_types/GbfsValidator.yaml -o src/app/services/feeds/gbfs-validator-types.ts && eslint src/app/services/feeds/gbfs-validator-types.ts --fix",
     "generate:user-api-types:output": "npm exec -- openapi-typescript ./external_types/UserServiceAPI.yaml -o $npm_config_output_file && eslint $npm_config_output_file --fix",

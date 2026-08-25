@@ -192,6 +192,46 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/gtfs_feeds/{id}/availability': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The feed ID of the requested feed. */
+        id: components['parameters']['feed_id_path_param'];
+      };
+      cookie?: never;
+    };
+    /** @description Returns historical availability checks for a GTFS feed, ordered by checked_at from oldest to newest. Availability is based on scheduled lightweight HTTP checks (HEAD or ranged GET requests) and does not download or validate the full GTFS dataset. */
+    get: operations['getGtfsFeedAvailability'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/gtfs_feeds/{id}/reliability': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The feed ID of the requested feed. */
+        id: components['parameters']['feed_id_path_param'];
+      };
+      cookie?: never;
+    };
+    /** @description Returns the Seal of Reliability breakdown for a GTFS feed: whether the feed currently holds the seal, and the verdict for each of the six criteria. */
+    get: operations['getGtfsFeedReliability'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/datasets/gtfs/{id}': {
     parameters: {
       query?: never;
@@ -254,6 +294,23 @@ export interface paths {
      *     <br>
      */
     get: operations['searchFeeds'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/locations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Search locations (countries, subdivisions and municipalities). Results can be filtered by a free-text query and narrowed to a specific country, subdivision or location type. Matches are ordered from the broadest area to the most specific, and by relevance within each level. */
+    get: operations['getLocations'];
     put?: never;
     post?: never;
     delete?: never;
@@ -371,7 +428,7 @@ export interface components {
        */
       feed_contact_email?: string;
       source_info?: components['schemas']['SourceInfo'];
-      redirects?: Array<components['schemas']['Redirect']>;
+      redirects?: components['schemas']['Redirect'][];
     };
     Feed: components['schemas']['BasicFeed'] &
       Omit<
@@ -404,6 +461,12 @@ export interface components {
            */
           official_updated_at?: string;
           /**
+           * @description Indicates whether the feed is seasonal, i.e. it only provides service during recurring periods of the year (for example a summer-only or winter-only service). Seasonal feeds are excluded from the rolling 7-day service coverage checks. Defaults to false when the feed has not been marked as seasonal.
+           * @default false
+           * @example true
+           */
+          seasonal: boolean;
+          /**
            * @description An optional description of the data feed, e.g to specify if the data feed is an aggregate of  multiple providers, or which network is represented by the feed.
            * @example Bus
            */
@@ -411,7 +474,7 @@ export interface components {
           /** @description A note to clarify complex use cases for consumers. */
           note?: string;
           /** @description A list of related links for the feed. */
-          related_links?: Array<components['schemas']['FeedRelatedLink']>;
+          related_links?: components['schemas']['FeedRelatedLink'][];
         },
         'data_type'
       >;
@@ -452,6 +515,7 @@ export interface components {
        * @example mdb-1210-202402121801
        */
       visualization_dataset_id?: string;
+      reliability_seal?: components['schemas']['FeedReliabilitySummary'];
     };
     GbfsFeed: components['schemas']['BasicFeed'] & {
       /**
@@ -472,7 +536,7 @@ export interface components {
        */
       provider_url?: string;
       /** @description A list of GBFS versions that the feed supports. Each version is represented by its version number and a list of endpoints. */
-      versions?: Array<components['schemas']['GbfsVersion']>;
+      versions?: components['schemas']['GbfsVersion'][];
       bounding_box?: components['schemas']['BoundingBox'];
       /**
        * Format: date-time
@@ -507,7 +571,7 @@ export interface components {
        */
       source?: 'autodiscovery' | 'gbfs_versions';
       /** @description A list of endpoints that are available in the version. */
-      endpoints?: Array<components['schemas']['GbfsEndpoint']>;
+      endpoints?: components['schemas']['GbfsEndpoint'][];
       latest_validation_report?: components['schemas']['GbfsValidationReport'];
     };
     /** @description A validation report of the GBFS feed. */
@@ -555,14 +619,14 @@ export interface components {
        */
       is_feature?: boolean;
     };
-    GbfsFeeds: Array<components['schemas']['GbfsFeed']>;
+    GbfsFeeds: components['schemas']['GbfsFeed'][];
     GtfsRTFeed: components['schemas']['Feed'] & {
       /**
        * @example gtfs_rt
        * @enum {string}
        */
       data_type?: 'gtfs' | 'gtfs_rt' | 'gbfs';
-      entity_types?: Array<'vp' | 'tu' | 'sa'>;
+      entity_types?: ('vp' | 'tu' | 'sa')[];
       /** @description A list of the GTFS feeds that the real time source is associated with, represented by their MDB source IDs. */
       feed_references?: string[];
       locations?: components['schemas']['Locations'];
@@ -596,10 +660,16 @@ export interface components {
        */
       created_at?: string;
       /**
-       * @description A boolean value indicating if the feed is official or not.  Official feeds are provided by the transit agency or a trusted source.
+       * @description A boolean value indicating if the feed is official or not. Official feeds are provided by the transit agency or a trusted source.
        * @example true
        */
       official?: boolean;
+      /**
+       * @description Indicates whether the feed is seasonal, i.e. it only provides service during recurring periods of the year (for example a summer-only or winter-only service). Seasonal feeds are excluded from the rolling 7-day service coverage checks. Defaults to false when the feed has not been marked as seasonal.
+       * @default false
+       * @example true
+       */
+      seasonal: boolean;
       /**
        * @description The ID that can be use to find the feed data in an external or legacy database.
        *     <ul>
@@ -629,18 +699,245 @@ export interface components {
        */
       feed_contact_email?: string;
       source_info?: components['schemas']['SourceInfo'];
-      redirects?: Array<components['schemas']['Redirect']>;
+      redirects?: components['schemas']['Redirect'][];
       locations?: components['schemas']['Locations'];
       latest_dataset?: components['schemas']['LatestDataset'];
-      entity_types?: Array<'vp' | 'tu' | 'sa'>;
+      entity_types?: ('vp' | 'tu' | 'sa')[];
       /** @description The supported versions of the GBFS feed. */
       versions?: string[];
       /** @description A list of the GTFS feeds that the real time source is associated with, represented by their MDB source IDs. */
       feed_references?: string[];
+      reliability_seal?: components['schemas']['FeedReliabilitySummary'];
     };
-    Feeds: Array<components['schemas']['Feed']>;
-    GtfsFeeds: Array<components['schemas']['GtfsFeed']>;
-    GtfsRTFeeds: Array<components['schemas']['GtfsRTFeed']>;
+    Feeds: components['schemas']['Feed'][];
+    GtfsFeeds: components['schemas']['GtfsFeed'][];
+    GtfsRTFeeds: components['schemas']['GtfsRTFeed'][];
+    /** @description A summary of the feed's Seal of Reliability. `null` when the feed has never been evaluated.  Use `GET /v1/gtfs_feeds/{id}/reliability` for the per-criterion breakdown. */
+    FeedReliabilitySummary: {
+      /**
+       * @description Whether the feed currently holds the Seal of Reliability.
+       * @example true
+       */
+      has_seal: boolean;
+      /**
+       * Format: date-time
+       * @description When the feed most recently earned the seal, in ISO 8601 date-time format.
+       * @example 2026-01-15T00:00:00Z
+       */
+      earned_at?: string | null;
+      /**
+       * Format: date-time
+       * @description When the feed most recently lost the seal, in ISO 8601 date-time format.
+       * @example 2026-07-20T04:00:00Z
+       */
+      lost_at?: string | null;
+      /**
+       * Format: date-time
+       * @description When the feed's criteria were last evaluated, in ISO 8601 date-time format.
+       * @example 2026-07-30T04:00:00Z
+       */
+      evaluated_at?: string | null;
+      /**
+       * @description Whether at least one criterion is serving probation - the six clean months a criterion must go through, with no failure, after a confirmed failure before it can count towards the seal again. While this is true the feed cannot hold the seal even if every criterion currently passes.
+       * @example true
+       */
+      on_probation: boolean;
+      /**
+       * Format: date-time
+       * @description The earliest date the feed could regain the seal, in ISO 8601 date-time format: the end of the longest-running probation across its criteria. `null` when no criterion is on probation, and also when the stored probation has already elapsed without the nightly job clearing it - a stale countdown is not served.
+       * @example 2027-01-16T00:00:00Z
+       */
+      probation_ends_at?: string | null;
+    } | null;
+    /** @description The full Seal of Reliability breakdown for a GTFS feed: the same summary as the embedded `reliability_seal` object, plus one entry per criterion. All six criteria are always returned, in a stable order, so a client can render them unconditionally. */
+    FeedReliabilityReport: {
+      /**
+       * @description Unique identifier of the GTFS feed.
+       * @example mdb-1210
+       */
+      feed_id: string;
+      /**
+       * @description Whether the feed currently holds the Seal of Reliability.
+       * @example false
+       */
+      has_seal: boolean;
+      /**
+       * Format: date-time
+       * @description When the feed most recently earned the seal, in ISO 8601 date-time format.
+       * @example 2026-01-15T00:00:00Z
+       */
+      earned_at?: string | null;
+      /**
+       * Format: date-time
+       * @description When the feed most recently lost the seal, in ISO 8601 date-time format.
+       * @example 2026-07-20T04:00:00Z
+       */
+      lost_at?: string | null;
+      /**
+       * Format: date-time
+       * @description When the feed's criteria were last evaluated, in ISO 8601 date-time format.
+       * @example 2026-07-30T04:00:00Z
+       */
+      evaluated_at?: string | null;
+      /**
+       * @description Whether at least one criterion is serving probation. See `FeedReliabilitySummary`.
+       * @example false
+       */
+      on_probation: boolean;
+      /**
+       * Format: date-time
+       * @description The earliest date the feed could regain the seal. See `FeedReliabilitySummary`.
+       * @example 2027-01-16T00:00:00Z
+       */
+      probation_ends_at?: string | null;
+      /** @description One entry per criterion, always all six, in a stable order. */
+      criteria: components['schemas']['ReliabilityCriterion'][];
+    };
+    /**
+     * @description One criterion's contribution to the Seal of Reliability.
+     *     `status` is the criterion's own check at the last evaluation, undebounced, so a criterion can read `fail` while the feed still holds the seal - that is the at-risk state, and `in_grace_period` distinguishes it from a confirmed failure. Conversely a criterion can read `pass` while `on_probation` is true, in which case it still does not count towards the seal. The three states a client renders are therefore: healthy (`pass`), at risk (`fail` with `in_grace_period`), and failing (`fail` without it) - with `on_probation` as an independent flag on top.
+     */
+    ReliabilityCriterion: {
+      /**
+       * @description Which criterion this entry describes.
+       *       * `official` - the feed is provided by the agency or a trusted source.
+       *       * `stable` - the feed has a stable producer URL and a long enough track record.
+       *       * `available` - the feed URL responds to scheduled availability checks.
+       *       * `compliant` - the latest dataset validates with no errors.
+       *       * `fresh_coverage` - the latest dataset's service period extends far enough ahead.
+       *       * `fresh_continuous` - successive datasets cover service without gaps.
+       * @example compliant
+       * @enum {string}
+       */
+      criterion:
+        | 'official'
+        | 'stable'
+        | 'available'
+        | 'compliant'
+        | 'fresh_coverage'
+        | 'fresh_continuous';
+      /**
+       * @description The criterion's verdict at the last evaluation, with no grace period applied.
+       *       * `pass` - the check passed.
+       *       * `fail` - the check failed. The seal is only withdrawn once the failure outlasts
+       *         the criterion's grace period, so check `in_grace_period` before presenting this
+       *         as a loss.
+       *       * `unknown` - the criterion was evaluated but its inputs were missing, so no verdict
+       *         could be reached this time. It is skipped when deciding the seal rather than counted
+       *         as a failure.
+       *       * `not_applicable` - the criterion does not apply to this feed (for example a
+       *         coverage criterion on a seasonal feed) and is withdrawn from the seal entirely.
+       *       * `never_evaluated` - the criterion has produced no verdict for this feed yet. It is
+       *         skipped when deciding the seal rather than counted as a failure.
+       * @example fail
+       * @enum {string}
+       */
+      status:
+        | 'pass'
+        | 'fail'
+        | 'unknown'
+        | 'not_applicable'
+        | 'never_evaluated';
+      /**
+       * @description Whether a failing check is still inside the criterion's grace period, and so is not yet counting against the seal. Can only be true while `status` is `fail`, and is always false while `on_probation` is true, since a failure during probation restarts probation outright rather than being absorbed.
+       * @example true
+       */
+      in_grace_period: boolean;
+      /**
+       * Format: date-time
+       * @description When the grace period expires and the failure starts counting against the seal, in ISO 8601 date-time format. `null` unless `in_grace_period` is true, and also when the window has already elapsed without the nightly job acting on it.
+       * @example 2026-08-24T04:00:00Z
+       */
+      grace_period_ends_at?: string | null;
+      /**
+       * @description Whether this criterion is serving the six clean months required after a confirmed failure. While true, the criterion does not count towards the seal whatever its `status`. Never true for `official` or `stable`, which are point-in-time state checks with no track record to rebuild.
+       * @example false
+       */
+      on_probation: boolean;
+      /**
+       * Format: date-time
+       * @description When this criterion finishes probation, in ISO 8601 date-time format. `null` when it is not on probation, and also when the window has already elapsed without the nightly job clearing it.
+       * @example 2027-01-16T00:00:00Z
+       */
+      probation_ends_at?: string | null;
+      /**
+       * Format: date-time
+       * @description When this criterion was last evaluated, in ISO 8601 date-time format.
+       * @example 2026-07-30T04:00:00Z
+       */
+      evaluated_at?: string | null;
+      /**
+       * Format: date-time
+       * @description Start of the current run of failing checks, in ISO 8601 date-time format. `null` once the criterion passes again. This is what the grace period is measured from.
+       * @example 2026-07-25T04:00:00Z
+       */
+      first_failure_at?: string | null;
+      /**
+       * Format: date-time
+       * @description The most recent failing check, in ISO 8601 date-time format. Kept as history and never cleared, so it can be set on a criterion that currently passes.
+       * @example 2026-07-30T04:00:00Z
+       */
+      last_failure_at?: string | null;
+    };
+    GtfsFeedAvailabilityResponse: {
+      /**
+       * @description Unique identifier of the GTFS feed.
+       * @example mdb-123
+       */
+      feed_id: string;
+      /**
+       * @description Total number of matching availability checks regardless of limit and offset.
+       * @example 42
+       */
+      total: number;
+      /**
+       * @description Offset of the first returned item.
+       * @example 0
+       */
+      offset: number;
+      /**
+       * @description Maximum number of items returned.
+       * @example 100
+       */
+      limit: number;
+      /** @description Availability checks matching the requested filters, ordered by checked_at from oldest to newest. */
+      checks: components['schemas']['GtfsFeedAvailabilityCheck'][];
+    };
+    GtfsFeedAvailabilityCheck: {
+      /**
+       * Format: date-time
+       * @description Timestamp when the availability check was performed.
+       * @example 2026-05-14T10:00:00Z
+       */
+      checked_at: string;
+      /**
+       * @description Whether the feed URL was reachable using the lightweight check.
+       * @example true
+       */
+      success: boolean;
+      /**
+       * @description HTTP method used for the availability check.
+       * @example HEAD
+       * @enum {string}
+       */
+      request_method: 'HEAD' | 'GET';
+      /**
+       * @description Final HTTP status code returned by the feed URL, when available.
+       * @example 200
+       */
+      status_code?: number | null;
+      /**
+       * Format: double
+       * @description Time taken to receive the response, in milliseconds.
+       * @example 845.3
+       */
+      latency_ms?: number | null;
+      /**
+       * @description Machine-readable error category when the check failed.
+       * @example timeout
+       */
+      error_type?: string | null;
+    };
     LatestDataset: {
       /**
        * @description Identifier of the latest dataset for this feed.
@@ -661,10 +958,15 @@ export interface components {
        */
       downloaded_at?: string;
       /**
-       * @description A hash of the dataset.
+       * @description SHA-256 hash of the dataset.
        * @example ad3805c4941cd37881ff40c342e831b5f5224f3d8a9a2ec3ac197d3652c78e42
        */
       hash?: string;
+      /**
+       * @description MD5 hash of the dataset.
+       * @example 098f6bcd4621d373cade4e832627b4f6
+       */
+      hash_md5?: string;
       /**
        * Format: date-time
        * @description The start date of the service date range for the dataset in UTC. Timing starts at 00:00:00 of the day.
@@ -726,7 +1028,7 @@ export interface components {
      *       <li><b>Transit.land</b>: Imported from https://www.transit.land/documentation/rest-api/feeds. Pattern is tld-<feed_id>.</li>
      *     </ul>
      */
-    ExternalIds: Array<components['schemas']['ExternalId']>;
+    ExternalIds: components['schemas']['ExternalId'][];
     ExternalId: {
       /**
        * @description The ID that can be used to find the feed data in an external or legacy database.
@@ -749,10 +1051,18 @@ export interface components {
     SourceInfo: {
       /**
        * Format: url
-       * @description URL where the producer is providing the dataset.  Refer to the authentication information to know how to access this URL.
+       * @description URL where the producer is providing the dataset. Refer to the authentication information to know how to access this URL.
        * @example https://ladotbus.com/gtfs
        */
       producer_url?: string;
+      /**
+       * @description Indicates whether the `producer_url` is known to be unstable, i.e. it changes over time. This may be because the URL contains a date/time, or because the transit provider has communicated that it is not permanent (e.g. it is updated monthly).
+       *       * true - The producer URL is unstable and changes over time.
+       *       * false - The producer URL is stable and unchanging over time.
+       *       * null (default) - There is not enough information to determine the stability of the producer URL.
+       * @example true
+       */
+      is_producer_url_unstable?: boolean | null;
       /**
        * @description Defines the type of authentication required to access the `producer_url`. Valid values for this field are:
        *       * 0 or (empty) - No authentication required.
@@ -804,7 +1114,7 @@ export interface components {
        */
       license_tags?: string[];
     };
-    Locations: Array<components['schemas']['Location']>;
+    Locations: components['schemas']['Location'][];
     Location: {
       /**
        * @description ISO 3166-1 alpha-2 code designating the country where the system is located.  For a list of valid codes [see here](https://unece.org/trade/uncefact/unlocode-country-subdivisions-iso-3166-2).
@@ -826,6 +1136,75 @@ export interface components {
        * @example Los Angeles
        */
       municipality?: string;
+    };
+    LocationSearchResponse: {
+      /** @description The total number of matching locations regardless of limit and offset. */
+      total?: number;
+      /** @description The page of matching locations, ordered from the broadest area to the most specific and by relevance within each level. */
+      results?: components['schemas']['LocationSearchResult'][];
+    };
+    LocationSearchResult: {
+      /**
+       * @description Stable location identifier.
+       * @example 175905
+       */
+      location_id?: number;
+      /**
+       * @description Stable identifier of the nearest containing location.
+       * @example 161950
+       */
+      parent_location_id?: number | null;
+      /**
+       * @description The primary name of the location, in English when available.
+       * @example Montréal
+       */
+      name?: string | null;
+      /**
+       * @description An alternate or local name for the location, when available.
+       * @example City of Montréal
+       */
+      alt_name?: string | null;
+      /**
+       * @description The type of location: `country` (has an ISO 3166-1 code), `subdivision` (has an ISO 3166-2 code) or `municipality` (a locality below the subdivision level).
+       * @example municipality
+       * @enum {string}
+       */
+      location_type?: 'country' | 'subdivision' | 'municipality';
+      /**
+       * @description The name of the country that contains this location.
+       * @example Canada
+       */
+      country_name?: string | null;
+      /**
+       * @description The ISO 3166-1 alpha-2 code of the country that contains this location.
+       * @example CA
+       */
+      country_code?: string | null;
+      /**
+       * @description The name of the subdivision (e.g. state or province) that contains this location, when applicable.
+       * @example Quebec
+       */
+      subdivision_name?: string | null;
+      /**
+       * @description The ISO 3166-2 code of the subdivision that contains this location, when applicable.
+       * @example CA-QC
+       */
+      subdivision_code?: string | null;
+      /**
+       * @description The ordered list of location names from the broadest containing area down to this location.
+       * @example [
+       *       "Canada",
+       *       "Quebec",
+       *       "Montréal (region)",
+       *       "Montréal"
+       *     ]
+       */
+      path_names?: string[];
+      /**
+       * @description A human-readable representation of the full location hierarchy, joined from the broadest area to this location.
+       * @example Canada, Quebec, Montréal (region), Montréal
+       */
+      display_name?: string | null;
     };
     BasicDataset: {
       /**
@@ -854,10 +1233,15 @@ export interface components {
        */
       downloaded_at?: string;
       /**
-       * @description A hash of the dataset.
+       * @description SHA-256 hash of the dataset.
        * @example 6497e85e34390b8b377130881f2f10ec29c18a80dd6005d504a2038cdd00aa71
        */
       hash?: string;
+      /**
+       * @description MD5 hash of the dataset.
+       * @example 098f6bcd4621d373cade4e832627b4f6
+       */
+      hash_md5?: string;
       bounding_box?: components['schemas']['BoundingBox'];
       validation_report?: components['schemas']['ValidationReport'];
       /**
@@ -911,7 +1295,7 @@ export interface components {
        */
       maximum_longitude?: number;
     };
-    GtfsDatasets: Array<components['schemas']['GtfsDataset']>;
+    GtfsDatasets: components['schemas']['GtfsDataset'][];
     Metadata: {
       /** @example 1.0.0 */
       version?: string;
@@ -1035,9 +1419,9 @@ export interface components {
       license_tags?: string[];
     };
     LicenseWithRules: components['schemas']['LicenseBase'] & {
-      license_rules?: Array<components['schemas']['LicenseRule']>;
+      license_rules?: components['schemas']['LicenseRule'][];
     };
-    Licenses: Array<components['schemas']['LicenseBase']>;
+    Licenses: components['schemas']['LicenseBase'][];
     /**
      * @description Matching a license
      * @example {
@@ -1123,16 +1507,20 @@ export interface components {
       regional_id?: string;
     };
     /** @description List of MatchingLicense */
-    MatchingLicenses: Array<components['schemas']['MatchingLicense']>;
+    MatchingLicenses: components['schemas']['MatchingLicense'][];
   };
   responses: never;
   parameters: {
     /** @description Filter feeds by their status. [Status definitions defined here](https://github.com/MobilityData/mobility-database-catalogs?tab=readme-ov-file#gtfs-schedule-schema) */
     status: 'active' | 'deprecated' | 'inactive' | 'development' | 'future';
     /** @description Filter feeds by their status. [Status definitions defined here](https://github.com/MobilityData/mobility-database-catalogs?tab=readme-ov-file#gtfs-schedule-schema) */
-    statuses: Array<
-      'active' | 'deprecated' | 'inactive' | 'development' | 'future'
-    >;
+    statuses: (
+      | 'active'
+      | 'deprecated'
+      | 'inactive'
+      | 'development'
+      | 'future'
+    )[];
     /** @description Filter feeds by their GTFS features. [GTFS features definitions defined here](https://gtfs.org/getting-started/features/overview) */
     feature: string[];
     /** @description Comma separated list of license IDs to filter feeds by their license. */
@@ -1180,6 +1568,10 @@ export interface components {
     latest_query_param: boolean;
     /** @description If true, only return official feeds. */
     is_official_query_param: boolean;
+    /** @description If true, only return feeds that currently hold the Seal of Reliability; if false, only feeds without it. Viewing a feed's seal is public, but filtering the catalogue by it is granted per user and requires the `isSealFilterEnabled` feature flag - other callers receive a 403. To request access or learn more, contact us at api@mobilitydata.org. */
+    has_seal_query_param: boolean;
+    /** @description The number of items to be returned. */
+    limit_query_param_locations_endpoint: number;
     /** @description The number of items to be returned. */
     limit_query_param_feeds_endpoint: number;
     /** @description The number of items to be returned. */
@@ -1216,6 +1608,14 @@ export interface components {
     system_id_param: string;
     /** @description Filter feeds by their supported GBFS version. This is a string that follows the semantic versioning format. */
     version_param: string;
+    /** @description The number of items to be returned. Maximum is 100. */
+    limit_query_param_availability_endpoint: number;
+    /** @description Return availability checks performed at or after this timestamp. Date should be in ISO 8601 date-time format. */
+    availability_from: string;
+    /** @description Return availability checks performed at or before this timestamp. Date should be in ISO 8601 date-time format. */
+    availability_to: string;
+    /** @description Sort order of results by checked_at. Use `desc` for newest first (default) or `asc` for oldest first. */
+    availability_sort: 'asc' | 'desc';
   };
   requestBodies: never;
   headers: never;
@@ -1247,7 +1647,9 @@ export interface operations {
     responses: {
       /** @description Successful pull of the feeds common info.  This info has a reduced set of fields that are common to all types of feeds. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['Feeds'];
         };
@@ -1268,7 +1670,9 @@ export interface operations {
     responses: {
       /** @description Successful pull of the feeds common info for the provided ID. This info has a reduced set of fields that are common to all types of feeds. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['Feed'];
         };
@@ -1319,7 +1723,9 @@ export interface operations {
     responses: {
       /** @description Successful pull of the GTFS feeds info. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['GtfsFeeds'];
         };
@@ -1356,7 +1762,9 @@ export interface operations {
     responses: {
       /** @description Successful pull of the GTFS Realtime feeds info. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['GtfsRTFeeds'];
         };
@@ -1393,7 +1801,9 @@ export interface operations {
     responses: {
       /** @description Successful pull of the GBFS feeds info. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['GbfsFeeds'];
         };
@@ -1414,7 +1824,9 @@ export interface operations {
     responses: {
       /** @description Successful pull of the requested feed. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['GtfsFeed'];
         };
@@ -1435,7 +1847,9 @@ export interface operations {
     responses: {
       /** @description Successful pull of the requested feed. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['GtfsRTFeed'];
         };
@@ -1456,7 +1870,9 @@ export interface operations {
     responses: {
       /** @description Successful pull of the requested feed. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['GbfsFeed'];
         };
@@ -1488,7 +1904,9 @@ export interface operations {
     responses: {
       /** @description Successful pull of the requested datasets. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['GtfsDatasets'];
         };
@@ -1509,10 +1927,104 @@ export interface operations {
     responses: {
       /** @description Successful pull of the GTFS Realtime feeds info related to a GTFS feed. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['GtfsRTFeeds'];
         };
+      };
+    };
+  };
+  getGtfsFeedAvailability: {
+    parameters: {
+      query?: {
+        /** @description Return availability checks performed at or after this timestamp. Date should be in ISO 8601 date-time format. */
+        from?: components['parameters']['availability_from'];
+        /** @description Return availability checks performed at or before this timestamp. Date should be in ISO 8601 date-time format. */
+        to?: components['parameters']['availability_to'];
+        /** @description The number of items to be returned. Maximum is 100. */
+        limit?: components['parameters']['limit_query_param_availability_endpoint'];
+        /** @description Offset of the first item to return. */
+        offset?: components['parameters']['offset'];
+        /** @description Sort order of results by checked_at. Use `desc` for newest first (default) or `asc` for oldest first. */
+        sort?: components['parameters']['availability_sort'];
+      };
+      header?: never;
+      path: {
+        /** @description The feed ID of the requested feed. */
+        id: components['parameters']['feed_id_path_param'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Availability history for the GTFS feed, ordered by checked_at (newest first by default). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GtfsFeedAvailabilityResponse'];
+        };
+      };
+      /** @description Invalid request parameters. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description GTFS feed not found. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getGtfsFeedReliability: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The feed ID of the requested feed. */
+        id: components['parameters']['feed_id_path_param'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Seal of Reliability breakdown for the GTFS feed. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FeedReliabilityReport'];
+        };
+      };
+      /** @description GTFS feed not found. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -1530,7 +2042,9 @@ export interface operations {
     responses: {
       /** @description Successful pull of the requested dataset. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['GtfsDataset'];
         };
@@ -1548,7 +2062,9 @@ export interface operations {
     responses: {
       /** @description Successful pull of the metadata. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['Metadata'];
         };
@@ -1570,6 +2086,8 @@ export interface operations {
         data_type?: components['parameters']['data_type_query_param'];
         /** @description If true, only return official feeds. */
         is_official?: components['parameters']['is_official_query_param'];
+        /** @description If true, only return feeds that currently hold the Seal of Reliability; if false, only feeds without it. Viewing a feed's seal is public, but filtering the catalogue by it is granted per user and requires the `isSealFilterEnabled` feature flag - other callers receive a 403. To request access or learn more, contact us at api@mobilitydata.org. */
+        has_seal?: components['parameters']['has_seal_query_param'];
         /** @description Comma separated list of GBFS versions to filter by. */
         version?: components['parameters']['version_query_param'];
         /** @description General search query to match against transit provider, location, and feed name. */
@@ -1591,13 +2109,60 @@ export interface operations {
     responses: {
       /** @description Successful search feeds using full-text search on feed, location and provider's information, potentially returning a mixed array of different entity types. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': {
             /** @description The total number of matching entities found regardless the limit and offset parameters. */
             total?: number;
-            results?: Array<components['schemas']['SearchFeedItemResult']>;
+            results?: components['schemas']['SearchFeedItemResult'][];
           };
+        };
+      };
+      /** @description Filtering by Seal of Reliability status is not available to this caller. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getLocations: {
+    parameters: {
+      query?: {
+        /** @description The number of items to be returned. */
+        limit?: components['parameters']['limit_query_param_locations_endpoint'];
+        /** @description Offset of the first item to return. */
+        offset?: components['parameters']['offset'];
+        /** @description Free-text search matched against the location name, alternate name and its full hierarchy (e.g. "Canada, Quebec, Montréal"). Matching is accent-insensitive and supports typeahead-style prefix matching, so "mon" matches "Montréal". When several words are provided, all of them must match. */
+        search_query?: string;
+        /** @description Limit results to locations contained within this country, given as its ISO 3166-1 alpha-2 code. Case-insensitive. */
+        country_code?: string;
+        /** @description Limit results to locations contained within this subdivision, given as its ISO 3166-2 code. Case-insensitive. */
+        subdivision_code?: string;
+        /**
+         * @description Filter by the type of location:
+         *       * `country` - a sovereign country, identified by an ISO 3166-1 code.
+         *       * `subdivision` - a first-level subdivision (e.g. state or province), identified by an ISO 3166-2 code.
+         *       * `municipality` - a locality below the subdivision level (e.g. a city or town).
+         */
+        location_type?: 'country' | 'subdivision' | 'municipality';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful search of locations. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LocationSearchResponse'];
         };
       };
     };
@@ -1618,7 +2183,9 @@ export interface operations {
     responses: {
       /** @description Successful pull of the licenses info. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['Licenses'];
         };
@@ -1639,7 +2206,9 @@ export interface operations {
     responses: {
       /** @description Successful pull of the license info for the provided ID. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['LicenseWithRules'];
         };
@@ -1669,7 +2238,9 @@ export interface operations {
     responses: {
       /** @description The list of matching licenses if any. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['MatchingLicenses'];
         };
