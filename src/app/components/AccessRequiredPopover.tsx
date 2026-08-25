@@ -103,7 +103,7 @@ export default function AccessRequiredPopover({
           sx={{ width: '100%' }}
           href={requestAccessUrl}
           target='_blank'
-          rel='nofollow'
+          rel='noopener noreferrer nofollow'
           onClick={onClose}
         >
           {t('accessRequired.requestAccess')}
