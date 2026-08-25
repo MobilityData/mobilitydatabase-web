@@ -116,6 +116,10 @@
     "accountMenu": "Account menu",
     "accountDetails": "Account Details",
     "login": "Login",
+    "accessRequired": {
+      "requestAccess": "Request Access",
+      "learnAboutMembership": "Learn about membership"
+    },
     "metricsAdminOnly": "Metrics - Admin Only",
     "languageSelect": "Language select",
     "transitFeedsRedirectTitle": "You've been redirected from TransitFeeds",
@@ -249,6 +253,9 @@
     "communityFeed": "Community Feed",
     "communityFeedTooltip": "This feed is not created on behalf of the transit authority. It may have been created by a community member or third party.",
     "communityFeedTooltipShort": "Community feed: Created by a third party unaffiliated with the transit provider.",
+    "sealOfReliabilityAlt": "Seal of Reliability",
+    "sealOfReliabilityTooltipShort": "Seal of Reliability: This feed meets MobilityData's baseline quality standard for being official, stable, available, compliant, and fresh.",
+    "sealOfReliabilityLearnMore": "What is the Seal of Reliability?",
     "seeDetailPageProviders": "See detail page to view {providersCount} others",
     "openFullQualityReport": "Open Full Quality Report",
     "subscribe": "Subscribe to get feed update notifications",

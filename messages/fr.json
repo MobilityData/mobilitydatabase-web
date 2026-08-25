@@ -116,6 +116,10 @@
     "accountMenu": "Menu du compte",
     "accountDetails": "Détails du compte",
     "login": "Connexion",
+    "accessRequired": {
+      "requestAccess": "Demander l'accès",
+      "learnAboutMembership": "En savoir plus sur l'adhésion"
+    },
     "metricsAdminOnly": "Métriques - Admin uniquement",
     "languageSelect": "Sélection de la langue",
     "transitFeedsRedirectTitle": "Vous avez été redirigé depuis TransitFeeds",
@@ -249,6 +253,9 @@
     "communityFeed": "Community Feed",
     "communityFeedTooltip": "This feed has not been officially confirmed by the transit provider. It may have been created by the community or a third party.",
     "communityFeedTooltipShort": "Community feed: Not officially confirmed by the transit provider.",
+    "sealOfReliabilityAlt": "Sceau de fiabilité",
+    "sealOfReliabilityTooltipShort": "Sceau de fiabilité : ce flux répond à la norme de qualité de base de MobilityData en matière de fiabilité officielle, de stabilité, de disponibilité, de conformité et de fraîcheur des données.",
+    "sealOfReliabilityLearnMore": "Qu'est-ce que le Sceau de fiabilité ?",
     "seeDetailPageProviders": "See detail page to view {providersCount} others",
     "openFullQualityReport": "Open Full Quality Report",
     "subscribe": "S'abonner",
