@@ -25,10 +25,12 @@ import NextLinkComposed from 'next/link';
 import { useRouter } from '../../../i18n/navigation';
 import { getEmojiFlag, type TCountryCode } from 'countries-list';
 import FeedVerificationChip from '../../components/FeedVerificationChip';
+import SealOfReliability from '../../components/SealOfReliability';
 import ProviderTitle from './ProviderTitle';
 
 export interface SearchTableProps {
   feedsData: AllFeedsType | undefined;
+  enableSealOfReliability?: boolean;
 }
 
 const HeaderTableCell = styled(TableCell)(() => ({
@@ -69,6 +71,7 @@ export const getDataTypeElement = (
 
 export default function SearchTable({
   feedsData,
+  enableSealOfReliability = false,
 }: SearchTableProps): React.ReactElement {
   const theme = useTheme();
   const router = useRouter();
@@ -216,10 +219,23 @@ export default function SearchTable({
                       setAnchorEl(el);
                     }}
                   ></ProviderTitle>
-                  <FeedVerificationChip
-                    isLongDisplay={false}
-                    status={feed.official}
-                  ></FeedVerificationChip>
+                  <Box
+                    sx={{
+                      ml: 0.5,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 0.5,
+                    }}
+                  >
+                    {enableSealOfReliability &&
+                      feed.reliability_seal?.has_seal === true && (
+                        <SealOfReliability size='small'></SealOfReliability>
+                      )}
+                    <FeedVerificationChip
+                      isLongDisplay={false}
+                      status={feed.official}
+                    ></FeedVerificationChip>
+                  </Box>
                 </Box>
               </TableCell>
               <TableCell className='feed-column' component={Box}>

@@ -47,6 +47,12 @@ export const isGtfsRtFeedType = (
   return data !== undefined && data.data_type === 'gtfs_rt';
 };
 
+export const isGtfsOrGtfsRtFeedType = (
+  data: AllFeedType,
+): data is GTFSFeedType | GTFSRTFeedType => {
+  return isGtfsFeedType(data) || isGtfsRtFeedType(data);
+};
+
 export type GBFSFeedType =
   | paths['/v1/gbfs_feeds/{id}']['get']['responses'][200]['content']['application/json']
   | undefined;

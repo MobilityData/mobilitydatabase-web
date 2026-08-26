@@ -24,6 +24,7 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import GtfsRtEntities from './GtfsRtEntities';
 import { getEmojiFlag, type TCountryCode } from 'countries-list';
 import FeedVerificationChip from '../../components/FeedVerificationChip';
+import SealOfReliability from '../../components/SealOfReliability';
 import { getFeatureComponentDecorators } from '../../utils/consts';
 import PopoverList from './PopoverList';
 import ProviderTitle from './ProviderTitle';
@@ -36,6 +37,7 @@ export interface AdvancedSearchTableProps {
   selectedGbfsVersions: string[] | undefined;
   selectedLicenseTags: string[] | undefined;
   isLoadingFeeds: boolean;
+  enableSealOfReliability?: boolean;
 }
 
 interface DetailsContainerProps {
@@ -221,6 +223,7 @@ export default function AdvancedSearchTable({
   selectedGbfsVersions,
   selectedLicenseTags,
   isLoadingFeeds,
+  enableSealOfReliability = false,
 }: AdvancedSearchTableProps): React.ReactElement {
   const t = useTranslations('feeds');
   const tCommon = useTranslations('common');
@@ -336,16 +339,22 @@ export default function AdvancedSearchTable({
                       }}
                     ></ProviderTitle>
                   </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    {enableSealOfReliability &&
+                      feed.reliability_seal?.has_seal === true && (
+                        <SealOfReliability size='small'></SealOfReliability>
+                      )}
+                    <FeedVerificationChip
+                      isLongDisplay={false}
+                      status={feed.official}
+                    ></FeedVerificationChip>
 
-                  <FeedVerificationChip
-                    isLongDisplay={false}
-                    status={feed.official}
-                  ></FeedVerificationChip>
-                  {feed.data_type !== 'gbfs' && (
-                    <FeedStatusIndicator
-                      status={feed.status}
-                    ></FeedStatusIndicator>
-                  )}
+                    {feed.data_type !== 'gbfs' && (
+                      <FeedStatusIndicator
+                        status={feed.status}
+                      ></FeedStatusIndicator>
+                    )}
+                  </Box>
                 </Box>
 
                 <Box

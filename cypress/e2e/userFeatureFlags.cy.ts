@@ -29,7 +29,7 @@ const TEST_FEED_URL = '/feeds/gtfs/test-516';
 
 const ALL_DEFAULTS = {
   isNotificationsEnabled: false,
-  isSealOfReliabilityFilterEnabled: false,
+  isSealFilterEnabled: false,
 };
 
 interface MockFeature {
@@ -141,7 +141,7 @@ describe('User Feature Flags', () => {
     it('falls back to defaults for flags the API omits', () => {
       interceptUserProfile([
         {
-          id: 'isSealOfReliabilityFilterEnabled',
+          id: 'isSealFilterEnabled',
           value_type: 'boolean',
           value: true,
         },
@@ -151,7 +151,7 @@ describe('User Feature Flags', () => {
 
       expectResolvedFlags({
         isNotificationsEnabled: false,
-        isSealOfReliabilityFilterEnabled: true,
+        isSealFilterEnabled: true,
       });
     });
 
@@ -173,6 +173,12 @@ describe('User Feature Flags', () => {
       let callsOnLoad = 0;
 
       cy.visit('/');
+      // /account is gated by ProtectedPageWrapper on a 'registered' Redux
+      // profile status, which the Firebase-only sign-in from the outer
+      // beforeEach does not set (see loginViaSaga's docstring). Without this,
+      // the accountHeader click below races ProtectedPageWrapper's redirect
+      // to /sign-in.
+      loginViaSaga();
       expectResolvedFlags({ ...ALL_DEFAULTS, isNotificationsEnabled: true });
       cy.then(() => {
         callsOnLoad = profile.calls();

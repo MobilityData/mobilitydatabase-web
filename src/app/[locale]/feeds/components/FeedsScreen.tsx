@@ -41,6 +41,7 @@ import {
 } from '../lib/useFeedsSearch';
 import { toFeatureAnchor } from '../../../utils/featureAnchor';
 import { useRemoteConfig } from '../../../context/RemoteConfigProvider';
+import { useSealOfReliabilityFilterAccess } from '../../../hooks/useSealOfReliabilityFilterAccess';
 
 export default function FeedsScreen(): React.ReactElement {
   const theme = useTheme();
@@ -58,6 +59,7 @@ export default function FeedsScreen(): React.ReactElement {
     page: activePagination,
     feedTypes: selectedFeedTypes,
     isOfficial: isOfficialFeedSearch,
+    hasSeal: hasSealFeedSearch,
     features: selectedFeatures,
     gbfsVersions: selectedGbfsVersions,
     licenses: selectedLicenses,
@@ -70,6 +72,18 @@ export default function FeedsScreen(): React.ReactElement {
     areFeatureFiltersEnabled,
     areGBFSFiltersEnabled,
   } = deriveFilterFlags(selectedFeedTypes);
+
+  const { isFeatureLive: isSealOfReliabilityLive, hasAccess: hasSealAccess } =
+    useSealOfReliabilityFilterAccess();
+  // Mirrors `canFilterBySeal` in useFeedsSearch: only a confirmed grant
+  // counts, so the chip never claims the filter is active while the fetcher
+  // is still omitting `has_seal` during the pending state.
+  const hasSealEntitlement = isSealOfReliabilityLive && hasSealAccess;
+  // The seal filter additionally follows the same data-type relevance rule as
+  // the Features filter: it only applies when GTFS Schedule is part of the
+  // search. Unlike entitlement, this shouldn't rewrite the URL — like
+  // Features, it just hides the chip until a relevant data type is selected.
+  const canShowSealFilter = hasSealEntitlement && areFeatureFiltersEnabled;
 
   const featureTrackerHref =
     selectedFeatures.length === 1
@@ -106,6 +120,7 @@ export default function FeedsScreen(): React.ReactElement {
         page: activePagination,
         feedTypes: selectedFeedTypes,
         isOfficial: isOfficialFeedSearch,
+        hasSeal: hasSealFeedSearch,
         features: selectedFeatures,
         gbfsVersions: selectedGbfsVersions,
         licenses: selectedLicenses,
@@ -121,6 +136,7 @@ export default function FeedsScreen(): React.ReactElement {
       activePagination,
       selectedFeedTypes,
       isOfficialFeedSearch,
+      hasSealFeedSearch,
       selectedFeatures,
       selectedGbfsVersions,
       selectedLicenses,
@@ -152,6 +168,7 @@ export default function FeedsScreen(): React.ReactElement {
       licenses: [],
       licenseTags: [],
       isOfficial: false,
+      hasSeal: false,
     });
   }
 
@@ -301,6 +318,7 @@ export default function FeedsScreen(): React.ReactElement {
               <SearchFilters
                 selectedFeedTypes={selectedFeedTypes}
                 isOfficialFeedSearch={isOfficialFeedSearch}
+                hasSealFeedSearch={hasSealFeedSearch}
                 selectedFeatures={selectedFeatures}
                 selectedGbfsVersions={selectedGbfsVersions}
                 selectedLicenses={selectedLicenses}
@@ -310,6 +328,9 @@ export default function FeedsScreen(): React.ReactElement {
                 }}
                 setIsOfficialFeedSearch={(isOfficial) => {
                   navigate({ isOfficial, page: 1 });
+                }}
+                setHasSealFeedSearch={(hasSeal) => {
+                  navigate({ hasSeal, page: 1 });
                 }}
                 setSelectedFeatures={(features) => {
                   navigate({ features, page: 1 });
@@ -381,6 +402,17 @@ export default function FeedsScreen(): React.ReactElement {
                     label={'Official Feeds'}
                     onDelete={() => {
                       navigate({ isOfficial: false, page: 1 });
+                    }}
+                  />
+                )}
+                {hasSealFeedSearch && canShowSealFilter && (
+                  <Chip
+                    color='primary'
+                    variant='outlined'
+                    size='small'
+                    label={'Seal of Reliability'}
+                    onDelete={() => {
+                      navigate({ hasSeal: false, page: 1 });
                     }}
                   />
                 )}
@@ -459,6 +491,7 @@ export default function FeedsScreen(): React.ReactElement {
                   selectedLicenses.length > 0 ||
                   selectedLicenseTags.length > 0 ||
                   isOfficialFeedSearch ||
+                  (hasSealFeedSearch && canShowSealFilter) ||
                   selectedFeedTypes.gtfs_rt ||
                   selectedFeedTypes.gtfs ||
                   selectedFeedTypes.gbfs) && (
@@ -611,7 +644,12 @@ export default function FeedsScreen(): React.ReactElement {
                           </ToggleButtonGroup>
                         </Grid>
                         {searchView === 'simple' ? (
-                          <SearchTable feedsData={feedsData} />
+                          <SearchTable
+                            feedsData={feedsData}
+                            enableSealOfReliability={
+                              config.enableSealOfReliability
+                            }
+                          />
                         ) : (
                           <AdvancedSearchTable
                             feedsData={feedsData}
@@ -619,6 +657,9 @@ export default function FeedsScreen(): React.ReactElement {
                             selectedGbfsVersions={selectedGbfsVersions}
                             selectedLicenseTags={selectedLicenseTags}
                             isLoadingFeeds={isLoading || isValidating}
+                            enableSealOfReliability={
+                              config.enableSealOfReliability
+                            }
                           />
                         )}
 
