@@ -173,6 +173,12 @@ describe('User Feature Flags', () => {
       let callsOnLoad = 0;
 
       cy.visit('/');
+      // /account is gated by ProtectedPageWrapper on a 'registered' Redux
+      // profile status, which the Firebase-only sign-in from the outer
+      // beforeEach does not set (see loginViaSaga's docstring). Without this,
+      // the accountHeader click below races ProtectedPageWrapper's redirect
+      // to /sign-in.
+      loginViaSaga();
       expectResolvedFlags({ ...ALL_DEFAULTS, isNotificationsEnabled: true });
       cy.then(() => {
         callsOnLoad = profile.calls();
