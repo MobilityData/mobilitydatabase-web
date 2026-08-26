@@ -113,6 +113,18 @@ const darkPalette = {
   boxShadow: '0px 1px 4px 2px rgba(0,0,0,0.6)',
 };
 
+const CARTO_MAP_API_KEY = process.env.NEXT_PUBLIC_CARTO_MAP_API_KEY ?? '';
+
+const buildBasemapTileUrl = (style: 'light_all' | 'dark_all'): string => {
+  const baseUrl = `https://a.basemaps.cartocdn.com/${style}/{z}/{x}/{y}{r}.png`;
+  return CARTO_MAP_API_KEY.length > 0
+    ? `${baseUrl}?key=${CARTO_MAP_API_KEY}`
+    : baseUrl;
+};
+
+const basemapAttribution =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+
 /**
  * Map configuration per color scheme.
  * Extracted from the theme because map tile URLs and canvas colors
@@ -121,8 +133,8 @@ const darkPalette = {
  */
 export const mapConfig = {
   light: {
-    basemapTileUrl:
-      'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    basemapTileUrl: buildBasemapTileUrl('light_all'),
+    basemapAttribution,
     basemapTileOverallColor: '#f6f6f6',
     routeColor: lightPalette.background.default,
     routeTextColor: lightPalette.text.primary,
@@ -131,8 +143,8 @@ export const mapConfig = {
     primaryMain: lightPalette.primary.main,
   },
   dark: {
-    basemapTileUrl:
-      'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    basemapTileUrl: buildBasemapTileUrl('dark_all'),
+    basemapAttribution,
     basemapTileOverallColor: '#0d0d0d',
     routeColor: darkPalette.background.default,
     routeTextColor: darkPalette.text.primary,
