@@ -113,7 +113,7 @@ const darkPalette = {
   boxShadow: '0px 1px 4px 2px rgba(0,0,0,0.6)',
 };
 
-const CARTO_MAP_API_KEY = process.env['NEXT_PUBLIC_CARTO_MAP_API_KEY'] ?? '';
+const CARTO_MAP_API_KEY = process.env.NEXT_PUBLIC_CARTO_MAP_API_KEY ?? '';
 
 const buildBasemapTileUrl = (style: 'light_all' | 'dark_all'): string => {
   const baseUrl = `https://a.basemaps.cartocdn.com/${style}/{z}/{x}/{y}{r}.png`;
