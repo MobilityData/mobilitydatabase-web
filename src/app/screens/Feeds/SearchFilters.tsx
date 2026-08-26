@@ -263,7 +263,11 @@ export function SearchFilters({
           {isSealOfReliabilityLive &&
             (!areFeatureFiltersEnabled || isSealAccessPending ? (
               <SealFilterRow
-                checked={hasNoSealAccess ? false : hasSealFeedSearch}
+                checked={
+                  !areFeatureFiltersEnabled || hasNoSealAccess
+                    ? false
+                    : hasSealFeedSearch
+                }
                 disabled
                 locked={hasNoSealAccess}
               />
