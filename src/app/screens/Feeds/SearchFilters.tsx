@@ -15,9 +15,7 @@ import {
 import NestedCheckboxList, {
   type CheckboxStructure,
 } from '../../components/NestedCheckboxList';
-import AccessRequiredPopover, {
-  EARLY_ACCESS_REQUEST_FORM_URL,
-} from '../../components/AccessRequiredPopover';
+import AccessRequiredPopover from '../../components/AccessRequiredPopover';
 import { useTranslations } from 'next-intl';
 import { useRemoteConfig } from '../../context/RemoteConfigProvider';
 import { useSealOfReliabilityFilterAccess } from '../../hooks/useSealOfReliabilityFilterAccess';
@@ -29,6 +27,9 @@ import { useEffect, useState } from 'react';
 import { DATASET_FEATURES, groupFeaturesByComponent } from '../../utils/consts';
 import { type GbfsVersionConfig } from '../../interface/RemoteConfig';
 import { SearchHeader } from '../../styles/Filters.styles';
+
+const SEAL_FILTER_ACCESS_FORM_URL =
+  'https://docs.google.com/forms/d/1jzrqXkxkRHp_TrRHM6fSxeF2nMX3RSvrAXC2dlovZDU/viewform?edit_requested=true';
 
 interface SealFilterRowProps {
   checked: boolean;
@@ -316,7 +317,7 @@ export function SearchFilters({
           }}
           title='Seal of Reliability Filtering Access Required'
           description='This feature requires a MobilityData membership. Log in or request access to continue'
-          requestAccessUrl={EARLY_ACCESS_REQUEST_FORM_URL}
+          requestAccessUrl={SEAL_FILTER_ACCESS_FORM_URL}
         />
       </>
 
