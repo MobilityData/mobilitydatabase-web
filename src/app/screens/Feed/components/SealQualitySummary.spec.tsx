@@ -202,7 +202,7 @@ describe('SealQualitySummary', () => {
     renderSummary(buildReliability());
 
     const link = screen.getByRole('link', {
-      name: 'See Full Seal of Reliability Analysis',
+      name: 'seeFullAnalysis',
     });
     expect(link).toHaveAttribute(
       'href',
