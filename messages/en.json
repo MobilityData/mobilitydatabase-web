@@ -259,6 +259,8 @@
     "sealOfReliabilityQualityTooltip": "Seal of Reliability is a feed quality measure determined by MobilityData. View details.",
     "noSealLabel": "No seal yet",
     "noSealTooltip": "This feed does not currently hold the Seal of Reliability.",
+    "seasonalFeed": "Seasonal Feed",
+    "seasonalFeedTooltip": "This feed only provides service during recurring periods of the year, such as a summer-only or winter-only schedule.",
     "sealEarnedLabel": "Earned",
     "sealNotYetEarnedLabel": "Not Earned",
     "sealInGracePeriodLabel": "In Grace Period",

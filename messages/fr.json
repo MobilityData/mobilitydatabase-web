@@ -259,6 +259,8 @@
     "sealOfReliabilityQualityTooltip": "Le Sceau de fiabilité est une mesure de la qualité des flux déterminée par MobilityData. Voir les détails.",
     "noSealLabel": "Pas encore de sceau",
     "noSealTooltip": "Ce flux ne détient pas actuellement le Sceau de fiabilité.",
+    "seasonalFeed": "Flux saisonnier",
+    "seasonalFeedTooltip": "Ce flux ne fournit un service que pendant des périodes récurrentes de l'année, comme un horaire d'été ou d'hiver uniquement.",
     "sealEarnedLabel": "Obtenu",
     "sealNotYetEarnedLabel": "Pas encore obtenu",
     "sealInGracePeriodLabel": "Délai de grâce",
