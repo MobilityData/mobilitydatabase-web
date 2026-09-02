@@ -4,6 +4,10 @@ import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import GavelIcon from '@mui/icons-material/Gavel';
+import {
+  type SealCriterionKey,
+  SEAL_CRITERION_ICONS,
+} from '../../../constants/sealCriteria';
 
 export interface HeroContent {
   titleKey: string;
@@ -47,41 +51,55 @@ export const benefitEntries: BenefitEntry[] = [
 ];
 
 export interface CriteriaEntry {
+  key: SealCriterionKey;
   titleKey: string;
   subtitleKey: string;
   descriptionKey: string;
+  icon: ComponentType<SvgIconProps>;
 }
 
 export const criteriaEntries: CriteriaEntry[] = [
   {
+    key: 'official',
     titleKey: 'criteria.official.title',
     subtitleKey: 'criteria.official.subtitle',
     descriptionKey: 'criteria.official.description',
+    icon: SEAL_CRITERION_ICONS.official,
   },
   {
+    key: 'stable',
     titleKey: 'criteria.stable.title',
     subtitleKey: 'criteria.stable.subtitle',
     descriptionKey: 'criteria.stable.description',
+    icon: SEAL_CRITERION_ICONS.stable,
   },
   {
+    key: 'available',
     titleKey: 'criteria.available.title',
     subtitleKey: 'criteria.available.subtitle',
     descriptionKey: 'criteria.available.description',
+    icon: SEAL_CRITERION_ICONS.available,
   },
   {
+    key: 'compliant',
     titleKey: 'criteria.compliant.title',
     subtitleKey: 'criteria.compliant.subtitle',
     descriptionKey: 'criteria.compliant.description',
+    icon: SEAL_CRITERION_ICONS.compliant,
   },
   {
+    key: 'freshRolling',
     titleKey: 'criteria.freshRolling.title',
     subtitleKey: 'criteria.freshRolling.subtitle',
     descriptionKey: 'criteria.freshRolling.description',
+    icon: SEAL_CRITERION_ICONS.freshRolling,
   },
   {
+    key: 'freshContinuous',
     titleKey: 'criteria.freshContinuous.title',
     subtitleKey: 'criteria.freshContinuous.subtitle',
     descriptionKey: 'criteria.freshContinuous.description',
+    icon: SEAL_CRITERION_ICONS.freshContinuous,
   },
 ];
 
