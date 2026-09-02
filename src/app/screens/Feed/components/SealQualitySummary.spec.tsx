@@ -181,6 +181,23 @@ describe('SealQualitySummary', () => {
     },
   );
 
+  it('renders a passing criterion on probation as its own state, not as a pass', () => {
+    renderSummary(
+      buildReliability({
+        has_seal: false,
+        criteria: [
+          buildCriterion('official', { status: 'pass', on_probation: true }),
+          buildCriterion('stable', { status: 'pass' }),
+        ],
+      }),
+    );
+
+    expect(
+      screen.getByTestId('criterion-official-probation'),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId('criterion-stable-pass')).toBeInTheDocument();
+  });
+
   it('links to the full seal-of-reliability analysis page', () => {
     renderSummary(buildReliability());
 

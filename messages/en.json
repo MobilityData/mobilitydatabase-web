@@ -275,6 +275,7 @@
     "sealCriterionGracePeriodNote": "In grace period until {date}.",
     "sealCriterionNotApplicable": "Not Applicable",
     "sealCriterionNotEvaluated": "Not Evaluated",
+    "sealCriterionOnProbation": "On Probation",
     "reliabilityAnalysisTitle": "Seal of Reliability Analysis",
     "reliabilityAnalysisIntro": "A breakdown of the six criteria used to determine whether this feed holds the Seal of Reliability.",
     "reliabilityDataPlaceholderWarning": "Per-criterion results aren't available from the API yet. The breakdown below is illustrative placeholder data.",

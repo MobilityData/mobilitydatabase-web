@@ -275,6 +275,7 @@
     "sealCriterionGracePeriodNote": "En délai de grâce jusqu'au {date}.",
     "sealCriterionNotApplicable": "Non applicable",
     "sealCriterionNotEvaluated": "Non évalué",
+    "sealCriterionOnProbation": "En probation",
     "reliabilityAnalysisTitle": "Analyse du Sceau de fiabilité",
     "reliabilityAnalysisIntro": "Un aperçu des six critères utilisés pour déterminer si ce flux détient le Sceau de fiabilité.",
     "reliabilityDataPlaceholderWarning": "Les résultats par critère ne sont pas encore disponibles depuis l'API. Le détail ci-dessous est une donnée d'exemple à titre indicatif.",

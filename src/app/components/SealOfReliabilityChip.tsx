@@ -1,7 +1,6 @@
 'use client';
 import { Chip, Tooltip } from '@mui/material';
 import { useTranslations } from 'next-intl';
-import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { Link } from '../../i18n/navigation';
 import SealOfReliability from './SealOfReliability';
 
@@ -50,18 +49,5 @@ export default function SealOfReliabilityChip({
     );
   }
 
-  return (
-    <Tooltip title={t('noSealTooltip')} placement='top'>
-      <Chip
-        data-testid='seal-of-reliability-chip'
-        component={Link}
-        href={href}
-        clickable
-        icon={<WorkspacePremiumIcon />}
-        label={t('noSealLabel')}
-        variant='outlined'
-        sx={{ opacity: 0.7 }}
-      />
-    </Tooltip>
-  );
+  return null;
 }

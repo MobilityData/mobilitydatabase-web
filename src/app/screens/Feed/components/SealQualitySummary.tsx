@@ -20,14 +20,18 @@ type CriterionDisplayStatus =
   | 'atRisk'
   | 'fail'
   | 'notApplicable'
-  | 'notEvaluated';
+  | 'notEvaluated'
+  | 'probation';
 
-// Covers all five verdicts the API can return for a criterion (pass, fail,
-// unknown, not_applicable, never_evaluated) - only `fail` outside its grace
-// period is a real failure; the rest are neutral, non-failing states.
+// `on_probation` is independent of `status` - a criterion can read `pass`
+// while on probation and still not count towards the seal, so it takes
+// priority over the status-derived states below.
 function getCriterionDisplayStatus(
   criterion: ReliabilityCriterion,
 ): CriterionDisplayStatus {
+  if (criterion.on_probation) {
+    return 'probation';
+  }
   switch (criterion.status) {
     case 'pass':
       return 'pass';
@@ -65,7 +69,7 @@ export default function SealQualitySummary({
     (c) => c.status !== 'not_applicable',
   );
   const passedCriteriaCount = consideredCriteria.filter(
-    (c) => c.status === 'pass',
+    (c) => c.status === 'pass' && !c.on_probation,
   ).length;
 
   const sealStatus: 'earned' | 'gracePeriod' | 'notEarned' = !hasSeal
@@ -146,6 +150,7 @@ export default function SealQualitySummary({
                   fail: theme.palette.error.light,
                   notApplicable: theme.palette.grey[500],
                   notEvaluated: theme.palette.grey[500],
+                  probation: theme.palette.info.light,
                 }[displayStatus];
 
                 const statusLabel = {
@@ -154,6 +159,7 @@ export default function SealQualitySummary({
                   fail: t('sealCriterionFail'),
                   notApplicable: t('sealCriterionNotApplicable'),
                   notEvaluated: t('sealCriterionNotEvaluated'),
+                  probation: t('sealCriterionOnProbation'),
                 }[displayStatus];
 
                 const graceNote =
