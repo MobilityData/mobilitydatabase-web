@@ -35,7 +35,7 @@ import ClientSubscribeControls from './components/ClientSubscribeControls';
 import { getBoundingBox } from './Feed.functions';
 import dynamic from 'next/dynamic';
 import { ContentBox } from '../../components/ContentBox';
-import { getUserRemoteConfigValues } from '../../../lib/remote-config.server';
+import { getRemoteConfigValues } from '../../../lib/remote-config.server';
 
 const CoveredAreaMap = dynamic(
   async () =>
@@ -98,7 +98,7 @@ export default async function FeedView({
     getTranslations('feeds'),
     getTranslations('gbfs'),
     getTranslations('common'),
-    getUserRemoteConfigValues(),
+    getRemoteConfigValues(),
   ]);
 
   // Basic derived data
