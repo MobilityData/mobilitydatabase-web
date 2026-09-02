@@ -264,7 +264,7 @@
     "sealEarnedLabel": "Obtenu",
     "sealNotYetEarnedLabel": "Pas encore obtenu",
     "sealInGracePeriodLabel": "Délai de grâce",
-    "sealEarnedCaption": "Les 6 critères sont respectés",
+    "sealEarnedCaption": "Tous les critères applicables sont respectés",
     "sealGracePeriodCaption": "Le sceau est conservé pendant qu'un ou plusieurs critères sont en délai de grâce",
     "sealCriteriaMetCaption": "{passed} critères sur {total} respectés",
     "seeFullAnalysis": "Voir l'analyse complète",
