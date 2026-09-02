@@ -4,6 +4,7 @@
  */
 
 import 'server-only';
+import { unstable_cache } from 'next/cache';
 import {
   getFeed,
   getGtfsFeed,
@@ -12,6 +13,7 @@ import {
   getGtfsFeedDatasets,
   getGtfsFeedRoutes,
   getGtfsFeedAssociatedGtfsRtFeeds,
+  getGtfsFeedReliability,
 } from '../../../../../services/feeds';
 import {
   type GTFSFeedType,
@@ -22,6 +24,7 @@ import type { components } from '../../../../../services/feeds/types';
 import type { GtfsRoute } from '../../../../../types';
 
 type DatasetType = components['schemas']['GtfsDataset'];
+type ReliabilityReport = components['schemas']['FeedReliabilityReport'];
 
 export interface FeedDataResult {
   feed: AllFeedType;
@@ -32,6 +35,7 @@ export interface FeedDataResult {
   totalRoutes?: number;
   routeTypes?: string[];
   routes?: GtfsRoute[];
+  reliability?: ReliabilityReport;
 }
 
 /**
@@ -75,6 +79,43 @@ export async function fetchDatasets(
   } catch (e) {
     return [];
   }
+}
+
+/**
+ * Fetch the Seal of Reliability breakdown for a GTFS feed.
+ *
+ * The reliability report is tied to the feed, not the caller, so it's cached
+ * by feedId alone via unstable_cache, shared across all users/sessions.
+ * accessToken/userContextJwt are only closed over to authenticate the
+ * underlying call and are intentionally excluded from the cache key.
+ */
+export async function fetchReliabilityData(
+  feedId: string,
+  accessToken: string,
+  userContextJwt: string | undefined,
+): Promise<ReliabilityReport | undefined> {
+  const cachedFetch = unstable_cache(
+    async (): Promise<ReliabilityReport | null> => {
+      try {
+        const reliability = await getGtfsFeedReliability(
+          feedId,
+          accessToken,
+          userContextJwt,
+        );
+        return reliability ?? null;
+      } catch (e) {
+        return null;
+      }
+    },
+    [`feed-reliability-${feedId}`],
+    {
+      tags: [`feed-${feedId}`],
+      revalidate: 1209600, // 14 days - public reliability data, revalidated on demand via /api/revalidate when the feed updates
+    },
+  );
+
+  const reliability = await cachedFetch();
+  return reliability ?? undefined;
 }
 
 /**
@@ -182,24 +223,29 @@ export async function fetchCompleteFeedDataImpl(
     throw new Error(`Feed ${feedId} not found`);
   }
 
-  // Fetch datasets and routes in parallel for GTFS feeds
+  // Fetch datasets, routes, and reliability in parallel for GTFS feeds
   let initialDatasets: DatasetType[] = [];
   let totalRoutes: number | undefined;
   let routeTypes: string[] | undefined;
   let routes: GtfsRoute[] | undefined;
+  let reliability: ReliabilityReport | undefined;
 
   if (feedDataType === 'gtfs') {
-    const [datasetsResult, routesResult] = await Promise.all([
-      fetchDatasets(feedId, accessToken, userContextJwt),
-      fetchRoutesData(
-        feedId,
-        (feed as GTFSFeedType)?.visualization_dataset_id ?? '',
-      ),
-    ]);
+    const [datasetsResult, routesResult, reliabilityResult] = await Promise.all(
+      [
+        fetchDatasets(feedId, accessToken, userContextJwt),
+        fetchRoutesData(
+          feedId,
+          (feed as GTFSFeedType)?.visualization_dataset_id ?? '',
+        ),
+        fetchReliabilityData(feedId, accessToken, userContextJwt),
+      ],
+    );
     initialDatasets = datasetsResult;
     totalRoutes = routesResult.totalRoutes;
     routeTypes = routesResult.routeTypes;
     routes = routesResult.routes;
+    reliability = reliabilityResult;
   }
 
   // Fetch related feeds for GTFS-RT
@@ -250,5 +296,6 @@ export async function fetchCompleteFeedDataImpl(
     totalRoutes,
     routeTypes,
     routes,
+    reliability,
   };
 }

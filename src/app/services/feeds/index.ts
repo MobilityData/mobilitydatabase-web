@@ -188,6 +188,26 @@ export const getGtfsFeedAssociatedGtfsRtFeeds = async (
   });
 };
 
+export const getGtfsFeedReliability = async (
+  id: string,
+  accessToken: string,
+  userContextJwt?: string,
+): Promise<
+  | paths['/v1/gtfs_feeds/{id}/reliability']['get']['responses'][200]['content']['application/json']
+  | undefined
+> => {
+  const authMiddleware = generateAuthMiddlewareWithToken(
+    accessToken,
+    userContextJwt,
+  );
+  return await withAuthMiddleware(authMiddleware, async () => {
+    const response = await client.GET('/v1/gtfs_feeds/{id}/reliability', {
+      params: { path: { id } },
+    });
+    return response.data;
+  });
+};
+
 export const getGtfsFeedDatasets = async (
   id: string,
   accessToken: string,
