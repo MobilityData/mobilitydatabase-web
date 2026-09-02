@@ -15,24 +15,6 @@ export type SealCriterionKey =
   | 'freshRolling'
   | 'freshContinuous';
 
-export interface SealCriterionResult {
-  key: SealCriterionKey;
-  icon: SvgIconComponent;
-  passed: boolean;
-}
-
-// Per-criterion verdicts aren't exposed by the API yet (only the overall
-// has_seal flag is) - hardcoded until GET /v1/gtfs_feeds/{id}/reliability
-// is wired up on the frontend.
-export const HARDCODED_SEAL_CRITERIA: SealCriterionResult[] = [
-  { key: 'official', icon: VerifiedIcon, passed: true },
-  { key: 'stable', icon: CodeIcon, passed: true },
-  { key: 'available', icon: DownloadIcon, passed: true },
-  { key: 'compliant', icon: RuleIcon, passed: true },
-  { key: 'freshRolling', icon: EventAvailableIcon, passed: true },
-  { key: 'freshContinuous', icon: SyncAltIcon, passed: false },
-];
-
 export type ApiSealCriterionKey =
   components['schemas']['ReliabilityCriterion']['criterion'];
 
