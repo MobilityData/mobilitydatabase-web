@@ -6,6 +6,7 @@ import LicenseDialog from './LicenseDialog';
 import {
   getCountryLocationSummaries,
   getLocationName,
+  isGtfsFeedType,
   type GTFSFeedType,
   type GTFSRTFeedType,
   type GBFSFeedType,
@@ -38,6 +39,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import CloseIcon from '@mui/icons-material/Close';
 import BusinessIcon from '@mui/icons-material/Business';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { FeedStatusChip } from '../../../components/FeedStatus';
 import { getEmojiFlag, type TCountryCode } from 'countries-list';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -46,16 +48,14 @@ import { getFeedStatusData } from '../../../utils/feedStatusConsts';
 import Link from 'next/link';
 import { sendGAEvent } from '@next/third-parties/google';
 import { getRouteTypeTranslatedName } from '../../../constants/RouteTypes';
-import {
-  featureChipsStyle,
-  ResponsiveListItem,
-  StyledListItem,
-} from '../Feed.styles';
+import { ResponsiveListItem, StyledListItem } from '../Feed.styles';
 import { getFeatureComponentDecorators } from '../../../utils/consts';
 import dynamic from 'next/dynamic';
 import CopyLinkElement from './CopyLinkElement';
 import { formatDateShort } from '../../../utils/date';
 import ExternalIds from './ExternalIds';
+import SealQualitySummary from './SealQualitySummary';
+import SealOfReliability from '../../../components/SealOfReliability';
 
 const Locations = dynamic(
   async () => await import('../../../components/Locations'),
@@ -69,6 +69,8 @@ export interface FeedSummaryProps {
   autoDiscoveryUrl?: string;
   totalRoutes?: number;
   routeTypes?: string[];
+  enableSealOfReliability?: boolean;
+  reliability?: components['schemas']['FeedReliabilityReport'];
 }
 
 export default function FeedSummary({
@@ -78,6 +80,8 @@ export default function FeedSummary({
   autoDiscoveryUrl,
   routeTypes,
   totalRoutes,
+  enableSealOfReliability = false,
+  reliability,
 }: FeedSummaryProps): React.ReactElement {
   const t = useTranslations('feeds');
   const tCommon = useTranslations('common');
@@ -619,6 +623,42 @@ export default function FeedSummary({
           </Card>
         )}
 
+      {isGtfsFeedType(feed) && enableSealOfReliability && (
+        <Card variant='section' sx={{ position: 'relative' }}>
+          {feed.reliability_seal?.has_seal === true && (
+            <Box sx={{ position: 'absolute', top: '16px', right:'16px' }}>
+              <SealOfReliability
+                size='small'
+              />
+            </Box>
+          )}
+          <CardSectionTitle component='h3'>
+            <WorkspacePremiumIcon fontSize='inherit' aria-hidden />
+            {t('sealOfReliabilityAlt')}
+            <Tooltip
+              title={t('sealOfReliabilityQualityTooltip')}
+              placement='top'
+            >
+              <IconButton
+                component={Link}
+                href='/seal-of-reliability'
+                target='_blank'
+                rel='noopener noreferrer'
+                size='small'
+                aria-label={t('sealOfReliabilityLearnMore')}
+              >
+                <InfoOutlinedIcon fontSize='inherit' />
+              </IconButton>
+            </Tooltip>
+          </CardSectionTitle>
+          <SealQualitySummary
+            feedId={feed.id ?? ''}
+            feedDataType={feed.data_type ?? 'gtfs'}
+            reliability={reliability}
+          />
+        </Card>
+      )}
+
       {latestDataset?.validation_report?.features != undefined &&
         latestDataset?.validation_report?.features.length > 0 && (
           <Card variant='section'>
@@ -661,10 +701,9 @@ export default function FeedSummary({
                               label={feature}
                               variant='filled'
                               sx={{
-                                ...featureChipsStyle,
                                 fontWeight: 500,
                                 background: featureDecorators.color,
-                                color: 'initial',
+                                color: 'black',
                               }}
                               clickable
                               target='_blank'
