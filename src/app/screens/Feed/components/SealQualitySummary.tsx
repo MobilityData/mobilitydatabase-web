@@ -120,7 +120,7 @@ export default function SealQualitySummary({
             <Typography
               variant='caption'
               color='text.secondary'
-              sx={{maxWidth: '200px', lineHeight: '1rem'}}
+              sx={{ maxWidth: '200px', lineHeight: '1rem' }}
             >
               {sealStatus === 'earned' && t('sealEarnedCaption')}
               {sealStatus === 'gracePeriod' && t('sealGracePeriodCaption')}

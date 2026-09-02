@@ -626,10 +626,8 @@ export default function FeedSummary({
       {isGtfsFeedType(feed) && enableSealOfReliability && (
         <Card variant='section' sx={{ position: 'relative' }}>
           {feed.reliability_seal?.has_seal === true && (
-            <Box sx={{ position: 'absolute', top: '16px', right:'16px' }}>
-              <SealOfReliability
-                size='small'
-              />
+            <Box sx={{ position: 'absolute', top: '16px', right: '16px' }}>
+              <SealOfReliability size='small' />
             </Box>
           )}
           <CardSectionTitle component='h3'>

@@ -3,8 +3,7 @@ import { Chip, Tooltip } from '@mui/material';
 import { useTranslations } from 'next-intl';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { Link } from '../../i18n/navigation';
-import SealOfReliability, {
-} from './SealOfReliability';
+import SealOfReliability from './SealOfReliability';
 
 export interface SealOfReliabilityChipProps {
   hasSeal: boolean | undefined;
@@ -34,11 +33,7 @@ export default function SealOfReliabilityChip({
           component={Link}
           href={href}
           clickable
-          icon={
-            <SealOfReliability
-              size='small'        
-            />
-          }
+          icon={<SealOfReliability size='small' />}
           label={t('sealOfReliabilityAlt')}
           sx={{
             background: 'white',
@@ -47,7 +42,7 @@ export default function SealOfReliabilityChip({
               borderRadius: '50%',
               boxShadow: '0 0 0 1.5px rgba(255,255,255,0.7)',
               marginLeft: '5px',
-              marginRight: '-6px'
+              marginRight: '-6px',
             },
           }}
         />
