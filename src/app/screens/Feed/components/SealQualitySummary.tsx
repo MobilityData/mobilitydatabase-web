@@ -172,26 +172,43 @@ export default function SealQualitySummary({
                       })}`
                     : '';
 
+                const criterionDescription = `${tSeal(`criteria.${key}.title`)} — ${statusLabel}: ${tSeal(
+                  `criteria.${key}.description`,
+                )}${graceNote}`;
+
                 return (
                   <Tooltip
                     key={criterion.criterion}
                     placement='top'
-                    title={`${tSeal(`criteria.${key}.title`)} — ${statusLabel}: ${tSeal(
-                      `criteria.${key}.description`,
-                    )}${graceNote}`}
+                    title={criterionDescription}
                   >
-                    <CriterionIcon
+                    <Box
+                      component='span'
+                      tabIndex={0}
+                      role='img'
+                      aria-label={criterionDescription}
                       data-testid={`criterion-${key}-${displayStatus}`}
-                      fontSize='medium'
                       sx={{
-                        backgroundColor: 'transparent',
+                        display: 'inline-flex',
                         borderRadius: '50%',
-                        color,
-                        border: '1px solid',
-                        borderColor: color,
-                        p: '4px',
+                        '&:focus-visible': {
+                          outline: `2px solid ${theme.palette.primary.main}`,
+                          outlineOffset: 2,
+                        },
                       }}
-                    />
+                    >
+                      <CriterionIcon
+                        fontSize='medium'
+                        sx={{
+                          backgroundColor: 'transparent',
+                          borderRadius: '50%',
+                          color,
+                          border: '1px solid',
+                          borderColor: color,
+                          p: '4px',
+                        }}
+                      />
+                    </Box>
                   </Tooltip>
                 );
               })}
@@ -209,7 +226,7 @@ export default function SealQualitySummary({
           component={Link}
           href={`/feeds/${feedDataType}/${feedId}/seal-of-reliability`}
         >
-          See Full Seal of Reliability Analysis
+          {t('seeFullAnalysis')}
         </Button>
       </Box>
     </Box>
