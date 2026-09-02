@@ -96,16 +96,12 @@ export async function fetchReliabilityData(
 ): Promise<ReliabilityReport | undefined> {
   const cachedFetch = unstable_cache(
     async (): Promise<ReliabilityReport | null> => {
-      try {
-        const reliability = await getGtfsFeedReliability(
-          feedId,
-          accessToken,
-          userContextJwt,
-        );
-        return reliability ?? null;
-      } catch (e) {
-        return null;
-      }
+      const reliability = await getGtfsFeedReliability(
+        feedId,
+        accessToken,
+        userContextJwt,
+      );
+      return reliability ?? null;
     },
     [`feed-reliability-${feedId}`],
     {
@@ -114,8 +110,12 @@ export async function fetchReliabilityData(
     },
   );
 
-  const reliability = await cachedFetch();
-  return reliability ?? undefined;
+  try {
+    const reliability = await cachedFetch();
+    return reliability ?? undefined;
+  } catch (e) {
+    return undefined;
+  }
 }
 
 /**
@@ -211,6 +211,7 @@ export async function fetchCompleteFeedDataImpl(
   feedId: string,
   accessToken: string,
   userContextJwt: string | undefined,
+  enableSealOfReliability: boolean,
 ): Promise<FeedDataResult> {
   // Fetch core feed data
   const feed = await fetchFeedByType(
@@ -238,7 +239,9 @@ export async function fetchCompleteFeedDataImpl(
           feedId,
           (feed as GTFSFeedType)?.visualization_dataset_id ?? '',
         ),
-        fetchReliabilityData(feedId, accessToken, userContextJwt),
+        enableSealOfReliability
+          ? fetchReliabilityData(feedId, accessToken, userContextJwt)
+          : Promise.resolve(undefined),
       ],
     );
     initialDatasets = datasetsResult;

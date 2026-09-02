@@ -7,7 +7,7 @@ import { FeedStatusChip } from '../../../components/FeedStatus';
 import FeedVerificationChip from '../../../components/FeedVerificationChip';
 import SealOfReliabilityChip from '../../../components/SealOfReliabilityChip';
 import { getTranslations } from 'next-intl/server';
-import { getUserRemoteConfigValues } from '../../../../lib/remote-config.server';
+import { getRemoteConfigValues } from '../../../../lib/remote-config.server';
 
 export interface DataQualitySummaryProps {
   feedStatus: components['schemas']['Feed']['status'];
@@ -32,7 +32,7 @@ export default async function DataQualitySummary({
   const [t, tCommon, config] = await Promise.all([
     getTranslations('feeds'),
     getTranslations('common'),
-    getUserRemoteConfigValues(),
+    getRemoteConfigValues(),
   ]);
 
   return (
