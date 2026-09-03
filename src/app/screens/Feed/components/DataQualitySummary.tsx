@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { Box, Chip, Tooltip } from '@mui/material';
-import { CheckCircle, EventRepeat, ReportOutlined } from '@mui/icons-material';
+import { Box, Chip } from '@mui/material';
+import { CheckCircle, ReportOutlined } from '@mui/icons-material';
 import { type components } from '../../../services/feeds/types';
 import { WarningContentBox } from '../../../components/WarningContentBox';
 import { FeedStatusChip } from '../../../components/FeedStatus';
@@ -16,7 +16,6 @@ export interface DataQualitySummaryProps {
   feedId: string;
   feedDataType: string;
   hasSeal: boolean | undefined;
-  isSeasonal: boolean | undefined;
 }
 
 // Because this is a server component, the page will not render until the data is ready, hence the async
@@ -27,7 +26,6 @@ export default async function DataQualitySummary({
   feedId,
   feedDataType,
   hasSeal,
-  isSeasonal,
 }: DataQualitySummaryProps): Promise<React.ReactElement> {
   const [t, tCommon, config] = await Promise.all([
     getTranslations('feeds'),
@@ -52,17 +50,6 @@ export default async function DataQualitySummary({
           />
         )}
         <FeedVerificationChip status={isOfficialFeed}></FeedVerificationChip>
-        {isSeasonal === true && (
-          <Tooltip title={t('seasonalFeedTooltip')} placement='top'>
-            <Chip
-              data-testid='seasonal-feed-chip'
-              icon={<EventRepeat />}
-              label={t('seasonalFeed')}
-              variant='outlined'
-              color='info'
-            />
-          </Tooltip>
-        )}
         {latestDataset?.validation_report !== undefined &&
           latestDataset.validation_report !== null && (
             <>

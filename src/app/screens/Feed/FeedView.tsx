@@ -209,7 +209,6 @@ export default async function FeedView({
                 feedId={feed.id ?? ''}
                 feedDataType={feed.data_type ?? 'gtfs'}
                 hasSeal={feed.reliability_seal?.has_seal}
-                isSeasonal={feed.seasonal}
               />
             )}
 

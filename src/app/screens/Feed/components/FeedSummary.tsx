@@ -29,6 +29,7 @@ import {
 import { useTranslations } from 'next-intl';
 import CardSectionTitle from '../../../components/CardSectionTitle';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import LinkIcon from '@mui/icons-material/Link';
 import DatasetIcon from '@mui/icons-material/Dataset';
 import LayersIcon from '@mui/icons-material/Layers';
@@ -514,7 +515,21 @@ export default function FeedSummary({
 
       {latestDataset?.service_date_range_start != undefined &&
         latestDataset.service_date_range_end != undefined && (
-          <Card variant='section'>
+          <Card variant='section' sx={{ position: 'relative' }}>
+            {isGtfsFeedType(feed) && feed.seasonal === true && (
+              <Box sx={{ position: 'absolute', top: '16px', right: '16px' }}>
+                <Tooltip title={t('seasonalFeedTooltip')} placement='top'>
+                  <Chip
+                    data-testid='seasonal-feed-chip'
+                    icon={<EventRepeatIcon />}
+                    label={t('seasonalFeed')}
+                    variant='outlined'
+                    color='info'
+                    size='small'
+                  />
+                </Tooltip>
+              </Box>
+            )}
             <CardSectionTitle component='h3'>
               <CalendarTodayIcon fontSize='inherit' aria-hidden />
               {t('serviceDateRange')}
