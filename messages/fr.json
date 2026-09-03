@@ -263,7 +263,7 @@
     "seasonalFeedTooltip": "Ce flux ne fournit un service que pendant des périodes récurrentes de l'année, comme un horaire d'été ou d'hiver uniquement.",
     "sealEarnedLabel": "Obtenu",
     "sealNotYetEarnedLabel": "Pas encore obtenu",
-    "sealInGracePeriodLabel": "Délai de grâce",
+    "sealInGracePeriodLabel": "À risque",
     "sealEarnedCaption": "Tous les critères applicables sont respectés",
     "sealGracePeriodCaption": "Le sceau est conservé pendant qu'un ou plusieurs critères sont en délai de grâce",
     "sealCriteriaMetCaption": "{passed} critères sur {total} respectés",

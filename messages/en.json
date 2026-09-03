@@ -263,7 +263,7 @@
     "seasonalFeedTooltip": "This feed only provides service during recurring periods of the year, such as a summer-only or winter-only schedule.",
     "sealEarnedLabel": "Earned",
     "sealNotYetEarnedLabel": "Not Earned",
-    "sealInGracePeriodLabel": "In Grace Period",
+    "sealInGracePeriodLabel": "At Risk",
     "sealEarnedCaption": "All criteria met",
     "sealGracePeriodCaption": "Seal retained while one or more criteria are in a grace period",
     "sealCriteriaMetCaption": "{passed} out of {total} criteria met",
