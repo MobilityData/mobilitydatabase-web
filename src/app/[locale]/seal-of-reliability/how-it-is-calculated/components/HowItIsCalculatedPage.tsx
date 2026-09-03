@@ -16,12 +16,7 @@ import {
 } from '@mui/material';
 import { type ReactElement } from 'react';
 import { getTranslations } from 'next-intl/server';
-import VerifiedIcon from '@mui/icons-material/Verified';
-import CodeIcon from '@mui/icons-material/Code';
-import DownloadIcon from '@mui/icons-material/Download';
-import RuleIcon from '@mui/icons-material/Rule';
-import EventAvailableIcon from '@mui/icons-material/EventAvailable';
-import SyncAltIcon from '@mui/icons-material/SyncAlt';
+import { SEAL_CRITERION_ICONS } from '../../../../constants/sealCriteria';
 import { fontFamily, theme } from '../../../../Theme';
 import SectionContainer from '../../../../components/SectionContainer';
 import CardSectionTitle from '../../../../components/CardSectionTitle';
@@ -40,6 +35,15 @@ import RollingCoverageCard from './RollingCoverageCard';
 import ScenarioCard from './ScenarioCard';
 
 const { primary, success, divider } = theme.vars.palette;
+
+const {
+  official: OfficialIcon,
+  stable: StableIcon,
+  available: AvailableIcon,
+  compliant: CompliantIcon,
+  freshRolling: FreshRollingIcon,
+  freshContinuous: FreshContinuousIcon,
+} = SEAL_CRITERION_ICONS;
 
 const twoColumnGrid = {
   display: 'grid',
@@ -150,7 +154,7 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
       <Box sx={{ ...twoColumnGrid, mt: 5 }}>
         <SectionContainer sx={criterionContainerStyle}>
           <Typography variant='sectionTitle'>
-            <VerifiedIcon fontSize='inherit' aria-hidden />
+            <OfficialIcon fontSize='inherit' aria-hidden />
             {t('official.title')}
           </Typography>
           <Box sx={criterionBodyStyle}>
@@ -165,7 +169,7 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
 
         <SectionContainer sx={criterionContainerStyle}>
           <Typography variant='sectionTitle'>
-            <CodeIcon fontSize='inherit' aria-hidden />
+            <StableIcon fontSize='inherit' aria-hidden />
             {t('stable.title')}
           </Typography>
           <Box sx={criterionBodyStyle}>
@@ -177,7 +181,7 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
 
         <SectionContainer sx={criterionContainerStyle}>
           <Typography variant='sectionTitle'>
-            <DownloadIcon fontSize='inherit' aria-hidden />
+            <AvailableIcon fontSize='inherit' aria-hidden />
             {t('available.title')}
           </Typography>
           <Box sx={criterionBodyStyle}>
@@ -193,7 +197,7 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
 
         <SectionContainer sx={criterionContainerStyle}>
           <Typography variant='sectionTitle'>
-            <RuleIcon fontSize='inherit' aria-hidden />
+            <CompliantIcon fontSize='inherit' aria-hidden />
             {t('compliant.title')}
           </Typography>
           <Box sx={criterionBodyStyle}>
@@ -223,7 +227,7 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
 
       <SectionContainer sx={{ mt: 5 }}>
         <Typography variant='sectionTitle'>
-          <EventAvailableIcon fontSize='inherit' aria-hidden />
+          <FreshRollingIcon fontSize='inherit' aria-hidden />
           {t('freshRolling.title')}
         </Typography>
         <Box sx={criterionBodyStyle}>
@@ -253,7 +257,7 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
 
       <SectionContainer sx={{ mt: 5 }}>
         <Typography variant='sectionTitle'>
-          <SyncAltIcon fontSize='inherit' aria-hidden />
+          <FreshContinuousIcon fontSize='inherit' aria-hidden />
           {t('freshContinuous.title')}
         </Typography>
         <Box sx={criterionBodyStyle}>

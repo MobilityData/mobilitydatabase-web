@@ -51,6 +51,7 @@ export default async function StaticFeedPage({
     relatedGtfsRtFeeds,
     totalRoutes,
     routeTypes,
+    reliability,
   } = feedData;
 
   return (
@@ -67,6 +68,7 @@ export default async function StaticFeedPage({
         relatedGtfsRtFeeds={relatedGtfsRtFeeds}
         totalRoutes={totalRoutes}
         routeTypes={routeTypes}
+        reliability={reliability}
       />
     </>
   );

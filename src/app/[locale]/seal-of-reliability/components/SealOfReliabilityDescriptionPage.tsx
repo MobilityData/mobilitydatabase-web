@@ -20,7 +20,6 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { type ReactElement } from 'react';
 import Image from 'next/image';
-import LockIcon from '@mui/icons-material/Lock';
 import { getTranslations } from 'next-intl/server';
 import CardSectionTitle from '../../../components/CardSectionTitle';
 import SectionContainer from '../../../components/SectionContainer';
@@ -194,22 +193,25 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
             gap: 2,
           }}
         >
-          {criteriaEntries.map((entry) => (
-            <Card variant='section' sx={{ mb: 0 }} key={entry.titleKey}>
-              <CardSectionTitle component='h3'>
-                <LockIcon fontSize='inherit' aria-hidden />
-                {t(entry.titleKey)}
-              </CardSectionTitle>
-              <CardContent sx={{ '&:last-child': { pb: 2 } }}>
-                <Typography variant='subtitle2' sx={{ fontWeight: 700 }}>
-                  {t(entry.subtitleKey)}
-                </Typography>
-                <Typography variant='body2' sx={{ mt: 1 }}>
-                  {t(entry.descriptionKey)}
-                </Typography>
-              </CardContent>
-            </Card>
-          ))}
+          {criteriaEntries.map((entry) => {
+            const CriterionIcon = entry.icon;
+            return (
+              <Card variant='section' sx={{ mb: 0 }} key={entry.titleKey}>
+                <CardSectionTitle component='h3'>
+                  <CriterionIcon fontSize='inherit' aria-hidden />
+                  {t(entry.titleKey)}
+                </CardSectionTitle>
+                <CardContent sx={{ '&:last-child': { pb: 2 } }}>
+                  <Typography variant='subtitle2' sx={{ fontWeight: 700 }}>
+                    {t(entry.subtitleKey)}
+                  </Typography>
+                  <Typography variant='body2' sx={{ mt: 1 }}>
+                    {t(entry.descriptionKey)}
+                  </Typography>
+                </CardContent>
+              </Card>
+            );
+          })}
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
           <LocaleLink href='/seal-of-reliability/how-it-is-calculated'>
