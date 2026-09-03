@@ -23,20 +23,24 @@ type CriterionDisplayStatus =
   | 'notEvaluated'
   | 'probation';
 
-// `on_probation` is independent of `status` - a criterion can read `pass`
-// while on probation and still not count towards the seal, so it takes
-// priority over the status-derived states below.
+// `on_probation` and `in_grace_period` are both independent of `status` - a
+// criterion can read `pass` while on probation, or while still inside a
+// grace period from a recent failure, and in either case it takes priority
+// over the plain status-derived states below.
 function getCriterionDisplayStatus(
   criterion: ReliabilityCriterion,
 ): CriterionDisplayStatus {
   if (criterion.on_probation) {
     return 'probation';
   }
+  if (criterion.in_grace_period) {
+    return 'atRisk';
+  }
   switch (criterion.status) {
     case 'pass':
       return 'pass';
     case 'fail':
-      return criterion.in_grace_period ? 'atRisk' : 'fail';
+      return 'fail';
     case 'not_applicable':
       return 'notApplicable';
     case 'unknown':
