@@ -172,9 +172,17 @@ export default function SealQualitySummary({
                       })}`
                     : '';
 
+                // not_applicable on this criterion only ever means the feed
+                // is seasonal - seasonal feeds are excluded from the rolling
+                // 7-day coverage check entirely.
+                const seasonalNote =
+                  key === 'freshRolling' && displayStatus === 'notApplicable'
+                    ? ` ${t('sealCriterionSeasonalNote')}`
+                    : '';
+
                 const criterionDescription = `${tSeal(`criteria.${key}.title`)} — ${statusLabel}: ${tSeal(
                   `criteria.${key}.description`,
-                )}${graceNote}`;
+                )}${graceNote}${seasonalNote}`;
 
                 return (
                   <Tooltip

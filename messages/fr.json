@@ -274,6 +274,7 @@
     "sealCriterionInGracePeriod": "À risque",
     "sealCriterionGracePeriodNote": "En délai de grâce jusqu'au {date}.",
     "sealCriterionNotApplicable": "Non applicable",
+    "sealCriterionSeasonalNote": "Ce flux est saisonnier, la couverture glissante de 7 jours ne s'applique donc pas.",
     "sealCriterionNotEvaluated": "Non évalué",
     "sealCriterionOnProbation": "En probation",
     "reliabilityAnalysisTitle": "Analyse du Sceau de fiabilité",

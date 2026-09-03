@@ -274,6 +274,7 @@
     "sealCriterionInGracePeriod": "At Risk",
     "sealCriterionGracePeriodNote": "In grace period until {date}.",
     "sealCriterionNotApplicable": "Not Applicable",
+    "sealCriterionSeasonalNote": "This feed is seasonal, so rolling 7-day coverage doesn't apply.",
     "sealCriterionNotEvaluated": "Not Evaluated",
     "sealCriterionOnProbation": "On Probation",
     "reliabilityAnalysisTitle": "Seal of Reliability Analysis",
