@@ -7,8 +7,8 @@ import earcut from 'earcut';
 import {
   ATTENDEES_BY_COUNTRY,
   SUMMIT_ATTENDEES,
+  SUMMIT_CITIES,
   SUMMIT_COUNTRIES,
-  logoUrlForDomain,
 } from './summit-attendees';
 import starSprite from './star.png';
 
@@ -442,6 +442,24 @@ const ISO2_TO_CONTINENT = {
   NZ: 'Oceania',
 };
 
+// MobilityData is headquartered in Montreal — the summit's host city, and the
+// convergence point for the attendee arcs drawn on the globe.
+const MONTREAL_LON = -73.5673;
+const MONTREAL_LAT = 45.5017;
+
+// Height (as a multiple of the globe's own radius) shared by the city dots,
+// the attendee arcs' starting point, and the popup anchor — so all three
+// sit exactly together rather than drifting apart via separately-tuned
+// constants.
+const CITY_MARKER_RADIUS_SCALE = 1.005;
+
+// Municipality name -> city record, for anchoring a country's popup on the
+// featured attendee's actual city rather than the country's geometric
+// centroid.
+const CITY_BY_MUNICIPALITY = new Map(
+  SUMMIT_CITIES.map((city) => [city.municipality, city]),
+);
+
 // MobilityData design system palette (see MOBILITYDATA_DESIGN.md).
 const MD_PERIWINKLE = '#96a1ff'; // --color-primary: line-work, data fills
 const MD_PERIWINKLE_SOFT = '#c2c9ff'; // lighter periwinkle for hairline dividers
@@ -471,26 +489,26 @@ const STAR_PURPLE = '#a78bfa'; // background starfield tint, distinct from periw
 // ones as the globe is dragged or auto-rotates).
 const STAR_LAYERS = [
   {
-    count: 220,
+    count: 140,
     radiusMin: 5,
     radiusMax: 7,
-    size: 4,
+    size: 3,
     opacity: 0.55,
     parallax: 0.05,
   },
   {
-    count: 140,
+    count: 90,
     radiusMin: 1,
     radiusMax: 8,
-    size: 2,
+    size: 1.5,
     opacity: 0.4,
     parallax: 0.1,
   },
   {
-    count: 90,
+    count: 40,
     radiusMin: 2,
     radiusMax: 10,
-    size: 2.5,
+    size: 2,
     opacity: 0.28,
     parallax: 0.18,
   },
@@ -511,6 +529,195 @@ function lonLatToVec3(lon, lat, radius) {
     radius * Math.cos(phi),
     radius * Math.sin(phi) * Math.sin(theta),
   );
+}
+
+// Spherical linear interpolation between two unit directions — the great-
+// circle midpoint between them, not a straight-line lerp (which would cut
+// through the globe).
+function slerpDirection(a, b, t) {
+  const dot = THREE.MathUtils.clamp(a.dot(b), -1, 1);
+  const theta = Math.acos(dot);
+  if (theta < 1e-6) return a.clone();
+  const sinTheta = Math.sin(theta);
+  const w1 = Math.sin((1 - t) * theta) / sinTheta;
+  const w2 = Math.sin(t * theta) / sinTheta;
+  return a.clone().multiplyScalar(w1).add(b.clone().multiplyScalar(w2));
+}
+
+// Builds a flight-path-style arc between two points on the globe's surface:
+// it follows the great-circle path (via slerpDirection) but lifts off the
+// surface by an amount that peaks at the midpoint and scales with how far
+// apart the two points are, so distant countries arc higher than nearby ones.
+function buildArcPoints(fromDir, toDir, baseRadius, segments = 48) {
+  const theta = Math.acos(THREE.MathUtils.clamp(fromDir.dot(toDir), -1, 1));
+  const arcHeight = 0.05 + theta * 0.15;
+  const points = [];
+  for (let i = 0; i <= segments; i++) {
+    const t = i / segments;
+    const dir = slerpDirection(fromDir, toDir, t);
+    const r = baseRadius + arcHeight * Math.sin(Math.PI * t);
+    points.push(dir.multiplyScalar(r));
+  }
+  return points;
+}
+
+// WebGL caps plain THREE.Line width at 1px on most platforms regardless of
+// `material.linewidth`, so real thickness needs actual geometry: a
+// cylindrical tube (a ring of vertices around each centerline point) rather
+// than a single-pixel polyline.
+const ARC_TUBE_RADIUS = 0.0015; // world units, on a globe of radius 1 -- line thickness
+const ARC_TUBE_SEGMENTS = 6; // vertices per ring — hexagonal cross-section
+const ARC_HIGHLIGHT_COLOR = '#ff3b30'; // solid red for the selected country's arc
+
+// Mirrors the TRAVEL_SPAN/SETTLE_SPAN/PERIOD constants inside
+// createAttendeeArc's fragment shader (the comet's own travel/hold/restart
+// cycle) — kept here in JS too so the city dots' departure pulse (see
+// animate()) can compute the exact same cycle position without re-running
+// the shader.
+const ARC_TRAVEL_SPAN = 1.0;
+const ARC_SETTLE_SPAN = 0.4;
+const ARC_PERIOD = ARC_TRAVEL_SPAN + ARC_SETTLE_SPAN;
+// How long, in the same cycle units as above, a city dot's departure pulse
+// takes to decay back to its normal ambient breathing.
+const CITY_DEPART_PULSE_WINDOW = 0.18;
+
+// Builds a tube around the arc's centerline. At each point the local frame
+// (n1, n2) is derived from the tangent and the sphere's own radial
+// direction rather than a Frenet frame, so it can't twist/flip along the
+// curve the way Frenet frames do near inflection points.
+function buildTubeGeometry(points, radius, segments) {
+  const last = points.length - 1;
+  const positions = new Float32Array(points.length * segments * 3);
+  const ts = new Float32Array(points.length * segments);
+
+  for (let i = 0; i <= last; i++) {
+    const p = points[i];
+    const prev = points[Math.max(i - 1, 0)];
+    const next = points[Math.min(i + 1, last)];
+    const tangent = next.clone().sub(prev).normalize();
+    const radial = p.clone().normalize();
+    const n1 = tangent.clone().cross(radial).normalize();
+    const n2 = n1.clone().cross(tangent).normalize();
+    const t = i / last;
+
+    for (let j = 0; j < segments; j++) {
+      const theta = (j / segments) * Math.PI * 2;
+      const vertex = p
+        .clone()
+        .addScaledVector(n1, Math.cos(theta) * radius)
+        .addScaledVector(n2, Math.sin(theta) * radius);
+      const idx = (i * segments + j) * 3;
+      positions[idx] = vertex.x;
+      positions[idx + 1] = vertex.y;
+      positions[idx + 2] = vertex.z;
+      ts[i * segments + j] = t;
+    }
+  }
+
+  const indices = [];
+  for (let i = 0; i < last; i++) {
+    for (let j = 0; j < segments; j++) {
+      const jNext = (j + 1) % segments;
+      const a = i * segments + j;
+      const b = i * segments + jNext;
+      const c = (i + 1) * segments + j;
+      const d = (i + 1) * segments + jNext;
+      indices.push(a, c, b, b, c, d);
+    }
+  }
+
+  return { positions, ts, indices };
+}
+
+// One arc with a faint static guide tube plus a bright comet that travels
+// from its country of origin (t=0) to Montreal (t=1). On arrival it doesn't
+// just vanish — it holds and gently fades at the destination (as if
+// settling into the globe there) before the next comet sets off. uPhase and
+// uSpeed are randomized per arc so the comets don't all move in lockstep.
+function createAttendeeArc(fromDir, toDir, baseRadius, color) {
+  const points = buildArcPoints(fromDir, toDir, baseRadius);
+  const { positions, ts, indices } = buildTubeGeometry(
+    points,
+    ARC_TUBE_RADIUS,
+    ARC_TUBE_SEGMENTS,
+  );
+
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geom.setAttribute('aT', new THREE.Float32BufferAttribute(ts, 1));
+  geom.setIndex(indices);
+  const mat = new THREE.ShaderMaterial({
+    uniforms: {
+      uColor: { value: new THREE.Color(color) },
+      uHighlightColor: { value: new THREE.Color(ARC_HIGHLIGHT_COLOR) },
+      uTime: { value: 0 },
+      uPhase: { value: Math.random() },
+      uSpeed: { value: 0.05 + Math.random() * 0.03 }, // speed of animation
+      // 0 normally; set to 1 while this arc's country is the tour/click
+      // selection, turning the entire path solid red.
+      uHighlight: { value: 0 },
+    },
+    vertexShader: `
+      attribute float aT;
+      varying float vT;
+      void main() {
+        vT = aT;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uColor;
+      uniform vec3 uHighlightColor;
+      uniform float uTime;
+      uniform float uPhase;
+      uniform float uSpeed;
+      uniform float uHighlight;
+      varying float vT;
+      void main() {
+        // Faint static line, brighter toward Montreal — a subtle guide even
+        // when the comet is elsewhere on the arc. Highlighted (selected)
+        // arcs go fully solid instead — the whole path lit red end to end.
+        float base = smoothstep(0.0, 0.35, vT) * mix(0.04, 0.16, vT);
+        base = mix(base, 1.0, uHighlight);
+
+        // The comet spends TRAVEL_SPAN units of time crossing the arc, then
+        // SETTLE_SPAN units holding and fading at Montreal before the cycle
+        // restarts — so arrival reads as settling into the destination
+        // rather than an abrupt cut.
+        const float TRAVEL_SPAN = ${ARC_TRAVEL_SPAN.toFixed(4)};
+        const float SETTLE_SPAN = ${ARC_SETTLE_SPAN.toFixed(4)};
+        const float PERIOD = TRAVEL_SPAN + SETTLE_SPAN;
+        float cycle = mod(uTime * uSpeed + uPhase * PERIOD, PERIOD);
+        float head = clamp(cycle / TRAVEL_SPAN, 0.0, 1.0);
+        float settle = clamp((cycle - TRAVEL_SPAN) / SETTLE_SPAN, 0.0, 1.0);
+        float fadeOut = 1.0 - settle;
+
+        float behind = head - vT;
+        // Trail glow only behind the head (behind >= 0); nothing ahead of
+        // it, since the comet hasn't reached those points yet this lap.
+        float trail = behind >= 0.0 ? exp(-behind * 9.0) : 0.0;
+        float core = smoothstep(0.025, 0.0, abs(behind));
+        float pulse = (trail * 0.7 + core) * fadeOut;
+
+        float alpha = clamp(base + pulse, 0.0, 1.0);
+        vec3 color = mix(uColor, uHighlightColor, uHighlight);
+        gl_FragColor = vec4(color, alpha);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+  });
+  const mesh = new THREE.Mesh(geom, mat);
+  // The transparent ocean sphere doesn't write depth until its turn in the
+  // (distance-sorted) transparent render pass, which can land after a
+  // far-side arc — one whose corresponding near-side screen pixel is open
+  // ocean rather than a country polygon — letting it show through where it
+  // should be hidden behind the globe. A higher renderOrder forces the
+  // ocean to always draw first.
+  mesh.renderOrder = 1;
+  return mesh;
 }
 
 // Wraps an angle to (-PI, PI]. Used to find the *shortest* turn toward a
@@ -770,6 +977,92 @@ function createStarLayer({
   return points;
 }
 
+// A pulsating white dot per attendee city (added to globeGroup, so unlike
+// the parallaxed star layers above these rotate with the globe like any
+// other surface marker). Each dot gets a random phase so they breathe out
+// of sync with one another.
+function createCityDots(cities, radius) {
+  const count = cities.length;
+  const positions = new Float32Array(count * 3);
+  const phases = new Float32Array(count);
+  // Departure pulse strength, one per city — 0 normally, driven up to 1 by
+  // animate() the instant that city's arc (see buildAttendeeArcs, which
+  // builds arcs from this same `cities` array in the same order) sends off
+  // a new comet, then left to decay back to 0 over CITY_DEPART_PULSE_WINDOW.
+  // A plain (non-dynamic) attribute would still work, but marking it
+  // DynamicDrawUsage hints to the driver that this buffer is rewritten
+  // every frame rather than once at creation.
+  const pulseBoosts = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
+    const city = cities[i];
+    const v = lonLatToVec3(
+      city.lon,
+      city.lat,
+      radius * CITY_MARKER_RADIUS_SCALE,
+    );
+    positions[i * 3] = v.x;
+    positions[i * 3 + 1] = v.y;
+    positions[i * 3 + 2] = v.z;
+    phases[i] = Math.random() * Math.PI * 2;
+  }
+
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geom.setAttribute('aPhase', new THREE.Float32BufferAttribute(phases, 1));
+  const pulseBoostAttr = new THREE.Float32BufferAttribute(pulseBoosts, 1);
+  pulseBoostAttr.setUsage(THREE.DynamicDrawUsage);
+  geom.setAttribute('aPulseBoost', pulseBoostAttr);
+
+  const mat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uColor: { value: new THREE.Color('#ffffff') },
+      // A fixed, small screen-space size — coin-sized, not distance-scaled
+      // the way the star shells are (that factor is tuned for points 5-10
+      // world-units out; at this marker's radius-~1 distance from camera
+      // it blew the dots up into huge glowing blobs).
+      uBaseSize: { value: 4 },
+    },
+    vertexShader: `
+      attribute float aPhase;
+      attribute float aPulseBoost;
+      uniform float uTime;
+      uniform float uBaseSize;
+      varying float vPulse;
+      varying float vDepartPulse;
+      void main() {
+        vPulse = 0.5 + 0.5 * sin(uTime * 2.0 + aPhase);
+        vDepartPulse = aPulseBoost;
+        // The departure pulse briefly grows the dot on top of its normal
+        // ambient breathing, so the moment reads as a distinct "pop" rather
+        // than just a brighter version of the idle animation.
+        gl_PointSize =
+          uBaseSize * (0.85 + 0.15 * vPulse) * (1.0 + aPulseBoost * 1.6);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uColor;
+      varying float vPulse;
+      varying float vDepartPulse;
+      void main() {
+        // A crisp, near-solid coin — a thin antialiased edge, not a soft glow.
+        vec2 uv = gl_PointCoord - vec2(0.5);
+        float dist = length(uv) * 2.0;
+        float shape = smoothstep(1.0, 0.85, dist);
+        float alpha = shape * (0.75 + 0.25 * vPulse);
+        alpha = clamp(alpha + vDepartPulse * 0.6, 0.0, 1.0);
+        if (alpha <= 0.0) discard;
+        gl_FragColor = vec4(uColor, alpha);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+  });
+
+  return new THREE.Points(geom, mat);
+}
+
 // ---------- TopoJSON -> GeoJSON (minimal inline decoder) ----------
 function feature(topology, object) {
   const { arcs, transform } = topology;
@@ -813,56 +1106,14 @@ function feature(topology, object) {
   };
 }
 
-// Small logo tile with graceful initials fallback if logo.dev can't serve it.
-function AgencyLogo({ domain, agency }: { domain: string; agency: string }) {
-  const [failed, setFailed] = useState(false);
-  const initials = agency
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-
-  const boxStyle = {
-    width: 44,
-    height: 44,
-    borderRadius: 4,
-    flexShrink: 0,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: MD_WHITE,
-    border: `2px solid ${MD_PERIWINKLE}`,
-    overflow: 'hidden',
-  } as const;
-
-  if (failed) {
-    return (
-      <div
-        style={{
-          ...boxStyle,
-          color: MD_INK,
-          fontFamily: MD_FONT_MONO,
-          fontWeight: 700,
-          fontSize: 14,
-        }}
-      >
-        {initials}
-      </div>
-    );
-  }
-  return (
-    <div style={boxStyle}>
-      <img
-        src={logoUrlForDomain(domain)}
-        alt={`${agency} logo`}
-        width={44}
-        height={44}
-        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-        onError={() => setFailed(true)}
-      />
-    </div>
+// Converts an ISO 3166-1 alpha-2 code to its flag emoji via regional
+// indicator symbols (each letter maps to U+1F1E6..U+1F1FF).
+function iso2ToFlagEmoji(iso2: string): string {
+  if (!iso2 || iso2.length !== 2) return '';
+  const codePoints = [...iso2.toUpperCase()].map(
+    (c) => 127397 + c.charCodeAt(0),
   );
+  return String.fromCodePoint(...codePoints);
 }
 
 // ---------- Component ----------
@@ -872,7 +1123,6 @@ export default function WorldGlobeSummit({
   allowFullscreen?: boolean;
 }) {
   const containerRef = useRef(null);
-  const rendererRef = useRef(null);
   const sceneRef = useRef(null);
   const cameraRef = useRef(null);
   const globeGroupRef = useRef(null);
@@ -880,9 +1130,30 @@ export default function WorldGlobeSummit({
   const countryMeshesRef = useRef([]);
   const selectedRef = useRef(null);
   const starLayersRef = useRef([]);
+  const arcLinesRef = useRef([]);
+  const arcsByMunicipalityRef = useRef({});
+  const cityDotsRef = useRef(null);
   const starTimeRef = useRef(0);
   const tourModeRef = useRef(false);
   const runTourTickRef = useRef(() => {});
+  // The popup's screen position is written straight to the DOM every frame
+  // (see updatePopupPosition) instead of through React state, so the
+  // globe's per-frame rotation doesn't force a re-render of the whole
+  // component 60x/second — only its content (which country/attendee) goes
+  // through setSelected, and only when that content actually changes.
+  const popupElRef = useRef(null);
+  const popupPosRef = useRef({ x: 0, y: 0 });
+  const lastSelectionKeyRef = useRef(null);
+  // Canvas size, cached so updatePopupPosition doesn't call
+  // getBoundingClientRect() every animation frame — that forces a
+  // synchronous layout recalculation, since the previous frame just wrote
+  // to this same popup's style. Kept in sync by onResize, which is the
+  // only thing that actually changes it.
+  const canvasSizeRef = useRef({ width: 0, height: 0 });
+  // The permanent Montreal marker, positioned and shown/hidden every frame
+  // the same ref-driven way as the popup above — see animate().
+  const montrealMarkerElRef = useRef(null);
+  const montrealMarkerPosRef = useRef({ x: 0, y: 0, visible: false });
 
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -908,11 +1179,17 @@ export default function WorldGlobeSummit({
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
+    canvasSizeRef.current = { width, height };
     renderer.setClearColor(0x000000, 0);
     renderer.domElement.style.cursor = 'grab';
     renderer.domElement.style.touchAction = 'none';
+    // The canvas clears to alpha 0 so it blends with the page behind it.
+    // A fullscreen element renders on the browser's own black backdrop
+    // instead of the page, so the canvas's own CSS background must match
+    // the page's off-white surface or fullscreen mode looks like it went
+    // black.
+    renderer.domElement.style.background = '#f7f7f7';
     container.appendChild(renderer.domElement);
-    rendererRef.current = renderer;
 
     // Directional lighting for dimensional depth. Neutral white so the
     // periwinkle brand colour renders true (no warm/cool colour cast).
@@ -935,16 +1212,15 @@ export default function WorldGlobeSummit({
     const OCEAN_RADIUS = 0.998;
     const COUNTRY_RADIUS = 1.0;
 
-    // Near-white globe body — the same tint no-attendee countries used to
-    // use, kept slightly translucent for a hint of glass. Matte, low
-    // specular — the brand avoids gloss; structure comes from periwinkle
-    // line-work.
+    // Near-white globe body, kept slightly translucent for a hint of glass.
+    // Unlit (Basic, not Phong): a lit material shades this dimmer on the
+    // side facing away from the key/fill lights, which read as the ocean
+    // looking grey rather than white — Basic ignores scene lighting
+    // entirely, so it stays flat white all the way round. Structure still
+    // comes from the periwinkle line-work on top, not from ocean shading.
     const oceanGeom = new THREE.SphereGeometry(OCEAN_RADIUS, 64, 64);
-    const oceanMat = new THREE.MeshPhongMaterial({
-      color: 0xffffff, //new THREE.Color(OCEAN_COLOR),
-      emissive: 0x000000,
-      shininess: 4,
-      specular: 0xffffff,
+    const oceanMat = new THREE.MeshBasicMaterial({
+      color: 0xbfc9ed, //#5f64a0
       transparent: true,
       opacity: 0.95,
     });
@@ -1036,20 +1312,6 @@ export default function WorldGlobeSummit({
     });
     globeGroup.add(new THREE.Mesh(innerAtmosGeom, innerAtmosMat));
 
-    // Equator — a great circle drawn exactly at latitude 0 so it sits at the
-    // true middle of the globe. Added to globeGroup so it spins/tilts with the
-    // earth (staying centred at rest, following the surface when dragged).
-    const equatorPoints = [];
-    for (let lon = -180; lon <= 180; lon += 1) {
-      equatorPoints.push(lonLatToVec3(lon, 0, COUNTRY_RADIUS * 1.003));
-    }
-    const equatorGeom = new THREE.BufferGeometry().setFromPoints(equatorPoints);
-    const equatorMat = new THREE.LineBasicMaterial({
-      color: 0x96a1ff, // periwinkle line-work
-      transparent: false,
-    });
-    globeGroup.add(new THREE.LineLoop(equatorGeom, equatorMat));
-
     // Background starfield — added directly to the scene (not globeGroup) so
     // each layer can be given its own fraction of the globe's rotation below,
     // producing a parallax drift instead of spinning rigidly with the globe.
@@ -1065,6 +1327,30 @@ export default function WorldGlobeSummit({
       return points;
     });
     starLayersRef.current = starLayers;
+
+    // Pulsating city markers and attendee arcs — placed directly, since
+    // both only need the agency catalogue's municipality coordinates, not
+    // the country topology fetched below.
+    const cityDots = createCityDots(SUMMIT_CITIES, COUNTRY_RADIUS);
+    // Same reasoning as the attendee arcs' renderOrder: without it, a
+    // far-side dot behind open ocean can be distance-sorted ahead of the
+    // (also transparent) ocean sphere and render before its depth is
+    // written, making the dot appear to float off the globe instead of
+    // being hidden behind it.
+    cityDots.renderOrder = 1;
+    globeGroup.add(cityDots);
+    cityDotsRef.current = cityDots;
+
+    arcLinesRef.current = buildAttendeeArcs(
+      globeGroup,
+      COUNTRY_RADIUS,
+      SUMMIT_CITIES,
+    );
+    const byMunicipality = {};
+    for (const arc of arcLinesRef.current) {
+      byMunicipality[arc.userData.municipality] = arc;
+    }
+    arcsByMunicipalityRef.current = byMunicipality;
 
     const COUNTRIES_URL =
       'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
@@ -1089,15 +1375,48 @@ export default function WorldGlobeSummit({
     const raycaster = new THREE.Raycaster();
     const ndc = new THREE.Vector2();
 
+    // Scratch vectors reused every frame by updatePopupPosition and
+    // updateMontrealMarker, instead of `.clone()`-ing new ones each call —
+    // at 60fps the per-frame allocations were enough churn (and resulting
+    // GC pauses) to read as choppy on top of the animation itself.
+    const popupAnchorScratch = new THREE.Vector3();
+    const popupProjectedScratch = new THREE.Vector3();
+    const montrealAnchorScratch = new THREE.Vector3();
+    const montrealNormalScratch = new THREE.Vector3();
+    const montrealCameraDirScratch = new THREE.Vector3();
+    const montrealProjectedScratch = new THREE.Vector3();
+    // Montreal's own lat/lon never changes — only its transformed
+    // world-space position does (via globeGroup's rotation) — so this is
+    // computed once here rather than every frame inside updateMontrealMarker.
+    const montrealLocal = lonLatToVec3(
+      MONTREAL_LON,
+      MONTREAL_LAT,
+      COUNTRY_RADIUS * CITY_MARKER_RADIUS_SCALE,
+    );
+    // Tracks the last value actually written to the marker's `visibility`,
+    // so animate() only touches that style property on the frame it
+    // changes instead of redundantly every frame.
+    let montrealMarkerVisible = null;
+
     function handleFullscreenChange() {
-      setIsFullscreen(document.fullscreenElement === renderer.domElement);
+      const nowFullscreen = document.fullscreenElement === container;
+      setIsFullscreen(nowFullscreen);
+      if (nowFullscreen && !tourModeRef.current) {
+        tourModeRef.current = true;
+        setTourMode(true);
+        runTourTickRef.current();
+      }
     }
 
     function toggleFullscreen() {
-      if (document.fullscreenElement === renderer.domElement) {
+      // The container (not the canvas) is the fullscreen target so the
+      // React-rendered overlays — banner, legend, popup, buttons — which
+      // are DOM siblings of the canvas, stay visible: only descendants of
+      // the fullscreen element are shown while it's active.
+      if (document.fullscreenElement === container) {
         exitFullscreenDocument();
       } else {
-        requestFullscreenForElement(renderer.domElement);
+        requestFullscreenForElement(container);
       }
     }
 
@@ -1170,11 +1489,22 @@ export default function WorldGlobeSummit({
       toggleFullscreen();
     }
 
-    function selectCountry(mesh, { freezeRotation = true } = {}) {
+    function setArcHighlight(municipality, value) {
+      const arc = arcsByMunicipalityRef.current[municipality];
+      if (arc) arc.material.uniforms.uHighlight.value = value;
+    }
+
+    function selectCountry(
+      mesh,
+      { freezeRotation = true, featured = null } = {},
+    ) {
       if (selectedRef.current && selectedRef.current !== mesh) {
         const prev = selectedRef.current;
         prev.material.color.copy(prev.userData.baseColor);
         prev.material.emissive.setHex(0x000000);
+        if (prev.userData.featured) {
+          setArcHighlight(prev.userData.featured.municipality, 0);
+        }
       }
       selectedRef.current = mesh;
       // Tour mode drives the globe itself (see runTourTick) and wants it to
@@ -1186,27 +1516,137 @@ export default function WorldGlobeSummit({
       mesh.material.emissive.setHex(0x241d47); // faint periwinkle-ink glow
 
       // Pick the featured attendee once per selection so it stays stable
-      // while the popup tracks the rotating country.
-      mesh.userData.featured = pickRandomAttendee(mesh.userData.iso2);
+      // while the popup tracks the rotating country — the highlighted arc
+      // and the popup anchor (see updatePopupPosition) both follow this
+      // specific attendee's city, not the country as a whole. Tour mode
+      // passes its own pre-chosen attendee (see runTourTick) so the camera
+      // swing, popup, and highlight all agree on the same city; manual
+      // clicks pick fresh here.
+      mesh.userData.featured =
+        featured ?? pickRandomAttendee(mesh.userData.iso2);
+      if (mesh.userData.featured) {
+        setArcHighlight(mesh.userData.featured.municipality, 1);
+      }
+      // Cached here (once per selection) rather than recomputed every
+      // frame inside updatePopupPosition — the featured attendee's city
+      // doesn't change while this selection is showing, only the popup's
+      // projected screen position does as the globe turns.
+      const featuredCity = mesh.userData.featured
+        ? CITY_BY_MUNICIPALITY.get(mesh.userData.featured.municipality)
+        : null;
+      mesh.userData.popupAnchorLocal = featuredCity
+        ? lonLatToVec3(
+            featuredCity.lon,
+            featuredCity.lat,
+            COUNTRY_RADIUS * CITY_MARKER_RADIUS_SCALE,
+          )
+        : mesh.userData.centroid3D;
       updatePopupPosition(mesh);
     }
 
+    // Keeps the permanent Montreal marker glued to Montreal's spot on the
+    // globe and hidden whenever that spot has rotated round to the far
+    // side — same front-facing test as the click raycast's frontHit check
+    // (surface normal vs. camera direction), just evaluated directly for
+    // this one fixed point instead of via a raycast hit.
+    function updateMontrealMarker() {
+      montrealAnchorScratch
+        .copy(montrealLocal)
+        .applyMatrix4(globeGroup.matrixWorld);
+      montrealNormalScratch.copy(montrealAnchorScratch).normalize();
+      montrealCameraDirScratch
+        .copy(camera.position)
+        .sub(montrealAnchorScratch)
+        .normalize();
+      const facing = montrealNormalScratch.dot(montrealCameraDirScratch);
+
+      montrealProjectedScratch.copy(montrealAnchorScratch).project(camera);
+      const { width, height } = canvasSizeRef.current;
+      // Not rounded — see the matching comment in updatePopupPosition:
+      // integer-snapping this reads as stair-stepping rather than smooth
+      // motion, more so the higher the display's refresh rate.
+      const sx = (montrealProjectedScratch.x * 0.5 + 0.5) * width;
+      const sy = (-montrealProjectedScratch.y * 0.5 + 0.5) * height;
+      // Fades in/out over a small window around the horizon instead of
+      // popping, but is fully hidden (rather than just faint) once
+      // Montreal is more than a hair past the edge.
+      const opacity = THREE.MathUtils.clamp(facing * 8, 0, 1);
+      const visible = facing > 0;
+
+      montrealMarkerPosRef.current = { x: sx, y: sy, visible };
+      const el = montrealMarkerElRef.current;
+      if (el) {
+        el.style.transform = `translate3d(${sx}px, ${sy}px, 0)`;
+        el.style.opacity = opacity.toFixed(3);
+        // Only touched on the frame it actually flips, rather than every
+        // frame regardless of value — one less style write in the common
+        // case where Montreal stays on the same side for many frames.
+        if (visible !== montrealMarkerVisible) {
+          el.style.visibility = visible ? 'visible' : 'hidden';
+          montrealMarkerVisible = visible;
+        }
+      }
+    }
+
     function updatePopupPosition(mesh) {
-      const centroid3D = mesh.userData.centroid3D.clone();
-      centroid3D.applyMatrix4(globeGroup.matrixWorld);
-      const projected = centroid3D.clone().project(camera);
-      const rect = renderer.domElement.getBoundingClientRect();
-      const sx = (projected.x * 0.5 + 0.5) * rect.width;
-      const sy = (-projected.y * 0.5 + 0.5) * rect.height;
-      const attendee = mesh.userData.featured;
+      const featured = mesh.userData.featured;
+      // mesh.userData.popupAnchorLocal is set once per selection (see
+      // selectCountry) rather than recomputed here — this runs every
+      // animation frame, and re-deriving it (plus the .clone()s this used
+      // to do) on each call was allocating enough per frame to read as
+      // choppy on its own, on top of the animation itself.
+      popupAnchorScratch
+        .copy(mesh.userData.popupAnchorLocal)
+        .applyMatrix4(globeGroup.matrixWorld);
+      popupProjectedScratch.copy(popupAnchorScratch).project(camera);
+      const projected = popupProjectedScratch;
+      // Cached by onResize instead of calling getBoundingClientRect() here:
+      // this runs every animation frame, and a geometry read right after
+      // the DOM write below would otherwise force a synchronous layout
+      // recalculation each frame (classic layout thrashing).
+      const { width, height } = canvasSizeRef.current;
+      // Deliberately NOT rounded to whole pixels: on a high-refresh-rate
+      // display (100Hz+), the globe advances well under a pixel in most
+      // frames, so integer-snapping made the popup sit at the same rounded
+      // position for several frames in a row and then jump — a stair-step
+      // that reads as choppy, and reads *worse* the higher the refresh
+      // rate (more "held" frames between each jump). `willChange:
+      // 'transform'` on the outer div (see JSX) already promotes it to its
+      // own compositor layer, so the browser resamples that layer's
+      // already-rasterized content at sub-pixel offsets via the GPU rather
+      // than re-rasterizing the text each frame — sub-pixel positioning
+      // stays smooth and cheap without needing to snap to whole pixels.
+      const sx = (projected.x * 0.5 + 0.5) * width;
+      const sy = (-projected.y * 0.5 + 0.5) * height;
+
+      // Written directly to the DOM (bypassing React) so tracking the
+      // rotating globe every animation frame doesn't also re-render the
+      // whole popup 60x/second — that's what was making the dialog choppy
+      // while the globe spins. popupPosRef also backs the popup's own
+      // initial inline style (see JSX below) so it's correctly placed the
+      // instant it mounts, before the next animation frame runs. Using
+      // `transform: translate3d` rather than `left`/`top` keeps these
+      // updates on the compositor instead of forcing layout + paint of the
+      // popup on the main thread every frame — the same reason the Three.js
+      // canvas itself stays smooth.
+      popupPosRef.current = { x: sx, y: sy };
+      if (popupElRef.current) {
+        popupElRef.current.style.transform = `translate3d(${sx}px, ${sy}px, 0)`;
+      }
+
+      // Only push through React state — which re-renders the popup's
+      // content — when the actual selection (country + featured attendee)
+      // changes, not on every position update.
+      const selectionKey = `${mesh.userData.iso2}-${featured ? featured.id : 'none'}`;
+      if (selectionKey === lastSelectionKeyRef.current) return;
+      lastSelectionKeyRef.current = selectionKey;
+
       setSelected({
         name: mesh.userData.name,
         iso2: mesh.userData.iso2,
         feeds: mesh.userData.feeds,
         attendeeCount: mesh.userData.attendeeCount,
-        attendee,
-        screenX: sx,
-        screenY: sy,
+        attendee: featured,
       });
     }
 
@@ -1215,8 +1655,12 @@ export default function WorldGlobeSummit({
         const prev = selectedRef.current;
         prev.material.color.copy(prev.userData.baseColor);
         prev.material.emissive.setHex(0x000000);
+        if (prev.userData.featured) {
+          setArcHighlight(prev.userData.featured.municipality, 0);
+        }
         selectedRef.current = null;
       }
+      lastSelectionKeyRef.current = null;
       setSelected(null);
       rotatingRef.current = true;
     }
@@ -1242,8 +1686,32 @@ export default function WorldGlobeSummit({
     let tourToY = 0;
     let tourStartTime = 0;
     let tourMesh = null;
+    let tourFeatured = null;
     let lastTourMesh = null;
     let tourTimeoutId = null;
+    // How many times each agency has already been featured during this
+    // tour — used to weight it down relative to agencies not yet shown, so
+    // the tour surfaces a variety of attendees instead of repeatedly
+    // landing on whichever one happens to win the country's coin flip.
+    const tourAgencyShownCount = new Map();
+
+    // Weighted pick within a country's attendee list: an agency's weight
+    // halves each time it has already been featured, so it grows steadily
+    // less likely to come up again relative to agencies not yet shown.
+    function pickTourAttendee(iso2) {
+      const list = ATTENDEES_BY_COUNTRY[iso2];
+      if (!list || !list.length) return null;
+      const weights = list.map(
+        (a) => 1 / (1 + (tourAgencyShownCount.get(a.agency) || 0)),
+      );
+      const total = weights.reduce((sum, w) => sum + w, 0);
+      let r = Math.random() * total;
+      for (let i = 0; i < list.length; i++) {
+        r -= weights[i];
+        if (r <= 0) return list[i];
+      }
+      return list[list.length - 1];
+    }
 
     function scheduleTourTick(delaySeconds) {
       clearTimeout(tourTimeoutId);
@@ -1287,15 +1755,35 @@ export default function WorldGlobeSummit({
       const mesh = pickTourMesh(candidates);
       lastTourMesh = mesh;
 
+      // Picked here — before the tween's target is solved — rather than
+      // inside selectCountry, so the swing centers on this specific
+      // attendee's city instead of the country as a whole. selectCountry
+      // (called once the tween lands) reuses this same attendee so the
+      // popup and highlighted arc match what the camera actually centered
+      // on.
+      tourFeatured = pickTourAttendee(mesh.userData.iso2);
+      if (tourFeatured) {
+        tourAgencyShownCount.set(
+          tourFeatured.agency,
+          (tourAgencyShownCount.get(tourFeatured.agency) || 0) + 1,
+        );
+      }
+      const city = tourFeatured
+        ? CITY_BY_MUNICIPALITY.get(tourFeatured.municipality)
+        : null;
+      const cityDir = city
+        ? lonLatToVec3(city.lon, city.lat, 1)
+        : mesh.userData.centroid3D;
+
       // Solve, in the same independent-axis rotation model the manual drag
       // handler already uses (rotation.x and rotation.y driven separately
       // rather than a combined orbit), the globeGroup rotation that puts
-      // this country's centroid dead-center facing the camera (+Z). The
-      // unrotated point at lon=-90/lat=0 sits at local (0,0,+radius) — i.e.
-      // already front-facing — so aligning any other point's local (x,z) to
-      // that via a Y rotation, then its (y, z-projection) to it via an X
+      // the city dead-center facing the camera (+Z). The unrotated point at
+      // lon=-90/lat=0 sits at local (0,0,+radius) — i.e. already
+      // front-facing — so aligning any other point's local (x,z) to that
+      // via a Y rotation, then its (y, z-projection) to it via an X
       // rotation, brings it to front-and-centered.
-      const { x, y, z } = mesh.userData.centroid3D;
+      const { x, y, z } = cityDir;
       const targetY = Math.atan2(-x, z);
       const z1 = Math.hypot(x, z);
       const targetX = Math.atan2(y, z1);
@@ -1345,6 +1833,7 @@ export default function WorldGlobeSummit({
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+      canvasSizeRef.current = { width: w, height: h };
     }
     const ro = new ResizeObserver(onResize);
     ro.observe(container);
@@ -1365,7 +1854,10 @@ export default function WorldGlobeSummit({
         globeGroup.rotation.y = tourFromY + (tourToY - tourFromY) * e;
         if (progress >= 1) {
           tourTweening = false;
-          selectCountry(tourMesh, { freezeRotation: false });
+          selectCountry(tourMesh, {
+            freezeRotation: false,
+            featured: tourFeatured,
+          });
           scheduleTourTick(TOUR_DWELL_SECONDS);
         }
       } else if (rotatingRef.current) {
@@ -1378,6 +1870,7 @@ export default function WorldGlobeSummit({
         globeGroup.rotation.y += dt * speed;
       }
       if (selectedRef.current) updatePopupPosition(selectedRef.current);
+      updateMontrealMarker();
       camera.position.z =
         baseZoom +
         Math.sin(starTimeRef.current * BREATHE_SPEED) * BREATHE_AMPLITUDE;
@@ -1385,6 +1878,33 @@ export default function WorldGlobeSummit({
         points.material.uniforms.uTime.value = starTimeRef.current;
         points.rotation.y = globeGroup.rotation.y * points.userData.parallax;
         points.rotation.x = globeGroup.rotation.x * points.userData.parallax;
+      }
+      // buildAttendeeArcs builds one arc per SUMMIT_CITIES entry, in that
+      // same order, so arcLinesRef.current[i] is always that same city's
+      // arc — no name lookup needed to keep the two in sync index-for-index.
+      const pulseBoostAttr =
+        cityDotsRef.current?.geometry.attributes.aPulseBoost;
+      for (let i = 0; i < arcLinesRef.current.length; i++) {
+        const arc = arcLinesRef.current[i];
+        arc.material.uniforms.uTime.value = starTimeRef.current;
+        if (pulseBoostAttr) {
+          const { uPhase, uSpeed } = arc.material.uniforms;
+          // Mirrors the comet's own cycle math in createAttendeeArc's
+          // fragment shader: cycle wraps to 0 exactly when a new comet
+          // departs this arc's origin city, so a short decay from there
+          // pulses the city dot in time with the departure.
+          const cycle =
+            (starTimeRef.current * uSpeed.value + uPhase.value * ARC_PERIOD) %
+            ARC_PERIOD;
+          pulseBoostAttr.array[i] =
+            cycle < CITY_DEPART_PULSE_WINDOW
+              ? Math.pow(1 - cycle / CITY_DEPART_PULSE_WINDOW, 2)
+              : 0;
+        }
+      }
+      if (cityDotsRef.current) {
+        cityDotsRef.current.material.uniforms.uTime.value = starTimeRef.current;
+        if (pulseBoostAttr) pulseBoostAttr.needsUpdate = true;
       }
 
       renderer.render(scene, camera);
@@ -1413,6 +1933,9 @@ export default function WorldGlobeSummit({
       });
       starTexture.dispose();
       starLayersRef.current = [];
+      arcLinesRef.current = [];
+      arcsByMunicipalityRef.current = {};
+      cityDotsRef.current = null;
       if (renderer.domElement.parentNode) {
         renderer.domElement.parentNode.removeChild(renderer.domElement);
       }
@@ -1427,7 +1950,10 @@ export default function WorldGlobeSummit({
         width: '100%',
         height: '100%',
         minHeight: 500,
-        background: 'transparent',
+        // In fullscreen the container itself sits on the browser's own
+        // black backdrop, so it needs an explicit background to match the
+        // page instead of staying transparent.
+        background: isFullscreen ? '#f7f7f7' : 'transparent',
       }}
     >
       {/* Popup entrance animation */}
@@ -1435,14 +1961,14 @@ export default function WorldGlobeSummit({
         @keyframes summitPopIn {
           0% {
             opacity: 0;
-            transform: translate(-50%, calc(-100% - 2px)) scale(0.82);
+            transform: translate(-50%, calc(-100% - 3px)) scale(0.82);
           }
           60% {
             opacity: 1;
           }
           100% {
             opacity: 1;
-            transform: translate(-50%, calc(-100% - 16px)) scale(1);
+            transform: translate(-50%, calc(-100% - 20px)) scale(1);
           }
         }
       `}</style>
@@ -1476,20 +2002,20 @@ export default function WorldGlobeSummit({
       <div
         style={{
           position: 'absolute',
-          left: 12,
-          bottom: 12,
+          left: 16,
+          bottom: 16,
           zIndex: 3,
           background: MD_WHITE,
           border: `2px solid ${MD_PERIWINKLE}`,
-          borderRadius: 4,
-          padding: '8px 12px',
+          borderRadius: 6,
+          padding: '14px 20px',
           fontFamily: MD_FONT_PROSE,
           color: MD_INK,
         }}
       >
         <div
           style={{
-            fontSize: 11,
+            fontSize: 14,
             letterSpacing: '0.08em',
             fontFamily: MD_FONT_MONO,
             color: MD_PERIWINKLE,
@@ -1501,16 +2027,16 @@ export default function WorldGlobeSummit({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
-            marginTop: 6,
-            fontSize: 12,
+            gap: 10,
+            marginTop: 8,
+            fontSize: 16,
           }}
         >
           <span
             style={{
-              width: 12,
-              height: 12,
-              borderRadius: 2,
+              width: 16,
+              height: 16,
+              borderRadius: 3,
               background: SUMMIT_COLOR,
               display: 'inline-block',
             }}
@@ -1522,69 +2048,141 @@ export default function WorldGlobeSummit({
         </div>
       </div>
 
-      {selected && (
+      {/* Permanent Montreal marker — MobilityData's HQ and the summit's
+          host city. Always mounted; updateMontrealMarker() (in animate())
+          moves it every frame and fades/hides it via opacity + visibility
+          once Montreal has rotated to the globe's far side, the same way
+          the click raycast decides a hit is front-facing. */}
+      <div
+        ref={montrealMarkerElRef}
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          transform: `translate3d(${montrealMarkerPosRef.current.x}px, ${montrealMarkerPosRef.current.y}px, 0)`,
+          opacity: 0,
+          visibility: 'hidden',
+          willChange: 'transform, opacity',
+          pointerEvents: 'none',
+          zIndex: 2,
+        }}
+      >
         <div
-          key={`${selected.iso2}-${selected.attendee ? selected.attendee.id : 'none'}`}
           style={{
             position: 'absolute',
-            left: selected.screenX,
-            top: selected.screenY,
-            transform: 'translate(-50%, calc(-100% - 16px))',
-            transformOrigin: 'bottom center',
-            animation: 'summitPopIn 300ms cubic-bezier(0.34, 1.56, 0.64, 1)',
-            pointerEvents: 'none',
+            transform: 'translate(-50%, -50%)',
+            width: 34,
+            height: 34,
+            borderRadius: '50%',
             background: MD_WHITE,
             border: `2px solid ${MD_PERIWINKLE}`,
-            borderRadius: 4,
-            padding: '12px 14px',
-            fontFamily: MD_FONT_PROSE,
-            color: MD_INK,
-            width: 260,
+            boxShadow: '0 2px 6px rgba(23, 10, 46, 0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src='/assets/MOBILTYDATA_logo_purple_M.png'
+            alt='MobilityData — Montreal'
+            style={{ width: 20, height: 19 }}
+          />
+        </div>
+      </div>
+
+      {selected && (
+        // Split in two: this outer div carries only the tracked screen
+        // position, written every frame as a `transform` (compositor-only,
+        // no layout/paint) via popupElRef — see updatePopupPosition. The
+        // inner div carries the centering offset and entrance animation,
+        // both also `transform`-based; nesting them keeps the two
+        // transforms from stepping on each other (the CSS animation's
+        // keyframes fully own `transform` on whatever element they're
+        // applied to for their duration).
+        <div
+          key={`${selected.iso2}-${selected.attendee ? selected.attendee.id : 'none'}`}
+          ref={popupElRef}
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            transform: `translate3d(${popupPosRef.current.x}px, ${popupPosRef.current.y}px, 0)`,
+            // Promotes this to its own compositor layer so the popup's
+            // (static) text is rasterized once and then just repositioned
+            // every frame, instead of being re-rasterized at each frame's
+            // new position — the latter is what reads as the text/content
+            // shimmering rather than moving smoothly.
+            willChange: 'transform',
+            pointerEvents: 'none',
+            // Above the Montreal marker (zIndex 2) and the legend/header
+            // badges (zIndex 3) — a dialog should never render underneath
+            // decorative overlays it happens to pass behind on screen.
+            zIndex: 4,
           }}
         >
           <div
             style={{
-              fontSize: 11,
-              letterSpacing: '0.08em',
-              fontFamily: MD_FONT_MONO,
-              color: MD_PERIWINKLE,
+              position: 'relative',
+              transform: 'translate(-50%, calc(-100% - 20px))',
+              transformOrigin: 'bottom center',
+              animation: 'summitPopIn 300ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+              background: MD_WHITE,
+              border: `2px solid ${MD_PERIWINKLE}`,
+              borderRadius: 4,
+              padding: '15px 18px',
+              fontFamily: MD_FONT_PROSE,
+              color: MD_INK,
+              width: 325,
             }}
           >
-            {selected.name}
-          </div>
-
-          {selected.attendee ? (
+            {selected.attendee?.isMember && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: -13,
+                  right: -13,
+                  padding: '4px 13px',
+                  borderRadius: 999,
+                  background: MD_PERIWINKLE,
+                  color: MD_WHITE,
+                  fontSize: 15,
+                  fontWeight: 700,
+                  letterSpacing: '0.04em',
+                  fontFamily: MD_FONT_MONO,
+                  boxShadow: '0 3px 8px rgba(23, 10, 46, 0.25)',
+                  border: '1px solid white',
+                }}
+              >
+                MobilityData Member
+              </div>
+            )}
             <div
               style={{
-                display: 'flex',
-                gap: 12,
-                marginTop: 8,
-                alignItems: 'center',
+                fontSize: 14,
+                letterSpacing: '0.08em',
+                fontFamily: MD_FONT_MONO,
+                color: MD_PERIWINKLE,
               }}
             >
-              <AgencyLogo
-                domain={selected.attendee.domain}
-                agency={selected.attendee.agency}
-              />
-              <div style={{ minWidth: 0 }}>
+              {iso2ToFlagEmoji(selected.iso2)} {selected.name}
+            </div>
+
+            {selected.attendee ? (
+              <div style={{ marginTop: 10 }}>
                 <div
                   style={{
-                    fontSize: 16,
+                    fontSize: 20,
                     fontWeight: 700,
                     color: MD_PERIWINKLE,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
+                    overflowWrap: 'break-word',
                   }}
                 >
-                  {selected.attendee.name}
-                </div>
-                <div style={{ fontSize: 13, color: MD_INK, marginTop: 1 }}>
                   {selected.attendee.agency}
                 </div>
                 <div
                   style={{
-                    fontSize: 12,
+                    fontSize: 15,
                     color: MD_INK_MUTED,
                     marginTop: 1,
                     fontFamily: MD_FONT_MONO,
@@ -1593,82 +2191,81 @@ export default function WorldGlobeSummit({
                   {selected.attendee.municipality}
                 </div>
               </div>
-            </div>
-          ) : (
+            ) : (
+              <div
+                style={{
+                  fontSize: 18,
+                  fontWeight: 700,
+                  marginTop: 8,
+                  color: MD_INK,
+                }}
+              >
+                No summit attendees
+              </div>
+            )}
+
             <div
               style={{
-                fontSize: 14,
-                fontWeight: 700,
-                marginTop: 6,
-                color: MD_INK,
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: 10,
+                marginTop: 15,
+                paddingTop: 13,
+                borderTop: `1px solid ${MD_PERIWINKLE_SOFT}`,
+                fontSize: 15,
+                fontFamily: MD_FONT_MONO,
+                color: MD_INK_MUTED,
               }}
             >
-              No summit attendees
+              <div>
+                <span
+                  style={{
+                    fontVariantNumeric: 'tabular-nums',
+                    fontWeight: 700,
+                    color: MD_PERIWINKLE,
+                    fontSize: 19,
+                  }}
+                >
+                  {selected.feeds.toLocaleString()}
+                </span>{' '}
+                {selected.feeds === 1 ? 'feed' : 'feeds'}
+              </div>
+              <div>
+                <span
+                  style={{
+                    fontVariantNumeric: 'tabular-nums',
+                    fontWeight: 700,
+                    color: MD_PERIWINKLE,
+                    fontSize: 19,
+                  }}
+                >
+                  {selected.attendeeCount}
+                </span>{' '}
+                {selected.attendeeCount === 1 ? 'attendee' : 'attendees'}
+              </div>
             </div>
-          )}
 
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              gap: 8,
-              marginTop: 12,
-              paddingTop: 10,
-              borderTop: `1px solid ${MD_PERIWINKLE_SOFT}`,
-              fontSize: 12,
-              fontFamily: MD_FONT_MONO,
-              color: MD_INK_MUTED,
-            }}
-          >
-            <div>
-              <span
-                style={{
-                  fontVariantNumeric: 'tabular-nums',
-                  fontWeight: 700,
-                  color: MD_PERIWINKLE,
-                  fontSize: 15,
-                }}
-              >
-                {selected.feeds.toLocaleString()}
-              </span>{' '}
-              {selected.feeds === 1 ? 'feed' : 'feeds'}
-            </div>
-            <div>
-              <span
-                style={{
-                  fontVariantNumeric: 'tabular-nums',
-                  fontWeight: 700,
-                  color: MD_PERIWINKLE,
-                  fontSize: 15,
-                }}
-              >
-                {selected.attendeeCount}
-              </span>{' '}
-              {selected.attendeeCount === 1 ? 'attendee' : 'attendees'}
-            </div>
+            <div
+              style={{
+                position: 'absolute',
+                left: '50%',
+                bottom: -8,
+                transform: 'translateX(-50%) rotate(45deg)',
+                width: 13,
+                height: 13,
+                background: MD_WHITE,
+                borderRight: `2px solid ${MD_PERIWINKLE}`,
+                borderBottom: `2px solid ${MD_PERIWINKLE}`,
+              }}
+            />
           </div>
-
-          <div
-            style={{
-              position: 'absolute',
-              left: '50%',
-              bottom: -6,
-              transform: 'translateX(-50%) rotate(45deg)',
-              width: 10,
-              height: 10,
-              background: MD_WHITE,
-              borderRight: `2px solid ${MD_PERIWINKLE}`,
-              borderBottom: `2px solid ${MD_PERIWINKLE}`,
-            }}
-          />
         </div>
       )}
       {allowFullscreen && !isFullscreen && (
         <button
           type='button'
           onClick={() => {
-            if (!rendererRef.current) return;
-            requestFullscreenForElement(rendererRef.current.domElement);
+            requestFullscreenForElement(containerRef.current);
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = MD_PERIWINKLE;
@@ -1708,55 +2305,138 @@ export default function WorldGlobeSummit({
           Fullscreen
         </button>
       )}
-      <button
-        type='button'
-        onClick={() => {
-          setTourMode((prev) => {
-            const next = !prev;
-            tourModeRef.current = next;
-            if (next) runTourTickRef.current();
-            return next;
-          });
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = MD_PERIWINKLE;
-          e.currentTarget.style.boxShadow = '0 1px 3px rgba(23, 10, 46, 0.2)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = MD_INK;
-          e.currentTarget.style.boxShadow = '0 4px 10px rgba(23, 10, 46, 0.25)';
-          e.currentTarget.style.transform = 'translateY(0)';
-        }}
-        onMouseDown={(e) => {
-          e.currentTarget.style.transform = 'translateY(2px)';
-        }}
-        onMouseUp={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-        }}
+      <div
         style={{
           position: 'absolute',
           left: 12,
           top: 12,
           zIndex: 3,
-          background: MD_INK,
-          color: MD_WHITE,
-          border: 'none',
-          borderRadius: 4,
-          padding: '8px 14px',
-          fontFamily: MD_FONT_MONO,
-          fontSize: 12,
-          letterSpacing: '0.02em',
-          cursor: 'pointer',
-          boxShadow: '0 4px 10px rgba(23, 10, 46, 0.25)',
-          transition: 'background 0.3s ease, box-shadow 0.3s ease',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          gap: 8,
         }}
-        aria-label={tourMode ? 'Stop auto tour' : 'Start auto tour'}
-        aria-pressed={tourMode}
       >
-        {tourMode ? 'Stop tour' : 'Auto tour'}
-      </button>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            background: MD_WHITE,
+            border: `2px solid ${MD_PERIWINKLE}`,
+            borderRadius: 4,
+            padding: '8px 14px',
+            fontFamily: MD_FONT_PROSE,
+            color: MD_INK,
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src='/assets/MOBILTYDATA_logo_purple_M.png'
+            alt='MobilityData logo'
+            style={{ width: 50, height: 48, flexShrink: 0 }}
+          />
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                letterSpacing: '0.08em',
+                fontFamily: MD_FONT_MONO,
+                color: MD_PERIWINKLE,
+              }}
+            >
+              2026
+            </div>
+            <div
+              style={{
+                fontSize: 22,
+                fontWeight: 700,
+                lineHeight: 1.2,
+                color: MD_PERIWINKLE,
+                marginTop: 2,
+              }}
+            >
+              MobilityData Summit
+            </div>
+          </div>
+        </div>
+        {/* Fullscreen auto-starts the tour (see handleFullscreenChange) as
+            an immersive, hands-off presentation — the toggle button (which
+            would read "Stop tour" the whole time) is hidden rather than
+            shown as a way to interrupt that. */}
+        {!isFullscreen && (
+          <button
+            type='button'
+            onClick={() => {
+              setTourMode((prev) => {
+                const next = !prev;
+                tourModeRef.current = next;
+                if (next) runTourTickRef.current();
+                return next;
+              });
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = MD_PERIWINKLE;
+              e.currentTarget.style.boxShadow =
+                '0 1px 3px rgba(23, 10, 46, 0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = MD_INK;
+              e.currentTarget.style.boxShadow =
+                '0 4px 10px rgba(23, 10, 46, 0.25)';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+            onMouseDown={(e) => {
+              e.currentTarget.style.transform = 'translateY(2px)';
+            }}
+            onMouseUp={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+            style={{
+              background: MD_INK,
+              color: MD_WHITE,
+              border: 'none',
+              borderRadius: 4,
+              padding: '8px 14px',
+              fontFamily: MD_FONT_MONO,
+              fontSize: 12,
+              letterSpacing: '0.02em',
+              cursor: 'pointer',
+              boxShadow: '0 4px 10px rgba(23, 10, 46, 0.25)',
+              transition: 'background 0.3s ease, box-shadow 0.3s ease',
+            }}
+            aria-label={tourMode ? 'Stop auto tour' : 'Start auto tour'}
+            aria-pressed={tourMode}
+          >
+            {tourMode ? 'Stop tour' : 'Auto tour'}
+          </button>
+        )}
+      </div>
     </div>
   );
+}
+
+// Draws one glowing arc from each attendee city back to Montreal — the
+// summit's host city — so the globe reads as "the world converging on
+// Montreal" rather than just a set of shaded countries.
+function buildAttendeeArcs(globeGroup, radius, cities) {
+  const arcRadius = radius * CITY_MARKER_RADIUS_SCALE;
+  const montrealDir = lonLatToVec3(MONTREAL_LON, MONTREAL_LAT, 1);
+  const arcs = [];
+  for (const city of cities) {
+    const fromDir = lonLatToVec3(city.lon, city.lat, 1);
+    const arc = createAttendeeArc(
+      fromDir,
+      montrealDir,
+      arcRadius,
+      MD_PERIWINKLE,
+    );
+    arc.userData.municipality = city.municipality;
+    arc.userData.iso2 = city.iso2;
+    globeGroup.add(arc);
+    arcs.push(arc);
+  }
+  return arcs;
 }
 
 function buildCountries(geo, globeGroup, radius, meshesRef) {
