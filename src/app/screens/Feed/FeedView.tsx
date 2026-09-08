@@ -6,11 +6,9 @@ import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 
 // Components
-import FeedTitle from './components/FeedTitle';
-import FeedVerificationChip from '../../components/FeedVerificationChip';
 import DataQualitySummary from './components/DataQualitySummary';
+import FeedDetailHeader from './components/FeedDetailHeader';
 import FeedSummary from './components/FeedSummary';
-import FeedNavigationControls from './components/FeedNavigationControls';
 import ScrollToTop from './components/ScrollToTop';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { getTranslations } from 'next-intl/server';
@@ -24,7 +22,6 @@ import {
   type GTFSRTFeedType,
   isGtfsFeedType,
   isGtfsOrGtfsRtFeedType,
-  isGtfsRtFeedType,
 } from '../../services/feeds/utils';
 import ClientDownloadButton from './components/ClientDownloadButton';
 import RevalidateCacheButton from './components/RevalidateCacheButton';
@@ -32,7 +29,11 @@ import { type components } from '../../services/feeds/types';
 import ClientQualityReportButton from './components/ClientQualityReportButton';
 import ClientQualityAnalysisButton from './components/ClientQualityAnalysisButton';
 import ClientSubscribeControls from './components/ClientSubscribeControls';
-import { getBoundingBox } from './Feed.functions';
+import {
+  formatProvidersSorted,
+  getBoundingBox,
+  getLatestDataset,
+} from './Feed.functions';
 import dynamic from 'next/dynamic';
 import { ContentBox } from '../../components/ContentBox';
 import { getRemoteConfigValues } from '../../../lib/remote-config.server';
@@ -40,14 +41,6 @@ import { getRemoteConfigValues } from '../../../lib/remote-config.server';
 const CoveredAreaMap = dynamic(
   async () =>
     await import('../../components/CoveredAreaMap').then((mod) => mod.default),
-  {},
-);
-
-const WarningContentBox = dynamic(
-  async () =>
-    await import('../../components/WarningContentBox').then(
-      (mod) => mod.WarningContentBox,
-    ),
   {},
 );
 
@@ -66,6 +59,14 @@ const GbfsVersions = dynamic(
 const PreviousDatasets = dynamic(
   async () =>
     await import('./components/PreviousDatasets').then((mod) => mod.default),
+  {},
+);
+
+const WarningContentBox = dynamic(
+  async () =>
+    await import('../../components/WarningContentBox').then(
+      (mod) => mod.WarningContentBox,
+    ),
   {},
 );
 
@@ -94,21 +95,14 @@ export default async function FeedView({
 }: Props): Promise<React.ReactElement> {
   if (feed == undefined) notFound();
 
-  const [t, tGbfs, tCommon, config] = await Promise.all([
+  const [t, tGbfs, config] = await Promise.all([
     getTranslations('feeds'),
     getTranslations('gbfs'),
-    getTranslations('common'),
     getRemoteConfigValues(),
   ]);
 
   // Basic derived data
-  const sortedProviders =
-    feed.provider != null && String(feed.provider).trim().length > 0
-      ? String(feed.provider)
-          .split(',')
-          .map((s) => s.trim())
-          .sort()
-      : [];
+  const sortedProviders = formatProvidersSorted(feed.provider ?? '');
 
   const downloadLatestUrl =
     feed?.data_type === 'gtfs'
@@ -133,8 +127,6 @@ export default async function FeedView({
     );
   };
 
-  const hasFeedRedirect = feed?.redirects != null && feed.redirects.length > 0;
-
   const gbfsAutodiscoveryUrl =
     feed?.data_type === 'gbfs'
       ? (feed as GBFSFeedType)?.source_info?.producer_url
@@ -142,13 +134,12 @@ export default async function FeedView({
 
   const boundingBox = getBoundingBox(feed);
 
-  let latestDataset: LatestDatasetFull;
-  if (isGtfsFeedType(feed)) {
-    latestDataset = initialDatasets?.find(
-      (dataset) => dataset.id === feed.latest_dataset?.id,
-    );
-  }
+  const latestDataset: LatestDatasetFull = getLatestDataset(
+    feed,
+    initialDatasets,
+  );
 
+  const hasFeedRedirect = feed?.redirects != null && feed.redirects.length > 0;
   const hasDatasets =
     initialDatasets != undefined && initialDatasets.length > 0;
 
@@ -174,32 +165,7 @@ export default async function FeedView({
           }}
         >
           <Box sx={{ position: 'relative' }}>
-            <FeedNavigationControls
-              feedDataType={feed.data_type ?? ''}
-              feedId={feed.id ?? ''}
-            />
-
-            <Box sx={{ mt: 1 }}>
-              <FeedTitle
-                sortedProviders={sortedProviders}
-                feed={isGtfsOrGtfsRtFeedType(feed) ? feed : undefined}
-              />
-            </Box>
-
-            {isGtfsFeedType(feed) && feed.feed_name !== '' && (
-              <Grid size={12}>
-                <Typography
-                  component={'h2'}
-                  sx={{
-                    fontWeight: 'bold',
-                    fontSize: { xs: 18, sm: 24 },
-                  }}
-                  data-testid='feed-name'
-                >
-                  {feed.feed_name}
-                </Typography>
-              </Grid>
-            )}
+            <FeedDetailHeader feed={feed} sortedProviders={sortedProviders} />
 
             {isGtfsFeedType(feed) && (
               <DataQualitySummary
@@ -211,77 +177,6 @@ export default async function FeedView({
                 hasSeal={feed.reliability_seal?.has_seal}
               />
             )}
-
-            {isGtfsRtFeedType(feed) && feed.official != null && (
-              <Box sx={{ my: 1 }}>
-                <FeedVerificationChip
-                  status={feed.official}
-                ></FeedVerificationChip>
-              </Box>
-            )}
-
-            <Box>
-              {feed.external_ids?.some((eId) => eId.source === 'tld') ===
-                true && (
-                <Typography
-                  data-testid='transitland-attribution'
-                  variant={'caption'}
-                  width={'100%'}
-                  component={'div'}
-                >
-                  {t('dataAttribution')}{' '}
-                  <a
-                    rel='noreferrer nofollow'
-                    target='_blank'
-                    href='https://www.transit.land/terms'
-                  >
-                    Transitland
-                  </a>
-                </Typography>
-              )}
-              {feed.external_ids?.some((eId) => eId.source === 'ntd') ===
-                true && (
-                <Typography
-                  data-testid='fta-attribution'
-                  variant={'caption'}
-                  width={'100%'}
-                  component={'div'}
-                >
-                  {t('dataAttribution')}
-                  {' the United States '}
-                  <a
-                    rel='noreferrer nofollow'
-                    target='_blank'
-                    href='https://www.transit.dot.gov/ntd/data-product/2023-annual-database-general-transit-feed-specification-gtfs-weblinks'
-                  >
-                    National Transit Database
-                  </a>
-                </Typography>
-              )}
-            </Box>
-
-            {feed?.data_type === 'gtfs_rt' &&
-              (feed as GTFSRTFeedType)?.entity_types != undefined && (
-                <Grid size={12}>
-                  <Typography variant='h5'>
-                    {' '}
-                    {((feed as GTFSRTFeedType)?.entity_types ?? [])
-                      .map(
-                        (entityType) =>
-                          (
-                            ({
-                              tu: tCommon('gtfsRealtimeEntities.tripUpdates'),
-                              vp: tCommon(
-                                'gtfsRealtimeEntities.vehiclePositions',
-                              ),
-                              sa: tCommon('gtfsRealtimeEntities.serviceAlerts'),
-                            }) as const satisfies Record<string, string>
-                          )[entityType],
-                      )
-                      .join(` ${tCommon('and')} `)}
-                  </Typography>
-                </Grid>
-              )}
 
             {/* Warnings */}
             {feed.data_type === 'gtfs' && !hasDatasets && !hasFeedRedirect && (

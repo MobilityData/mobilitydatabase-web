@@ -5,82 +5,45 @@ import { Box, Button, Tooltip, Typography, useTheme } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import BlockIcon from '@mui/icons-material/Block';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import { useTranslations } from 'next-intl';
 import { Link } from '../../../../i18n/navigation';
 import {
   API_CRITERION_TO_KEY,
   SEAL_CRITERION_ICONS,
+  SEAL_STATUS_LABEL_KEYS,
+  getConsideredCriteria,
+  getCriterionDescription,
+  getCriterionDisplayStatus,
+  getCriterionStatusColor,
+  getPassedCriteriaCount,
+  getSealDisplayStatus,
+  type SealCriterionContext,
 } from '../../../constants/sealCriteria';
 import { type components } from '../../../services/feeds/types';
-
-type ReliabilityCriterion = components['schemas']['ReliabilityCriterion'];
-
-type CriterionDisplayStatus =
-  | 'pass'
-  | 'atRisk'
-  | 'fail'
-  | 'notApplicable'
-  | 'notEvaluated'
-  | 'probation';
-
-// `on_probation` and `in_grace_period` are both independent of `status` - a
-// criterion can read `pass` while on probation, or while still inside a
-// grace period from a recent failure, and in either case it takes priority
-// over the plain status-derived states below.
-function getCriterionDisplayStatus(
-  criterion: ReliabilityCriterion,
-): CriterionDisplayStatus {
-  if (criterion.on_probation) {
-    return 'probation';
-  }
-  if (criterion.in_grace_period) {
-    return 'atRisk';
-  }
-  switch (criterion.status) {
-    case 'pass':
-      return 'pass';
-    case 'fail':
-      return 'fail';
-    case 'not_applicable':
-      return 'notApplicable';
-    case 'unknown':
-    case 'never_evaluated':
-      return 'notEvaluated';
-  }
-}
 
 export interface SealQualitySummaryProps {
   feedId: string;
   feedDataType: string;
   reliability: components['schemas']['FeedReliabilityReport'] | undefined;
+  /** Feed-level facts that change how some criteria are worded. */
+  criterionContext?: SealCriterionContext;
 }
 
 export default function SealQualitySummary({
   feedId,
   feedDataType,
   reliability,
+  criterionContext,
 }: SealQualitySummaryProps): React.ReactElement {
   const t = useTranslations('feeds');
   const tSeal = useTranslations('sealOfReliability');
   const theme = useTheme();
 
   const criteria = reliability?.criteria ?? [];
-  const hasSeal = reliability?.has_seal ?? false;
-  const anyInGracePeriod = criteria.some((c) => c.in_grace_period);
-  // not_applicable criteria are withdrawn from the seal entirely, so they
-  // shouldn't count towards "X out of Y criteria met"
-  const consideredCriteria = criteria.filter(
-    (c) => c.status !== 'not_applicable',
-  );
-  const passedCriteriaCount = consideredCriteria.filter(
-    (c) => c.status === 'pass' && !c.on_probation,
-  ).length;
-
-  const sealStatus: 'earned' | 'gracePeriod' | 'notEarned' = !hasSeal
-    ? 'notEarned'
-    : anyInGracePeriod
-      ? 'gracePeriod'
-      : 'earned';
+  const consideredCriteria = getConsideredCriteria(criteria);
+  const passedCriteriaCount = getPassedCriteriaCount(criteria);
+  const sealStatus = getSealDisplayStatus(reliability);
 
   return (
     <Box data-testid='seal-quality-row' sx={{ ml: 2 }}>
@@ -116,13 +79,18 @@ export default function SealQualitySummary({
                   sx={{ mr: 0.5 }}
                 />
               )}
+              {sealStatus === 'probation' && (
+                <HourglassEmptyIcon
+                  fontSize='small'
+                  color='info'
+                  sx={{ mr: 0.5 }}
+                />
+              )}
               {sealStatus === 'notEarned' && (
                 <BlockIcon fontSize='small' color='disabled' sx={{ mr: 0.5 }} />
               )}
               <Typography variant='body1' fontWeight={600}>
-                {sealStatus === 'earned' && t('sealEarnedLabel')}
-                {sealStatus === 'gracePeriod' && t('sealInGracePeriodLabel')}
-                {sealStatus === 'notEarned' && t('sealNotYetEarnedLabel')}
+                {t(SEAL_STATUS_LABEL_KEYS[sealStatus])}
               </Typography>
             </Box>
             <Typography
@@ -132,6 +100,7 @@ export default function SealQualitySummary({
             >
               {sealStatus === 'earned' && t('sealEarnedCaption')}
               {sealStatus === 'gracePeriod' && t('sealGracePeriodCaption')}
+              {sealStatus === 'probation' && t('sealProbationCaption')}
               {sealStatus === 'notEarned' &&
                 consideredCriteria.length > 0 &&
                 t('sealCriteriaMetCaption', {
@@ -148,45 +117,13 @@ export default function SealQualitySummary({
                 const CriterionIcon = SEAL_CRITERION_ICONS[key];
                 const displayStatus = getCriterionDisplayStatus(criterion);
 
-                const color = {
-                  pass: theme.palette.success.light,
-                  atRisk: theme.palette.warning.light,
-                  fail: theme.palette.error.light,
-                  notApplicable: theme.palette.grey[500],
-                  notEvaluated: theme.palette.grey[500],
-                  probation: theme.palette.info.light,
-                }[displayStatus];
-
-                const statusLabel = {
-                  pass: t('sealCriterionPass'),
-                  atRisk: t('sealCriterionInGracePeriod'),
-                  fail: t('sealCriterionFail'),
-                  notApplicable: t('sealCriterionNotApplicable'),
-                  notEvaluated: t('sealCriterionNotEvaluated'),
-                  probation: t('sealCriterionOnProbation'),
-                }[displayStatus];
-
-                const graceNote =
-                  displayStatus === 'atRisk' &&
-                  criterion.grace_period_ends_at != null
-                    ? ` ${t('sealCriterionGracePeriodNote', {
-                        date: new Date(
-                          criterion.grace_period_ends_at,
-                        ).toDateString(),
-                      })}`
-                    : '';
-
-                // not_applicable on this criterion only ever means the feed
-                // is seasonal - seasonal feeds are excluded from the rolling
-                // 7-day coverage check entirely.
-                const seasonalNote =
-                  key === 'freshRolling' && displayStatus === 'notApplicable'
-                    ? ` ${t('sealCriterionSeasonalNote')}`
-                    : '';
-
-                const criterionDescription = `${tSeal(`criteria.${key}.title`)} — ${statusLabel}: ${tSeal(
-                  `criteria.${key}.description`,
-                )}${graceNote}${seasonalNote}`;
+                const color = getCriterionStatusColor(displayStatus, theme);
+                const criterionDescription = getCriterionDescription(
+                  criterion,
+                  t,
+                  tSeal,
+                  criterionContext,
+                );
 
                 return (
                   <Tooltip
