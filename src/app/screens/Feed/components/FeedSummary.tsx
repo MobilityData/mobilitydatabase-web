@@ -668,6 +668,10 @@ export default function FeedSummary({
             feedId={feed.id ?? ''}
             feedDataType={feed.data_type ?? 'gtfs'}
             reliability={reliability}
+            criterionContext={{
+              isProducerUrlUnstable: feed.source_info?.is_producer_url_unstable,
+              feedCreatedAt: feed.created_at,
+            }}
           />
         </Card>
       )}
