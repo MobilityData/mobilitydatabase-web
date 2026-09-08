@@ -77,6 +77,10 @@ const criterionBodyStyle = {
   '& > :last-child': { mt: 'auto' },
 } as const;
 
+// Offsets an anchor-jump (from the feed detail page's criterion info icons)
+// so the section doesn't land underneath the fixed header.
+const anchorScrollMargin = { scrollMarginTop: '96px' } as const;
+
 function BulletList({ items }: { items: string[] }): ReactElement {
   return (
     <Box
@@ -152,7 +156,10 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
       </SectionContainer>
 
       <Box sx={{ ...twoColumnGrid, mt: 5 }}>
-        <SectionContainer sx={criterionContainerStyle}>
+        <SectionContainer
+          id='official'
+          sx={{ ...criterionContainerStyle, ...anchorScrollMargin }}
+        >
           <Typography variant='sectionTitle'>
             <OfficialIcon fontSize='inherit' aria-hidden />
             {t('official.title')}
@@ -167,7 +174,10 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
           </Box>
         </SectionContainer>
 
-        <SectionContainer sx={criterionContainerStyle}>
+        <SectionContainer
+          id='stable'
+          sx={{ ...criterionContainerStyle, ...anchorScrollMargin }}
+        >
           <Typography variant='sectionTitle'>
             <StableIcon fontSize='inherit' aria-hidden />
             {t('stable.title')}
@@ -179,7 +189,10 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
           </Box>
         </SectionContainer>
 
-        <SectionContainer sx={criterionContainerStyle}>
+        <SectionContainer
+          id='available'
+          sx={{ ...criterionContainerStyle, ...anchorScrollMargin }}
+        >
           <Typography variant='sectionTitle'>
             <AvailableIcon fontSize='inherit' aria-hidden />
             {t('available.title')}
@@ -195,7 +208,10 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
           </Box>
         </SectionContainer>
 
-        <SectionContainer sx={criterionContainerStyle}>
+        <SectionContainer
+          id='compliant'
+          sx={{ ...criterionContainerStyle, ...anchorScrollMargin }}
+        >
           <Typography variant='sectionTitle'>
             <CompliantIcon fontSize='inherit' aria-hidden />
             {t('compliant.title')}
@@ -225,7 +241,7 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
         </SectionContainer>
       </Box>
 
-      <SectionContainer sx={{ mt: 5 }}>
+      <SectionContainer id='freshRolling' sx={{ mt: 5, ...anchorScrollMargin }}>
         <Typography variant='sectionTitle'>
           <FreshRollingIcon fontSize='inherit' aria-hidden />
           {t('freshRolling.title')}
@@ -255,7 +271,10 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
         </Box>
       </SectionContainer>
 
-      <SectionContainer sx={{ mt: 5 }}>
+      <SectionContainer
+        id='freshContinuous'
+        sx={{ mt: 5, ...anchorScrollMargin }}
+      >
         <Typography variant='sectionTitle'>
           <FreshContinuousIcon fontSize='inherit' aria-hidden />
           {t('freshContinuous.title')}
