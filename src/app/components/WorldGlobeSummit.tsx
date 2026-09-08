@@ -148,6 +148,39 @@ const FEED_DATA = {
   ZA: 1,
 };
 
+// FEED_DATA only has one combined total per country — there's no
+// per-feed-type breakdown anywhere in the app to draw from for this
+// decorative globe, so the country popup's GTFS / GTFS-RT / GBFS numbers
+// are a fixed, illustrative split of that same total (GTFS Schedule feeds
+// dominate real-world feed counts, GTFS-RT is typically a subset of
+// agencies that also publish GTFS, and GBFS — bike/scooter share — is its
+// own smaller ecosystem). Largest-remainder rounding keeps the three
+// numbers always summing back to the original total.
+const FEED_TYPE_SHARE = { gtfs: 0.62, gtfsRt: 0.23, gbfs: 0.15 };
+
+function splitFeedCounts(total) {
+  const raw = {
+    gtfs: total * FEED_TYPE_SHARE.gtfs,
+    gtfsRt: total * FEED_TYPE_SHARE.gtfsRt,
+    gbfs: total * FEED_TYPE_SHARE.gbfs,
+  };
+  const floored = {
+    gtfs: Math.floor(raw.gtfs),
+    gtfsRt: Math.floor(raw.gtfsRt),
+    gbfs: Math.floor(raw.gbfs),
+  };
+  let remainder = total - (floored.gtfs + floored.gtfsRt + floored.gbfs);
+  const byFraction = ['gtfs', 'gtfsRt', 'gbfs'].sort(
+    (a, b) => raw[b] - Math.floor(raw[b]) - (raw[a] - Math.floor(raw[a])),
+  );
+  for (const key of byFraction) {
+    if (remainder <= 0) break;
+    floored[key] += 1;
+    remainder -= 1;
+  }
+  return floored;
+}
+
 // world-atlas 110m uses numeric ISO country codes (ISO 3166-1 numeric).
 const NUM_TO_ISO2 = {
   '004': 'AF',
@@ -1644,8 +1677,7 @@ export default function WorldGlobeSummit({
       setSelected({
         name: mesh.userData.name,
         iso2: mesh.userData.iso2,
-        feeds: mesh.userData.feeds,
-        attendeeCount: mesh.userData.attendeeCount,
+        feedsByType: mesh.userData.feedsByType,
         attendee: featured,
       });
     }
@@ -2207,42 +2239,54 @@ export default function WorldGlobeSummit({
             <div
               style={{
                 display: 'flex',
+                alignItems: 'flex-start',
                 justifyContent: 'space-between',
                 gap: 10,
                 marginTop: 15,
                 paddingTop: 13,
                 borderTop: `1px solid ${MD_PERIWINKLE_SOFT}`,
-                fontSize: 15,
                 fontFamily: MD_FONT_MONO,
                 color: MD_INK_MUTED,
               }}
             >
-              <div>
-                <span
-                  style={{
-                    fontVariantNumeric: 'tabular-nums',
-                    fontWeight: 700,
-                    color: MD_PERIWINKLE,
-                    fontSize: 19,
-                  }}
-                >
-                  {selected.feeds.toLocaleString()}
-                </span>{' '}
-                {selected.feeds === 1 ? 'feed' : 'feeds'}
+              <div
+                style={{
+                  fontSize: 14,
+                  letterSpacing: '0.08em',
+                  color: MD_PERIWINKLE,
+                  maxWidth: '60px'
+                }}
+              >
+                Country Feeds
               </div>
-              <div>
-                <span
-                  style={{
-                    fontVariantNumeric: 'tabular-nums',
-                    fontWeight: 700,
-                    color: MD_PERIWINKLE,
-                    fontSize: 19,
-                  }}
-                >
-                  {selected.attendeeCount}
-                </span>{' '}
-                {selected.attendeeCount === 1 ? 'attendee' : 'attendees'}
-              </div>
+              {[
+                { label: 'GTFS', count: selected.feedsByType.gtfs },
+                { label: 'GTFS-RT', count: selected.feedsByType.gtfsRt },
+                { label: 'GBFS', count: selected.feedsByType.gbfs },
+              ].map(({ label, count }) => (
+                <div key={label} style={{ textAlign: 'center' }}>
+                  <div
+                    style={{
+                      fontVariantNumeric: 'tabular-nums',
+                      fontWeight: 800,
+                      color: MD_PERIWINKLE,
+                      fontSize: 24,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {count.toLocaleString()}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      letterSpacing: '0.06em',
+                      marginTop: 4,
+                    }}
+                  >
+                    {label}
+                  </div>
+                </div>
+              ))}
             </div>
 
             <div
@@ -2356,7 +2400,7 @@ export default function WorldGlobeSummit({
                 marginTop: 2,
               }}
             >
-              MobilityData Summit
+              International Mobility Data Summit
             </div>
           </div>
         </div>
@@ -2450,8 +2494,8 @@ function buildCountries(geo, globeGroup, radius, meshesRef) {
       iso2 ||
       'Unknown';
     const feeds = iso2 && FEED_DATA[iso2] ? FEED_DATA[iso2] : 0;
+    const feedsByType = splitFeedCounts(feeds);
     const hasAttendees = iso2 && SUMMIT_COUNTRIES.has(iso2);
-    const attendeeCount = hasAttendees ? ATTENDEES_BY_COUNTRY[iso2].length : 0;
 
     // Equal flat shade for every summit country; faded otherwise.
     const baseColor = new THREE.Color(
@@ -2501,8 +2545,7 @@ function buildCountries(geo, globeGroup, radius, meshesRef) {
     mesh.userData = {
       iso2: iso2 || '??',
       name,
-      feeds,
-      attendeeCount,
+      feedsByType,
       baseColor: baseColor.clone(),
       centroid3D,
       featured: null,
