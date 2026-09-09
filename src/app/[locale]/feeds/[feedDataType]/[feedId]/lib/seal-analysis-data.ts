@@ -110,15 +110,32 @@ function cachedSealAnalysis(
   accessToken: string,
   userContextJwt: string | undefined,
 ): () => Promise<SealAnalysisData> {
-  return unstable_cache(
-    async () =>
-      await fetchSealAnalysisImpl(feedId, accessToken, userContextJwt),
+  const cachedFetch = unstable_cache(
+    async () => {
+      const result = await fetchSealAnalysisImpl(
+        feedId,
+        accessToken,
+        userContextJwt,
+      );
+      if (result.reliabilityError) {
+        throw new Error(`Failed to load reliability data for feed ${feedId}`);
+      }
+      return result;
+    },
     [`seal-analysis-${feedId}`],
     {
       tags: [`feed-${feedId}`, 'seal-analysis'],
       revalidate: SEAL_ANALYSIS_REVALIDATE,
     },
   );
+
+  return async () => {
+    try {
+      return await cachedFetch();
+    } catch {
+      return { reliabilityError: true };
+    }
+  };
 }
 
 /** `undefined` whenever there is no analysis to fetch, rather than an error. */
