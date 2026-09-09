@@ -274,7 +274,6 @@
     "sealCriterionInGracePeriod": "At Risk",
     "sealCriterionGracePeriodNote": "In grace period until {date}.",
     "sealCriterionNotApplicable": "Not Applicable",
-    "sealCriterionSeasonalNote": "This feed is seasonal, so rolling 7-day coverage doesn't apply.",
     "sealCriterionNotEvaluated": "Not Evaluated",
     "sealCriterionOnProbation": "On Probation",
     "reliabilityAnalysisTitle": "Seal of Reliability Analysis",
@@ -289,7 +288,7 @@
     "sealStatusEarnedDescription": "This feed passes all applicable criteria",
     "sealStatusGracePeriodDescription": "This feed has {days, plural, one {# day} other {# days}} to resolve its {criteria} {criteriaCount, plural, one {issue} other {issues}} before it is disqualified",
     "sealStatusNotEarnedDescription": "This feed passes {passed} out of {total} applicable criteria",
-    "sealStatusProbationDescription": "All criteria currently passing. Building a 6-month consistency record before the Seal of Reliability is awarded",
+    "sealStatusProbationDescription": "All criteria currently passing. Building a 6-month consistency record before the Seal of Reliability is awarded.",
     "sealProbationStartDateLabel": "Start date",
     "sealProbationEarnDateLabel": "Earn date",
     "sealCurrentProducerUrlLabel": "Current producer URL",
@@ -678,7 +677,7 @@
         "title": "Official",
         "shortTitle": "Official",
         "notAuthorizedSubtitle": "Not authorized by the transit agency",
-        "notAuthorizedDescription": "This feed is created by an unaffiliated community member rather than the transit agency, making it unofficial",
+        "notAuthorizedDescription": "This feed is created by an unaffiliated community member rather than the transit agency, making it unofficial.",
         "subtitle": "Authorized by the transit agency.",
         "description": "The feed has been confirmed as an official source, published by or on behalf of the transit agency."
       },
@@ -707,6 +706,8 @@
       "freshRolling": {
         "title": "Fresh: Rolling 7 Days of Coverage",
         "shortTitle": "Fresh",
+        "seasonalSubtitle": "Not applicable — this feed is seasonal",
+        "seasonalDescription": "Seasonal feeds don't run service year-round, so the rolling 7-day coverage check doesn't apply to them.",
         "subtitle": "Always includes 7 days or more of service coverage.",
         "description": "Following GTFS Best Practices, the feed provides at least 7 days of rolling future service coverage. This means at least a full week of service is covered every day it is fetched."
       },

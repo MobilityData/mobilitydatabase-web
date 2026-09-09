@@ -274,7 +274,6 @@
     "sealCriterionInGracePeriod": "À risque",
     "sealCriterionGracePeriodNote": "En délai de grâce jusqu'au {date}.",
     "sealCriterionNotApplicable": "Non applicable",
-    "sealCriterionSeasonalNote": "Ce flux est saisonnier, la couverture glissante de 7 jours ne s'applique donc pas.",
     "sealCriterionNotEvaluated": "Non évalué",
     "sealCriterionOnProbation": "En probation",
     "reliabilityAnalysisTitle": "Analyse du Sceau de fiabilité",
@@ -707,6 +706,8 @@
       "freshRolling": {
         "title": "Récent : couverture glissante de 7 jours",
         "shortTitle": "Récent",
+        "seasonalSubtitle": "Non applicable — ce flux est saisonnier",
+        "seasonalDescription": "Les flux saisonniers n'offrent pas de service toute l'année, donc la vérification de la couverture glissante de 7 jours ne s'applique pas.",
         "subtitle": "Comprend toujours 7 jours ou plus de couverture de service.",
         "description": "Conformément aux meilleures pratiques GTFS, le flux fournit au moins 7 jours de couverture de service future glissante. Cela signifie qu'au moins une semaine complète de service est couverte chaque jour où le flux est récupéré."
       },

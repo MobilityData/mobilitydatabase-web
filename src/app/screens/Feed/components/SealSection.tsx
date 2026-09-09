@@ -176,8 +176,8 @@ export default async function SealSection({
                 pass: theme.vars.palette.success.contrastText,
                 atRisk: theme.vars.palette.warning.contrastText,
                 fail: theme.vars.palette.error.contrastText,
-                notApplicable: theme.vars.palette.common.black,
-                notEvaluated: theme.vars.palette.common.black,
+                notApplicable: theme.vars.palette.primary.contrastText,
+                notEvaluated: theme.vars.palette.primary.contrastText,
                 probation: theme.vars.palette.info.contrastText,
               }[displayStatus];
 

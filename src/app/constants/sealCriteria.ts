@@ -109,8 +109,8 @@ export function getCriterionStatusColor(
     pass: appTheme.vars.palette.success.main,
     atRisk: appTheme.vars.palette.warning.main,
     fail: appTheme.vars.palette.error.main,
-    notApplicable: appTheme.vars.palette.grey[500],
-    notEvaluated: appTheme.vars.palette.grey[500],
+    notApplicable: appTheme.vars.palette.text.secondary,
+    notEvaluated: appTheme.vars.palette.text.secondary,
     probation: appTheme.vars.palette.info.main,
   }[displayStatus];
 }
@@ -276,7 +276,8 @@ export type CriterionCopyVariant =
   | 'default'
   | 'unstableUrl'
   | 'buildingRecord'
-  | 'notAuthorized';
+  | 'notAuthorized'
+  | 'seasonal';
 
 export interface CriterionCopy {
   variant: CriterionCopyVariant;
@@ -358,6 +359,16 @@ export function getCriterionCopy(
     };
   }
 
+  // `not_applicable` on this criterion only ever means the feed is seasonal.
+  if (key === 'freshRolling' && displayStatus === 'notApplicable') {
+    return {
+      ...base,
+      variant: 'seasonal',
+      subtitleKey: 'criteria.freshRolling.seasonalSubtitle',
+      descriptionKey: 'criteria.freshRolling.seasonalDescription',
+    };
+  }
+
   return { ...base, variant: 'default' };
 }
 
@@ -371,8 +382,10 @@ type Translator = (
 ) => string;
 
 /**
- * "<title> — <status>: <description>" plus any grace-period or seasonal note.
- * Shared by every criterion tooltip / aria-label so they read identically.
+ * "<title> — <status>: <description>" plus any grace-period note. The
+ * description itself already covers the seasonal case (see the `seasonal`
+ * variant in getCriterionCopy). Shared by every criterion tooltip / aria-label
+ * so they read identically.
  *
  * @param t translator for the `feeds` namespace
  * @param tSeal translator for the `sealOfReliability` namespace
@@ -384,7 +397,6 @@ export function getCriterionDescription(
   tSeal: Translator,
   context: SealCriterionContext = {},
 ): string {
-  const key = API_CRITERION_TO_KEY[criterion.criterion];
   const displayStatus = getCriterionDisplayStatus(criterion);
   const copy = getCriterionCopy(criterion, context);
   const statusLabel = t(CRITERION_STATUS_LABEL_KEYS[displayStatus]);
@@ -396,14 +408,7 @@ export function getCriterionDescription(
         })}`
       : '';
 
-  // not_applicable on this criterion only ever means the feed is seasonal -
-  // seasonal feeds are excluded from the rolling 7-day coverage check.
-  const seasonalNote =
-    key === 'freshRolling' && displayStatus === 'notApplicable'
-      ? ` ${t('sealCriterionSeasonalNote')}`
-      : '';
-
   return `${tSeal(copy.titleKey)} — ${statusLabel}: ${tSeal(
     copy.descriptionKey,
-  )}${graceNote}${seasonalNote}`;
+  )}${graceNote}`;
 }

@@ -191,10 +191,10 @@ describe('getCriterionStatusColor', () => {
       theme.vars.palette.info.main,
     );
     expect(getCriterionStatusColor('notApplicable')).toBe(
-      theme.vars.palette.grey[500],
+      theme.vars.palette.text.secondary,
     );
     expect(getCriterionStatusColor('notEvaluated')).toBe(
-      theme.vars.palette.grey[500],
+      theme.vars.palette.text.secondary,
     );
   });
 });
