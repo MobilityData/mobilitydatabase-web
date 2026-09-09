@@ -23,6 +23,7 @@ import {
   type SealCriterionContext,
 } from '../../../constants/sealCriteria';
 import { formatProvidersSorted } from '../Feed.functions';
+import { displayFormattedDate } from '../../../utils/date';
 import SectionContainer from '../../../components/SectionContainer';
 
 interface Props {
@@ -53,6 +54,10 @@ export default async function FeedReliabilityView({
     name: components['schemas']['ReliabilityCriterion']['criterion'],
   ): components['schemas']['ReliabilityCriterion'] | undefined =>
     reliability?.criteria?.find((c) => c.criterion === name);
+
+  const evaluatedAt = displayFormattedDate(
+    reliability?.evaluated_at ?? undefined,
+  );
 
   const officialCriterion = findCriterion('official');
   const stableCriterion = findCriterion('stable');
@@ -85,14 +90,26 @@ export default async function FeedReliabilityView({
                 mt: 3,
               }}
             >
-              <Typography
-                component='h2'
-                variant='h6'
-                sx={{ fontWeight: 700 }}
-                color='secondary'
-              >
-                {t('reliabilityAnalysisTitle')}
-              </Typography>
+              <Box>
+                <Typography
+                  component='h2'
+                  variant='h6'
+                  sx={{ fontWeight: 700 }}
+                  color='secondary'
+                >
+                  {t('reliabilityAnalysisTitle')}
+                </Typography>
+                {evaluatedAt !== '' && (
+                  <Typography
+                    data-testid='seal-analysis-evaluated-at'
+                    variant='caption'
+                    color='text.secondary'
+                    component='div'
+                  >
+                    {t('sealLastEvaluated', { date: evaluatedAt })}
+                  </Typography>
+                )}
+              </Box>
               <AboutSealButton />
             </Box>
 

@@ -296,6 +296,8 @@
     "sealStableUrlExampleLabel": "Exemple d'URL stable",
     "sealStableUrlExample": "https://agency.gov/gtfs/schedule.zip",
     "sealProjectedSealDate": "Date prévue du sceau : {date}",
+    "sealLastEvaluated": "Dernière évaluation : {date} UTC",
+    "sealEarnedOn": "Sceau obtenu : {date}",
     "reliabilityDataPlaceholderWarning": "Les résultats par critère ne sont pas encore disponibles depuis l'API. Le détail ci-dessous est une donnée d'exemple à titre indicatif.",
     "seeDetailPageProviders": "See detail page to view {providersCount} others",
     "openFullValidationReport": "Ouvrir le rapport de validation complet",
