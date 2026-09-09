@@ -107,12 +107,12 @@ export function getCriterionStatusColor(
   displayStatus: CriterionDisplayStatus,
 ): string {
   return {
-    pass: appTheme.vars.palette.success.light,
-    atRisk: appTheme.vars.palette.warning.light,
-    fail: appTheme.vars.palette.error.light,
+    pass: appTheme.vars.palette.success.main,
+    atRisk: appTheme.vars.palette.warning.main,
+    fail: appTheme.vars.palette.error.main,
     notApplicable: appTheme.vars.palette.grey[500],
     notEvaluated: appTheme.vars.palette.grey[500],
-    probation: appTheme.vars.palette.info.light,
+    probation: appTheme.vars.palette.info.main,
   }[displayStatus];
 }
 
@@ -125,12 +125,12 @@ export function getResolvedCriterionStatusColor(
   theme: Theme,
 ): string {
   return {
-    pass: theme.palette.success.light,
-    atRisk: theme.palette.warning.light,
-    fail: theme.palette.error.light,
+    pass: theme.palette.success.main,
+    atRisk: theme.palette.warning.main,
+    fail: theme.palette.error.main,
     notApplicable: theme.palette.grey[500],
     notEvaluated: theme.palette.grey[500],
-    probation: theme.palette.info.light,
+    probation: theme.palette.info.main,
   }[displayStatus];
 }
 

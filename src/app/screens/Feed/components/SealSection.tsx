@@ -135,13 +135,13 @@ export default async function SealSection({
             }}
           >
             {sealStatus === 'earned' && (
-              <CheckCircleIcon color='success' aria-hidden />
+              <CheckCircleIcon color='success' aria-hidden fontSize='large' />
             )}
             {t(SEAL_STATUS_LABEL_KEYS[sealStatus])}
           </Typography>
           <Typography
             data-testid='seal-status-description'
-            variant='body2'
+            variant='body1'
             color='text.secondary'
             sx={{ mt: 0.5 }}
           >
@@ -173,17 +173,7 @@ export default async function SealSection({
                 context,
               );
 
-              // getContrastText picks black for the light success/grey
-              // swatches, but these statuses should always read white on
-              // their fill.
-              const contrastText =
-                displayStatus === 'pass' ||
-                displayStatus === 'notApplicable' ||
-                displayStatus === 'notEvaluated'
-                  ? theme.vars.palette.common.white
-                  : theme.palette.getContrastText(
-                      getResolvedCriterionStatusColor(displayStatus, theme),
-                    );
+              const contrastText = theme.vars.palette.primary.contrastText;
 
               return (
                 <Tooltip
@@ -212,6 +202,19 @@ export default async function SealSection({
               );
             })}
           </Box>
+
+          {hasSeal && reliability.earned_at != null && (
+            <Typography
+              data-testid='seal-earned-on'
+              variant='caption'
+              color='text.secondary'
+              sx={{ mt: 1 }}
+            >
+              {t('sealEarnedOn', {
+                date: formatDateShort(reliability.earned_at),
+              })}
+            </Typography>
+          )}
 
           {probationWindow != undefined && (
             <Box data-testid='probation-progress' sx={{ mt: 3 }}>

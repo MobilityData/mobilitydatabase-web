@@ -182,16 +182,14 @@ describe('getSealDisplayStatus', () => {
 describe('getCriterionStatusColor', () => {
   it('maps each display status to its palette CSS variable', () => {
     expect(getCriterionStatusColor('pass')).toBe(
-      theme.vars.palette.success.light,
+      theme.vars.palette.success.main,
     );
     expect(getCriterionStatusColor('atRisk')).toBe(
-      theme.vars.palette.warning.light,
+      theme.vars.palette.warning.main,
     );
-    expect(getCriterionStatusColor('fail')).toBe(
-      theme.vars.palette.error.light,
-    );
+    expect(getCriterionStatusColor('fail')).toBe(theme.vars.palette.error.main);
     expect(getCriterionStatusColor('probation')).toBe(
-      theme.vars.palette.info.light,
+      theme.vars.palette.info.main,
     );
     expect(getCriterionStatusColor('notApplicable')).toBe(
       theme.vars.palette.grey[500],
@@ -205,16 +203,16 @@ describe('getCriterionStatusColor', () => {
 describe('getResolvedCriterionStatusColor', () => {
   it('maps each display status to a concrete palette color', () => {
     expect(getResolvedCriterionStatusColor('pass', theme)).toBe(
-      theme.palette.success.light,
+      theme.palette.success.main,
     );
     expect(getResolvedCriterionStatusColor('atRisk', theme)).toBe(
-      theme.palette.warning.light,
+      theme.palette.warning.main,
     );
     expect(getResolvedCriterionStatusColor('fail', theme)).toBe(
-      theme.palette.error.light,
+      theme.palette.error.main,
     );
     expect(getResolvedCriterionStatusColor('probation', theme)).toBe(
-      theme.palette.info.light,
+      theme.palette.info.main,
     );
     expect(getResolvedCriterionStatusColor('notApplicable', theme)).toBe(
       theme.palette.grey[500],

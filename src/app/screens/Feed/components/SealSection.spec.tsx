@@ -107,6 +107,44 @@ describe('SealSection', () => {
   });
 });
 
+describe('SealSection earned date', () => {
+  it('shows when the seal was earned while the feed holds it', async () => {
+    await renderSection({
+      feed_id: 'mdb-1',
+      has_seal: true,
+      on_probation: false,
+      earned_at: '2026-01-15T00:00:00Z',
+      criteria: [buildCriterion('official', { status: 'pass' })],
+    });
+
+    expect(screen.getByTestId('seal-earned-on')).toBeInTheDocument();
+  });
+
+  it('omits it once the seal has been lost', async () => {
+    await renderSection({
+      feed_id: 'mdb-1',
+      has_seal: false,
+      on_probation: false,
+      earned_at: '2026-01-15T00:00:00Z',
+      lost_at: '2026-07-20T00:00:00Z',
+      criteria: [buildCriterion('official', { status: 'fail' })],
+    });
+
+    expect(screen.queryByTestId('seal-earned-on')).not.toBeInTheDocument();
+  });
+
+  it('omits it when the feed never earned the seal', async () => {
+    await renderSection({
+      feed_id: 'mdb-1',
+      has_seal: true,
+      on_probation: false,
+      criteria: [buildCriterion('official', { status: 'pass' })],
+    });
+
+    expect(screen.queryByTestId('seal-earned-on')).not.toBeInTheDocument();
+  });
+});
+
 describe('SealSection status description', () => {
   it('describes a fully passing feed', async () => {
     await renderSection({
