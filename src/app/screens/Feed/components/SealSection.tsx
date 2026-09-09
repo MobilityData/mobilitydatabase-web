@@ -12,7 +12,6 @@ import {
   getCriterionDescription,
   getCriterionDisplayStatus,
   getCriterionStatusColor,
-  getResolvedCriterionStatusColor,
   getDaysUntil,
   getGracePeriodCriteria,
   getPassedCriteriaCount,

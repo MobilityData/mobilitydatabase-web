@@ -5,7 +5,6 @@ import {
   getConsideredCriteria,
   getCriterionDisplayStatus,
   getCriterionStatusColor,
-  getResolvedCriterionStatusColor,
   getDaysUntil,
   getPassedCriteriaCount,
   getCriterionCopy,
@@ -196,29 +195,6 @@ describe('getCriterionStatusColor', () => {
     );
     expect(getCriterionStatusColor('notEvaluated')).toBe(
       theme.vars.palette.grey[500],
-    );
-  });
-});
-
-describe('getResolvedCriterionStatusColor', () => {
-  it('maps each display status to a concrete palette color', () => {
-    expect(getResolvedCriterionStatusColor('pass', theme)).toBe(
-      theme.palette.success.main,
-    );
-    expect(getResolvedCriterionStatusColor('atRisk', theme)).toBe(
-      theme.palette.warning.main,
-    );
-    expect(getResolvedCriterionStatusColor('fail', theme)).toBe(
-      theme.palette.error.main,
-    );
-    expect(getResolvedCriterionStatusColor('probation', theme)).toBe(
-      theme.palette.info.main,
-    );
-    expect(getResolvedCriterionStatusColor('notApplicable', theme)).toBe(
-      theme.palette.grey[500],
-    );
-    expect(getResolvedCriterionStatusColor('notEvaluated', theme)).toBe(
-      theme.palette.grey[500],
     );
   });
 });

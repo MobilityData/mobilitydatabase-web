@@ -1,5 +1,4 @@
 import { type SvgIconComponent } from '@mui/icons-material';
-import { type Theme } from '@mui/material/styles';
 import { differenceInCalendarDays, isAfter, subMonths } from 'date-fns';
 import { theme as appTheme } from '../Theme';
 import { formatDateShort } from '../utils/date';
@@ -113,24 +112,6 @@ export function getCriterionStatusColor(
     notApplicable: appTheme.vars.palette.grey[500],
     notEvaluated: appTheme.vars.palette.grey[500],
     probation: appTheme.vars.palette.info.main,
-  }[displayStatus];
-}
-
-/**
- * The same color resolved to a concrete value. Only for computations that have
- * to read the color itself - `getContrastText` can't parse a CSS variable.
- */
-export function getResolvedCriterionStatusColor(
-  displayStatus: CriterionDisplayStatus,
-  theme: Theme,
-): string {
-  return {
-    pass: theme.palette.success.main,
-    atRisk: theme.palette.warning.main,
-    fail: theme.palette.error.main,
-    notApplicable: theme.palette.grey[500],
-    notEvaluated: theme.palette.grey[500],
-    probation: theme.palette.info.main,
   }[displayStatus];
 }
 
