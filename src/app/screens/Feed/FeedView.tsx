@@ -37,6 +37,7 @@ import {
 import dynamic from 'next/dynamic';
 import { ContentBox } from '../../components/ContentBox';
 import { getRemoteConfigValues } from '../../../lib/remote-config.server';
+import SectionContainer from '../../components/SectionContainer';
 
 const CoveredAreaMap = dynamic(
   async () =>
@@ -94,12 +95,15 @@ export default async function FeedView({
   isMobilityDatabaseAdmin = false,
 }: Props): Promise<React.ReactElement> {
   if (feed == undefined) notFound();
-
   const [t, tGbfs, config] = await Promise.all([
     getTranslations('feeds'),
     getTranslations('gbfs'),
     getRemoteConfigValues(),
   ]);
+
+  // Pinned on the server so the six-month "building record" branch in the
+  // criterion copy resolves to the same instant during SSR and hydration.
+  const now = new Date();
 
   // Basic derived data
   const sortedProviders = formatProvidersSorted(feed.provider ?? '');
@@ -152,18 +156,7 @@ export default async function FeedView({
       <ScrollToTop />
       <CssBaseline />
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-        <Box
-          sx={{
-            width: '100%',
-            bgcolor: 'background.paper',
-            borderRadius: '6px 0px 0px 6px',
-            p: 3,
-            color: 'text.primary',
-            fontSize: '18px',
-            fontWeight: 700,
-            position: 'relative',
-          }}
-        >
+        <SectionContainer maxWidth='xl'>
           <Box sx={{ position: 'relative' }}>
             <FeedDetailHeader feed={feed} sortedProviders={sortedProviders} />
 
@@ -282,6 +275,7 @@ export default async function FeedView({
                     routeTypes={routeTypes}
                     enableSealOfReliability={config.enableSealOfReliability}
                     reliability={reliability}
+                    now={now}
                   />
                 </Box>
                 {feed?.data_type === 'gtfs_rt' && (
@@ -308,7 +302,7 @@ export default async function FeedView({
               </Grid>
             )}
           </Box>
-        </Box>
+        </SectionContainer>
       </Box>
       <Box
         sx={{

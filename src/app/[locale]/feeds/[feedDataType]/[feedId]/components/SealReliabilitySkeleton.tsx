@@ -13,7 +13,14 @@ export default function SealReliabilitySkeleton(): React.ReactElement {
     <Container
       component='main'
       maxWidth='xl'
-      sx={{ my: 4, bgcolor: 'background.paper', py: 2, borderRadius: 2, px: 1, mx: 'auto' }}
+      sx={{
+        my: 4,
+        bgcolor: 'background.paper',
+        py: 2,
+        borderRadius: 2,
+        px: 1,
+        mx: 'auto',
+      }}
     >
       <Box>
         {/* Breadcrumb skeleton */}

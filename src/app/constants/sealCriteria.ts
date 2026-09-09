@@ -1,6 +1,7 @@
 import { type SvgIconComponent } from '@mui/icons-material';
 import { type Theme } from '@mui/material/styles';
 import { differenceInCalendarDays, isAfter, subMonths } from 'date-fns';
+import { theme as appTheme } from '../Theme';
 import { formatDateShort } from '../utils/date';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import CodeIcon from '@mui/icons-material/Code';
@@ -97,7 +98,29 @@ export function getCriterionDisplayStatus(
   }
 }
 
+/**
+ * The criterion's color as a CSS variable, so a caller doesn't need the theme
+ * in hand - which keeps presentational components off the client - and so the
+ * color follows whichever scheme is active.
+ */
 export function getCriterionStatusColor(
+  displayStatus: CriterionDisplayStatus,
+): string {
+  return {
+    pass: appTheme.vars.palette.success.light,
+    atRisk: appTheme.vars.palette.warning.light,
+    fail: appTheme.vars.palette.error.light,
+    notApplicable: appTheme.vars.palette.grey[500],
+    notEvaluated: appTheme.vars.palette.grey[500],
+    probation: appTheme.vars.palette.info.light,
+  }[displayStatus];
+}
+
+/**
+ * The same color resolved to a concrete value. Only for computations that have
+ * to read the color itself - `getContrastText` can't parse a CSS variable.
+ */
+export function getResolvedCriterionStatusColor(
   displayStatus: CriterionDisplayStatus,
   theme: Theme,
 ): string {
@@ -260,9 +283,9 @@ export interface SealCriterionContext {
   /** `feed.created_at` - when the URL entered the Mobility Database */
   feedCreatedAt?: string | null;
   /**
-   * The date to evaluate against. Pass the client's clock (see
-   * `useClientDate`) so a cached page can't pin a date-derived branch to the
-   * day it was rendered on. Defaults to the current date.
+   * The date to evaluate against. Pin this once on the server and thread it
+   * through, so a date-derived branch resolves to the same instant during SSR
+   * and hydration. Defaults to the current date.
    */
   now?: Date;
 }

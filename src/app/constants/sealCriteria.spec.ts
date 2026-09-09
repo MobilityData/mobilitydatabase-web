@@ -5,6 +5,7 @@ import {
   getConsideredCriteria,
   getCriterionDisplayStatus,
   getCriterionStatusColor,
+  getResolvedCriterionStatusColor,
   getDaysUntil,
   getPassedCriteriaCount,
   getCriterionCopy,
@@ -179,23 +180,46 @@ describe('getSealDisplayStatus', () => {
 });
 
 describe('getCriterionStatusColor', () => {
-  it('maps each display status to its palette color', () => {
-    expect(getCriterionStatusColor('pass', theme)).toBe(
+  it('maps each display status to its palette CSS variable', () => {
+    expect(getCriterionStatusColor('pass')).toBe(
+      theme.vars.palette.success.light,
+    );
+    expect(getCriterionStatusColor('atRisk')).toBe(
+      theme.vars.palette.warning.light,
+    );
+    expect(getCriterionStatusColor('fail')).toBe(
+      theme.vars.palette.error.light,
+    );
+    expect(getCriterionStatusColor('probation')).toBe(
+      theme.vars.palette.info.light,
+    );
+    expect(getCriterionStatusColor('notApplicable')).toBe(
+      theme.vars.palette.grey[500],
+    );
+    expect(getCriterionStatusColor('notEvaluated')).toBe(
+      theme.vars.palette.grey[500],
+    );
+  });
+});
+
+describe('getResolvedCriterionStatusColor', () => {
+  it('maps each display status to a concrete palette color', () => {
+    expect(getResolvedCriterionStatusColor('pass', theme)).toBe(
       theme.palette.success.light,
     );
-    expect(getCriterionStatusColor('atRisk', theme)).toBe(
+    expect(getResolvedCriterionStatusColor('atRisk', theme)).toBe(
       theme.palette.warning.light,
     );
-    expect(getCriterionStatusColor('fail', theme)).toBe(
+    expect(getResolvedCriterionStatusColor('fail', theme)).toBe(
       theme.palette.error.light,
     );
-    expect(getCriterionStatusColor('probation', theme)).toBe(
+    expect(getResolvedCriterionStatusColor('probation', theme)).toBe(
       theme.palette.info.light,
     );
-    expect(getCriterionStatusColor('notApplicable', theme)).toBe(
+    expect(getResolvedCriterionStatusColor('notApplicable', theme)).toBe(
       theme.palette.grey[500],
     );
-    expect(getCriterionStatusColor('notEvaluated', theme)).toBe(
+    expect(getResolvedCriterionStatusColor('notEvaluated', theme)).toBe(
       theme.palette.grey[500],
     );
   });

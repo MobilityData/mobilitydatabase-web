@@ -72,6 +72,8 @@ export interface FeedSummaryProps {
   routeTypes?: string[];
   enableSealOfReliability?: boolean;
   reliability?: components['schemas']['FeedReliabilityReport'];
+  /** Server-pinned "now" for date-derived criterion copy. */
+  now: Date;
 }
 
 export default function FeedSummary({
@@ -83,6 +85,7 @@ export default function FeedSummary({
   totalRoutes,
   enableSealOfReliability = false,
   reliability,
+  now,
 }: FeedSummaryProps): React.ReactElement {
   const t = useTranslations('feeds');
   const tCommon = useTranslations('common');
@@ -671,6 +674,7 @@ export default function FeedSummary({
             criterionContext={{
               isProducerUrlUnstable: feed.source_info?.is_producer_url_unstable,
               feedCreatedAt: feed.created_at,
+              now,
             }}
           />
         </Card>

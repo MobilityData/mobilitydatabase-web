@@ -117,7 +117,7 @@ export default function SealQualitySummary({
                 const CriterionIcon = SEAL_CRITERION_ICONS[key];
                 const displayStatus = getCriterionDisplayStatus(criterion);
 
-                const color = getCriterionStatusColor(displayStatus, theme);
+                const color = getCriterionStatusColor(displayStatus);
                 const criterionDescription = getCriterionDescription(
                   criterion,
                   t,
