@@ -24,7 +24,7 @@ export default async function AuthedFeedReliabilityPage({
     fetchAuthedSealAnalysisData(feedDataType, feedId),
   ]);
 
-  if (feedData == null) notFound()
+  if (feedData == null) notFound();
 
   if (sealAnalysis?.reliabilityError === true) {
     throw new Error(

@@ -2,11 +2,7 @@ import FeedReliabilityView from '../../../../../../screens/Feed/components/FeedR
 import { type ReactElement } from 'react';
 import { notFound } from 'next/navigation';
 import { fetchGuestFeedData } from '../../lib/guest-feed-data';
-import { type FeedDataResult } from '../../lib/feed-data-shared';
-import {
-  fetchGuestSealAnalysisData,
-  type SealAnalysisData,
-} from '../../lib/seal-analysis-data';
+import { fetchGuestSealAnalysisData } from '../../lib/seal-analysis-data';
 
 interface Props {
   params: Promise<{ feedDataType: string; feedId: string }>;
@@ -37,23 +33,31 @@ export default async function StaticFeedReliabilityPage({
 }: Props): Promise<ReactElement> {
   const { feedId, feedDataType } = await params;
 
-  let feedData: FeedDataResult;
-  let sealAnalysis: SealAnalysisData | undefined;
-  try {
-    const [fetchedFeed, fetchedSeal] = await Promise.all([
-      fetchGuestFeedData(feedDataType, feedId),
-      fetchGuestSealAnalysisData(feedDataType, feedId),
-    ]);
-    feedData = fetchedFeed;
-    sealAnalysis = fetchedSeal;
-  } catch (e) {
+  // Settled rather than all-or-nothing: the two requests fail for unrelated
+  // reasons and need unrelated responses. A missing feed is a 404; a seal
+  // loader that can't mint a token, read Remote Config, or reach its cache is
+  // a reliability error on a page that does exist.
+  const [feedResult, sealResult] = await Promise.allSettled([
+    fetchGuestFeedData(feedDataType, feedId),
+    fetchGuestSealAnalysisData(feedDataType, feedId),
+  ]);
+
+  if (feedResult.status === 'rejected') {
     // Layout should have caught non-existent feeds, but handle edge case
     console.error(
       `[StaticFeedReliabilityPage] Failed to fetch feed ${feedId}:`,
-      e,
+      feedResult.reason,
     );
     notFound();
   }
+
+  // Rethrown as-is so this segment's error.tsx renders the full-page
+  // reliability error, and the original cause keeps its stack.
+  if (sealResult.status === 'rejected') {
+    throw sealResult.reason;
+  }
+
+  const sealAnalysis = sealResult.value;
 
   if (sealAnalysis?.reliabilityError === true) {
     throw new Error(
@@ -62,6 +66,9 @@ export default async function StaticFeedReliabilityPage({
   }
 
   return (
-    <FeedReliabilityView feed={feedData.feed} sealAnalysis={sealAnalysis} />
+    <FeedReliabilityView
+      feed={feedResult.value.feed}
+      sealAnalysis={sealAnalysis}
+    />
   );
 }
