@@ -2,6 +2,7 @@ import FeedReliabilityView from '../../../../../../screens/Feed/components/FeedR
 import { type ReactElement } from 'react';
 import { fetchCompleteFeedData } from '../../lib/feed-data';
 import { fetchAuthedSealAnalysisData } from '../../lib/seal-analysis-data';
+import { notFound } from 'next/navigation';
 
 interface Props {
   params: Promise<{ feedDataType: string; feedId: string }>;
@@ -23,9 +24,7 @@ export default async function AuthedFeedReliabilityPage({
     fetchAuthedSealAnalysisData(feedDataType, feedId),
   ]);
 
-  if (feedData == null) {
-    return <div>Feed not found</div>;
-  }
+  if (feedData == null) notFound()
 
   if (sealAnalysis?.reliabilityError === true) {
     throw new Error(
