@@ -19,6 +19,14 @@ export default async function AuthedFeedReliabilityPage({
 }: Props): Promise<ReactElement> {
   const { feedId, feedDataType } = await params;
 
+  // Seal of Reliability only exists for GTFS Schedule feeds (see
+  // isSealAnalysisApplicable in lib/seal-analysis-data.ts).
+  if (feedDataType !== 'gtfs') {
+    throw new Error(
+      `Seal of Reliability is not available for data type ${feedDataType}`,
+    );
+  }
+
   const [feedData, sealAnalysis] = await Promise.all([
     fetchCompleteFeedData(feedDataType, feedId),
     fetchAuthedSealAnalysisData(feedDataType, feedId),

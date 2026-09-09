@@ -33,6 +33,14 @@ export default async function StaticFeedReliabilityPage({
 }: Props): Promise<ReactElement> {
   const { feedId, feedDataType } = await params;
 
+  // Seal of Reliability only exists for GTFS Schedule feeds (see
+  // isSealAnalysisApplicable in lib/seal-analysis-data.ts).
+  if (feedDataType !== 'gtfs') {
+    throw new Error(
+      `Seal of Reliability is not available for data type ${feedDataType}`,
+    );
+  }
+
   // Settled rather than all-or-nothing: the two requests fail for unrelated
   // reasons and need unrelated responses. A missing feed is a 404; a seal
   // loader that can't mint a token, read Remote Config, or reach its cache is
