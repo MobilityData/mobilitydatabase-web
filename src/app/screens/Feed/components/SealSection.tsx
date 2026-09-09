@@ -172,7 +172,14 @@ export default async function SealSection({
                 context,
               );
 
-              const contrastText = theme.vars.palette.primary.contrastText;
+              const contrastText = {
+                pass: theme.vars.palette.success.contrastText,
+                atRisk: theme.vars.palette.warning.contrastText,
+                fail: theme.vars.palette.error.contrastText,
+                notApplicable: theme.vars.palette.common.black,
+                notEvaluated: theme.vars.palette.common.black,
+                probation: theme.vars.palette.info.contrastText,
+              }[displayStatus];
 
               return (
                 <Tooltip
