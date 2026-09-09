@@ -164,9 +164,7 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
             <Typography variant='body1'>
               {t('official.assessmentIntro')}
             </Typography>
-            <BulletList
-              items={t.raw('official.assessmentItems') as string[]}
-            />
+            <BulletList items={t.raw('official.assessmentItems') as string[]} />
             {officialParagraphs.slice(1).map((paragraph) => (
               <Typography variant='body1' key={paragraph}>
                 <RichText text={paragraph} />
@@ -187,9 +185,7 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
             <Typography variant='body1'>
               {t('stable.urlPatternsIntro')}
             </Typography>
-            <BulletList
-              items={t.raw('stable.urlPatterns') as string[]}
-            />
+            <BulletList items={t.raw('stable.urlPatterns') as string[]} />
             <Typography variant='body1'>{t('stable.redirectNote')}</Typography>
             <Alert severity='info'>{t('stable.notice')}</Alert>
           </Box>
