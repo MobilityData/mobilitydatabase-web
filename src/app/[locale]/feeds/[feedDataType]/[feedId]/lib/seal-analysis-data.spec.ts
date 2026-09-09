@@ -105,15 +105,20 @@ describe('fetchGuestSealAnalysisData', () => {
     );
   });
 
-  it('flags reliabilityError when the reliability call fails', async () => {
+  it('discards the whole entry when the reliability call fails', async () => {
     mockGetGtfsFeedReliability.mockRejectedValue(new Error('network error'));
 
     const result = await fetchGuestSealAnalysisData('gtfs', 'mdb-1');
 
     expect(result?.reliabilityError).toBe(true);
     expect(result?.reliability).toBeUndefined();
-    // The supporting history still came back and is still usable.
-    expect(result?.availability).toEqual(availability);
+    // The loader throws inside unstable_cache so a transient failure isn't
+    // held for the 6 hour TTL, and the rescue rebuilds the result from
+    // nothing - so the history that did come back goes with it. Both seal
+    // pages throw to their error boundary on reliabilityError, so none of it
+    // would have rendered anyway.
+    expect(result?.availability).toBeUndefined();
+    expect(result?.continuousCoverage).toBeUndefined();
   });
 
   it('degrades a failed history call without flagging reliabilityError', async () => {
