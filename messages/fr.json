@@ -732,6 +732,14 @@
       "riskAwareness": {
         "question": "En tant que producteur de données, comment savoir si je risque de perdre le Sceau ?",
         "answer": "La meilleure façon est de consulter le statut de votre flux sur la Mobility Database 1 à 2 fois par mois. Notre équipe travaille sur des notifications par courriel, afin qu'à l'avenir vous puissiez être averti dès l'entrée en période de grâce."
+      },
+      "thresholds": {
+        "question": "How did you select the thresholds for each criteria and grace period?",
+        "answer": "Placeholder answer for threshold selection."
+      },
+      "freshRolling7Days": {
+        "question": "Why did you choose 7 days for the freshness: rolling coverage criteria?",
+        "answer": "Placeholder answer for the 7-day freshness rolling coverage threshold."
       }
     },
     "howItIsCalculated": {
@@ -757,10 +765,18 @@
       "official": {
         "title": "Officiel",
         "paragraphs": [
-          "Un flux est Officiel lorsque MobilityData a confirmé qu'il est autorisé par l'agence de transport. Cela signifie qu'il est publié par l'agence elle-même ou en son nom. MobilityData évalue ce point à partir du domaine de l'URL du producteur, des informations personnelles du contributeur ayant soumis le flux, du site web de l'agence et du fichier `feed_info.txt`. Cette détermination est faite manuellement et ne change pas en fonction de vérifications automatisées.",
+          "Un flux est Officiel lorsque MobilityData a confirmé qu'il est autorisé par l'agence de transport. Cela signifie qu'il est publié par l'agence elle-même ou en son nom.",
+          "Cette détermination est faite manuellement et ne change pas en fonction de vérifications automatisées.",
           "Contrairement aux cinq autres critères, le statut Officiel n'est pas soumis à la période probatoire de six mois."
         ],
-        "notice": "Il n'y a pas de période de grâce pour le critère Officiel. La désignation est soit confirmée, soit elle ne l'est pas."
+        "notice": "Il n'y a pas de période de grâce pour le critère Officiel. La désignation est soit confirmée, soit elle ne l'est pas.",
+        "assessmentIntro": "MobilityData évalue ce point à partir de :",
+        "assessmentItems": [
+          "Le domaine de l'URL du producteur",
+          "Les informations personnelles du contributeur ayant soumis le flux",
+          "Le site web de l'agence",
+          "Le fichier `feed_info.txt`"
+        ]
       },
       "stable": {
         "title": "Stable",
@@ -769,13 +785,26 @@
           "La même URL sert le flux sans redirection depuis au moins six mois",
           "L'URL semble permanente, c'est-à-dire qu'elle ne ressemble pas à un chemin de fichier temporaire comportant des dates, des heures ou des saisons"
         ],
-        "notice": "Il n'y a pas de période de grâce pour le critère Stable. Si l'URL change, le critère échoue immédiatement et la période probatoire de six mois repart à la date à laquelle la nouvelle URL est ajoutée en tant que nouveau flux."
+        "notice": "Il n'y a pas de période de grâce pour le critère Stable. Si l'URL change, le critère échoue immédiatement et la période probatoire de six mois repart à la date à laquelle la nouvelle URL est ajoutée en tant que nouveau flux.",
+        "urlPatternsIntro": "Exemples de modèles d'URL qui échoueraient :",
+        "urlPatterns": [
+          "Des dates dans n'importe quel format (ex. : https://opendata.bratislava.sk/dataset/download/cestovny-poriadok-20220725/1)",
+          "Des slugs saisonniers (ex. : `/summer-2024/`, `/winter-schedule/`)",
+          "Des numéros de version ou des horodatages dans le nom du fichier"
+        ],
+        "redirectNote": "Une redirection permanente (301) d'une ancienne URL vers une nouvelle satisfait le critère Stable."
       },
       "available": {
         "title": "Disponible",
-        "description": "Une fois par jour, la Mobility Database tente de télécharger le flux depuis l'URL de son producteur. Une récupération est considérée comme réussie lorsque la réponse HTTP se situe dans la plage 200.",
+        "description": "Une fois par jour, la Mobility Database tente de télécharger le flux depuis l'URL de son producteur.",
         "noticeTitle": "Période de grâce de 14 jours.",
-        "notice": "En cas d'échec de récupération, les producteurs disposent de 14 jours pour rétablir l'accès. Si le flux reste inaccessible après 14 jours, le Sceau est retiré."
+        "notice": "En cas d'échec de récupération, les producteurs disposent de 14 jours pour rétablir l'accès. Si le flux reste inaccessible après 14 jours, le Sceau est retiré.",
+        "descriptionFetchIntro": "Une récupération est considérée comme réussie lorsque la réponse retourne :",
+        "descriptionFetchItems": [
+          "Une réponse HTTP dans la plage 200",
+          "Une redirection (301, 302, 303, 307 ou 308) qui résout vers le flux à une autre URL",
+          "Une réponse 304 Non Modifié indiquant que le contenu du flux est inchangé"
+        ]
       },
       "compliant": {
         "title": "Conforme",

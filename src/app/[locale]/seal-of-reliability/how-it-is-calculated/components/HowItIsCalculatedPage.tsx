@@ -158,7 +158,16 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
             {t('official.title')}
           </Typography>
           <Box sx={criterionBodyStyle}>
-            {officialParagraphs.map((paragraph) => (
+            <Typography variant='body1'>
+              <RichText text={officialParagraphs[0]} />
+            </Typography>
+            <Typography variant='body1'>
+              {t('official.assessmentIntro')}
+            </Typography>
+            <BulletList
+              items={t.raw('official.assessmentItems') as string[]}
+            />
+            {officialParagraphs.slice(1).map((paragraph) => (
               <Typography variant='body1' key={paragraph}>
                 <RichText text={paragraph} />
               </Typography>
@@ -175,6 +184,13 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
           <Box sx={criterionBodyStyle}>
             <Typography variant='body1'>{t('stable.description')}</Typography>
             <BulletList items={stableItems} />
+            <Typography variant='body1'>
+              {t('stable.urlPatternsIntro')}
+            </Typography>
+            <BulletList
+              items={t.raw('stable.urlPatterns') as string[]}
+            />
+            <Typography variant='body1'>{t('stable.redirectNote')}</Typography>
             <Alert severity='info'>{t('stable.notice')}</Alert>
           </Box>
         </SectionContainer>
@@ -188,6 +204,12 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
             <Typography variant='body1'>
               {t('available.description')}
             </Typography>
+            <Typography variant='body1'>
+              {t('available.descriptionFetchIntro')}
+            </Typography>
+            <BulletList
+              items={t.raw('available.descriptionFetchItems') as string[]}
+            />
             <Alert severity='warning'>
               <AlertTitle>{t('available.noticeTitle')}</AlertTitle>
               {t('available.notice')}
