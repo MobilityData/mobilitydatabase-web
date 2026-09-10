@@ -334,6 +334,8 @@
     "sealAvailabilityProbationUndated": "Fetches are succeeding again. This criterion is rebuilding its six-month record after a confirmed failure.",
     "sealAvailabilityNotApplicable": "Daily availability checks don't apply to this feed.",
     "sealAvailabilityNoData": "No availability checks have been recorded for this feed yet.",
+    "sealAvailabilityError": "Availability history could not be loaded right now.",
+    "sealAvailabilityErrorDescription": "We couldn't load this feed's daily fetch history. Please try again later.",
     "sealAvailabilitySuccessfulDays": "{count, plural, one {# successful day} other {# successful days}}",
     "sealAvailabilityFailedDays": "{count, plural, one {# failed day} other {# failed days}}",
     "sealAvailabilityUncheckedDays": "{count, plural, one {# day not checked} other {# days not checked}}",

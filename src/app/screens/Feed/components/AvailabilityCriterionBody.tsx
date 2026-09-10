@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Alert, Box, Typography } from '@mui/material';
 import CircleIcon from '@mui/icons-material/Circle';
 import { getTranslations } from 'next-intl/server';
 import AvailabilityHeatmap from './AvailabilityHeatmap';
@@ -29,6 +29,7 @@ export interface AvailabilityCriterionBodyProps {
   calendar: AvailabilityCalendar;
   /** Pinned by the page so every date-derived branch agrees. */
   now: Date;
+  availabilityError?: boolean;
 }
 
 /**
@@ -40,9 +41,15 @@ export default async function AvailabilityCriterionBody({
   criterion,
   calendar,
   now,
+  availabilityError = false,
 }: AvailabilityCriterionBodyProps): Promise<React.ReactElement> {
   const t = await getTranslations('feeds');
-  const summary = getAvailabilitySummary(criterion, calendar, now);
+  const summary = getAvailabilitySummary(
+    criterion,
+    calendar,
+    now,
+    availabilityError,
+  );
   const hasHistory = calendar.successCount + calendar.failureCount > 0;
 
   // Probation excludes a grace period, so only one of these ever renders -
@@ -73,6 +80,12 @@ export default async function AvailabilityCriterionBody({
           probationWindow={probationWindow}
           now={now}
         />
+      )}
+
+      {availabilityError && (
+        <Alert data-testid='availability-error' severity='error' sx={{ mt: 2 }}>
+          {t('sealAvailabilityErrorDescription')}
+        </Alert>
       )}
 
       {hasHistory && (

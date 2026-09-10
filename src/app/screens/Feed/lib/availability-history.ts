@@ -226,6 +226,7 @@ export function getAvailabilitySummary(
   criterion: ReliabilityCriterion,
   calendar: AvailabilityCalendar,
   now: Date = new Date(),
+  availabilityError = false,
 ): AvailabilitySummary {
   const displayStatus = getCriterionDisplayStatus(criterion);
   const graceDays = AVAILABILITY_GRACE_DAYS;
@@ -269,7 +270,12 @@ export function getAvailabilitySummary(
     displayStatus === 'notEvaluated' ||
     calendar.successCount + calendar.failureCount === 0
   ) {
-    return { key: 'sealAvailabilityNoData', values: {} };
+    // An empty calendar means either "nothing recorded yet" or "the history
+    // fetch just failed" - `availabilityError` tells them apart so the copy
+    // doesn't claim a feed has no record when it simply couldn't be loaded.
+    return availabilityError
+      ? { key: 'sealAvailabilityError', values: {} }
+      : { key: 'sealAvailabilityNoData', values: {} };
   }
   if (calendar.failureCount === 0) {
     return { key: 'sealAvailabilityNoFailures', values: {} };

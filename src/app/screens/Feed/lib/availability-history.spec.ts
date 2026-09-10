@@ -253,6 +253,14 @@ describe('getAvailabilitySummary', () => {
     ).toBe('sealAvailabilityNoData');
   });
 
+  it('reads as an error, not as no data, when the history fetch failed', () => {
+    const empty = buildAvailabilityCalendar([], { now: NOW, months: 1 });
+
+    expect(getAvailabilitySummary(criterion(), empty, NOW, true).key).toBe(
+      'sealAvailabilityError',
+    );
+  });
+
   it('withdraws the criterion when it does not apply', () => {
     expect(
       getAvailabilitySummary(

@@ -81,21 +81,29 @@ describe('fetchGuestSealAnalysisData', () => {
       availability: flattenedAvailability,
       continuousCoverage: coverage,
       reliabilityError: false,
+      availabilityError: false,
     });
   });
 
-  it('caches on the feed id alone, with a 6 hour TTL', async () => {
+  it('caches each endpoint separately on the feed id alone, with a 6 hour TTL', async () => {
     await fetchGuestSealAnalysisData('gtfs', 'mdb-1');
 
     expect(SEAL_ANALYSIS_REVALIDATE).toBe(21600);
-    // Key excludes the caller so guest and authed share one entry.
-    expect(mockUnstableCache).toHaveBeenCalledWith(
-      ['seal-analysis-mdb-1'],
-      expect.objectContaining({
-        revalidate: 21600,
-        tags: ['feed-mdb-1', 'seal-analysis'],
-      }),
-    );
+    // Keys exclude the caller so guest and authed share the same entries.
+    expect(mockUnstableCache).toHaveBeenCalledTimes(3);
+    for (const key of [
+      'seal-analysis-reliability-mdb-1',
+      'seal-analysis-availability-mdb-1',
+      'seal-analysis-coverage-mdb-1',
+    ]) {
+      expect(mockUnstableCache).toHaveBeenCalledWith(
+        [key],
+        expect.objectContaining({
+          revalidate: 21600,
+          tags: ['feed-mdb-1', 'seal-analysis'],
+        }),
+      );
+    }
   });
 
   it('requests six months of availability and the newest coverage page', async () => {
@@ -162,32 +170,44 @@ describe('fetchGuestSealAnalysisData', () => {
     expect(result?.availability?.checks).toHaveLength(200);
   });
 
-  it('discards the whole entry when the reliability call fails', async () => {
+  it('flags reliabilityError without discarding the other endpoints', async () => {
     mockGetGtfsFeedReliability.mockRejectedValue(new Error('network error'));
 
     const result = await fetchGuestSealAnalysisData('gtfs', 'mdb-1');
 
     expect(result?.reliabilityError).toBe(true);
     expect(result?.reliability).toBeUndefined();
-    // The loader throws inside unstable_cache so a transient failure isn't
-    // held for the 6 hour TTL, and the rescue rebuilds the result from
-    // nothing - so the history that did come back goes with it. Both seal
-    // pages throw to their error boundary on reliabilityError, so none of it
-    // would have rendered anyway.
-    expect(result?.availability).toBeUndefined();
-    expect(result?.continuousCoverage).toBeUndefined();
+    // Each endpoint has its own cache entry, so a failed reliability call
+    // isn't held for the 6 hour TTL, and it doesn't take the sibling
+    // endpoints' successful, independently-cached results down with it. Both
+    // seal pages still throw to their error boundary on reliabilityError
+    // regardless, so none of this would render anyway.
+    expect(result?.availability).toEqual(flattenedAvailability);
+    expect(result?.continuousCoverage).toEqual(coverage);
   });
 
-  it('degrades a failed history call without flagging reliabilityError', async () => {
+  it('flags availabilityError without discarding reliability or coverage', async () => {
     mockGetGtfsFeedAvailability.mockRejectedValue(new Error('boom'));
-    mockGetGtfsFeedContinuousCoverage.mockRejectedValue(new Error('boom'));
 
     const result = await fetchGuestSealAnalysisData('gtfs', 'mdb-1');
 
     expect(result?.availability).toBeUndefined();
-    expect(result?.continuousCoverage).toBeUndefined();
+    expect(result?.availabilityError).toBe(true);
+    expect(result?.continuousCoverage).toEqual(coverage);
     expect(result?.reliabilityError).toBe(false);
     expect(result?.reliability).toEqual(report);
+  });
+
+  it('degrades a failed continuous-coverage call without flagging any error', async () => {
+    mockGetGtfsFeedContinuousCoverage.mockRejectedValue(new Error('boom'));
+
+    const result = await fetchGuestSealAnalysisData('gtfs', 'mdb-1');
+
+    expect(result?.continuousCoverage).toBeUndefined();
+    expect(result?.reliabilityError).toBe(false);
+    expect(result?.availabilityError).toBe(false);
+    expect(result?.reliability).toEqual(report);
+    expect(result?.availability).toEqual(flattenedAvailability);
   });
 
   it('fetches nothing when the seal feature flag is off', async () => {

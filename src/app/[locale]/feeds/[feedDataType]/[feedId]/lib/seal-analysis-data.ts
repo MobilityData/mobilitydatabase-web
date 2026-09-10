@@ -1,8 +1,9 @@
 /**
  * Seal of Reliability data fetching for the dedicated seal-of-reliability
  *
- * The cache key is the feed id alone, so a single entry is shared across
- * requests and users, guest and authenticated alike.
+ * Each of the three endpoints below has its own cache entry, keyed by feed id
+ * alone, so each is shared across requests and users, guest and authenticated
+ * alike.
  */
 
 import 'server-only';
@@ -116,16 +117,89 @@ export interface SealAnalysisData {
    * has no verdict yet", which comes back as a successful response.
    */
   reliabilityError: boolean;
+  availabilityError: boolean;
+}
+
+/**
+ * Cache entries below are keyed by feed id only - the analysis describes the
+ * feed, not the caller - so guests and authenticated users read the same
+ * entries. The credentials are closed over purely to authenticate the calls
+ * and are intentionally excluded from the key.
+ *
+ * Each endpoint gets its own `unstable_cache` entry rather than one entry for
+ * all three. `unstable_cache` never persists a rejected call, so keeping them
+ * separate means a failing endpoint simply isn't cached - and retries on the
+ * next request - without discarding a sibling endpoint's successful, and
+ * cacheable, result.
+ */
+function cachedReliability(
+  feedId: string,
+  accessToken: string,
+  userContextJwt: string | undefined,
+): () => Promise<ReliabilityReport | undefined> {
+  return unstable_cache(
+    async () =>
+      await getGtfsFeedReliability(feedId, accessToken, userContextJwt),
+    [`seal-analysis-reliability-${feedId}`],
+    {
+      tags: [`feed-${feedId}`, 'seal-analysis'],
+      revalidate: SEAL_ANALYSIS_REVALIDATE,
+    },
+  );
+}
+
+function cachedAvailability(
+  feedId: string,
+  accessToken: string,
+  userContextJwt: string | undefined,
+): () => Promise<AvailabilityResponse | undefined> {
+  return unstable_cache(
+    async () =>
+      await fetchAvailabilityHistory(
+        feedId,
+        accessToken,
+        userContextJwt,
+        new Date(),
+      ),
+    [`seal-analysis-availability-${feedId}`],
+    {
+      tags: [`feed-${feedId}`, 'seal-analysis'],
+      revalidate: SEAL_ANALYSIS_REVALIDATE,
+    },
+  );
+}
+
+function cachedContinuousCoverage(
+  feedId: string,
+  accessToken: string,
+  userContextJwt: string | undefined,
+): () => Promise<ContinuousCoverageResponse | undefined> {
+  return unstable_cache(
+    async () =>
+      await getGtfsFeedContinuousCoverage(
+        feedId,
+        accessToken,
+        { limit: HISTORY_LIMIT },
+        userContextJwt,
+      ),
+    [`seal-analysis-coverage-${feedId}`],
+    {
+      tags: [`feed-${feedId}`, 'seal-analysis'],
+      revalidate: SEAL_ANALYSIS_REVALIDATE,
+    },
+  );
 }
 
 /**
  * Fetch the three seal endpoints together.
  *
  * `allSettled`, not `all`: the availability and continuous-coverage history
- * are supporting detail, so one of them failing degrades to `undefined`
- * rather than taking down a page that can still show the criteria. Only the
- * reliability breakdown reports failure, via `reliabilityError`, because the
- * seal page has nothing to render without it.
+ * are supporting detail, so one of them failing degrades to `undefined` (with
+ * its own `*Error` flag, for availability) rather than taking down a page
+ * that can still show the criteria. Only the reliability breakdown ever
+ * bubbles up as a thrown error past the exported loaders, because the seal
+ * page has nothing to render without it - see `fetchGuestSealAnalysisData`
+ * and `fetchAuthedSealAnalysisData`.
  */
 async function fetchSealAnalysisImpl(
   feedId: string,
@@ -134,14 +208,9 @@ async function fetchSealAnalysisImpl(
 ): Promise<SealAnalysisData> {
   const [reliabilityResult, availabilityResult, coverageResult] =
     await Promise.allSettled([
-      getGtfsFeedReliability(feedId, accessToken, userContextJwt),
-      fetchAvailabilityHistory(feedId, accessToken, userContextJwt, new Date()),
-      getGtfsFeedContinuousCoverage(
-        feedId,
-        accessToken,
-        { limit: HISTORY_LIMIT },
-        userContextJwt,
-      ),
+      cachedReliability(feedId, accessToken, userContextJwt)(),
+      cachedAvailability(feedId, accessToken, userContextJwt)(),
+      cachedContinuousCoverage(feedId, accessToken, userContextJwt)(),
     ]);
 
   return {
@@ -154,47 +223,9 @@ async function fetchSealAnalysisImpl(
       availabilityResult.status === 'fulfilled'
         ? availabilityResult.value
         : undefined,
+    availabilityError: availabilityResult.status === 'rejected',
     continuousCoverage:
       coverageResult.status === 'fulfilled' ? coverageResult.value : undefined,
-  };
-}
-
-/**
- * The shared cache entry. Keyed by feed id only - the analysis describes the
- * feed, not the caller - so guests and authenticated users read the same
- * entry. The credentials are closed over purely to authenticate the calls and
- * are intentionally excluded from the key.
- */
-function cachedSealAnalysis(
-  feedId: string,
-  accessToken: string,
-  userContextJwt: string | undefined,
-): () => Promise<SealAnalysisData> {
-  const cachedFetch = unstable_cache(
-    async () => {
-      const result = await fetchSealAnalysisImpl(
-        feedId,
-        accessToken,
-        userContextJwt,
-      );
-      if (result.reliabilityError) {
-        throw new Error(`Failed to load reliability data for feed ${feedId}`);
-      }
-      return result;
-    },
-    [`seal-analysis-${feedId}`],
-    {
-      tags: [`feed-${feedId}`, 'seal-analysis'],
-      revalidate: SEAL_ANALYSIS_REVALIDATE,
-    },
-  );
-
-  return async () => {
-    try {
-      return await cachedFetch();
-    } catch {
-      return { reliabilityError: true };
-    }
   };
 }
 
@@ -215,8 +246,8 @@ function isSealAnalysisApplicable(
  * from a statically rendered page would still drag that page's ISR TTL down
  * to 6 hours, so its only caller is the force-dynamic seal page.
  *
- * `cache()` dedupes within a single request; the `unstable_cache` entry it
- * wraps dedupes across requests and users.
+ * `cache()` dedupes within a single request; the per-endpoint `unstable_cache`
+ * entries it reads from dedupe across requests and users.
  */
 export const fetchGuestSealAnalysisData = cache(
   async (
@@ -237,7 +268,7 @@ export const fetchGuestSealAnalysisData = cache(
       return undefined;
     }
 
-    return await cachedSealAnalysis(feedId, accessToken, undefined)();
+    return await fetchSealAnalysisImpl(feedId, accessToken, undefined);
   },
 );
 
@@ -265,6 +296,6 @@ export const fetchAuthedSealAnalysisData = cache(
       return undefined;
     }
 
-    return await cachedSealAnalysis(feedId, accessToken, userContextJwt)();
+    return await fetchSealAnalysisImpl(feedId, accessToken, userContextJwt);
   },
 );

@@ -205,6 +205,7 @@ export default async function FeedReliabilityView({
                     criterion={availableCriterion}
                     calendar={availabilityCalendar}
                     now={now}
+                    availabilityError={sealAnalysis?.availabilityError}
                   />
                 </CriterionSection>
               </Box>
