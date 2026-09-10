@@ -1,7 +1,11 @@
 import { type SvgIconComponent } from '@mui/icons-material';
-import { differenceInCalendarDays, isAfter, subMonths } from 'date-fns';
+import { isAfter } from 'date-fns';
 import { theme as appTheme } from '../Theme';
-import { formatDateShort } from '../utils/date';
+import {
+  formatDateShort,
+  subMonthsUtc,
+  utcCalendarDayDiff,
+} from '../utils/date';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import CodeIcon from '@mui/icons-material/Code';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -192,7 +196,7 @@ export function getGracePeriodCriteria(
  * already be in the past when the nightly job hasn't acted on it yet.
  */
 export function getDaysUntil(date: string, now = new Date()): number {
-  return Math.max(0, differenceInCalendarDays(new Date(date), now));
+  return Math.max(0, utcCalendarDayDiff(new Date(date), now));
 }
 
 /**
@@ -232,7 +236,7 @@ export function getProbationWindowFromEnd(
   if (isNaN(end.getTime())) {
     return undefined;
   }
-  return { start: subMonths(end, PROBATION_MONTHS), end };
+  return { start: subMonthsUtc(end, PROBATION_MONTHS), end };
 }
 
 /**
@@ -263,7 +267,7 @@ export function getProbationWindow(
   const start =
     starts.length > 0
       ? new Date(Math.min(...starts.map((d) => d.getTime())))
-      : subMonths(end, PROBATION_MONTHS);
+      : subMonthsUtc(end, PROBATION_MONTHS);
 
   return { start, end };
 }
@@ -334,7 +338,7 @@ export function isFeedWithinProbationWindow(
   if (isNaN(createdAt.getTime())) {
     return false;
   }
-  return isAfter(createdAt, subMonths(now, PROBATION_MONTHS));
+  return isAfter(createdAt, subMonthsUtc(now, PROBATION_MONTHS));
 }
 
 /**

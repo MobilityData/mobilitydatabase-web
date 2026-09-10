@@ -75,3 +75,46 @@ export const formatTokenExpiration = (duration: Duration): string => {
 
   return `${hours}:${minutes}:${seconds}`;
 };
+
+/**
+ * Calendar-day difference between `date` and `now`, in UTC. Useful whenever
+ * `now` is a single Date instance shared by a server render and the client
+ * that hydrates it: date-fns's `differenceInCalendarDays` buckets by the
+ * *local* calendar day of whichever machine runs it, so a server in UTC and a
+ * browser in another zone can round the same instant to different days, most
+ * visibly near midnight. Rebuilding both sides at UTC midnight keeps the diff
+ * identical wherever it runs.
+ */
+export function utcCalendarDayDiff(date: Date, now: Date): number {
+  const dateUtcDay = Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate(),
+  );
+  const nowUtcDay = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate(),
+  );
+  return Math.round((dateUtcDay - nowUtcDay) / 86400000);
+}
+
+/**
+ * `date` minus `months`, in UTC. Same rationale as `utcCalendarDayDiff`:
+ * date-fns's `subMonths` rolls the calendar back in local time, so it can
+ * return a different instant - and therefore a different displayed date -
+ * depending on the timezone of the machine that evaluates it.
+ */
+export function subMonthsUtc(date: Date, months: number): Date {
+  return new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth() - months,
+      date.getUTCDate(),
+      date.getUTCHours(),
+      date.getUTCMinutes(),
+      date.getUTCSeconds(),
+      date.getUTCMilliseconds(),
+    ),
+  );
+}
