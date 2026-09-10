@@ -2,6 +2,7 @@ import FeedReliabilityView from '../../../../../../screens/Feed/components/FeedR
 import { type ReactElement } from 'react';
 import { fetchCompleteFeedData } from '../../lib/feed-data';
 import { fetchAuthedSealAnalysisData } from '../../lib/seal-analysis-data';
+import { getLatestDataset } from '../../../../../../screens/Feed/Feed.functions';
 import { notFound } from 'next/navigation';
 
 interface Props {
@@ -41,6 +42,10 @@ export default async function AuthedFeedReliabilityPage({
   }
 
   return (
-    <FeedReliabilityView feed={feedData.feed} sealAnalysis={sealAnalysis} />
+    <FeedReliabilityView
+      feed={feedData.feed}
+      latestDataset={getLatestDataset(feedData.feed, feedData.initialDatasets)}
+      sealAnalysis={sealAnalysis}
+    />
   );
 }

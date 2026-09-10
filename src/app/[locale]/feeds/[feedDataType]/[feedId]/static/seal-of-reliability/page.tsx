@@ -3,6 +3,7 @@ import { type ReactElement } from 'react';
 import { notFound } from 'next/navigation';
 import { fetchGuestFeedData } from '../../lib/guest-feed-data';
 import { fetchGuestSealAnalysisData } from '../../lib/seal-analysis-data';
+import { getLatestDataset } from '../../../../../../screens/Feed/Feed.functions';
 
 interface Props {
   params: Promise<{ feedDataType: string; feedId: string }>;
@@ -73,9 +74,12 @@ export default async function StaticFeedReliabilityPage({
     );
   }
 
+  const { feed, initialDatasets } = feedResult.value;
+
   return (
     <FeedReliabilityView
-      feed={feedResult.value.feed}
+      feed={feed}
+      latestDataset={getLatestDataset(feed, initialDatasets)}
       sealAnalysis={sealAnalysis}
     />
   );
