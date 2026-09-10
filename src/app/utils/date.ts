@@ -31,6 +31,18 @@ export const formatDateShort = (
   }).format(date);
 };
 
+/** Short month name for a date, in the same UTC-by-default frame as
+ * formatDateShort - used for the column headers of date grids. */
+export const formatMonthShort = (
+  dateString: string,
+  timeZone?: string,
+): string => {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: timeZone ?? 'UTC',
+    month: 'short',
+  }).format(new Date(dateString));
+};
+
 /**
  *
  * @param dateString date in ISO format
