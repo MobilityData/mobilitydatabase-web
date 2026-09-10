@@ -41,6 +41,8 @@ function renderSection(
   criterion: ReliabilityCriterion,
   context?: SealCriterionContext,
   producerUrl?: string,
+  children?: React.ReactNode,
+  metaChips?: React.ReactNode,
 ): ReturnType<typeof render> {
   return render(
     <ThemeProvider theme={theme}>
@@ -48,8 +50,11 @@ function renderSection(
         criterion={criterion}
         context={context}
         producerUrl={producerUrl}
-        statusChip={null}
-      />
+        statusChip={<span data-testid='status-chip' />}
+        metaChips={metaChips}
+      >
+        {children}
+      </CriterionSection>
     </ThemeProvider>,
   );
 }
@@ -158,5 +163,167 @@ describe('CriterionSection stable', () => {
     expect(
       screen.getByText('sealCriterionGracePeriodNote'),
     ).toBeInTheDocument();
+  });
+});
+
+describe('CriterionSection body slot', () => {
+  it('keeps the header but drops the generic copy when a body is supplied', () => {
+    renderSection(
+      buildCriterion('available', { status: 'pass' }),
+      undefined,
+      undefined,
+      <p>custom body</p>,
+    );
+
+    expect(
+      screen.getByTestId('criterion-section-available'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('criteria.available.title')).toBeInTheDocument();
+    expect(screen.getByText('custom body')).toBeInTheDocument();
+    expect(
+      screen.queryByText('criteria.available.description'),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe('CriterionSection probation', () => {
+  it('says when probation ends, and how far through it is', () => {
+    renderSection(
+      buildCriterion('available', {
+        status: 'pass',
+        on_probation: true,
+        probation_ends_at: '2027-01-16T00:00:00Z',
+      }),
+      { now: NOW },
+    );
+
+    const note = screen.getByTestId('criterion-probation-note');
+    expect(note).toHaveTextContent('sealCriterionProbationNote');
+    // Window runs Jul 16 2026 - Jan 16 2027; NOW is Sep 8, roughly a third in.
+    const bar = note.querySelector('[role="progressbar"]');
+    expect(bar).toHaveAttribute('aria-valuenow', '29');
+  });
+
+  it('says when probation ends alongside a custom body', () => {
+    renderSection(
+      buildCriterion('compliant', {
+        status: 'pass',
+        on_probation: true,
+        probation_ends_at: '2027-01-16T00:00:00Z',
+      }),
+      { now: NOW },
+      undefined,
+      <p>custom body</p>,
+    );
+
+    expect(screen.getByText('custom body')).toBeInTheDocument();
+    expect(screen.getByTestId('criterion-probation-note')).toBeInTheDocument();
+  });
+
+  it('omits the note when the probation window has already elapsed', () => {
+    renderSection(
+      buildCriterion('available', { status: 'pass', on_probation: true }),
+    );
+
+    expect(
+      screen.queryByTestId('criterion-probation-note'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('omits the note when the criterion is not on probation', () => {
+    renderSection(
+      buildCriterion('available', {
+        status: 'pass',
+        probation_ends_at: '2027-01-16T00:00:00Z',
+      }),
+    );
+
+    expect(
+      screen.queryByTestId('criterion-probation-note'),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe('CriterionSection days-left chip', () => {
+  const atRisk = (): ReliabilityCriterion =>
+    buildCriterion('compliant', {
+      status: 'fail',
+      in_grace_period: true,
+      grace_period_ends_at: '2026-09-28T00:00:00Z',
+    });
+
+  it('counts the days left against the date the page pinned', () => {
+    renderSection(atRisk(), { now: NOW });
+
+    expect(screen.getByTestId('criterion-days-left-chip')).toHaveTextContent(
+      'sealCriterionDaysLeftChip',
+    );
+  });
+
+  it('sits between the meta chips and the status chip', () => {
+    renderSection(
+      atRisk(),
+      { now: NOW },
+      undefined,
+      undefined,
+      <span data-testid='meta-chip' />,
+    );
+
+    const order = [
+      screen.getByTestId('meta-chip'),
+      screen.getByTestId('criterion-days-left-chip'),
+      screen.getByTestId('status-chip'),
+    ];
+    order.slice(1).forEach((node, i) => {
+      // Node.DOCUMENT_POSITION_FOLLOWING - each chip comes after the last.
+      expect(order[i].compareDocumentPosition(node) & 4).toBeTruthy();
+    });
+  });
+
+  it('is absent when the criterion is not in a grace period', () => {
+    renderSection(buildCriterion('compliant', { status: 'pass' }), {
+      now: NOW,
+    });
+
+    expect(
+      screen.queryByTestId('criterion-days-left-chip'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('is absent when the grace period reports no deadline', () => {
+    renderSection(
+      buildCriterion('compliant', { status: 'fail', in_grace_period: true }),
+      { now: NOW },
+    );
+
+    expect(
+      screen.queryByTestId('criterion-days-left-chip'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('counts down probation too, which runs to its own deadline', () => {
+    renderSection(
+      buildCriterion('available', {
+        status: 'pass',
+        on_probation: true,
+        probation_ends_at: '2027-01-16T00:00:00Z',
+      }),
+      { now: NOW },
+    );
+
+    expect(screen.getByTestId('criterion-days-left-chip')).toHaveTextContent(
+      'sealCriterionDaysLeftChip',
+    );
+  });
+
+  it('is absent when probation reports no deadline', () => {
+    renderSection(
+      buildCriterion('available', { status: 'pass', on_probation: true }),
+      { now: NOW },
+    );
+
+    expect(
+      screen.queryByTestId('criterion-days-left-chip'),
+    ).not.toBeInTheDocument();
   });
 });

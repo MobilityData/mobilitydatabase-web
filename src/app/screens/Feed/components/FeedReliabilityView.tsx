@@ -13,6 +13,9 @@ import ScrollToTop from './ScrollToTop';
 import SealSection from './SealSection';
 import CriterionSection from './CriterionSection';
 import CriterionStatusChip from './CriterionStatusChip';
+import AvailabilityCriterionBody from './AvailabilityCriterionBody';
+import AvailabilityUptimeChip from './AvailabilityUptimeChip';
+import ComplianceCriterionBody from './ComplianceCriterionBody';
 
 // Utils
 import { type AllFeedType } from '../../../services/feeds/utils';
@@ -23,16 +26,19 @@ import {
   type SealCriterionContext,
 } from '../../../constants/sealCriteria';
 import { formatProvidersSorted } from '../Feed.functions';
+import { buildAvailabilityCalendar } from '../lib/availability-history';
 import { displayFormattedDate } from '../../../utils/date';
 import SectionContainer from '../../../components/SectionContainer';
 
 interface Props {
   feed: AllFeedType;
+  latestDataset?: components['schemas']['GtfsDataset'];
   sealAnalysis?: SealAnalysisData;
 }
 
 export default async function FeedReliabilityView({
   feed,
+  latestDataset,
   sealAnalysis,
 }: Props): Promise<ReactElement> {
   if (feed == undefined) notFound();
@@ -43,10 +49,11 @@ export default async function FeedReliabilityView({
   // Pinned once here so every date-derived branch below resolves to the same
   // instant during SSR and hydration. This route is force-dynamic, so it is
   // request time.
+  const now = new Date();
   const criterionContext: SealCriterionContext = {
     isProducerUrlUnstable: feed.source_info?.is_producer_url_unstable,
     feedCreatedAt: feed.created_at,
-    now: new Date(),
+    now,
   };
   const producerUrl = feed.source_info?.producer_url;
 
@@ -61,6 +68,15 @@ export default async function FeedReliabilityView({
 
   const officialCriterion = findCriterion('official');
   const stableCriterion = findCriterion('stable');
+  const availableCriterion = findCriterion('available');
+  const compliantCriterion = findCriterion('compliant');
+
+  // Built once and handed down, so the header's uptime chip and the grid in
+  // the body are reading the same window.
+  const availabilityCalendar = buildAvailabilityCalendar(
+    sealAnalysis?.availability?.checks,
+    { now },
+  );
 
   return (
     <Container
@@ -156,6 +172,63 @@ export default async function FeedReliabilityView({
                     }
                   />
                 )}
+              </Box>
+            )}
+
+            {/* Available and Compliant each carry a full history, so they get
+                a row of their own rather than sharing the two-up grid. */}
+            {availableCriterion != undefined && (
+              <Box sx={{ mt: 2 }}>
+                <CriterionSection
+                  criterion={availableCriterion}
+                  context={criterionContext}
+                  hideProbationProgress
+                  metaChips={
+                    availabilityCalendar.uptimePercent != undefined && (
+                      <AvailabilityUptimeChip
+                        uptimePercent={availabilityCalendar.uptimePercent}
+                        displayStatus={getCriterionDisplayStatus(
+                          availableCriterion,
+                        )}
+                      />
+                    )
+                  }
+                  statusChip={
+                    <CriterionStatusChip
+                      displayStatus={getCriterionDisplayStatus(
+                        availableCriterion,
+                      )}
+                    />
+                  }
+                >
+                  <AvailabilityCriterionBody
+                    criterion={availableCriterion}
+                    calendar={availabilityCalendar}
+                    now={now}
+                  />
+                </CriterionSection>
+              </Box>
+            )}
+
+            {compliantCriterion != undefined && (
+              <Box sx={{ mt: 2 }}>
+                <CriterionSection
+                  criterion={compliantCriterion}
+                  context={criterionContext}
+                  statusChip={
+                    <CriterionStatusChip
+                      displayStatus={getCriterionDisplayStatus(
+                        compliantCriterion,
+                      )}
+                    />
+                  }
+                >
+                  <ComplianceCriterionBody
+                    criterion={compliantCriterion}
+                    report={latestDataset?.validation_report}
+                    now={now}
+                  />
+                </CriterionSection>
               </Box>
             )}
           </Box>
