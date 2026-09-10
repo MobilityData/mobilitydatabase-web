@@ -202,6 +202,24 @@ describe('getAvailabilitySummary', () => {
     });
   });
 
+  it('drops the date when at risk with no first failure kept', () => {
+    expect(
+      getAvailabilitySummary(
+        criterion({
+          status: 'fail',
+          in_grace_period: true,
+          grace_period_ends_at: '2026-09-20T00:00:00Z',
+        }),
+        calendar,
+        NOW,
+      ),
+    ).toEqual({
+      key: 'sealAvailabilityAtRiskUndated',
+      values: {},
+      graceDaysLeft: 11,
+    });
+  });
+
   it('reads as a spent grace window once the failure is confirmed', () => {
     expect(
       getAvailabilitySummary(
@@ -210,6 +228,12 @@ describe('getAvailabilitySummary', () => {
         NOW,
       ).key,
     ).toBe('sealAvailabilityFailing');
+  });
+
+  it('drops the date when failing with no first failure kept', () => {
+    expect(
+      getAvailabilitySummary(criterion({ status: 'fail' }), calendar, NOW).key,
+    ).toBe('sealAvailabilityFailingUndated');
   });
 
   it('names the error probation is being served for', () => {

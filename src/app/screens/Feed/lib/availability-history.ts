@@ -246,11 +246,19 @@ export function getAvailabilitySummary(
       : { key: 'sealAvailabilityProbationUndated', values: {} };
   }
   // The countdown itself lives in the deadline notice, so the sentence only
-  // has to say since when.
+  // has to say since when. `first_failure_at` is cleared once a feed
+  // recovers, so - as with `last_failure_at` above - the wording falls back
+  // to one that names no date rather than interpolating a blank.
   if (displayStatus === 'atRisk') {
     return {
-      key: 'sealAvailabilityAtRisk',
-      values: { date: formatFailureDate(criterion.first_failure_at) },
+      key:
+        criterion.first_failure_at != null
+          ? 'sealAvailabilityAtRisk'
+          : 'sealAvailabilityAtRiskUndated',
+      values:
+        criterion.first_failure_at != null
+          ? { date: formatDateShort(criterion.first_failure_at) }
+          : {},
       graceDaysLeft:
         criterion.grace_period_ends_at != null
           ? getDaysUntil(criterion.grace_period_ends_at, now)
@@ -258,13 +266,18 @@ export function getAvailabilitySummary(
     };
   }
   if (displayStatus === 'fail') {
-    return {
-      key: 'sealAvailabilityFailing',
-      values: {
-        months: AVAILABILITY_HISTORY_MONTHS,
-        date: formatFailureDate(criterion.first_failure_at),
-      },
-    };
+    return criterion.first_failure_at != null
+      ? {
+          key: 'sealAvailabilityFailing',
+          values: {
+            months: AVAILABILITY_HISTORY_MONTHS,
+            date: formatDateShort(criterion.first_failure_at),
+          },
+        }
+      : {
+          key: 'sealAvailabilityFailingUndated',
+          values: { months: AVAILABILITY_HISTORY_MONTHS },
+        };
   }
   if (
     displayStatus === 'notEvaluated' ||
@@ -291,9 +304,4 @@ export function getAvailabilitySummary(
           : '',
     },
   };
-}
-
-/** `first_failure_at` is cleared once a feed recovers, so it can be absent. */
-function formatFailureDate(date?: string | null): string {
-  return date == null ? '' : formatDateShort(date);
 }
