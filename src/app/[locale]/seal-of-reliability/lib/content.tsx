@@ -150,4 +150,12 @@ export const faqEntries: FaqEntry[] = [
     questionKey: 'faq.riskAwareness.question',
     answerKey: 'faq.riskAwareness.answer',
   },
+  {
+    questionKey: 'faq.thresholds.question',
+    answerKey: 'faq.thresholds.answer',
+  },
+  {
+    questionKey: 'faq.freshRolling7Days.question',
+    answerKey: 'faq.freshRolling7Days.answer',
+  },
 ];

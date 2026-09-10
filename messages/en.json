@@ -75,10 +75,10 @@
         },
         "5": {
           "name": "Cable tram",
-          "description": "Used for street-level rail cars where the cable runs beneath the vehicle (e.g., cable car in San Francisco)."
+          "description": "Used for street-level rail cars where the cable runs beneath the vehicle (e.g. cable car in San Francisco)."
         },
         "6": {
-          "name": "Aerial lift/Suspended cable car (e.g., gondola lift, aerial tramway)",
+          "name": "Aerial lift/Suspended cable car (e.g. gondola lift, aerial tramway)",
           "description": "Cable transport where cabins, cars, gondolas or open chairs are suspended by means of one or more cables."
         },
         "7": {
@@ -627,7 +627,7 @@
     "hero": {
       "title": "The Benchmark for Reliable GTFS Schedule Data",
       "paragraphs": [
-        "It's hard to measure if data is trustworthy. Transit agencies struggle to know if their GTFS data works for riders; data vendors lack a baseline of quality to aspire to, and trip planning apps end up spending time pre-processing feeds rather than seamlessly consuming them",
+        "It's hard to measure if data is trustworthy. Transit agencies struggle to know if their GTFS data works for riders; data vendors lack a baseline of quality to aspire to, and trip planning apps end up spending too much time pre-processing feeds rather than seamlessly consuming them",
         "That's where the MobilityData Seal of Reliability comes in. As a clear measure of baseline quality, the Seal of Reliability is applied to feeds that meet five key criteria: they're official, stable, available, compliant, and fresh."
       ],
       "ctaButton": "See a feed measured against the standard (todo)",
@@ -764,6 +764,14 @@
       "riskAwareness": {
         "question": "As a data producer, how do I know if I'm at risk of losing the Seal?",
         "answer": "The best way is to check your feed on the Mobility Database 1-2 times a month to see your Seal status. Our team is working on email notifications, so in the future you can be notified when you've entered a grace period."
+      },
+      "thresholds": {
+        "question": "How did you select the thresholds for each criterion and grace period?",
+        "answer": "Thresholds were determined based on a mix of GTFS Best Practices review, examining real world data, and consulting consumers. For example, we decided on the grace period lengths based on reviewing the average time it takes for producers to correct the data evaluated on the Mobility Database. We have aimed to strike a balance between setting an ambitious bar for producers that promotes higher quality data, and setting goals that transit agencies can feasibly reach."
+      },
+      "freshRolling7Days": {
+        "question": "Why did you choose 7 days for the Fresh: Rolling Coverage criterion?",
+        "answer": "7 days was selected for two reasons: it is in the minimum threshold already specified in GTFS for service coverage, and upon reviewing international data, several high-ridership transit agencies failed higher test thresholds. This indicated that a higher threshold, like 14 or 30 days, may not be feasible with operational timelines for transit agencies."
       }
     },
     "howItIsCalculated": {
@@ -789,25 +797,46 @@
       "official": {
         "title": "Official",
         "paragraphs": [
-          "A feed is Official when MobilityData has confirmed it is authorized by the transit agency. This means it is published by, or on behalf of, the agency itself. MobilityData assesses this based on the domain of the producer URL, the feed submission contributor's personal information, the agency's website, and the `feed_info.txt` file. This determination is made manually and does not change based on automated checks.",
-          "Unlike the other five criteria, Official status is not subject to the six-month probation."
+          "A feed is Official when MobilityData has confirmed it is authorized by the transit agency. This means it is published by, or on behalf of, the agency itself.",
+          "This determination is made manually and does not change based on automated checks.",
+          "The Official status is not subject to the six-month probation."
         ],
-        "notice": "There is no grace period for Official. The designation is either confirmed or it is not."
+        "notice": "There is no grace period for Official. The designation is either confirmed or it is not.",
+        "assessmentIntro": "MobilityData assesses this based on:",
+        "assessmentItems": [
+          "The domain of the producer URL",
+          "The feed submission contributor’s personal information",
+          "The agency’s website",
+          "The `feed_info.txt` file"
+        ]
       },
       "stable": {
         "title": "Stable",
         "description": "The Mobility Database evaluates stability based on the producer URL. A feed is considered Stable when:",
         "items": [
-          "The same URL has served the feed without redirects for at least six months",
+          "The same URL has served the feed for at least six months",
           "The URL appears to be permanent, meaning it does not look like a temporary file path with dates, times or seasons"
         ],
-        "notice": "There is no grace period for Stable. If the URL changes, the criterion fails immediately and the six-month probation restarts from the date the new URL is added as a new feed."
+        "notice": "There is no grace period for Stable. If the URL changes, the criterion fails immediately and the six-month probation restarts from the date the new URL is added as a new feed.",
+        "urlPatternsIntro": "Examples of URL patterns that would fail:",
+        "urlPatterns": [
+          "Dates in any format (e.g. https://opendata.bratislava.sk/dataset/download/cestovny-poriadok-20220725/1)",
+          "Seasonal slugs (e.g. `/summer-2024/`, `/winter-schedule/`)",
+          "Timestamps in the filename"
+        ],
+        "redirectNote": "A permanent redirect (301) from an old URL to a new one passes the Stable criterion."
       },
       "available": {
         "title": "Available",
-        "description": "Once per day, the Mobility Database attempts to download the feed from its producer URL. A fetch is considered successful when the response returns an HTTP response in the 200 range.",
+        "description": "Once per day, the Mobility Database attempts to download the feed from its producer URL.",
         "noticeTitle": "14-day grace period.",
-        "notice": "If a fetch fails, producers have 14 days to restore access. If the feed is still unreachable after 14 days, the Seal is revoked."
+        "notice": "If a fetch fails, producers have 14 days to restore access. If the feed is still unreachable after 14 days, the Seal is revoked.",
+        "descriptionFetchIntro": "A fetch is considered successful when the response returns:",
+        "descriptionFetchItems": [
+          "An HTTP response in the 200 range",
+          "A redirect (301, 302, 303, 307, or 308) that resolves to the feed at another URL",
+          "A 304 Not Modified response indicating the feed content is unchanged"
+        ]
       },
       "compliant": {
         "title": "Compliant",
