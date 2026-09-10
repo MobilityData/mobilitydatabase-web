@@ -24,6 +24,7 @@ import { getRemoteConfigValues } from '../../../../../../lib/remote-config.serve
 type ReliabilityReport = components['schemas']['FeedReliabilityReport'];
 type AvailabilityResponse =
   components['schemas']['GtfsFeedAvailabilityResponse'];
+type AvailabilityCheck = components['schemas']['GtfsFeedAvailabilityCheck'];
 type ContinuousCoverageResponse =
   components['schemas']['GtfsFeedContinuousCoverageResponse'];
 
@@ -33,12 +34,78 @@ type ContinuousCoverageResponse =
 export const SEAL_ANALYSIS_REVALIDATE = 21600;
 
 /**
- * Both history endpoints are paginated with a maximum of 100 items. We take
- * the newest page, which is what a breakdown UI needs; revisit this if the
- * design calls for a specific time window (both endpoints also accept
- * date-range filters) rather than "the most recent N".
+ * Both history endpoints are paginated with a maximum of 100 items.
+ *
+ * Continuous coverage takes the newest page, which is what a breakdown UI
+ * needs. Availability instead asks for a fixed window - the heatmap draws six
+ * months of daily checks, which is more than one page holds - so it pages.
  */
 const HISTORY_LIMIT = 100;
+
+/**
+ * How far back the availability heatmap looks. Kept in step with
+ * AVAILABILITY_HISTORY_MONTHS in screens/Feed/lib/availability-history.ts,
+ * which decides how much of it is drawn.
+ */
+const AVAILABILITY_HISTORY_MONTHS = 6;
+
+/**
+ * Daily checks over six months are ~183 items, so two pages cover the window
+ * with room to spare. The cap keeps a feed checked more than once a day from
+ * turning one render into an unbounded page walk.
+ */
+const AVAILABILITY_MAX_PAGES = 2;
+
+/**
+ * The newest checks going back `AVAILABILITY_HISTORY_MONTHS`, flattened into
+ * one response. Sorted newest-first so that a feed checked often enough to
+ * overflow the page cap keeps the days the heatmap actually draws.
+ */
+async function fetchAvailabilityHistory(
+  feedId: string,
+  accessToken: string,
+  userContextJwt: string | undefined,
+  now: Date,
+): Promise<AvailabilityResponse | undefined> {
+  const from = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth() - AVAILABILITY_HISTORY_MONTHS,
+      now.getUTCDate(),
+    ),
+  ).toISOString();
+
+  let firstPage: AvailabilityResponse | undefined;
+  const checks: AvailabilityCheck[] = [];
+
+  for (let page = 0; page < AVAILABILITY_MAX_PAGES; page++) {
+    const response = await getGtfsFeedAvailability(
+      feedId,
+      accessToken,
+      {
+        from,
+        limit: HISTORY_LIMIT,
+        offset: page * HISTORY_LIMIT,
+        // Passed explicitly because the OpenAPI spec contradicts itself on the
+        // default ordering of `checks`.
+        sort: 'desc',
+      },
+      userContextJwt,
+    );
+    if (response == undefined) {
+      break;
+    }
+    firstPage ??= response;
+    checks.push(...response.checks);
+    if (checks.length >= response.total || response.checks.length === 0) {
+      break;
+    }
+  }
+
+  return firstPage == undefined
+    ? undefined
+    : { ...firstPage, offset: 0, limit: checks.length, checks };
+}
 
 export interface SealAnalysisData {
   reliability?: ReliabilityReport;
@@ -68,14 +135,7 @@ async function fetchSealAnalysisImpl(
   const [reliabilityResult, availabilityResult, coverageResult] =
     await Promise.allSettled([
       getGtfsFeedReliability(feedId, accessToken, userContextJwt),
-      getGtfsFeedAvailability(
-        feedId,
-        accessToken,
-        // Passed explicitly because the OpenAPI spec contradicts itself on the
-        // default ordering of `checks`.
-        { limit: HISTORY_LIMIT, sort: 'desc' },
-        userContextJwt,
-      ),
+      fetchAvailabilityHistory(feedId, accessToken, userContextJwt, new Date()),
       getGtfsFeedContinuousCoverage(
         feedId,
         accessToken,
