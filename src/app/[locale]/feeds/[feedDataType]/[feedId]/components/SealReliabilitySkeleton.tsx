@@ -3,9 +3,17 @@ import { Box, Container, Skeleton } from '@mui/material';
 const CRITERION_CHIP_COUNT = 6;
 
 /**
+ * Width-to-height of the availability heatmap: ~27 week columns of square
+ * cells over 7 day rows. Held as a ratio rather than a height because the
+ * real grid's cells scale with the width it is given.
+ */
+const HEATMAP_ASPECT_RATIO = '27 / 7';
+
+/**
  * Loading skeleton for the Seal of Reliability analysis page, mirroring
  * `FeedReliabilityView`'s layout: header, page title row, seal banner with
- * its criteria chips, then the two detailed criterion cards.
+ * its criteria chips, the two-up Official / Stable cards, then the full-width
+ * Available and Compliant cards.
  * ref: https://nextjs.org/docs/app/api-reference/file-conventions/loading
  */
 export default function SealReliabilitySkeleton(): React.ReactElement {
@@ -105,7 +113,7 @@ export default function SealReliabilitySkeleton(): React.ReactElement {
           </Box>
         </Box>
 
-        {/* Criterion cards skeleton */}
+        {/* Official / Stable card skeletons */}
         <Box
           sx={{
             display: 'grid',
@@ -115,28 +123,7 @@ export default function SealReliabilitySkeleton(): React.ReactElement {
         >
           {Array.from({ length: 2 }).map((_, i) => (
             <Box key={i} sx={{ p: 2, borderRadius: 1, height: '100%' }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: 1,
-                  mb: 2,
-                }}
-              >
-                <Skeleton
-                  animation='wave'
-                  variant='text'
-                  sx={{ fontSize: '1.25rem', width: '160px' }}
-                />
-                <Skeleton
-                  animation='wave'
-                  variant='rounded'
-                  height={24}
-                  width={80}
-                  sx={{ borderRadius: '16px' }}
-                />
-              </Box>
+              <CriterionHeaderSkeleton />
               <Skeleton
                 animation='wave'
                 variant='text'
@@ -155,7 +142,90 @@ export default function SealReliabilitySkeleton(): React.ReactElement {
             </Box>
           ))}
         </Box>
+
+        {/* Available card skeleton: summary line, heatmap, legend */}
+        <Box sx={{ p: 2, mt: 2, borderRadius: 1 }}>
+          {/* Two chips: the uptime figure sits beside the status chip. */}
+          <CriterionHeaderSkeleton chipCount={2} />
+          <Skeleton
+            animation='wave'
+            variant='text'
+            sx={{ fontSize: '1rem', width: '80%', mb: 2 }}
+          />
+          <Box sx={{ width: '100%', aspectRatio: HEATMAP_ASPECT_RATIO }}>
+            <Skeleton
+              animation='wave'
+              variant='rounded'
+              width='100%'
+              height='100%'
+            />
+          </Box>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 1 }}>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton
+                key={i}
+                animation='wave'
+                variant='text'
+                sx={{ fontSize: '0.75rem', width: '120px' }}
+              />
+            ))}
+          </Box>
+        </Box>
+
+        {/* Compliant card skeleton: summary line and the report link */}
+        <Box sx={{ p: 2, mt: 2, borderRadius: 1 }}>
+          <CriterionHeaderSkeleton />
+          <Skeleton
+            animation='wave'
+            variant='text'
+            sx={{ fontSize: '1rem', width: '75%' }}
+          />
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+            <Skeleton
+              animation='wave'
+              variant='text'
+              sx={{ fontSize: '0.875rem', width: '200px' }}
+            />
+          </Box>
+        </Box>
       </Box>
     </Container>
+  );
+}
+
+/** Criterion card header: the title on the left, its chips on the right. */
+function CriterionHeaderSkeleton({
+  chipCount = 1,
+}: {
+  chipCount?: number;
+}): React.ReactElement {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: 1,
+        mb: 2,
+      }}
+    >
+      <Skeleton
+        animation='wave'
+        variant='text'
+        sx={{ fontSize: '1.25rem', width: '160px' }}
+      />
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        {Array.from({ length: chipCount }).map((_, i) => (
+          <Skeleton
+            key={i}
+            animation='wave'
+            variant='rounded'
+            height={24}
+            width={80}
+            sx={{ borderRadius: '16px' }}
+          />
+        ))}
+      </Box>
+    </Box>
   );
 }
