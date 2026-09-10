@@ -356,7 +356,7 @@
     "sealCompliantAtRisk": "Le dernier rapport de validation comporte {count, plural, one {# erreur} other {# erreurs}}.",
     "sealCompliantGraceTitle": "Il reste {days, plural, one {# jour} other {# jours}} pour corriger les erreurs",
     "sealCompliantGraceDescription": "Corrigez ces erreurs avant la fin du délai de grâce pour conserver le Sceau.",
-    "sealCompliantFailing": "Le dernier rapport de validation comporte {count, plural, one {# erreur} other {# erreurs}}, corrigez ces erreurs de validation pour valider ce critère.",
+    "sealCompliantFailing": "Le dernier rapport de validation comporte {count, plural, one {# erreur} other {# erreurs}}. Corrigez ces erreurs de validation pour valider ce critère.",
     "sealCompliantProbation": "Le dernier jeu de données est validé sans erreur. Ce critère reconstruit son historique de six mois après sa dernière erreur enregistrée le {date}.",
     "sealCompliantProbationUndated": "Le dernier jeu de données est validé sans erreur. Ce critère reconstruit son historique de six mois après un échec confirmé.",
     "sealCompliantNotApplicable": "La validation ne s'applique pas à ce flux.",

@@ -5,13 +5,11 @@ import {
   Box,
   Card,
   CardContent,
-  Chip,
   IconButton,
   Tooltip,
   Typography,
 } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { useTranslations } from 'next-intl';
 import { Link } from '../../../../i18n/navigation';
 import CriterionProbationProgress from './CriterionProbationProgress';
@@ -22,7 +20,6 @@ import {
   getCriterionCopy,
   getCriterionDisplayStatus,
   getCriterionStatusColor,
-  getDaysUntil,
   getProbationWindowFromEnd,
 } from '../../../constants/sealCriteria';
 import { type components } from '../../../services/feeds/types';
@@ -35,8 +32,8 @@ export interface CriterionSectionProps {
   producerUrl?: string;
   statusChip: React.ReactNode;
   /**
-   * Extra chips for the header, placed left of the grace-period countdown and
-   * the status chip - a criterion's own headline figure, such as uptime.
+   * Extra chips for the header, placed left of the status chip - a
+   * criterion's own headline figure, such as uptime.
    */
   metaChips?: React.ReactNode;
   /**
@@ -75,20 +72,6 @@ export default function CriterionSection({
   const color = getCriterionStatusColor(displayStatus);
   const copy = getCriterionCopy(criterion, context);
 
-  // Both states run to a deadline, and they are mutually exclusive - a
-  // failure during probation restarts it rather than opening a grace period -
-  // so one chip counts down whichever is running. `now` is pinned by the page
-  // and threaded through the context so it renders identically on the server
-  // and after hydration.
-  const deadline =
-    displayStatus === 'atRisk'
-      ? criterion.grace_period_ends_at
-      : displayStatus === 'probation'
-        ? criterion.probation_ends_at
-        : undefined;
-  const daysLeft =
-    deadline != null ? getDaysUntil(deadline, context?.now) : undefined;
-
   const graceNote =
     displayStatus === 'atRisk' && criterion.grace_period_ends_at != null
       ? t('sealCriterionGracePeriodNote', {
@@ -118,8 +101,8 @@ export default function CriterionSection({
       sx={{ mb: 0, height: '100%' }}
       data-testid={`criterion-section-${key}`}
     >
-      {/* Wraps rather than clips: with a metric chip and a grace countdown
-          alongside the status chip, the row outgrows a narrow card. */}
+      {/* Wraps rather than clips: with a metric chip alongside the status
+          chip, the row outgrows a narrow card. */}
       <Box
         sx={{
           display: 'flex',
@@ -169,21 +152,6 @@ export default function CriterionSection({
             </IconButton>
           </Tooltip>
           {metaChips}
-          {daysLeft != undefined && (
-            <Chip
-              data-testid='criterion-days-left-chip'
-              size='small'
-              variant='outlined'
-              icon={<AccessTimeIcon aria-hidden />}
-              label={t('sealCriterionDaysLeftChip', { days: daysLeft })}
-              sx={{
-                color,
-                borderColor: color,
-                flexShrink: 0,
-                '& .MuiChip-icon': { color },
-              }}
-            />
-          )}
           {statusChip}
         </Box>
       </Box>
