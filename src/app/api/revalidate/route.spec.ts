@@ -356,12 +356,19 @@ describe('POST /api/revalidate', () => {
       expect(mockRevalidateTag).toHaveBeenCalledWith('feed-feed-1', 'max');
       expect(mockRevalidateTag).toHaveBeenCalledWith('feed-feed-2', 'max');
 
-      // Each feed revalidates all 3 feed types (gtfs, gtfs_rt, gbfs) × base + map + /fr + /fr/map
+      // Each feed revalidates all 3 feed types (gtfs, gtfs_rt, gbfs) ×
+      // base + /map + /seal-of-reliability, in en and fr
       expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gtfs/feed-1');
       expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gtfs/feed-1/map');
       expect(mockRevalidatePath).toHaveBeenCalledWith('/fr/feeds/gtfs/feed-1');
       expect(mockRevalidatePath).toHaveBeenCalledWith(
         '/fr/feeds/gtfs/feed-1/map',
+      );
+      expect(mockRevalidatePath).toHaveBeenCalledWith(
+        '/feeds/gtfs/feed-1/seal-of-reliability',
+      );
+      expect(mockRevalidatePath).toHaveBeenCalledWith(
+        '/fr/feeds/gtfs/feed-1/seal-of-reliability',
       );
       expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gtfs_rt/feed-1');
       expect(mockRevalidatePath).toHaveBeenCalledWith(
@@ -380,8 +387,8 @@ describe('POST /api/revalidate', () => {
         '/fr/feeds/gbfs/feed-1/map',
       );
 
-      // 2 feeds × 3 types × 4 paths = 24 total calls
-      expect(mockRevalidatePath).toHaveBeenCalledTimes(24);
+      // 2 feeds × 3 types × 3 sub-routes × 2 locales = 36 total calls
+      expect(mockRevalidatePath).toHaveBeenCalledTimes(36);
     });
 
     it('revalidates a single feed across all feed type paths', async () => {
@@ -411,9 +418,12 @@ describe('POST /api/revalidate', () => {
         '/feeds/gtfs_rt/rt-feed-1',
       );
       expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gbfs/rt-feed-1');
+      expect(mockRevalidatePath).toHaveBeenCalledWith(
+        '/feeds/gtfs/rt-feed-1/seal-of-reliability',
+      );
 
-      // 1 feed × 3 types × 4 paths = 12 total calls
-      expect(mockRevalidatePath).toHaveBeenCalledTimes(12);
+      // 1 feed × 3 types × 3 sub-routes × 2 locales = 18 total calls
+      expect(mockRevalidatePath).toHaveBeenCalledTimes(18);
     });
 
     it('revalidates multiple feeds simultaneously', async () => {
@@ -445,8 +455,8 @@ describe('POST /api/revalidate', () => {
       expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gtfs_rt/feed-a');
       expect(mockRevalidatePath).toHaveBeenCalledWith('/feeds/gbfs/feed-a');
 
-      // 3 feeds × 3 types × 4 paths = 36 total calls
-      expect(mockRevalidatePath).toHaveBeenCalledTimes(36);
+      // 3 feeds × 3 types × 3 sub-routes × 2 locales = 54 total calls
+      expect(mockRevalidatePath).toHaveBeenCalledTimes(54);
     });
 
     it('returns 500 when type is invalid', async () => {

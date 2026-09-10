@@ -274,11 +274,29 @@
     "sealCriterionInGracePeriod": "À risque",
     "sealCriterionGracePeriodNote": "En délai de grâce jusqu'au {date}.",
     "sealCriterionNotApplicable": "Non applicable",
-    "sealCriterionSeasonalNote": "Ce flux est saisonnier, la couverture glissante de 7 jours ne s'applique donc pas.",
     "sealCriterionNotEvaluated": "Non évalué",
     "sealCriterionOnProbation": "En probation",
     "reliabilityAnalysisTitle": "Analyse du Sceau de fiabilité",
     "reliabilityAnalysisIntro": "Un aperçu des six critères utilisés pour déterminer si ce flux détient le Sceau de fiabilité.",
+    "sealAboutButtonLabel": "À propos du Sceau de fiabilité",
+    "sealReliabilityErrorTitle": "Impossible de charger l'analyse du Sceau de fiabilité",
+    "sealReliabilityErrorDescription": "Une erreur s'est produite lors de la récupération des données de fiabilité de ce flux. Veuillez réessayer.",
+    "sealReliabilityErrorBackToFeed": "Retour au flux",
+    "sealSectionTitle": "Sceau",
+    "sealOnProbationLabel": "En probation",
+    "sealProbationCaption": "Constitution d'un historique de 6 mois",
+    "sealStatusEarnedDescription": "Ce flux respecte tous les critères applicables",
+    "sealStatusGracePeriodDescription": "Ce flux a {days, plural, one {# jour} other {# jours}} pour résoudre {criteriaCount, plural, one {son problème} other {ses problèmes}} de {criteria} avant d'être disqualifié",
+    "sealStatusNotEarnedDescription": "Ce flux respecte {passed} critères applicables sur {total}",
+    "sealStatusProbationDescription": "Tous les critères sont actuellement respectés. Constitution d'un historique de cohérence de 6 mois avant l'attribution du Sceau de fiabilité",
+    "sealProbationStartDateLabel": "Date de début",
+    "sealProbationEarnDateLabel": "Date d'obtention",
+    "sealCurrentProducerUrlLabel": "URL actuelle du producteur",
+    "sealStableUrlExampleLabel": "Exemple d'URL stable",
+    "sealStableUrlExample": "https://agency.gov/gtfs/schedule.zip",
+    "sealProjectedSealDate": "Date prévue du sceau : {date}",
+    "sealLastEvaluated": "Dernière évaluation : {date} UTC",
+    "sealEarnedOn": "Sceau obtenu : {date}",
     "reliabilityDataPlaceholderWarning": "Les résultats par critère ne sont pas encore disponibles depuis l'API. Le détail ci-dessous est une donnée d'exemple à titre indicatif.",
     "seeDetailPageProviders": "See detail page to view {providersCount} others",
     "openFullValidationReport": "Ouvrir le rapport de validation complet",
@@ -657,31 +675,45 @@
       "calculationButton": "Voir comment chaque critère est calculé",
       "official": {
         "title": "Officiel",
+        "shortTitle": "Officiel",
+        "notAuthorizedSubtitle": "Non autorisé par l'agence de transport",
+        "notAuthorizedDescription": "Ce flux est créé par un membre de la communauté non affilié plutôt que par l'agence de transport, ce qui le rend non officiel",
         "subtitle": "Autorisé par l'agence de transport.",
         "description": "Le flux a été confirmé comme une source officielle, publiée par l'agence de transport ou en son nom."
       },
       "stable": {
         "title": "Stable",
+        "shortTitle": "Stable",
+        "unstableUrlSubtitle": "L'URL semble changer régulièrement",
+        "unstableUrlDescription": "Cette URL semble changer régulièrement, ce qui casse les applications qui en dépendent.",
+        "buildingRecordSubtitle": "En bonne voie, historique en constitution",
+        "buildingRecordDescription": "Cette URL sert le flux depuis moins de six mois. Elle est en bonne voie et doit rester inchangée pendant six mois consécutifs pour que le critère Stable soit respecté.",
         "subtitle": "L'URL de téléchargement ne change pas",
         "description": "Pendant au moins six mois consécutifs, la même URL dessert le flux, et celle-ci semble permanente."
       },
       "available": {
         "title": "Disponible",
+        "shortTitle": "Disponible",
         "subtitle": "Peut être téléchargé depuis l'URL chaque jour.",
         "description": "Une fois par jour, la Mobility Database récupère le flux et le télécharge sans erreur."
       },
       "compliant": {
         "title": "Conforme",
+        "shortTitle": "Conforme",
         "subtitle": "Respecte chaque « doit » de la General Transit Feed Specification.",
         "description": "Le flux ne présente aucune erreur dans le Validateur officiel GTFS Schedule. Les avertissements et les notices d'information n'affectent pas la conformité."
       },
       "freshRolling": {
         "title": "Récent : couverture glissante de 7 jours",
+        "shortTitle": "Récent",
+        "seasonalSubtitle": "Non applicable — ce flux est saisonnier",
+        "seasonalDescription": "Les flux saisonniers n'offrent pas de service toute l'année, donc la vérification de la couverture glissante de 7 jours ne s'applique pas.",
         "subtitle": "Comprend toujours 7 jours ou plus de couverture de service.",
         "description": "Conformément aux meilleures pratiques GTFS, le flux fournit au moins 7 jours de couverture de service future glissante. Cela signifie qu'au moins une semaine complète de service est couverte chaque jour où le flux est récupéré."
       },
       "freshContinuous": {
         "title": "Récent : couverture continue",
+        "shortTitle": "Continu",
         "subtitle": "Une fenêtre de service réaliste, sans interruption entre les versions du flux.",
         "description": "La couverture de service est continue entre les versions successives du flux, sans interruption, et la fenêtre de service s'étend sur deux ans ou moins."
       }
