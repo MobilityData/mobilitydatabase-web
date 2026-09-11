@@ -11,7 +11,6 @@ import {
   getUserContextJwtFromCookie,
   getCurrentUserFromCookie,
 } from '../../../../../utils/auth-server';
-import { getRemoteConfigValues } from '../../../../../../lib/remote-config.server';
 import {
   fetchCompleteFeedDataImpl,
   type FeedDataResult,
@@ -36,14 +35,11 @@ export const fetchCompleteFeedData = cache(
     feedDataType: string,
     feedId: string,
   ): Promise<FeedData | undefined> => {
-    const [accessToken, userContextJwt, user, remoteConfig] = await Promise.all(
-      [
-        getSSRAccessToken(),
-        getUserContextJwtFromCookie(),
-        getCurrentUserFromCookie(),
-        getRemoteConfigValues(),
-      ],
-    );
+    const [accessToken, userContextJwt, user] = await Promise.all([
+      getSSRAccessToken(),
+      getUserContextJwtFromCookie(),
+      getCurrentUserFromCookie(),
+    ]);
     const userId = user?.uid ?? 'anonymous';
 
     const cachedFetch = unstable_cache(
@@ -53,7 +49,6 @@ export const fetchCompleteFeedData = cache(
           feedId,
           accessToken,
           userContextJwt,
-          remoteConfig.enableSealOfReliability,
         );
       },
       [`feed-complete-${feedDataType}-${feedId}-${userId}`], // unique cache key per user

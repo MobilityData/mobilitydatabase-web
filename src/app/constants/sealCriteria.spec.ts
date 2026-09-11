@@ -274,6 +274,35 @@ describe('getProbationWindow', () => {
       }),
     ).toBeUndefined();
   });
+
+  it('takes the earliest start across every criterion on probation, not the one derived from the latest end', () => {
+    const probationWindow = getProbationWindow({
+      feed_id: 'mdb-1',
+      has_seal: false,
+      on_probation: true,
+      // The feed-level end is the latest of the two - it belongs to
+      // `compliant`, whose own window starts later than `available`'s.
+      probation_ends_at: '2027-01-16T00:00:00Z',
+      criteria: [
+        buildCriterion('available', {
+          on_probation: true,
+          probation_ends_at: '2026-10-16T00:00:00Z',
+        }),
+        buildCriterion('compliant', {
+          on_probation: true,
+          probation_ends_at: '2027-01-16T00:00:00Z',
+        }),
+      ],
+    });
+
+    expect(probationWindow?.end.toISOString()).toBe('2027-01-16T00:00:00.000Z');
+    // `available`'s own start (2026-10-16 minus 6 months), not
+    // `compliant`'s (2027-01-16 minus 6 months, which the old
+    // end-minus-PROBATION_MONTHS shortcut would have produced instead).
+    expect(probationWindow?.start.toISOString()).toBe(
+      '2026-04-16T00:00:00.000Z',
+    );
+  });
 });
 
 describe('getProbationProgressPercent', () => {

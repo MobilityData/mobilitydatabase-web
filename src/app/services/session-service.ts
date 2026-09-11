@@ -10,15 +10,24 @@ interface SessionMeta {
   expiresAt: number;
 }
 
-type SessionStatus =
+/**
+ * Outcome of {@link setUserCookieSession}.
+ *
+ * Callers use this to tell "the cookie was already good" from "we had to
+ * establish one". The latter means the current document was rendered without
+ * a valid `md_session`, and the proxy therefore routed it as a guest.
+ */
+export type SessionStatus =
   /** Session is valid — no POST needed. */
   | 'fresh'
   /** Prior session for this user existed but expired — a renewal. */
   | 'renewal'
   /** No prior session for this user — first login or identity change. */
-  | 'new';
+  | 'new'
+  /** The POST failed — no session was established. */
+  | 'failed';
 
-function getSessionStatus(uid: string): SessionStatus {
+function getSessionStatus(uid: string): Exclude<SessionStatus, 'failed'> {
   try {
     const raw = localStorage.getItem(STORED_SESSION_KEY);
     const meta = raw != null ? (JSON.parse(raw) as SessionMeta) : null;
@@ -40,18 +49,19 @@ function getSessionStatus(uid: string): SessionStatus {
  * Identity changes (e.g. anonymous → authenticated) are handled
  * automatically: a different uid always triggers a fresh POST.
  *
- * Returns true when an existing session was renewed (same uid, cookie was
- * stale). Returns false when the session was freshly established (first login)
- * or was still fresh (no-op).
+ * Returns the status that was acted on: `'fresh'` when no POST was needed,
+ * `'renewal'` or `'new'` when one succeeded, `'failed'` when it did not.
+ * Anything other than `'fresh'` means the document currently on screen was
+ * rendered without this user's session — see AuthSessionProvider.
  */
-export const setUserCookieSession = async (): Promise<boolean> => {
-  if (typeof window === 'undefined') return false;
+export const setUserCookieSession = async (): Promise<SessionStatus> => {
+  if (typeof window === 'undefined') return 'fresh';
 
   const user = app.auth().currentUser;
-  if (user == null) return false;
+  if (user == null) return 'fresh';
 
   const sessionStatus = getSessionStatus(user.uid);
-  if (sessionStatus === 'fresh') return false;
+  if (sessionStatus === 'fresh') return 'fresh';
 
   const idToken = await user.getIdToken();
   const resp = await fetch('/api/session', {
@@ -72,10 +82,10 @@ export const setUserCookieSession = async (): Promise<boolean> => {
     } catch {
       // Private browsing or storage quota exceeded — best-effort.
     }
-    return sessionStatus === 'renewal';
+    return sessionStatus;
   }
 
-  return false;
+  return 'failed';
 };
 
 /**

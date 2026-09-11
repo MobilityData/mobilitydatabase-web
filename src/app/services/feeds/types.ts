@@ -242,7 +242,7 @@ export interface paths {
       };
       cookie?: never;
     };
-    /** @description Returns the continuous coverage history for a GTFS feed: one entry per dataset, ordered by `downloaded_at` from newest to oldest. Each entry carries the service window the dataset covers, the window declared in its `feed_info.txt`, whether the two agree, and how much that dataset overlaps the previous (older) one. */
+    /** @description Returns the continuous coverage of a GTFS feed: `latest_state` and `latest_failure`, plus the history, one entry per dataset ordered by `downloaded_at` from newest to oldest. Each entry carries the service window the dataset covers, the window declared in its `feed_info.txt`, whether the two agree, and how much that dataset overlaps the previous (older) one. */
     get: operations['getGtfsFeedContinuousCoverage'];
     put?: never;
     post?: never;
@@ -821,7 +821,7 @@ export interface components {
     };
     /**
      * @description One criterion's contribution to the Seal of Reliability.
-     *     `status` is the criterion's own check at the last evaluation, undebounced, so a criterion can read `fail` while the feed still holds the seal - that is the at-risk state, and `in_grace_period` distinguishes it from a confirmed failure. Conversely a criterion can read `pass` while `on_probation` is true, in which case it still does not count towards the seal. The three states a client renders are therefore: healthy (`pass`), at risk (`fail` with `in_grace_period`), and failing (`fail` without it) - with `on_probation` as an independent flag on top.
+     *     `status` is the criterion's debounced verdict - the one the seal is decided on, so a client can always explain the `has_seal` beside it. A criterion failing its daily check but still inside its grace period reads `pass` with `in_grace_period` true: grace is not a failing state, it is the warning before one. Conversely a criterion can read `pass` while `on_probation` is true, in which case it still does not count towards the seal. The three states a client renders are therefore: healthy (`pass`), at risk (`pass` with `in_grace_period`), and failing (`fail`) - with `on_probation` as an independent flag on top.
      */
     ReliabilityCriterion: {
       /**
@@ -843,14 +843,14 @@ export interface components {
         | 'fresh_coverage'
         | 'fresh_continuous';
       /**
-       * @description The criterion's verdict at the last evaluation, with no grace period applied.
-       *       * `pass` - the check passed.
-       *       * `fail` - the check failed. The seal is only withdrawn once the failure outlasts
-       *         the criterion's grace period, so check `in_grace_period` before presenting this
-       *         as a loss.
-       *       * `unknown` - the criterion was evaluated but its inputs were missing, so no verdict
-       *         could be reached this time. It is skipped when deciding the seal rather than counted
-       *         as a failure.
+       * @description The criterion's debounced verdict: what it contributes to the seal, grace period already applied.
+       *       * `pass` - the criterion is not counting against the seal. Either its check passed,
+       *         or the check failed and the failure is still inside the criterion's grace period,
+       *         which `in_grace_period` tells apart.
+       *       * `fail` - the failure is confirmed and the criterion is withholding the seal.
+       *       * `unknown` - not produced. A run whose inputs were missing reaches no verdict and
+       *         leaves this value untouched, so the last verdict stands. Listed only because the
+       *         underlying column can hold it.
        *       * `not_applicable` - the criterion does not apply to this feed (for example a
        *         coverage criterion on a seasonal feed) and is withdrawn from the seal entirely.
        *       * `never_evaluated` - the criterion has produced no verdict for this feed yet. It is
@@ -865,7 +865,7 @@ export interface components {
         | 'not_applicable'
         | 'never_evaluated';
       /**
-       * @description Whether a failing check is still inside the criterion's grace period, and so is not yet counting against the seal. Can only be true while `status` is `fail`, and is always false while `on_probation` is true, since a failure during probation restarts probation outright rather than being absorbed.
+       * @description Whether the criterion's daily check is currently failing but the failure is still inside its grace period, and so is not yet counting against the seal. This is the at-risk state, and the only thing in the response that reports the raw daily check. Can only be true while `status` is `pass`, and is always false while `on_probation` is true, since a failure during probation restarts probation outright rather than being absorbed.
        * @example true
        */
       in_grace_period: boolean;
@@ -964,47 +964,15 @@ export interface components {
        */
       error_type?: string | null;
     };
+    /** @description `latest_state` is the feed's latest dataset measured against the one before it; `latest_failure` is the same measurement at the criterion's last observed failure. Both have the structure of an `items[]` entry, and either can be null. Together they name at most four datasets, shared when the latest state is itself the failure. */
     GtfsFeedContinuousCoverageResponse: {
       /**
        * @description Unique identifier of the GTFS feed.
        * @example mdb-123
        */
       feed_id: string;
-      /** @description The files the calculation reads for the feed's latest dataset (the `items[]` entry with `is_latest: true`), and whether each was present. Always returned in the same order with one entry per file, so a client can render a fixed row. */
-      latest_files: components['schemas']['GtfsFeedContinuousCoverageFile'][];
-      latest_coverage_window?: components['schemas']['ServiceDateWindow'];
-      /**
-       * @description Which input the latest dataset's `latest_coverage_window` was taken from.
-       *     * `service_dates` - the service dates derived by the validator from `calendar.txt` and
-       *       `calendar_dates.txt`.
-       *     * `feed_info` - the dates declared in `feed_info.txt`, used only when the service dates
-       *       are missing.
-       * @example service_dates
-       * @enum {string|null}
-       */
-      latest_coverage_window_source?: 'service_dates' | 'feed_info' | null;
-      /**
-       * @description Whether the latest dataset's `latest_coverage_window` stays inside the maximum coverage window the seal allows (two years). Null when there is no coverage window to measure.
-       * @example true
-       */
-      latest_within_max_coverage_window?: boolean | null;
-      latest_service_window?: components['schemas']['ServiceDateWindow'];
-      latest_feed_info_window?: components['schemas']['ServiceDateWindow'];
-      /**
-       * @description Whether the latest dataset's `latest_feed_info_window` agrees with `latest_service_window` on both bounds. Null when either window is missing, which is not the same as a mismatch.
-       * @example true
-       */
-      latest_feed_info_matches?: boolean | null;
-      /**
-       * @description Days of overlap between the latest dataset's coverage window and that of the dataset immediately older than it. Zero means the windows meet exactly; a gap is reported as `latest_gap_days` instead. Null when either window is missing or there is no older dataset.
-       * @example 15
-       */
-      latest_overlap_days?: number | null;
-      /**
-       * @description Days of uncovered service between the end of the older dataset's window and the start of the latest dataset's window. Null when the windows overlap or meet, which is the passing case.
-       * @example 3
-       */
-      latest_gap_days?: number | null;
+      latest_state?: components['schemas']['GtfsFeedContinuousCoverage'];
+      latest_failure?: components['schemas']['GtfsFeedContinuousCoverage'];
       /**
        * @description Total number of matching datasets regardless of limit and offset.
        * @example 42
@@ -1788,7 +1756,7 @@ export interface components {
     system_id_param: string;
     /** @description Filter feeds by their supported GBFS version. This is a string that follows the semantic versioning format. */
     version_param: string;
-    /** @description The number of items to be returned. Maximum is 100. */
+    /** @description The number of items to be returned. Maximum is 200. */
     limit_query_param_availability_endpoint: number;
     /** @description Return availability checks performed at or after this timestamp. Date should be in ISO 8601 date-time format. */
     availability_from: string;
@@ -2129,7 +2097,7 @@ export interface operations {
         from?: components['parameters']['availability_from'];
         /** @description Return availability checks performed at or before this timestamp. Date should be in ISO 8601 date-time format. */
         to?: components['parameters']['availability_to'];
-        /** @description The number of items to be returned. Maximum is 100. */
+        /** @description The number of items to be returned. Maximum is 200. */
         limit?: components['parameters']['limit_query_param_availability_endpoint'];
         /** @description Offset of the first item to return. */
         offset?: components['parameters']['offset'];

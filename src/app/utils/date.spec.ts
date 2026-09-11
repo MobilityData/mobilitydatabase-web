@@ -1,4 +1,8 @@
-import { getTimeLeftForTokenExpiration, displayFormattedDate } from './date';
+import {
+  getTimeLeftForTokenExpiration,
+  displayFormattedDate,
+  subMonthsUtc,
+} from './date';
 
 describe('displayFormattedDate', () => {
   test('returns empty string for null', () => {
@@ -108,5 +112,33 @@ describe('getTimeLeftForTokenExpiration', () => {
     );
     expect(timeLeft.duration).toEqual(expectedDuration);
     expect(timeLeft.future).toBe(false);
+  });
+});
+
+describe('subMonthsUtc', () => {
+  it('subtracts whole months in UTC, preserving the time of day', () => {
+    expect(
+      subMonthsUtc(new Date('2026-09-11T13:45:30.250Z'), 6).toISOString(),
+    ).toBe('2026-03-11T13:45:30.250Z');
+  });
+
+  it('clamps to the last day of the target month instead of rolling forward', () => {
+    // Feb 31 does not exist: plain Date.UTC arithmetic would land on Mar 3.
+    expect(
+      subMonthsUtc(new Date('2026-08-31T00:00:00Z'), 6).toISOString(),
+    ).toBe('2026-02-28T00:00:00.000Z');
+    // Leap year, so the same subtraction stops a day later.
+    expect(
+      subMonthsUtc(new Date('2024-08-31T00:00:00Z'), 6).toISOString(),
+    ).toBe('2024-02-29T00:00:00.000Z');
+    expect(
+      subMonthsUtc(new Date('2026-05-31T00:00:00Z'), 1).toISOString(),
+    ).toBe('2026-04-30T00:00:00.000Z');
+  });
+
+  it('crosses the year boundary', () => {
+    expect(
+      subMonthsUtc(new Date('2026-01-31T00:00:00Z'), 2).toISOString(),
+    ).toBe('2025-11-30T00:00:00.000Z');
   });
 });

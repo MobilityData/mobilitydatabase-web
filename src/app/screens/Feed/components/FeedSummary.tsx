@@ -57,6 +57,7 @@ import { formatDateShort } from '../../../utils/date';
 import ExternalIds from './ExternalIds';
 import SealQualitySummary from './SealQualitySummary';
 import SealOfReliability from '../../../components/SealOfReliability';
+import { useRemoteConfig } from '../../../context/RemoteConfigProvider';
 
 const Locations = dynamic(
   async () => await import('../../../components/Locations'),
@@ -70,7 +71,6 @@ export interface FeedSummaryProps {
   autoDiscoveryUrl?: string;
   totalRoutes?: number;
   routeTypes?: string[];
-  enableSealOfReliability?: boolean;
   reliability?: components['schemas']['FeedReliabilityReport'];
   /** Server-pinned "now" for date-derived criterion copy. */
   now: Date;
@@ -83,12 +83,12 @@ export default function FeedSummary({
   autoDiscoveryUrl,
   routeTypes,
   totalRoutes,
-  enableSealOfReliability = false,
   reliability,
   now,
 }: FeedSummaryProps): React.ReactElement {
   const t = useTranslations('feeds');
   const tCommon = useTranslations('common');
+  const { config } = useRemoteConfig();
   const theme = useTheme();
   const [openLocationDetails, setOpenLocationDetails] = useState<
     'summary' | 'fullList' | undefined
@@ -641,44 +641,47 @@ export default function FeedSummary({
           </Card>
         )}
 
-      {isGtfsFeedType(feed) && enableSealOfReliability && (
-        <Card variant='section' sx={{ position: 'relative' }}>
-          {feed.reliability_seal?.has_seal === true && (
-            <Box sx={{ position: 'absolute', top: '16px', right: '16px' }}>
-              <SealOfReliability size='small' />
-            </Box>
-          )}
-          <CardSectionTitle component='h3'>
-            <WorkspacePremiumIcon fontSize='inherit' aria-hidden />
-            {t('sealOfReliabilityAlt')}
-            <Tooltip
-              title={t('sealOfReliabilityQualityTooltip')}
-              placement='top'
-            >
-              <IconButton
-                component={Link}
-                href='/seal-of-reliability'
-                target='_blank'
-                rel='noopener noreferrer'
-                size='small'
-                aria-label={t('sealOfReliabilityLearnMore')}
+      {isGtfsFeedType(feed) &&
+        config.enableSealOfReliability &&
+        reliability != null && (
+          <Card variant='section' sx={{ position: 'relative' }}>
+            {feed.reliability_seal?.has_seal === true && (
+              <Box sx={{ position: 'absolute', top: '16px', right: '16px' }}>
+                <SealOfReliability size='small' />
+              </Box>
+            )}
+            <CardSectionTitle component='h3'>
+              <WorkspacePremiumIcon fontSize='inherit' aria-hidden />
+              {t('sealOfReliabilityAlt')}
+              <Tooltip
+                title={t('sealOfReliabilityQualityTooltip')}
+                placement='top'
               >
-                <InfoOutlinedIcon fontSize='inherit' />
-              </IconButton>
-            </Tooltip>
-          </CardSectionTitle>
-          <SealQualitySummary
-            feedId={feed.id ?? ''}
-            feedDataType={feed.data_type ?? 'gtfs'}
-            reliability={reliability}
-            criterionContext={{
-              isProducerUrlUnstable: feed.source_info?.is_producer_url_unstable,
-              feedCreatedAt: feed.created_at,
-              now,
-            }}
-          />
-        </Card>
-      )}
+                <IconButton
+                  component={Link}
+                  href='/seal-of-reliability'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  size='small'
+                  aria-label={t('sealOfReliabilityLearnMore')}
+                >
+                  <InfoOutlinedIcon fontSize='inherit' />
+                </IconButton>
+              </Tooltip>
+            </CardSectionTitle>
+            <SealQualitySummary
+              feedId={feed.id ?? ''}
+              feedDataType={feed.data_type ?? 'gtfs'}
+              reliability={reliability}
+              criterionContext={{
+                isProducerUrlUnstable:
+                  feed.source_info?.is_producer_url_unstable,
+                feedCreatedAt: feed.created_at,
+                now,
+              }}
+            />
+          </Card>
+        )}
 
       {latestDataset?.validation_report?.features != undefined &&
         latestDataset?.validation_report?.features.length > 0 && (

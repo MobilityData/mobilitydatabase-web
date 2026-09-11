@@ -10,7 +10,6 @@ import 'server-only';
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { getGuestGcipIdToken } from '../../../../../utils/auth-server';
-import { getRemoteConfigValues } from '../../../../../../lib/remote-config.server';
 import {
   fetchCompleteFeedDataImpl,
   type FeedDataResult,
@@ -33,16 +32,12 @@ export const fetchGuestFeedData = cache(
   async (feedDataType: string, feedId: string): Promise<FeedDataResult> => {
     const cachedFetch = unstable_cache(
       async () => {
-        const [accessToken, remoteConfig] = await Promise.all([
-          getGuestGcipIdToken(),
-          getRemoteConfigValues(),
-        ]);
+        const accessToken = await getGuestGcipIdToken();
         return await fetchCompleteFeedDataImpl(
           feedDataType,
           feedId,
           accessToken,
           undefined, // no user context for guest
-          remoteConfig.enableSealOfReliability,
         );
       },
       [`feed-guest-${feedDataType}-${feedId}`], // unique cache key
