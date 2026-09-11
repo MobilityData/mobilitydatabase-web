@@ -658,32 +658,32 @@
       "official": {
         "title": "Official",
         "subtitle": "Authorized by the transit agency.",
-        "description": "The feed has been confirmed as an official source, published by or on behalf of the transit agency."
+        "description": "A feed is Official on the Mobility Database when it has been manually confirmed. Confirmation is based on the producer URL domain, submitter information, the agency's website, and the feed_info.txt files."
       },
       "stable": {
         "title": "Stable",
-        "subtitle": "The download URL doesn't change",
-        "description": "For at least six uninterrupted months, the same URL serves the feed, and the URL appears to be permanent."
+        "subtitle": "The feed URL is stable and permanent.",
+        "description": "A feed is Stable when the same URL has served the feed for at least six uninterrupted months, and the URL does not contain date, time, or seasonal markers that indicate a temporary path."
       },
       "available": {
         "title": "Available",
-        "subtitle": "Can be downloaded from the URL each day.",
-        "description": "Once a day, the Mobility Database fetches the feed and downloads it cleanly."
+        "subtitle": "Can be downloaded each day.",
+        "description": "Once per day, the Mobility Database attempts to fetch the feed. A fetch is considered successful when the server returns a valid response, including redirects that resolve to the feed."
       },
       "compliant": {
         "title": "Compliant",
-        "subtitle": "Adheres to every \"must\" in the General Transit Feed Specification.",
-        "description": "The feed has 0 errors in the Official GTFS Schedule Validator. Warnings and info notices do not affect compliance."
+        "subtitle": "The feed passes the Official GTFS Schedule Validator with zero errors.",
+        "description": "The Validator checks conformance with every \"must\" requirement in the GTFS specification. A single error triggers a violation. Warnings and info notices do not affect compliance."
       },
       "freshRolling": {
         "title": "Fresh: Rolling 7 Days of Coverage",
-        "subtitle": "Always includes 7 days or more of service coverage.",
-        "description": "Following GTFS Best Practices, the feed provides at least 7 days of rolling future service coverage. This means at least a full week of service is covered every day it is fetched."
+        "subtitle": "At least 7 days of future service coverage, checked daily.",
+        "description": "Following GTFS Best Practices, the feed should provide at least 7 days of rolling future service coverage. The last date in the calendar files must be at least 7 days beyond the download date."
       },
       "freshContinuous": {
         "title": "Fresh: Continuous Coverage",
         "subtitle": "A realistic service window with no gaps between feed versions.",
-        "description": "Service coverage is continuous across subsequent feed versions with no gaps, and the service window spans two years or less."
+        "description": "Service coverage must be continuous across consecutive feed versions, and the total service window must not exceed two years. If v1 ends Aug 31, v2 must begin no later than Sept 1. A Sept 2 start is a gap."
       }
     },
     "gracePeriods": {
@@ -709,7 +709,7 @@
         "consequence": "If a feed cannot be downloaded, producers have 14 days to restore access. After 14 days, if the feed remains unavailable, the feed loses its Seal."
       },
       "freshCoverage": {
-        "criterion": "Fresh (7‑day coverage)",
+        "criterion": "Fresh: Rolling 7 Days of Coverage",
         "triggerCondition": "Coverage gap",
         "gracePeriod": "14 days",
         "consequence": "If a feed stops covering far enough into the future, producers have 14 days to publish an update before the feed loses its Seal."
@@ -847,7 +847,7 @@
           },
           "serviceWindow": {
             "title": "Two-year service window",
-            "description": "The total span of service dates in a dataset must not exceed two years. Feeds covering more than two years ahead are considered to contain stale, unreliable future data."
+            "description": "The total span of service dates in a dataset must not exceed two years. Feeds covering more than two years ahead contain unreliable future data."
           }
         },
         "feedInfo": {
