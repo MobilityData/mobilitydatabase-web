@@ -276,6 +276,56 @@ describe('remote-config.server', () => {
     });
   });
 
+  describe('fetch failures', () => {
+    let consoleErrorSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+        // silence expected error logging
+      });
+    });
+
+    afterEach(() => {
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('returns defaults when getTemplate rejects', async () => {
+      mockGetTemplate.mockRejectedValue(new Error('firebase unavailable'));
+
+      const result = await getRemoteConfigValuesForUser('user@example.com');
+
+      expect(result).toEqual(defaultRemoteConfigValues);
+      expect(consoleErrorSpy).toHaveBeenCalled();
+    });
+
+    it('returns defaults when the Admin app cannot be initialized', async () => {
+      const { getFirebaseAdminApp } = jest.requireMock('./firebase-admin');
+      getFirebaseAdminApp.mockImplementationOnce(() => {
+        throw new Error('Missing server-side credentials.');
+      });
+
+      const result = await getRemoteConfigValuesForUser('user@example.com');
+
+      expect(result).toEqual(defaultRemoteConfigValues);
+    });
+
+    it('does not persist the fallback: a later request refetches', async () => {
+      mockGetTemplate.mockRejectedValueOnce(new Error('transient'));
+
+      const failed = await getRemoteConfigValuesForUser('user@example.com');
+      expect(failed.enableMetrics).toBe(false);
+
+      mockGetTemplate.mockResolvedValue({
+        parameters: {
+          enableMetrics: { defaultValue: { value: 'true' } },
+        },
+      });
+
+      const recovered = await getRemoteConfigValuesForUser('user@example.com');
+      expect(recovered.enableMetrics).toBe(true);
+    });
+  });
+
   describe('refreshRemoteConfig', () => {
     it('calls revalidateTag with remote-config tag', async () => {
       const { revalidateTag } = jest.requireMock('next/cache');
