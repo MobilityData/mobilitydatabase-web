@@ -331,7 +331,7 @@
     "sealAvailabilityGraceTitle": "{days, plural, one {# day} other {# days}} left to restore access",
     "sealAvailabilityGraceDescription": "Restore access to the feed before the grace period ends to keep the Seal.",
     "sealAvailabilityFailing": "The feed has been unreachable since {date}. Ensure this feed is available consistently for {months, plural, one {# month} other {# months}} to pass this criterion.",
-    "sealAvailabilityFailingUndated": "The feed has been unreachable. Ensure this feed is available consistently for {months, plural, one {# month} other {# months}} to pass this criterion."
+    "sealAvailabilityFailingUndated": "The feed has been unreachable. Ensure this feed is available consistently for {months, plural, one {# month} other {# months}} to pass this criterion.",
     "sealAvailabilityProbation": "Fetches are succeeding again. This criterion is rebuilding its six-month record after its last recorded error on {date}.",
     "sealAvailabilityProbationUndated": "Fetches are succeeding again. This criterion is rebuilding its six-month record after a confirmed failure.",
     "sealAvailabilityNotApplicable": "Daily availability checks don't apply to this feed.",
