@@ -119,7 +119,7 @@ export function AuthSessionProvider({
           /**
            * Addresses the issue where a cookie is expired and the user
            * goes directly to a page that requires authentication (ex: feed detail)
-           * If the user goes on the feed detail page directly after the 
+           * If the user goes on the feed detail page directly after the
            * cookie expires (ex: coming back the next day) it will call the
            * server component with an expired cookie resulting in wrong path
            * Solution is to recognize this from the client and refresh the page
