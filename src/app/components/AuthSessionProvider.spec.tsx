@@ -33,7 +33,14 @@ jest.mock('../../firebase', () => ({
 // ---------- Mock: session-service ----------
 
 jest.mock('../services/session-service', () => ({
-  setUserCookieSession: jest.fn().mockResolvedValue(undefined),
+  setUserCookieSession: jest.fn().mockResolvedValue('fresh'),
+}));
+
+// ---------- Mock: i18n navigation ----------
+
+const mockRefresh = jest.fn();
+jest.mock('../../i18n/navigation', () => ({
+  useRouter: () => ({ refresh: mockRefresh }),
 }));
 
 // ---------- Mock: user-feature-flag-service ----------
@@ -90,7 +97,12 @@ function renderProvider(): RenderResult {
   );
 }
 
-const mockUser = { uid: 'user-1' };
+const mockUser = { uid: 'user-1', isAnonymous: false };
+const mockGuest = { uid: 'guest-1', isAnonymous: true };
+
+function mockSessionStatus(status: string): void {
+  (setUserCookieSession as jest.Mock).mockResolvedValue(status);
+}
 
 // ---------- Tests ----------
 
@@ -209,6 +221,105 @@ describe('AuthSessionProvider', () => {
       });
 
       expect(setUserCookieSession).not.toHaveBeenCalled();
+    });
+  });
+
+  // The proxy routes a request with no valid `md_session` to the guest
+  // `static/` tree, so a document rendered before the cookie was established is
+  // an anonymous view. Refreshing re-runs the proxy with the cookie in place.
+  describe('refreshing after the session cookie is established', () => {
+    it('refreshes when an expired cookie is renewed', async () => {
+      mockSessionStatus('renewal');
+      renderProvider();
+
+      await act(async () => {
+        capturedAuthCallback(mockUser);
+      });
+
+      expect(mockRefresh).toHaveBeenCalledTimes(1);
+    });
+
+    it('refreshes when a session is established for a new identity', async () => {
+      mockSessionStatus('new');
+      renderProvider();
+
+      await act(async () => {
+        capturedAuthCallback(mockUser);
+      });
+
+      expect(mockRefresh).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not refresh when the cookie was already fresh', async () => {
+      mockSessionStatus('fresh');
+      renderProvider();
+
+      await act(async () => {
+        capturedAuthCallback(mockUser);
+      });
+
+      expect(mockRefresh).not.toHaveBeenCalled();
+    });
+
+    it('does not refresh when the POST failed', async () => {
+      mockSessionStatus('failed');
+      renderProvider();
+
+      await act(async () => {
+        capturedAuthCallback(mockUser);
+      });
+
+      expect(mockRefresh).not.toHaveBeenCalled();
+    });
+
+    // Guests are routed to `static/` with or without a cookie, so a refresh
+    // would land on the very same tree.
+    it('does not refresh for an anonymous user', async () => {
+      mockSessionStatus('new');
+      renderProvider();
+
+      await act(async () => {
+        capturedAuthCallback(mockGuest);
+      });
+
+      expect(mockRefresh).not.toHaveBeenCalled();
+    });
+
+    // The hourly renewal on a long-open tab is a page that already rendered
+    // under the right tree.
+    it('does not refresh again on a later renewal for the same user', async () => {
+      mockSessionStatus('fresh');
+      renderProvider();
+
+      await act(async () => {
+        capturedAuthCallback(mockUser);
+      });
+
+      mockSessionStatus('renewal');
+      await act(async () => {
+        jest.advanceTimersByTime(RENEWAL_INTERVAL_MS);
+      });
+
+      expect(setUserCookieSession).toHaveBeenCalledTimes(2);
+      expect(mockRefresh).not.toHaveBeenCalled();
+    });
+
+    // Signing in on a page that was rendered for a guest is a wrong-tree
+    // render too, even though it is not the first sync of this page's life.
+    it('refreshes when the identity changes from guest to signed in', async () => {
+      mockSessionStatus('new');
+      renderProvider();
+
+      await act(async () => {
+        capturedAuthCallback(mockGuest);
+      });
+      expect(mockRefresh).not.toHaveBeenCalled();
+
+      await act(async () => {
+        capturedAuthCallback(mockUser);
+      });
+
+      expect(mockRefresh).toHaveBeenCalledTimes(1);
     });
   });
 

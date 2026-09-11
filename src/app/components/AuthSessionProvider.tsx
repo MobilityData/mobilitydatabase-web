@@ -13,6 +13,7 @@ import { useDispatch } from 'react-redux';
 import { app } from '../../firebase';
 import { anonymousLogin } from '../store/profile-reducer';
 import { setUserCookieSession } from '../services/session-service';
+import { useRouter } from '../../i18n/navigation';
 import { revalidateUserFeatureFlags } from '../services/user-feature-flag-service';
 
 interface AuthSession {
@@ -62,7 +63,9 @@ export function useAuthSession(): AuthSession {
  *
  * 1. Triggers anonymous sign-in when no user exists.
  * 2. Re-establishes the `md_session` cookie on return visits (Firebase
- *    restores auth from IndexedDB but the 1-hour cookie has expired).
+ *    restores auth from IndexedDB but the 1-hour cookie has expired), then
+ *    refreshes the route so the proxy can re-run with the restored cookie —
+ *    the document was served from the guest `static/` tree without it.
  * 3. Schedules the next renewal at exactly `expiresAt - 5 min` using
  *    a setTimeout derived from the value stored in localStorage.
  * 4. Deduplicates POSTs across tabs — localStorage is shared across all
@@ -87,6 +90,16 @@ export function AuthSessionProvider({
     displayName: null,
   });
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  /**
+   * The last identity whose session this page has already resolved. Only the
+   * first resolution for a given uid can have followed a wrong-tree render.
+   */
+  const settledUidRef = useRef<string | null>(null);
+  const router = useRouter();
+  const routerRef = useRef(router);
+  useEffect(() => {
+    routerRef.current = router;
+  }, [router]);
 
   useEffect(() => {
     /**
@@ -95,10 +108,28 @@ export function AuthSessionProvider({
      * the session without a poller of their own.
      */
     const syncSession = (uid: string, isAnonymous: boolean): void => {
+      const isFirstForUid = settledUidRef.current !== uid;
+      settledUidRef.current = uid;
+
       setUserCookieSession()
-        .then((wasRenewed) => {
-          if (wasRenewed && !isAnonymous) {
+        .then((status) => {
+          if (status === 'renewal' && !isAnonymous) {
             void revalidateUserFeatureFlags(uid);
+          }
+          /**
+           * Addresses the issue where a cookie is expired and the user
+           * goes directly to a page that requires authentication (ex: feed detail)
+           * If the user goes on the feed detail page directly after the 
+           * cookie expires (ex: coming back the next day) it will call the
+           * server component with an expired cookie resulting in wrong path
+           * Solution is to recognize this from the client and refresh the page
+           */
+          if (
+            isFirstForUid &&
+            !isAnonymous &&
+            (status === 'new' || status === 'renewal')
+          ) {
+            routerRef.current.refresh();
           }
         })
         .catch(() => {
@@ -148,6 +179,7 @@ export function AuthSessionProvider({
     return () => {
       unsubscribe();
       if (intervalRef.current != null) clearInterval(intervalRef.current);
+      settledUidRef.current = null;
     };
   }, [dispatch]);
 
