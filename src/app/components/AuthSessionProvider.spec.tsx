@@ -304,6 +304,73 @@ describe('AuthSessionProvider', () => {
       expect(mockRefresh).not.toHaveBeenCalled();
     });
 
+    // A failed POST leaves no cookie, so the route on screen is still the
+    // guest one - the retry that finally establishes the session has to be the
+    // one that refreshes it.
+    it('refreshes on the retry after the first POST failed', async () => {
+      mockSessionStatus('failed');
+      renderProvider();
+
+      await act(async () => {
+        capturedAuthCallback(mockUser);
+      });
+      expect(mockRefresh).not.toHaveBeenCalled();
+
+      mockSessionStatus('new');
+      await act(async () => {
+        jest.advanceTimersByTime(RENEWAL_INTERVAL_MS);
+      });
+
+      expect(mockRefresh).toHaveBeenCalledTimes(1);
+    });
+
+    it('refreshes on the retry after the first POST rejected', async () => {
+      (setUserCookieSession as jest.Mock).mockRejectedValueOnce(
+        new Error('network'),
+      );
+      const consoleError = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      renderProvider();
+
+      await act(async () => {
+        capturedAuthCallback(mockUser);
+      });
+      expect(mockRefresh).not.toHaveBeenCalled();
+
+      mockSessionStatus('new');
+      await act(async () => {
+        jest.advanceTimersByTime(RENEWAL_INTERVAL_MS);
+      });
+
+      expect(mockRefresh).toHaveBeenCalledTimes(1);
+      consoleError.mockRestore();
+    });
+
+    // Releasing the uid must not resurrect a refresh for a sync that already
+    // succeeded - only the failed one is rolled back.
+    it('does not refresh again when a later renewal fails', async () => {
+      mockSessionStatus('new');
+      renderProvider();
+
+      await act(async () => {
+        capturedAuthCallback(mockUser);
+      });
+      expect(mockRefresh).toHaveBeenCalledTimes(1);
+
+      mockSessionStatus('failed');
+      await act(async () => {
+        jest.advanceTimersByTime(RENEWAL_INTERVAL_MS);
+      });
+
+      mockSessionStatus('renewal');
+      await act(async () => {
+        jest.advanceTimersByTime(RENEWAL_INTERVAL_MS);
+      });
+
+      expect(mockRefresh).toHaveBeenCalledTimes(1);
+    });
+
     // Signing in on a page that was rendered for a guest is a wrong-tree
     // render too, even though it is not the first sync of this page's life.
     it('refreshes when the identity changes from guest to signed in', async () => {

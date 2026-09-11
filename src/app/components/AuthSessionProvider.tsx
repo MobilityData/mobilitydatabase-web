@@ -108,11 +108,33 @@ export function AuthSessionProvider({
      * the session without a poller of their own.
      */
     const syncSession = (uid: string, isAnonymous: boolean): void => {
-      const isFirstForUid = settledUidRef.current !== uid;
+      /**
+       * Claimed synchronously so two overlapping syncs for the same uid - an
+       * onIdTokenChanged landing on top of an in-flight POST - don't both count
+       * as the first and both refresh.
+       */
+      const previousSettledUid = settledUidRef.current;
+      const isFirstForUid = previousSettledUid !== uid;
       settledUidRef.current = uid;
+
+      /**
+       * Nothing was established, so this uid is not settled after all. Released
+       * again - unless a newer identity has since claimed the ref - so the
+       * five-minute retry still counts as the first sync for this user and can
+       * refresh the guest-rendered route it inherited.
+       */
+      const releaseUid = (): void => {
+        if (settledUidRef.current === uid) {
+          settledUidRef.current = previousSettledUid;
+        }
+      };
 
       setUserCookieSession()
         .then((status) => {
+          if (status === 'failed') {
+            releaseUid();
+            return;
+          }
           if (status === 'renewal' && !isAnonymous) {
             void revalidateUserFeatureFlags(uid);
           }
@@ -133,6 +155,7 @@ export function AuthSessionProvider({
           }
         })
         .catch(() => {
+          releaseUid();
           console.error('Failed to establish session cookie');
         });
     };
