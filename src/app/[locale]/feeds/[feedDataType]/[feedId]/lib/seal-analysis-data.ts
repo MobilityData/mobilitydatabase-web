@@ -24,7 +24,6 @@ import {
 type ReliabilityReport = components['schemas']['FeedReliabilityReport'];
 type AvailabilityResponse =
   components['schemas']['GtfsFeedAvailabilityResponse'];
-type AvailabilityCheck = components['schemas']['GtfsFeedAvailabilityCheck'];
 type ContinuousCoverageResponse =
   components['schemas']['GtfsFeedContinuousCoverageResponse'];
 
@@ -33,14 +32,8 @@ type ContinuousCoverageResponse =
  */
 export const SEAL_ANALYSIS_REVALIDATE = 21600;
 
-/**
- * Both history endpoints are paginated with a maximum of 100 items.
- *
- * Continuous coverage takes the newest page, which is what a breakdown UI
- * needs. Availability instead asks for a fixed window - the heatmap draws six
- * months of daily checks, which is more than one page holds - so it pages.
- */
-const HISTORY_LIMIT = 100;
+const COVERAGE_LIMIT = 100;
+const AVAILABILITY_LIMIT = 100; // to be changed to 200
 
 /**
  * How far back the availability heatmap looks. Kept in step with
@@ -48,18 +41,17 @@ const HISTORY_LIMIT = 100;
  * which decides how much of it is drawn.
  */
 const AVAILABILITY_HISTORY_MONTHS = 6;
-
-/**
- * Daily checks over six months are ~183 items, so two pages cover the window
- * with room to spare. The cap keeps a feed checked more than once a day from
- * turning one render into an unbounded page walk.
- */
-const AVAILABILITY_MAX_PAGES = 2;
+const AVAILABILITY_MAX_EXTRA_PAGES = 5;
 
 /**
  * The newest checks going back `AVAILABILITY_HISTORY_MONTHS`, flattened into
- * one response. Sorted newest-first so that a feed checked often enough to
- * overflow the page cap keeps the days the heatmap actually draws.
+ * one response.
+ *
+ * One call covers the window in the ordinary case. The response reports the
+ * `total` matching the window, so anything beyond the first page is fetched
+ * as a fixed set of follow-up requests in parallel rather than a serial walk.
+ * Sorted newest-first so that a feed checked often enough to overflow the cap
+ * keeps the days the heatmap actually draws.
  */
 async function fetchAvailabilityHistory(
   feedId: string,
@@ -75,36 +67,48 @@ async function fetchAvailabilityHistory(
     ),
   ).toISOString();
 
-  let firstPage: AvailabilityResponse | undefined;
-  const checks: AvailabilityCheck[] = [];
-
-  for (let page = 0; page < AVAILABILITY_MAX_PAGES; page++) {
-    const response = await getGtfsFeedAvailability(
+  const fetchPage = async (
+    offset: number,
+  ): Promise<AvailabilityResponse | undefined> =>
+    await getGtfsFeedAvailability(
       feedId,
       accessToken,
       {
         from,
-        limit: HISTORY_LIMIT,
-        offset: page * HISTORY_LIMIT,
+        limit: AVAILABILITY_LIMIT,
+        offset,
         // Passed explicitly because the OpenAPI spec contradicts itself on the
         // default ordering of `checks`.
         sort: 'desc',
       },
       userContextJwt,
     );
-    if (response == undefined) {
-      break;
-    }
-    firstPage ??= response;
-    checks.push(...response.checks);
-    if (checks.length >= response.total || response.checks.length === 0) {
-      break;
+
+  const firstPage = await fetchPage(0);
+  if (firstPage == undefined) {
+    return undefined;
+  }
+
+  const checks = [...firstPage.checks];
+
+  // An empty first page means there is nothing to walk, whatever `total` says.
+  if (checks.length > 0 && firstPage.total > AVAILABILITY_LIMIT) {
+    const pageCount = Math.min(
+      Math.ceil(firstPage.total / AVAILABILITY_LIMIT),
+      AVAILABILITY_MAX_EXTRA_PAGES + 1,
+    );
+    const rest = await Promise.all(
+      Array.from(
+        { length: pageCount - 1 },
+        async (_, index) => await fetchPage((index + 1) * AVAILABILITY_LIMIT),
+      ),
+    );
+    for (const page of rest) {
+      checks.push(...(page?.checks ?? []));
     }
   }
 
-  return firstPage == undefined
-    ? undefined
-    : { ...firstPage, offset: 0, limit: checks.length, checks };
+  return { ...firstPage, offset: 0, limit: checks.length, checks };
 }
 
 export interface SealAnalysisData {
@@ -178,7 +182,7 @@ function cachedContinuousCoverage(
       await getGtfsFeedContinuousCoverage(
         feedId,
         accessToken,
-        { limit: HISTORY_LIMIT },
+        { limit: COVERAGE_LIMIT },
         userContextJwt,
       ),
     [`seal-analysis-coverage-${feedId}`],
