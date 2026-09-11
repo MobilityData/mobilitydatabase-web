@@ -36,7 +36,6 @@ import {
 } from './Feed.functions';
 import dynamic from 'next/dynamic';
 import { ContentBox } from '../../components/ContentBox';
-import { getRemoteConfigValues } from '../../../lib/remote-config.server';
 import SectionContainer from '../../components/SectionContainer';
 
 const CoveredAreaMap = dynamic(
@@ -95,10 +94,9 @@ export default async function FeedView({
   isMobilityDatabaseAdmin = false,
 }: Props): Promise<React.ReactElement> {
   if (feed == undefined) notFound();
-  const [t, tGbfs, config] = await Promise.all([
+  const [t, tGbfs] = await Promise.all([
     getTranslations('feeds'),
     getTranslations('gbfs'),
-    getRemoteConfigValues(),
   ]);
 
   // Pinned on the server so the six-month "building record" branch in the
@@ -223,7 +221,7 @@ export default async function FeedView({
                 downloadLatestUrl.length > 0 && (
                   <ClientDownloadButton url={downloadLatestUrl} />
                 )}
-              {isGtfsFeedType(feed) && config.enableSealOfReliability && (
+              {isGtfsFeedType(feed) && (
                 <ClientQualityAnalysisButton
                   feedId={feed.id ?? ''}
                   feedDataType={feed.data_type ?? 'gtfs'}
@@ -273,7 +271,6 @@ export default async function FeedView({
                     autoDiscoveryUrl={gbfsAutodiscoveryUrl}
                     totalRoutes={totalRoutes}
                     routeTypes={routeTypes}
-                    enableSealOfReliability={config.enableSealOfReliability}
                     reliability={reliability}
                     now={now}
                   />
