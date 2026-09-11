@@ -68,9 +68,10 @@ function toUtcDayKey(date: Date): string {
 }
 
 /**
- * One entry per calendar day in the window, ending on `now`'s UTC day. A day
- * counts as a failure as soon as one of its checks failed - a feed that came
- * back up later the same day still had an outage.
+ * One entry per calendar day in the window, ending on `now`'s UTC day. Where a
+ * day holds several checks, the last one decides its status - a feed that
+ * failed in the morning and was back up by the evening ended the day
+ * available.
  */
 export function buildAvailabilityCalendar(
   checks: AvailabilityCheck[] = [],
@@ -91,17 +92,32 @@ export function buildAvailabilityCalendar(
     ),
   );
 
-  const byDay = new Map<string, { failed: boolean; checkCount: number }>();
+  const byDay = new Map<
+    string,
+    { latestAt: number; success: boolean; checkCount: number }
+  >();
   for (const check of checks) {
     const checkedAt = new Date(check.checked_at);
     if (isNaN(checkedAt.getTime()) || checkedAt < start) {
       continue;
     }
     const key = toUtcDayKey(checkedAt);
-    const entry = byDay.get(key) ?? { failed: false, checkCount: 0 };
+    const at = checkedAt.getTime();
+    const entry = byDay.get(key);
+    if (entry == undefined) {
+      byDay.set(key, { latestAt: at, success: check.success, checkCount: 1 });
+      continue;
+    }
     entry.checkCount += 1;
-    entry.failed = entry.failed || !check.success;
-    byDay.set(key, entry);
+    if (at > entry.latestAt) {
+      entry.latestAt = at;
+      entry.success = check.success;
+    } else if (at === entry.latestAt) {
+      // Two checks on the same instant have no "last" between them, and the
+      // input order is not meaningful - the loader flattens pages fetched in
+      // parallel. Let the failure stand so the result doesn't depend on it.
+      entry.success = entry.success && check.success;
+    }
   }
 
   const days: AvailabilityDay[] = [];
@@ -116,7 +132,11 @@ export function buildAvailabilityCalendar(
       date,
       checkCount: entry?.checkCount ?? 0,
       status:
-        entry == undefined ? 'unchecked' : entry.failed ? 'failure' : 'success',
+        entry == undefined
+          ? 'unchecked'
+          : entry.success
+            ? 'success'
+            : 'failure',
     });
   }
 

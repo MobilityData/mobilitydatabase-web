@@ -65,19 +65,58 @@ describe('buildAvailabilityCalendar', () => {
     );
   });
 
-  it('counts a day as failed when any of its checks failed', () => {
-    const calendar = buildAvailabilityCalendar(
+  it("takes the day's last check as its status, whatever the input order", () => {
+    for (const checks of [
       [
         check('2026-09-08', true, '04:00:00'),
         check('2026-09-08', false, '16:00:00'),
+      ],
+      [
+        check('2026-09-08', false, '16:00:00'),
+        check('2026-09-08', true, '04:00:00'),
+      ],
+    ]) {
+      const calendar = buildAvailabilityCalendar(checks, {
+        now: NOW,
+        months: 1,
+      });
+
+      const day = calendar.days.find((d) => d.date === '2026-09-08');
+      expect(day?.status).toBe('failure');
+      expect(day?.checkCount).toBe(2);
+      expect(calendar.failureCount).toBe(1);
+    }
+  });
+
+  it('recovers a day whose earlier checks failed but whose last one passed', () => {
+    const calendar = buildAvailabilityCalendar(
+      [
+        check('2026-09-08', false, '04:00:00'),
+        check('2026-09-08', false, '10:00:00'),
+        check('2026-09-08', true, '16:00:00'),
       ],
       { now: NOW, months: 1 },
     );
 
     const day = calendar.days.find((d) => d.date === '2026-09-08');
-    expect(day?.status).toBe('failure');
-    expect(day?.checkCount).toBe(2);
-    expect(calendar.failureCount).toBe(1);
+    expect(day?.status).toBe('success');
+    expect(day?.checkCount).toBe(3);
+    expect(calendar.failureCount).toBe(0);
+    expect(calendar.successCount).toBe(1);
+  });
+
+  it('lets a failure stand when two checks share the same instant', () => {
+    const calendar = buildAvailabilityCalendar(
+      [
+        check('2026-09-08', true, '16:00:00'),
+        check('2026-09-08', false, '16:00:00'),
+      ],
+      { now: NOW, months: 1 },
+    );
+
+    expect(calendar.days.find((d) => d.date === '2026-09-08')?.status).toBe(
+      'failure',
+    );
   });
 
   it('ignores checks from before the window and unparseable timestamps', () => {
