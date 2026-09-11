@@ -35,7 +35,7 @@ export const SEAL_ANALYSIS_REVALIDATE = 21600;
 
 const COVERAGE_LIMIT = 100;
 /** Exported so the specs follow it rather than restating the page size. */
-export const AVAILABILITY_LIMIT = 100; // to be changed to 200
+export const AVAILABILITY_LIMIT = 200;
 
 /**
  * How far back the availability heatmap looks. Kept in step with
