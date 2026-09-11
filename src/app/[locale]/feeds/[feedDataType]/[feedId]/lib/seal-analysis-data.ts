@@ -20,6 +20,7 @@ import {
   getSSRAccessToken,
   getUserContextJwtFromCookie,
 } from '../../../../../utils/auth-server';
+import { subMonthsUtc } from '../../../../../utils/date';
 
 type ReliabilityReport = components['schemas']['FeedReliabilityReport'];
 type AvailabilityResponse =
@@ -60,12 +61,14 @@ async function fetchAvailabilityHistory(
   userContextJwt: string | undefined,
   now: Date,
 ): Promise<AvailabilityResponse | undefined> {
-  const from = new Date(
-    Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth() - AVAILABILITY_HISTORY_MONTHS,
-      now.getUTCDate(),
+  // `subMonthsUtc` clamps the day to the target month's length: subtracting
+  // six months from Aug 31 by hand lands on Feb 31, which rolls forward to
+  // Mar 3 and cuts days the heatmap draws out of the requested window.
+  const from = subMonthsUtc(
+    new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
     ),
+    AVAILABILITY_HISTORY_MONTHS,
   ).toISOString();
 
   const fetchPage = async (

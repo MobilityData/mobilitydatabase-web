@@ -124,6 +124,24 @@ describe('fetchGuestSealAnalysisData', () => {
     );
   });
 
+  it('clamps the window start to a real date at month end', async () => {
+    // Six months before Aug 31 is Feb 31, which rolls forward to Mar 3 unless
+    // the subtraction clamps - losing days the heatmap draws.
+    jest.useFakeTimers().setSystemTime(new Date('2026-08-31T09:15:00Z'));
+    try {
+      await fetchGuestSealAnalysisData('gtfs', 'mdb-1');
+    } finally {
+      jest.useRealTimers();
+    }
+
+    expect(mockGetGtfsFeedAvailability).toHaveBeenCalledWith(
+      'mdb-1',
+      'guest-token',
+      expect.objectContaining({ from: '2026-02-28T00:00:00.000Z' }),
+      undefined,
+    );
+  });
+
   it('fetches the follow-up pages `total` reports beyond the first', async () => {
     const page = (offset: number, total: number, count: number): unknown => ({
       feed_id: 'mdb-1',

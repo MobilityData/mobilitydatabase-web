@@ -104,13 +104,27 @@ export function utcCalendarDayDiff(date: Date, now: Date): number {
  * date-fns's `subMonths` rolls the calendar back in local time, so it can
  * return a different instant - and therefore a different displayed date -
  * depending on the timezone of the machine that evaluates it.
+ *
+ * The day of the month is clamped to the target month's length, the way
+ * date-fns's `subMonths` does it. Handing `Date.UTC` an out-of-range day
+ * instead rolls it *forward* into the next month - six months before Aug 31
+ * would be Feb 31, i.e. Mar 3 - which silently shortens any window built
+ * from it.
  */
 export function subMonthsUtc(date: Date, months: number): Date {
+  const targetYear = date.getUTCFullYear();
+  const targetMonth = date.getUTCMonth() - months;
+  // Day 0 of the following month is the last day of the target month, and
+  // `Date.UTC` normalises a month outside 0-11 into the right year for us.
+  const daysInTargetMonth = new Date(
+    Date.UTC(targetYear, targetMonth + 1, 0),
+  ).getUTCDate();
+
   return new Date(
     Date.UTC(
-      date.getUTCFullYear(),
-      date.getUTCMonth() - months,
-      date.getUTCDate(),
+      targetYear,
+      targetMonth,
+      Math.min(date.getUTCDate(), daysInTargetMonth),
       date.getUTCHours(),
       date.getUTCMinutes(),
       date.getUTCSeconds(),
