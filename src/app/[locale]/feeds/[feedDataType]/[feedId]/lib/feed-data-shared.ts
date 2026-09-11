@@ -209,7 +209,6 @@ export async function fetchCompleteFeedDataImpl(
   feedId: string,
   accessToken: string,
   userContextJwt: string | undefined,
-  enableSealOfReliability: boolean,
 ): Promise<FeedDataResult> {
   // Fetch core feed data
   const feed = await fetchFeedByType(
@@ -238,9 +237,7 @@ export async function fetchCompleteFeedDataImpl(
           feedId,
           (feed as GTFSFeedType)?.visualization_dataset_id ?? '',
         ),
-        enableSealOfReliability
-          ? fetchReliabilityData(feedId, accessToken, userContextJwt)
-          : Promise.resolve({ reliability: undefined, failed: false }),
+        fetchReliabilityData(feedId, accessToken, userContextJwt),
       ],
     );
     initialDatasets = datasetsResult;

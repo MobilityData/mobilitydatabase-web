@@ -44,8 +44,8 @@ export default async function StaticFeedReliabilityPage({
 
   // Settled rather than all-or-nothing: the two requests fail for unrelated
   // reasons and need unrelated responses. A missing feed is a 404; a seal
-  // loader that can't mint a token, read Remote Config, or reach its cache is
-  // a reliability error on a page that does exist.
+  // loader that can't mint a token or reach its cache is a reliability error
+  // on a page that does exist.
   const [feedResult, sealResult] = await Promise.allSettled([
     fetchGuestFeedData(feedDataType, feedId),
     fetchGuestSealAnalysisData(feedDataType, feedId),

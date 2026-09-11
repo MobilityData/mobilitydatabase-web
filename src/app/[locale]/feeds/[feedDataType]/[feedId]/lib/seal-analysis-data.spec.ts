@@ -43,11 +43,6 @@ jest.mock('../../../../../utils/auth-server', () => ({
   getUserContextJwtFromCookie: async () => 'user-jwt',
 }));
 
-const mockGetRemoteConfigValues = jest.fn();
-jest.mock('../../../../../../lib/remote-config.server', () => ({
-  getRemoteConfigValues: async () => await mockGetRemoteConfigValues(),
-}));
-
 const report = { feed_id: 'mdb-1', has_seal: true, criteria: [] };
 const check = { checked_at: '2026-09-08T04:00:00Z', success: true };
 const availability = {
@@ -65,9 +60,6 @@ const coverage = { feed_id: 'mdb-1', latest_files: [] };
 describe('fetchGuestSealAnalysisData', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetRemoteConfigValues.mockResolvedValue({
-      enableSealOfReliability: true,
-    });
     mockGetGtfsFeedReliability.mockResolvedValue(report);
     mockGetGtfsFeedAvailability.mockResolvedValue(availability);
     mockGetGtfsFeedContinuousCoverage.mockResolvedValue(coverage);
@@ -208,17 +200,6 @@ describe('fetchGuestSealAnalysisData', () => {
     expect(result?.availabilityError).toBe(false);
     expect(result?.reliability).toEqual(report);
     expect(result?.availability).toEqual(flattenedAvailability);
-  });
-
-  it('fetches nothing when the seal feature flag is off', async () => {
-    mockGetRemoteConfigValues.mockResolvedValue({
-      enableSealOfReliability: false,
-    });
-
-    const result = await fetchGuestSealAnalysisData('gtfs', 'mdb-1');
-
-    expect(result).toBeUndefined();
-    expect(mockGetGtfsFeedReliability).not.toHaveBeenCalled();
   });
 
   it.each(['gtfs_rt', 'gbfs'])(

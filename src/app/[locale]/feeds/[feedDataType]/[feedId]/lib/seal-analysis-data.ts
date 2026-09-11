@@ -20,7 +20,6 @@ import {
   getSSRAccessToken,
   getUserContextJwtFromCookie,
 } from '../../../../../utils/auth-server';
-import { getRemoteConfigValues } from '../../../../../../lib/remote-config.server';
 
 type ReliabilityReport = components['schemas']['FeedReliabilityReport'];
 type AvailabilityResponse =
@@ -230,12 +229,9 @@ async function fetchSealAnalysisImpl(
 }
 
 /** `undefined` whenever there is no analysis to fetch, rather than an error. */
-function isSealAnalysisApplicable(
-  feedDataType: string,
-  enableSealOfReliability: boolean,
-): boolean {
+function isSealAnalysisApplicable(feedDataType: string): boolean {
   // The three endpoints exist only under /v1/gtfs_feeds.
-  return feedDataType === 'gtfs' && enableSealOfReliability;
+  return feedDataType === 'gtfs';
 }
 
 /**
@@ -254,19 +250,11 @@ export const fetchGuestSealAnalysisData = cache(
     feedDataType: string,
     feedId: string,
   ): Promise<SealAnalysisData | undefined> => {
-    const [accessToken, remoteConfig] = await Promise.all([
-      getGuestGcipIdToken(),
-      getRemoteConfigValues(),
-    ]);
-
-    if (
-      !isSealAnalysisApplicable(
-        feedDataType,
-        remoteConfig.enableSealOfReliability,
-      )
-    ) {
+    if (!isSealAnalysisApplicable(feedDataType)) {
       return undefined;
     }
+
+    const accessToken = await getGuestGcipIdToken();
 
     return await fetchSealAnalysisImpl(feedId, accessToken, undefined);
   },
@@ -281,20 +269,14 @@ export const fetchAuthedSealAnalysisData = cache(
     feedDataType: string,
     feedId: string,
   ): Promise<SealAnalysisData | undefined> => {
-    const [accessToken, userContextJwt, remoteConfig] = await Promise.all([
-      getSSRAccessToken(),
-      getUserContextJwtFromCookie(),
-      getRemoteConfigValues(),
-    ]);
-
-    if (
-      !isSealAnalysisApplicable(
-        feedDataType,
-        remoteConfig.enableSealOfReliability,
-      )
-    ) {
+    if (!isSealAnalysisApplicable(feedDataType)) {
       return undefined;
     }
+
+    const [accessToken, userContextJwt] = await Promise.all([
+      getSSRAccessToken(),
+      getUserContextJwtFromCookie(),
+    ]);
 
     return await fetchSealAnalysisImpl(feedId, accessToken, userContextJwt);
   },
