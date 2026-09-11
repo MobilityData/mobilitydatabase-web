@@ -33,7 +33,8 @@ type ContinuousCoverageResponse =
 export const SEAL_ANALYSIS_REVALIDATE = 21600;
 
 const COVERAGE_LIMIT = 100;
-const AVAILABILITY_LIMIT = 100; // to be changed to 200
+/** Exported so the specs follow it rather than restating the page size. */
+export const AVAILABILITY_LIMIT = 100; // to be changed to 200
 
 /**
  * How far back the availability heatmap looks. Kept in step with
@@ -41,7 +42,7 @@ const AVAILABILITY_LIMIT = 100; // to be changed to 200
  * which decides how much of it is drawn.
  */
 const AVAILABILITY_HISTORY_MONTHS = 6;
-const AVAILABILITY_MAX_EXTRA_PAGES = 5;
+export const AVAILABILITY_MAX_EXTRA_PAGES = 5;
 
 /**
  * The newest checks going back `AVAILABILITY_HISTORY_MONTHS`, flattened into

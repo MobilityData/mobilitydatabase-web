@@ -3,6 +3,8 @@
  */
 
 import {
+  AVAILABILITY_LIMIT,
+  AVAILABILITY_MAX_EXTRA_PAGES,
   SEAL_ANALYSIS_REVALIDATE,
   fetchGuestSealAnalysisData,
 } from './seal-analysis-data';
@@ -49,7 +51,7 @@ const availability = {
   feed_id: 'mdb-1',
   total: 1,
   offset: 0,
-  limit: 200,
+  limit: AVAILABILITY_LIMIT,
   checks: [check],
 };
 // The loader flattens the pages it walked, so `limit` reports how many checks
@@ -106,7 +108,7 @@ describe('fetchGuestSealAnalysisData', () => {
       'guest-token',
       {
         from: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T00:00:00\.000Z$/),
-        limit: 200,
+        limit: AVAILABILITY_LIMIT,
         offset: 0,
         sort: 'desc',
       },
@@ -127,45 +129,53 @@ describe('fetchGuestSealAnalysisData', () => {
       feed_id: 'mdb-1',
       total,
       offset,
-      limit: 200,
+      limit: AVAILABILITY_LIMIT,
       checks: Array.from({ length: count }, (_, index) => ({
         checked_at: `2026-09-08T04:00:0${index % 10}Z`,
         success: true,
       })),
     });
+    // Two full pages and a partial third.
+    const total = AVAILABILITY_LIMIT * 2 + 50;
     mockGetGtfsFeedAvailability
-      .mockResolvedValueOnce(page(0, 450, 200))
-      .mockResolvedValueOnce(page(200, 450, 200))
-      .mockResolvedValueOnce(page(400, 450, 50));
+      .mockResolvedValueOnce(page(0, total, AVAILABILITY_LIMIT))
+      .mockResolvedValueOnce(
+        page(AVAILABILITY_LIMIT, total, AVAILABILITY_LIMIT),
+      )
+      .mockResolvedValueOnce(page(AVAILABILITY_LIMIT * 2, total, 50));
 
     const result = await fetchGuestSealAnalysisData('gtfs', 'mdb-1');
 
     expect(mockGetGtfsFeedAvailability).toHaveBeenCalledTimes(3);
-    for (const offset of [200, 400]) {
+    for (const offset of [AVAILABILITY_LIMIT, AVAILABILITY_LIMIT * 2]) {
       expect(mockGetGtfsFeedAvailability).toHaveBeenCalledWith(
         'mdb-1',
         'guest-token',
-        expect.objectContaining({ offset, limit: 200 }),
+        expect.objectContaining({ offset, limit: AVAILABILITY_LIMIT }),
         undefined,
       );
     }
-    expect(result?.availability?.checks).toHaveLength(450);
+    expect(result?.availability?.checks).toHaveLength(total);
   });
 
   it('stops at the page cap rather than walking the whole history', async () => {
     mockGetGtfsFeedAvailability.mockResolvedValue({
       feed_id: 'mdb-1',
-      total: 50000,
+      total: AVAILABILITY_LIMIT * 500,
       offset: 0,
-      limit: 200,
-      checks: Array.from({ length: 200 }, () => check),
+      limit: AVAILABILITY_LIMIT,
+      checks: Array.from({ length: AVAILABILITY_LIMIT }, () => check),
     });
 
     const result = await fetchGuestSealAnalysisData('gtfs', 'mdb-1');
 
-    // The first page plus the five follow-up pages the cap allows.
-    expect(mockGetGtfsFeedAvailability).toHaveBeenCalledTimes(6);
-    expect(result?.availability?.checks).toHaveLength(1200);
+    // The first page plus the follow-up pages the cap allows.
+    expect(mockGetGtfsFeedAvailability).toHaveBeenCalledTimes(
+      AVAILABILITY_MAX_EXTRA_PAGES + 1,
+    );
+    expect(result?.availability?.checks).toHaveLength(
+      AVAILABILITY_LIMIT * (AVAILABILITY_MAX_EXTRA_PAGES + 1),
+    );
   });
 
   it('flags reliabilityError without discarding the other endpoints', async () => {
