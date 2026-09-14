@@ -19,10 +19,10 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { type ReactElement } from 'react';
-import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import CardSectionTitle from '../../../components/CardSectionTitle';
 import SectionContainer from '../../../components/SectionContainer';
+import SealOfReliability from '../../../components/SealOfReliability';
 import { accordionStyle } from '../../../components/accordionStyle';
 import { Link as LocaleLink } from '../../../../i18n/navigation';
 import {
@@ -98,17 +98,8 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
               alignItems: 'center',
             }}
           >
-            <Image
-              src={'/assets/seal-reliability.png'}
-              alt={t('hero.imageAlt')}
-              width={250}
-              height={250}
-              style={{
-                objectFit: 'contain',
-                borderRadius: '4px',
-              }}
-            />
-            <Box sx={{ width: '80%', mt: 1 }}>
+            <SealOfReliability size='xxlarge' />
+            <Box sx={{ width: '80%', mt: 5 }}>
               <Typography
                 variant='subtitle2'
                 sx={{ opacity: 0.7, fontWeight: 'bold', mb: 0.5 }}
