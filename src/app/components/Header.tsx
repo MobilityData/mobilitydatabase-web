@@ -344,7 +344,12 @@ export default function DrawerAppBar(): React.ReactElement {
                   },
                 }}
               >
-                <Box sx={{ display: 'flex' }}>
+                <Box
+                  sx={{ display: 'flex' }}
+                  onClick={() => {
+                    setToolsAnchorEl(null);
+                  }}
+                >
                   {/* Validators column */}
                   <Box sx={{ minWidth: 220 }}>
                     <Typography
@@ -513,6 +518,9 @@ export default function DrawerAppBar(): React.ReactElement {
                       onMouseLeave: handleAccountClose,
                       sx: { pointerEvents: 'auto', minWidth: 200 },
                     },
+                  }}
+                  onClick={() => {
+                    setAccountAnchorEl(null);
                   }}
                 >
                   <HeaderMenuItem
