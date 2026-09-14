@@ -27,13 +27,17 @@ function getBasicStructuredData(
   description: string,
 ): StructureDataInterface {
   const dataTypeNaming =
-    feed?.data_type === 'gtfs_rt' ? 'GTFS Realtime' : feed?.data_type;
+    feed?.data_type === 'gtfs_rt'
+      ? 'GTFS Realtime'
+      : feed?.data_type === 'gtfs'
+        ? 'GTFS Schedule'
+        : feed?.data_type?.toUpperCase();
 
   const structuredData: StructureDataInterface = {
     '@context': 'https://schema.org',
     '@type': 'Dataset',
     isAccessibleForFree: true,
-    name: `${dataTypeNaming ?? ''} Feed for ${feed?.provider}`,
+    name: `${feed?.provider ?? ''} ${dataTypeNaming ?? ''} Transit Feed`.trim(),
     description,
     url: `https://mobilitydatabase.org/feeds/${feed?.data_type}/${feed?.id}`,
     license: feed?.source_info?.license_url,
@@ -41,10 +45,20 @@ function getBasicStructuredData(
       '@type': 'Organization',
       name: feed?.provider,
     },
+    publisher: {
+      '@type': 'Organization',
+      name: 'MobilityData',
+      url: 'https://mobilitydata.org/',
+    },
     provider: {
       '@type': 'Organization',
       name: 'MobilityData',
       url: 'https://mobilitydata.org/',
+    },
+    includedInDataCatalog: {
+      '@type': 'DataCatalog',
+      name: 'Mobility Database',
+      url: 'https://mobilitydatabase.org',
     },
   };
   return structuredData;
