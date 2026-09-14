@@ -1,4 +1,4 @@
-import FeedReliabilityView from '../../../../../../screens/Feed/components/FeedReliabilityView';
+import FeedReliabilityView from '@mdb/screens/Feed/components/FeedReliabilityView';
 import { type ReactElement } from 'react';
 import { notFound } from 'next/navigation';
 import { fetchGuestFeedData } from '../../lib/guest-feed-data';

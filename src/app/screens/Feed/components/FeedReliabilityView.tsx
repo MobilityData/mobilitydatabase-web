@@ -15,16 +15,16 @@ import CriterionSection from './CriterionSection';
 import CriterionStatusChip from './CriterionStatusChip';
 
 // Utils
-import { type AllFeedType } from '../../../services/feeds/utils';
-import { type components } from '../../../services/feeds/types';
-import { type SealAnalysisData } from '../../../[locale]/feeds/[feedDataType]/[feedId]/lib/seal-analysis-data';
+import { type AllFeedType } from '@mdb/services/feeds/utils';
+import { type components } from '@mdb/services/feeds/types';
+import { type SealAnalysisData } from '@mdb/[locale]/feeds/[feedDataType]/[feedId]/lib/seal-analysis-data';
 import {
   getCriterionDisplayStatus,
   type SealCriterionContext,
-} from '../../../constants/sealCriteria';
+} from '@mdb/constants/sealCriteria';
 import { formatProvidersSorted } from '../Feed.functions';
-import { displayFormattedDate } from '../../../utils/date';
-import SectionContainer from '../../../components/SectionContainer';
+import { displayFormattedDate } from '@mdb/utils/date';
+import SectionContainer from '@mdb/components/SectionContainer';
 
 interface Props {
   feed: AllFeedType;

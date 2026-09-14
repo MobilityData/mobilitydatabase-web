@@ -1,4 +1,4 @@
-import FeedReliabilityView from '../../../../../../screens/Feed/components/FeedReliabilityView';
+import FeedReliabilityView from '@mdb/screens/Feed/components/FeedReliabilityView';
 import { type ReactElement } from 'react';
 import { fetchCompleteFeedData } from '../../lib/feed-data';
 import { fetchAuthedSealAnalysisData } from '../../lib/seal-analysis-data';
