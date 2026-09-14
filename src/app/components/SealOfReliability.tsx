@@ -7,6 +7,7 @@ export type SealOfReliabilitySize = 'xlarge' | 'large' | 'small';
 
 export interface SealOfReliabilityProps {
   size?: SealOfReliabilitySize;
+  format?: 'svg' | 'png';
 }
 
 const SEAL_SIZE_PX: Record<SealOfReliabilitySize, number> = {
@@ -17,14 +18,19 @@ const SEAL_SIZE_PX: Record<SealOfReliabilitySize, number> = {
 
 export default function SealOfReliability({
   size = 'large',
+  format = 'png',
 }: SealOfReliabilityProps): React.ReactElement {
   const t = useTranslations('feeds');
   const dimension = SEAL_SIZE_PX[size];
+  const src =
+    format === 'svg'
+      ? '/assets/seal-reliability.svg'
+      : '/assets/seal-reliability.png';
 
   const image = (
     <Image
       data-testid='seal-of-reliability-image'
-      src='/assets/seal-reliability.png'
+      src={src}
       alt={t('sealOfReliabilityAlt')}
       width={dimension}
       height={dimension}

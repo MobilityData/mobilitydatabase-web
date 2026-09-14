@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE082" />
+      <stop offset="40%" stop-color="#FFB300" />
+      <stop offset="80%" stop-color="#FFA000" />
+      <stop offset="100%" stop-color="#FF8F00" />
+    </linearGradient>
+    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2684FF" />
+      <stop offset="100%" stop-color="#0052CC" />
+    </linearGradient>
+    <linearGradient id="ribbonLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0052CC" />
+      <stop offset="100%" stop-color="#0747A6" />
+    </linearGradient>
+    <linearGradient id="ribbonRight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0747A6" />
+      <stop offset="100%" stop-color="#003884" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#091E42" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Ribbon Tails -->
+  <g filter="url(#shadow)">
+    <!-- Left Ribbon -->
+    <path d="M 180 340 L 140 480 L 200 450 L 230 480 L 230 350 Z" fill="url(#ribbonLeft)" />
+    <!-- Right Ribbon -->
+    <path d="M 332 340 L 372 480 L 312 450 L 282 480 L 282 350 Z" fill="url(#ribbonRight)" />
+  </g>
+
+  <!-- Outer Scalloped Badge -->
+  <g filter="url(#shadow)">
+    <!-- 24-point scalloped star / seal outer rim -->
+    <path d="
+      M 256 32
+      L 278 48 L 305 40 L 324 60 L 352 59 L 366 84 L 394 90 L 401 117 L 427 130 L 426 158 L 448 177 L 440 205 L 456 228 L 441 254 L 451 281 L 430 304 L 433 332 L 408 349 L 404 377 L 376 387 L 365 413 L 336 415 L 319 438 L 291 431 L 269 449 L 243 449 L 221 431 L 193 438 L 176 415 L 147 413 L 136 387 L 108 377 L 104 349 L 79 332 L 82 304 L 61 281 L 71 254 L 56 228 L 72 205 L 64 177 L 86 158 L 85 130 L 111 117 L 118 90 L 146 84 L 160 59 L 188 60 L 207 40 L 234 48 Z"
+      fill="url(#goldGradient)"
+      stroke="#FF8F00"
+      stroke-width="3"
+    />
+
+    <!-- Inner Golden Edge Ring -->
+    <circle cx="256" cy="244" r="172" fill="#FFA000" />
+    <circle cx="256" cy="244" r="165" fill="#FFE082" />
+
+    <!-- Dashed Stitching Accent -->
+    <circle cx="256" cy="244" r="158" fill="none" stroke="#FFA000" stroke-width="2" stroke-dasharray="6,4" />
+
+    <!-- Blue Core Circle -->
+    <circle cx="256" cy="244" r="148" fill="url(#blueGradient)" />
+
+    <!-- Inner Core Bevel Ring -->
+    <circle cx="256" cy="244" r="144" fill="none" stroke="#4C9AFF" stroke-width="2" opacity="0.6" />
+    <circle cx="256" cy="244" r="124" fill="none" stroke="#0043A5" stroke-width="2" opacity="0.8" />
+  </g>
+
+  <!-- Central Emblem: Shield with Verified Checkmark -->
+  <g transform="translate(0, 0)">
+    <!-- Shield Outline -->
+    <path d="
+      M 256 160
+      C 295 160 326 170 336 178
+      C 336 245 305 305 256 325
+      C 207 305 176 245 176 178
+      C 186 170 217 160 256 160 Z"
+      fill="#FFFFFF"
+      opacity="0.95"
+    />
+
+    <!-- Inner Shield Gradient -->
+    <path d="
+      M 256 168
+      C 290 168 318 176 328 184
+      C 328 240 300 294 256 314
+      C 212 294 184 240 184 184
+      C 194 176 222 168 256 168 Z"
+      fill="#F4F5F7"
+    />
+
+    <!-- Verification Checkmark in MobilityData Green/Emerald -->
+    <path d="
+      M 224 240
+      L 246 264
+      L 290 216"
+      fill="none"
+      stroke="#36B37E"
+      stroke-width="14"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+
+    <!-- 3 Reliability Stars -->
+    <!-- Center Top Star -->
+    <polygon points="256,122 260,132 271,133 263,140 265,150 256,144 247,150 249,140 241,133 252,132" fill="#FFE082" stroke="#FFA000" stroke-width="0.75" />
+    <!-- Left Star -->
+    <polygon points="220,128 223,137 233,138 226,144 228,153 220,148 212,153 214,144 207,138 217,137" fill="#FFE082" stroke="#FFA000" stroke-width="0.75" />
+    <!-- Right Star -->
+    <polygon points="292,128 295,137 305,138 298,144 300,153 292,148 284,153 286,144 279,138 289,137" fill="#FFE082" stroke="#FFA000" stroke-width="0.75" />
+  </g>
+</svg>
