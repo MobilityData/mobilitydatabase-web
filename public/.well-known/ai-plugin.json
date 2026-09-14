@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "MobilityDatabase Transit Catalog",
+  "name_for_model": "mobilitydatabase",
+  "description_for_human": "Discover and query global GTFS, GTFS-RT, and GBFS public transit feeds from 100+ countries.",
+  "description_for_model": "Plugin for searching and retrieving open transit data feeds (GTFS, GTFS-Realtime, GBFS) indexed by MobilityDatabase. Use this to find transit schedules, vehicle positions, alerts, and bikeshare systems.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://api.mobilitydatabase.org/v1/openapi.json"
+  },
+  "logo_url": "https://mobilitydatabase.org/apple-touch-icon.png",
+  "contact_email": "api@mobilitydata.org",
+  "legal_info_url": "https://mobilitydatabase.org/terms"
+}

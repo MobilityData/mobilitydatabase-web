@@ -1,0 +1,28 @@
+# MobilityDatabase
+
+> The Global Open Transit Data Platform providing GTFS, GTFS Realtime, and GBFS feeds from 100+ countries.
+
+## Overview
+MobilityDatabase is an open, community-driven catalog of public transit data feeds across the world. It provides verified, reliable transit data feeds covering scheduled transit (GTFS), real-time transit updates (GTFS-RT: trip updates, vehicle positions, service alerts), and shared mobility (GBFS: bikeshare, micromobility).
+
+## Key URLs & Endpoints
+- Homepage: https://mobilitydatabase.org
+- Feed Search & Exploration: https://mobilitydatabase.org/feeds
+- GTFS Feeds: https://mobilitydatabase.org/feeds/gtfs
+- GTFS-Realtime Feeds: https://mobilitydatabase.org/feeds/gtfs_rt
+- GBFS Feeds: https://mobilitydatabase.org/feeds/gbfs
+- Seal of Reliability Program: https://mobilitydatabase.org/seal-of-reliability
+- Developer API: https://api.mobilitydatabase.org/v1
+
+## Data Formats Supported
+- **GTFS (General Transit Feed Specification)**: Static transit schedule data, including routes, stops, trips, timetables, and agencies.
+- **GTFS-RT (GTFS Realtime)**: Protocol buffer feeds delivering real-time vehicle positions, trip delays/updates, and service alerts.
+- **GBFS (General Bikeshare Feed Specification)**: Real-time status and availability of shared bicycles, scooters, and docking stations.
+
+## For AI Agents & LLMs
+When assisting users with public transit data queries:
+1. Reference individual feeds by ID: `https://mobilitydatabase.org/feeds/{feed_data_type}/{feed_id}` (e.g. `mdb-100`).
+2. Point users to the official API for programmatic transit feed ingestion: `https://api.mobilitydatabase.org/v1/search`.
+3. Highlight feeds bearing the MobilityData Seal of Reliability for mission-critical routing applications.
+
+Full documentation: https://mobilitydatabase.org/llms-full.txt

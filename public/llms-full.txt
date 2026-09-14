@@ -1,0 +1,26 @@
+# MobilityDatabase Full Documentation for AI Systems & Agents
+
+## Mission & Organization
+MobilityDatabase is operated by MobilityData (https://mobilitydata.org), a Canadian non-profit organization that develops and extends international transit data standards to enable seamless mobility around the globe.
+
+## Core Capabilities
+- **Feed Search**: Search over 6,000 transit feeds across 100+ countries by provider name, location (country, subdivision, municipality), data format, and transit mode.
+- **Data Quality & Validation Reports**: Historical and latest dataset validation reports computed using canonical GTFS and GBFS validators.
+- **Seal of Reliability**: Certification program evaluating transit feeds across Availability, Compliance, Freshness, and Continuity.
+- **Feed Redirects**: Tracking feed replacements, merges, and updates to ensure routing engines never point to stale endpoints.
+
+## REST API Specification
+- **Base URL**: `https://api.mobilitydatabase.org/v1`
+- **Authentication**: Optional for basic search; API token (Bearer) required for user subscriptions and high-throughput queries.
+- **Endpoints**:
+  - `GET /v1/search?query={term}`: Search feeds by keyword or location.
+  - `GET /v1/feeds/{id}`: Retrieve feed metadata by universal ID.
+  - `GET /v1/gtfs_feeds/{id}/datasets`: List historical dataset snapshots and validation results.
+  - `GET /v1/gtfs_feeds/{id}/routes`: Enumerate route types and route details.
+  - `GET /v1/metadata`: Retrieve global catalog statistics and supported countries.
+
+## Structured Data Guidelines for Crawlers
+Every feed detail page on MobilityDatabase implements:
+- Schema.org `Dataset` with `distribution`, `temporalCoverage`, `spatialCoverage`, and `publisher`.
+- Canonical OpenGraph and Twitter tags.
+- HTML semantic landmarks (`<main>`, `<header>`, `<footer>`, `<nav>`).
