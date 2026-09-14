@@ -3,6 +3,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { type ReactElement } from 'react';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
+import SectionContainer from '../../../components/SectionContainer';
 
 export default async function AboutPage(): Promise<ReactElement> {
   const t = await getTranslations('about');
@@ -10,16 +11,7 @@ export default async function AboutPage(): Promise<ReactElement> {
   return (
     <Container component='main'>
       <Typography variant='h1'>{t('title')}</Typography>
-      <Container
-        sx={{
-          backgroundColor: 'background.paper',
-          borderRadius: '6px',
-          paddingTop: 3,
-          paddingBottom: 3,
-          mt: 3,
-        }}
-        maxWidth={false}
-      >
+      <SectionContainer sx={{ mt: 3 }} maxWidth={false}>
         <Typography sx={{ fontWeight: 700 }}>
           {t('description')}
           <br />
@@ -82,7 +74,7 @@ export default async function AboutPage(): Promise<ReactElement> {
             <li>{t('benefits.openSource')}</li>
           </ul>
         </Typography>
-      </Container>
+      </SectionContainer>
     </Container>
   );
 }

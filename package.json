@@ -1,6 +1,6 @@
 {
   "name": "mobility-database",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "dependencies": {
     "@emotion/cache": "11.14.0",
@@ -67,10 +67,12 @@
     "firebase:auth:emulator:dev": "firebase emulators:start --only auth --project mobility-feeds-dev",
     "generate:api-types:output": "node scripts/generate-api-types.mjs",
     "generate:api-types": "node scripts/generate-api-types.mjs src/app/services/feeds/types.ts",
-    "generate:gbfs-validator-types:output": "npm exec -- openapi-typescript ./external_types/GbfsValidator.yaml -o $npm_config_output_path && eslint $npm_config_output_path --fix",
-    "generate:gbfs-validator-types": "npm run generate:gbfs-validator-types:output -- --output-file=src/app/services/feeds/gbfs-validator-types.ts",
-    "generate:user-api-types:output": "npm exec -- openapi-typescript ./external_types/UserServiceAPI.yaml -o $npm_config_output_path && eslint $npm_config_output_path --fix",
-    "generate:user-api-types": "npm run generate:user-api-types:output -- --output-file=src/app/services/user-service-api-types.ts",
+    "generate:api-types-manual:output": "npm exec -- openapi-typescript ./external_types/DatabaseCatalogAPI.yaml -o $npm_config_output_file && eslint $npm_config_output_file --fix",
+    "generate:api-types-manual": "npm exec -- openapi-typescript ./external_types/DatabaseCatalogAPI.yaml -o src/app/services/feeds/types.ts && eslint src/app/services/feeds/types.ts --fix",
+    "generate:gbfs-validator-types:output": "npm exec -- openapi-typescript ./external_types/GbfsValidator.yaml -o $npm_config_output_file && eslint $npm_config_output_file --fix",
+    "generate:gbfs-validator-types": "npm exec -- openapi-typescript ./external_types/GbfsValidator.yaml -o src/app/services/feeds/gbfs-validator-types.ts && eslint src/app/services/feeds/gbfs-validator-types.ts --fix",
+    "generate:user-api-types:output": "npm exec -- openapi-typescript ./external_types/UserServiceAPI.yaml -o $npm_config_output_file && eslint $npm_config_output_file --fix",
+    "generate:user-api-types": "npm exec -- openapi-typescript ./external_types/UserServiceAPI.yaml -o src/app/services/user-service-api-types.ts && eslint src/app/services/user-service-api-types.ts --fix",
     "new-worktree": "bash scripts/new-worktree.sh",
     "remove-worktree": "bash scripts/remove-worktree.sh"
   },

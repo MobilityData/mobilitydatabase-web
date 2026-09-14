@@ -6,6 +6,7 @@ import LicenseDialog from './LicenseDialog';
 import {
   getCountryLocationSummaries,
   getLocationName,
+  isGtfsFeedType,
   type GTFSFeedType,
   type GTFSRTFeedType,
   type GBFSFeedType,
@@ -13,6 +14,7 @@ import {
 import {
   Box,
   Button,
+  Card,
   Chip,
   Dialog,
   DialogTitle,
@@ -25,8 +27,9 @@ import {
   useTheme,
 } from '@mui/material';
 import { useTranslations } from 'next-intl';
-import { GroupCard, GroupHeader } from '../FeedSummary.styles';
+import CardSectionTitle from '../../../components/CardSectionTitle';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import LinkIcon from '@mui/icons-material/Link';
 import DatasetIcon from '@mui/icons-material/Dataset';
 import LayersIcon from '@mui/icons-material/Layers';
@@ -37,6 +40,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import CloseIcon from '@mui/icons-material/Close';
 import BusinessIcon from '@mui/icons-material/Business';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { FeedStatusChip } from '../../../components/FeedStatus';
 import { getEmojiFlag, type TCountryCode } from 'countries-list';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -45,16 +49,14 @@ import { getFeedStatusData } from '../../../utils/feedStatusConsts';
 import Link from 'next/link';
 import { sendGAEvent } from '@next/third-parties/google';
 import { getRouteTypeTranslatedName } from '../../../constants/RouteTypes';
-import {
-  featureChipsStyle,
-  ResponsiveListItem,
-  StyledListItem,
-} from '../Feed.styles';
+import { ResponsiveListItem, StyledListItem } from '../Feed.styles';
 import { getFeatureComponentDecorators } from '../../../utils/consts';
 import dynamic from 'next/dynamic';
 import CopyLinkElement from './CopyLinkElement';
 import { formatDateShort } from '../../../utils/date';
 import ExternalIds from './ExternalIds';
+import SealQualitySummary from './SealQualitySummary';
+import SealOfReliability from '../../../components/SealOfReliability';
 
 const Locations = dynamic(
   async () => await import('../../../components/Locations'),
@@ -68,6 +70,10 @@ export interface FeedSummaryProps {
   autoDiscoveryUrl?: string;
   totalRoutes?: number;
   routeTypes?: string[];
+  enableSealOfReliability?: boolean;
+  reliability?: components['schemas']['FeedReliabilityReport'];
+  /** Server-pinned "now" for date-derived criterion copy. */
+  now: Date;
 }
 
 export default function FeedSummary({
@@ -77,6 +83,9 @@ export default function FeedSummary({
   autoDiscoveryUrl,
   routeTypes,
   totalRoutes,
+  enableSealOfReliability = false,
+  reliability,
+  now,
 }: FeedSummaryProps): React.ReactElement {
   const t = useTranslations('feeds');
   const tCommon = useTranslations('common');
@@ -115,11 +124,11 @@ export default function FeedSummary({
 
   return (
     <>
-      <GroupCard variant='outlined'>
-        <GroupHeader variant='body1' component='h3'>
+      <Card variant='section'>
+        <CardSectionTitle component='h3'>
           <BusinessIcon fontSize='inherit' aria-hidden />
           {feed?.data_type === 'gbfs' ? t('producer') : t('agency')}
-        </GroupHeader>
+        </CardSectionTitle>
         <Box sx={{ ml: 2 }}>
           <Typography
             variant='h6'
@@ -174,9 +183,9 @@ export default function FeedSummary({
             <ExternalIds externalIds={feed.external_ids} />
           )}
         </Box>
-      </GroupCard>
+      </Card>
 
-      <GroupCard variant='outlined'>
+      <Card variant='section'>
         <Box
           sx={{
             display: 'flex',
@@ -185,10 +194,10 @@ export default function FeedSummary({
             mb: 1,
           }}
         >
-          <GroupHeader variant='body1' component='h3' sx={{ mb: 0 }}>
+          <CardSectionTitle component='h3' sx={{ mb: 0 }}>
             <DatasetIcon fontSize='inherit' aria-hidden />
             {t('feedSummary.routes')}
-          </GroupHeader>
+          </CardSectionTitle>
           <Chip
             data-testid='data-type'
             size='small'
@@ -472,16 +481,16 @@ export default function FeedSummary({
               </Button>
             </Box>
           )}
-      </GroupCard>
+      </Card>
 
       {feed?.source_info?.authentication_info_url != undefined &&
         feed.source_info.authentication_type !== 0 &&
         feed?.source_info.authentication_info_url.trim() !== '' && (
-          <GroupCard variant='outlined'>
-            <GroupHeader variant='body1' component='h3'>
+          <Card variant='section'>
+            <CardSectionTitle component='h3'>
               <LockIcon fontSize='inherit' aria-hidden />
               {t('feedSummary.feedAuthentication')}
-            </GroupHeader>
+            </CardSectionTitle>
             <Box sx={{ ml: 2 }}>
               <Typography variant='h6' component='p' sx={{ fontWeight: 700 }}>
                 {feed?.source_info?.authentication_type === 1 &&
@@ -504,13 +513,27 @@ export default function FeedSummary({
                 </Button>
               )}
             </Box>
-          </GroupCard>
+          </Card>
         )}
 
       {latestDataset?.service_date_range_start != undefined &&
         latestDataset.service_date_range_end != undefined && (
-          <GroupCard variant='outlined'>
-            <GroupHeader variant='body1' component='h3'>
+          <Card variant='section' sx={{ position: 'relative' }}>
+            {isGtfsFeedType(feed) && feed.seasonal === true && (
+              <Box sx={{ position: 'absolute', top: '16px', right: '16px' }}>
+                <Tooltip title={t('seasonalFeedTooltip')} placement='top'>
+                  <Chip
+                    data-testid='seasonal-feed-chip'
+                    icon={<EventRepeatIcon />}
+                    label={t('seasonalFeed')}
+                    variant='outlined'
+                    color='info'
+                    size='small'
+                  />
+                </Tooltip>
+              </Box>
+            )}
+            <CardSectionTitle component='h3'>
               <CalendarTodayIcon fontSize='inherit' aria-hidden />
               {t('serviceDateRange')}
               <Tooltip title={t('serviceDateRangeTooltip')} placement='top'>
@@ -518,7 +541,7 @@ export default function FeedSummary({
                   <InfoOutlinedIcon fontSize='inherit' />
                 </IconButton>
               </Tooltip>
-            </GroupHeader>
+            </CardSectionTitle>
             <Box
               sx={{
                 display: 'flex',
@@ -615,13 +638,52 @@ export default function FeedSummary({
                 </Typography>
               </Box>
             </Box>
-          </GroupCard>
+          </Card>
         )}
+
+      {isGtfsFeedType(feed) && enableSealOfReliability && (
+        <Card variant='section' sx={{ position: 'relative' }}>
+          {feed.reliability_seal?.has_seal === true && (
+            <Box sx={{ position: 'absolute', top: '16px', right: '16px' }}>
+              <SealOfReliability size='small' />
+            </Box>
+          )}
+          <CardSectionTitle component='h3'>
+            <WorkspacePremiumIcon fontSize='inherit' aria-hidden />
+            {t('sealOfReliabilityAlt')}
+            <Tooltip
+              title={t('sealOfReliabilityQualityTooltip')}
+              placement='top'
+            >
+              <IconButton
+                component={Link}
+                href='/seal-of-reliability'
+                target='_blank'
+                rel='noopener noreferrer'
+                size='small'
+                aria-label={t('sealOfReliabilityLearnMore')}
+              >
+                <InfoOutlinedIcon fontSize='inherit' />
+              </IconButton>
+            </Tooltip>
+          </CardSectionTitle>
+          <SealQualitySummary
+            feedId={feed.id ?? ''}
+            feedDataType={feed.data_type ?? 'gtfs'}
+            reliability={reliability}
+            criterionContext={{
+              isProducerUrlUnstable: feed.source_info?.is_producer_url_unstable,
+              feedCreatedAt: feed.created_at,
+              now,
+            }}
+          />
+        </Card>
+      )}
 
       {latestDataset?.validation_report?.features != undefined &&
         latestDataset?.validation_report?.features.length > 0 && (
-          <GroupCard variant='outlined'>
-            <GroupHeader variant='body1' component='h3'>
+          <Card variant='section'>
+            <CardSectionTitle component='h3'>
               <LayersIcon fontSize='inherit' aria-hidden />
               {t('features')}
               <Tooltip title={tCommon('moreInfo')} placement='top'>
@@ -634,7 +696,7 @@ export default function FeedSummary({
                   <OpenInNewIcon fontSize='inherit' />
                 </IconButton>
               </Tooltip>
-            </GroupHeader>
+            </CardSectionTitle>
             {(() => {
               const allFeatures =
                 latestDataset?.validation_report?.features ?? [];
@@ -660,10 +722,9 @@ export default function FeedSummary({
                               label={feature}
                               variant='filled'
                               sx={{
-                                ...featureChipsStyle,
                                 fontWeight: 500,
                                 background: featureDecorators.color,
-                                color: 'initial',
+                                color: 'black',
                               }}
                               clickable
                               target='_blank'
@@ -696,12 +757,12 @@ export default function FeedSummary({
                 </>
               );
             })()}
-          </GroupCard>
+          </Card>
         )}
 
       {feed?.source_info?.license_url != undefined &&
         feed?.source_info?.license_url !== '' && (
-          <GroupCard variant='outlined'>
+          <Card variant='section'>
             <Box
               sx={{
                 display: 'flex',
@@ -710,10 +771,10 @@ export default function FeedSummary({
                 mb: 1,
               }}
             >
-              <GroupHeader variant='body1' component='h3' sx={{ mb: 0 }}>
+              <CardSectionTitle component='h3' sx={{ mb: 0 }}>
                 <GavelIcon fontSize='inherit' aria-hidden />
                 {tCommon('license')}
-              </GroupHeader>
+              </CardSectionTitle>
               {feed?.source_info?.license_is_spdx != undefined &&
                 feed.source_info.license_is_spdx && (
                   <Tooltip title={t('license.spdxTooltip')} placement='top'>
@@ -817,15 +878,15 @@ export default function FeedSummary({
                   </Box>
                 </>
               )}
-          </GroupCard>
+          </Card>
         )}
 
       {hasRelatedLinks() && (
-        <GroupCard variant='outlined'>
-          <GroupHeader variant='body1' component='h3'>
+        <Card variant='section'>
+          <CardSectionTitle component='h3'>
             <LinkIcon fontSize='inherit' aria-hidden />
             {t('relatedLinks')}
-          </GroupHeader>
+          </CardSectionTitle>
 
           {(feed as GTFSFeedType)?.related_links?.map(
             (link, index, allLinks) => (
@@ -839,7 +900,7 @@ export default function FeedSummary({
               />
             ),
           )}
-        </GroupCard>
+        </Card>
       )}
 
       <Dialog

@@ -65,13 +65,19 @@ describe('Account General Page', () => {
       cy.contains('label', 'Name')
         .invoke('attr', 'for')
         .then((id) => {
-          cy.get(`#${id}`).clear().type('Updated Name');
+          cy.get(`#${id}`).clear();
+          cy.get(`#${id}`).should('have.value', '');
+          cy.get(`#${id}`).type('Updated Name');
+          cy.get(`#${id}`).should('have.value', 'Updated Name');
         });
 
       cy.contains('label', 'Organization')
         .invoke('attr', 'for')
         .then((id) => {
-          cy.get(`#${id}`).clear().type('Updated Organization');
+          cy.get(`#${id}`).clear();
+          cy.get(`#${id}`).should('have.value', '');
+          cy.get(`#${id}`).type('Updated Organization');
+          cy.get(`#${id}`).should('have.value', 'Updated Organization');
         });
 
       cy.contains('button', 'Save').click();
@@ -106,7 +112,10 @@ describe('Account General Page', () => {
       cy.contains('label', 'Name')
         .invoke('attr', 'for')
         .then((id) => {
-          cy.get(`#${id}`).clear().type('Will Not Save');
+          cy.get(`#${id}`).clear();
+          cy.get(`#${id}`).should('have.value', '');
+          cy.get(`#${id}`).type('Will Not Save');
+          cy.get(`#${id}`).should('have.value', 'Will Not Save');
         });
 
       cy.contains('button', 'Save').click();

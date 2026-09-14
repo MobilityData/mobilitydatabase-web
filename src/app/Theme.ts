@@ -1,5 +1,3 @@
-'use client';
-
 import { type PaletteColor, createTheme } from '@mui/material/styles';
 import type {} from '@mui/material/themeCssVarsAugmentation';
 import { type Property } from 'csstype';
@@ -27,6 +25,12 @@ declare module '@mui/material/styles' {
 declare module '@mui/material/Typography' {
   interface TypographyPropsVariantOverrides {
     sectionTitle: true;
+  }
+}
+
+declare module '@mui/material/Paper' {
+  interface PaperPropsVariantOverrides {
+    section: true;
   }
 }
 
@@ -109,6 +113,18 @@ const darkPalette = {
   boxShadow: '0px 1px 4px 2px rgba(0,0,0,0.6)',
 };
 
+const CARTO_MAP_API_KEY = process.env.NEXT_PUBLIC_CARTO_MAP_API_KEY ?? '';
+
+const buildBasemapTileUrl = (style: 'light_all' | 'dark_all'): string => {
+  const baseUrl = `https://a.basemaps.cartocdn.com/${style}/{z}/{x}/{y}{r}.png`;
+  return CARTO_MAP_API_KEY.length > 0
+    ? `${baseUrl}?key=${CARTO_MAP_API_KEY}`
+    : baseUrl;
+};
+
+const basemapAttribution =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+
 /**
  * Map configuration per color scheme.
  * Extracted from the theme because map tile URLs and canvas colors
@@ -117,8 +133,8 @@ const darkPalette = {
  */
 export const mapConfig = {
   light: {
-    basemapTileUrl:
-      'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    basemapTileUrl: buildBasemapTileUrl('light_all'),
+    basemapAttribution,
     basemapTileOverallColor: '#f6f6f6',
     routeColor: lightPalette.background.default,
     routeTextColor: lightPalette.text.primary,
@@ -127,8 +143,8 @@ export const mapConfig = {
     primaryMain: lightPalette.primary.main,
   },
   dark: {
-    basemapTileUrl:
-      'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    basemapTileUrl: buildBasemapTileUrl('dark_all'),
+    basemapAttribution,
     basemapTileOverallColor: '#0d0d0d',
     routeColor: darkPalette.background.default,
     routeTextColor: darkPalette.text.primary,
@@ -246,16 +262,44 @@ export const theme = createTheme({
         }),
       },
     },
-    MuiTypography: {
+    MuiCard: {
       variants: [
         {
+          props: { variant: 'section' },
+          style: ({ theme }) => ({
+            background: 'var(--mui-palette-background-default)',
+            border: 'none',
+            padding: theme.spacing(2),
+            marginBottom: theme.spacing(2),
+            '&:last-of-type': {
+              marginBottom: 0,
+            },
+          }),
+        },
+      ],
+    },
+    MuiTypography: {
+      // Only maps the custom variants; MUI falls back to its own mapping for
+      // every built-in variant.
+      defaultProps: {
+        variantMapping: {
+          sectionTitle: 'h2',
+        },
+      },
+      variants: [
+        {
+          // Heading for a page section. Laid out as a flex row so an optional
+          // leading icon aligns with the text.
           props: { variant: 'sectionTitle' },
           style: {
             color: 'var(--mui-palette-primary-main)',
-            fontWeight: 'bold',
-            fontSize: '1.5rem',
-            marginBottom: '0.5rem',
-            marginTop: '1rem',
+            fontWeight: 700,
+            fontSize: '1.25rem', // h6 size
+            lineHeight: 1.6,
+            marginBottom: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
           },
         },
       ],

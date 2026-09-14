@@ -36,6 +36,14 @@ jest.mock('../services/session-service', () => ({
   setUserCookieSession: jest.fn().mockResolvedValue(undefined),
 }));
 
+// ---------- Mock: user-feature-flag-service ----------
+// Also keeps the real module's openapi-fetch client out of this suite's module
+// graph, which needs browser globals jsdom does not provide.
+
+jest.mock('../services/user-feature-flag-service', () => ({
+  revalidateUserFeatureFlags: jest.fn().mockResolvedValue(undefined),
+}));
+
 // ---------- Mock: profile-reducer ----------
 
 jest.mock('../store/profile-reducer', () => ({

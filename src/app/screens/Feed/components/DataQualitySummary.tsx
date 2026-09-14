@@ -2,17 +2,22 @@ import * as React from 'react';
 import { Box, Chip } from '@mui/material';
 import { CheckCircle, ReportOutlined } from '@mui/icons-material';
 import { type components } from '../../../services/feeds/types';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { WarningContentBox } from '../../../components/WarningContentBox';
 import { FeedStatusChip } from '../../../components/FeedStatus';
-import OfficialChip from '../../../components/OfficialChip';
+import FeedVerificationChip from '../../../components/FeedVerificationChip';
+import SealOfReliabilityChip from '../../../components/SealOfReliabilityChip';
 import { getTranslations } from 'next-intl/server';
-import { getUserRemoteConfigValues } from '../../../../lib/remote-config.server';
+import { getRemoteConfigValues } from '../../../../lib/remote-config.server';
 
 export interface DataQualitySummaryProps {
   feedStatus: components['schemas']['Feed']['status'];
-  isOfficialFeed: boolean;
+  isOfficialFeed: boolean | undefined;
   latestDataset: components['schemas']['GtfsDataset'] | undefined;
+  feedId: string;
+  feedDataType: string;
+  hasSeal: boolean | undefined;
+  /** Render the seal chip without a link - used on the seal analysis page. */
+  disableSealLink?: boolean;
 }
 
 // Because this is a server component, the page will not render until the data is ready, hence the async
@@ -20,15 +25,19 @@ export default async function DataQualitySummary({
   feedStatus,
   isOfficialFeed,
   latestDataset,
+  feedId,
+  feedDataType,
+  hasSeal,
+  disableSealLink = false,
 }: DataQualitySummaryProps): Promise<React.ReactElement> {
   const [t, tCommon, config] = await Promise.all([
     getTranslations('feeds'),
     getTranslations('common'),
-    getUserRemoteConfigValues(),
+    getRemoteConfigValues(),
   ]);
 
   return (
-    <Box data-testid='data-quality-summary' sx={{ my: 2 }}>
+    <Box data-testid='data-quality-summary' sx={{ my: 2, fontWeight: 700 }}>
       {latestDataset?.validation_report == undefined && (
         <WarningContentBox>{t('errorLoadingQualityReport')}</WarningContentBox>
       )}
@@ -36,7 +45,15 @@ export default async function DataQualitySummary({
         {config.enableFeedStatusBadge && (
           <FeedStatusChip status={feedStatus ?? ''}></FeedStatusChip>
         )}
-        {isOfficialFeed && <OfficialChip></OfficialChip>}
+        {config.enableSealOfReliability && (
+          <SealOfReliabilityChip
+            hasSeal={hasSeal}
+            feedId={feedId}
+            feedDataType={feedDataType}
+            disableLink={disableSealLink}
+          />
+        )}
+        <FeedVerificationChip status={isOfficialFeed}></FeedVerificationChip>
         {latestDataset?.validation_report !== undefined &&
           latestDataset.validation_report !== null && (
             <>
@@ -70,69 +87,6 @@ export default async function DataQualitySummary({
                     undefined &&
                   latestDataset?.validation_report?.unique_error_count > 0
                     ? 'error'
-                    : 'success'
-                }
-                variant='outlined'
-              />
-
-              <Chip
-                data-testid='warning-count'
-                clickable={Boolean(latestDataset?.validation_report?.url_html)}
-                component='a'
-                href={latestDataset?.validation_report?.url_html ?? undefined}
-                target='_blank'
-                rel='noopener noreferrer nofollow'
-                icon={
-                  latestDataset?.validation_report?.unique_warning_count !==
-                    undefined &&
-                  latestDataset?.validation_report?.unique_warning_count > 0 ? (
-                    <ReportOutlined />
-                  ) : (
-                    <CheckCircle />
-                  )
-                }
-                label={
-                  latestDataset?.validation_report?.unique_warning_count !==
-                    undefined &&
-                  latestDataset?.validation_report?.unique_warning_count > 0
-                    ? `${
-                        latestDataset?.validation_report?.unique_warning_count
-                      } ${tCommon('feedback.warnings')}`
-                    : tCommon('feedback.noWarnings')
-                }
-                color={
-                  latestDataset?.validation_report?.unique_warning_count !==
-                    undefined &&
-                  latestDataset?.validation_report?.unique_warning_count > 0
-                    ? 'warning'
-                    : 'success'
-                }
-                variant='outlined'
-              />
-
-              <Chip
-                data-testid='info-count'
-                icon={
-                  (latestDataset?.validation_report?.unique_info_count ?? 0) >
-                  0 ? (
-                    <InfoOutlinedIcon />
-                  ) : (
-                    <CheckCircle />
-                  )
-                }
-                clickable={Boolean(latestDataset?.validation_report?.url_html)}
-                component='a'
-                href={latestDataset?.validation_report?.url_html ?? undefined}
-                target='_blank'
-                rel='noopener noreferrer nofollow'
-                label={
-                  (latestDataset?.validation_report?.unique_info_count ?? 0) > 0
-                    ? `${latestDataset?.validation_report?.unique_info_count} ${tCommon('feedback.infoNotices')}`
-                    : tCommon('feedback.noInfoNotices')
-                }
-                color={
-                  (latestDataset?.validation_report?.unique_info_count ?? 0) > 0
-                    ? 'primary'
                     : 'success'
                 }
                 variant='outlined'

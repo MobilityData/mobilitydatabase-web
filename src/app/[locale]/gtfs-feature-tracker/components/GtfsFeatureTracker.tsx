@@ -60,6 +60,9 @@ const CONSUMER_LOGOS: Record<string, string> = {
   motis: '/assets/tripPlannerLogos/motis.png',
   opentripplanner: '/assets/tripPlannerLogos/opentripplanner.png',
   aubin: '/assets/tripPlannerLogos/aubin-app.png',
+  transsee: '/assets/tripPlannerLogos/transsee.svg',
+  catenary: '/assets/tripPlannerLogos/catenary.svg',
+  rome2rio: '/assets/tripPlannerLogos/rome2rio.png',
 };
 
 // ── FeatureDetail ─────────────────────────────────────────────────────────────

@@ -63,8 +63,7 @@ export const Map = (
                 type: 'raster',
                 tiles: [mapCfg.basemapTileUrl],
                 tileSize: 256,
-                attribution:
-                  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                attribution: mapCfg.basemapAttribution,
               },
             },
             layers: [

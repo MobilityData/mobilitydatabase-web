@@ -1,7 +1,7 @@
 'use client';
 import * as React from 'react';
 import { Box, Container, Grid, Skeleton } from '@mui/material';
-import { ColoredContainer } from '../../styles/PageLayout.style';
+import SectionContainer from '../../components/SectionContainer';
 
 /**
  * Loading skeleton that mirrors the FeedsScreen layout.
@@ -39,7 +39,7 @@ export default function FeedsScreenSkeleton(): React.ReactElement {
         </Container>
       </Box>
 
-      <ColoredContainer maxWidth='xl' sx={{ pt: 2 }}>
+      <SectionContainer maxWidth='xl' sx={{ pt: 2 }}>
         <Grid
           container
           spacing={1}
@@ -103,7 +103,7 @@ export default function FeedsScreenSkeleton(): React.ReactElement {
             />
           </Grid>
         </Grid>
-      </ColoredContainer>
+      </SectionContainer>
     </Box>
   );
 }

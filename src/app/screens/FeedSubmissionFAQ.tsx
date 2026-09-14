@@ -5,7 +5,6 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
-  type SxProps,
   Typography,
   Box,
   Container,
@@ -16,18 +15,10 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import { accordionStyle } from '../components/accordionStyle';
 
 export default function FeedSubmissionFAQ(): React.ReactElement {
   const theme = useTheme();
-
-  const accordionStyle: SxProps = {
-    boxShadow: 'none',
-    background: 'transparent',
-    borderBottom: '2px solid',
-    borderColor: theme.vars.palette.divider,
-    '&:before': { display: 'none' },
-    svg: { color: theme.vars.palette.divider },
-  };
 
   return (
     <Container component='main' sx={{ my: 0, mx: 'auto' }}>

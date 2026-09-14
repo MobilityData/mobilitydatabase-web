@@ -89,7 +89,9 @@ npx firebase hosting:channel:deploy {channel_name}
 
 Firebase remote configs help us toggle new features on and off. Due to the nature of static pages, there are some nuances. For static pages, the remote configs are called and set at build time and will be the same for the remainder of the static page's cache.
 
-When remote configs change (they rarily do), it is recommended to redeploy the app as that will trigger a new cache for all pages, that will include the updated remote configs
+When remote configs change (they rarely do), manually purge the `remote-config` cache tag in the Vercel dashboard (Storage -> Data Cache) after publishing the change. Redeploying the app is not sufficient on its own — Vercel's Data Cache persists across deployments, so a fresh deployment can still serve the stale remote config value.
+
+Note: purging the `remote-config` tag also invalidates every static and ISR page site-wide, not just feed pages. The remote config is fetched in the root layout, which every page shares, so purging that one tag marks every statically-generated page for regeneration on its next visit.
 
 What this also means is that client components will be able to access the firebase remote configs using the Context but server components will have to fetch them each time. This isn't a big deal as the firebase remote configs are cached (for 1 hour on the server)
 
