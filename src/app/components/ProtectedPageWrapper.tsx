@@ -5,21 +5,22 @@
 // targetStatus can be used to scope groups further (e.g. (authenticated), (unverified)).
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppDispatch } from '../hooks';
 import { refreshApp, refreshAppSuccess } from '../store/profile-reducer';
 import { selectUserProfileStatus } from '../store/selectors';
 import { app } from '../../firebase';
 import { SIGN_IN_TARGET } from '../constants/Navigation';
+import { useAuthSession } from './AuthSessionProvider';
 
 interface ProtectedPageWrapperProps {
   children: React.ReactNode;
   /**
-   * The user profile status required to access this page.
+   * The user profile status or statuses required to access this page.
    * Mirrors the `targetStatus` prop from the legacy ProtectedRoute component.
    * Defaults to 'registered'.
    */
-  targetStatus?: string;
+  targetStatus?: string | string[];
   redirect?: string;
 }
 
@@ -29,8 +30,14 @@ export function ProtectedPageWrapper({
   redirect = SIGN_IN_TARGET,
 }: ProtectedPageWrapperProps): React.ReactElement | null {
   const userProfileStatus = useSelector(selectUserProfileStatus);
+  const { isAuthResolved } = useAuthSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
+
+  const allowedStatuses = Array.isArray(targetStatus)
+    ? targetStatus
+    : [targetStatus];
 
   useEffect(() => {
     app.auth();
@@ -51,13 +58,29 @@ export function ProtectedPageWrapper({
     };
   }, [dispatch]);
 
-  useEffect(() => {
-    if (userProfileStatus !== targetStatus) {
-      router.replace(redirect);
-    }
-  }, [userProfileStatus, targetStatus, redirect, router]);
+  const isAuthorized = allowedStatuses.includes(userProfileStatus);
 
-  if (userProfileStatus !== targetStatus) {
+  useEffect(() => {
+    // Only redirect once auth state has resolved and profile is hydrated
+    if (!isAuthResolved) return;
+    if (userProfileStatus === 'idle' || userProfileStatus === 'loading') return;
+
+    if (!isAuthorized) {
+      const query = searchParams?.toString();
+      const target =
+        query && !redirect.includes('?') ? `${redirect}?${query}` : redirect;
+      router.replace(target);
+    }
+  }, [
+    isAuthResolved,
+    userProfileStatus,
+    isAuthorized,
+    redirect,
+    router,
+    searchParams,
+  ]);
+
+  if (!isAuthResolved || !isAuthorized) {
     return null;
   }
 
