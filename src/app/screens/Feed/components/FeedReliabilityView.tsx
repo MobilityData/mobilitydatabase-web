@@ -70,6 +70,8 @@ export default async function FeedReliabilityView({
   const stableCriterion = findCriterion('stable');
   const availableCriterion = findCriterion('available');
   const compliantCriterion = findCriterion('compliant');
+  const freshRollingCriterion = findCriterion('fresh_coverage');
+  const freshContinuousCriterion = findCriterion('fresh_continuous');
 
   // Built once and handed down, so the header's uptime chip and the grid in
   // the body are reading the same window.
@@ -230,6 +232,45 @@ export default async function FeedReliabilityView({
                     now={now}
                   />
                 </CriterionSection>
+              </Box>
+            )}
+
+            {(freshRollingCriterion != undefined ||
+              freshContinuousCriterion != undefined) && (
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+                  gap: 2,
+                  mt: 2,
+                }}
+              >
+                {freshRollingCriterion != undefined && (
+                  <CriterionSection
+                    criterion={freshRollingCriterion}
+                    context={criterionContext}
+                    statusChip={
+                      <CriterionStatusChip
+                        displayStatus={getCriterionDisplayStatus(
+                          freshRollingCriterion,
+                        )}
+                      />
+                    }
+                  />
+                )}
+                {freshContinuousCriterion != undefined && (
+                  <CriterionSection
+                    criterion={freshContinuousCriterion}
+                    context={criterionContext}
+                    statusChip={
+                      <CriterionStatusChip
+                        displayStatus={getCriterionDisplayStatus(
+                          freshContinuousCriterion,
+                        )}
+                      />
+                    }
+                  />
+                )}
               </Box>
             )}
           </Box>

@@ -243,3 +243,20 @@ describe('CriterionSection probation', () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe('CriterionSection fresh criteria', () => {
+  it('renders freshRolling correctly when passing', () => {
+    renderSection(buildCriterion('fresh_coverage', { status: 'pass' }));
+    expect(
+      screen.getByTestId('criterion-section-freshRolling'),
+    ).toBeInTheDocument();
+  });
+
+  it('renders freshContinuous correctly when passing', () => {
+    renderSection(buildCriterion('fresh_continuous', { status: 'pass' }));
+    expect(
+      screen.getByTestId('criterion-section-freshContinuous'),
+    ).toBeInTheDocument();
+  });
+});
+
