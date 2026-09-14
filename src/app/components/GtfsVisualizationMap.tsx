@@ -294,9 +294,12 @@ export const GtfsVisualizationMap = ({
           out.push(s);
         }
       }
-      out.sort((a, b) =>
-        a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
-      );
+      out.sort((a, b) => {
+        if (a.sequence != null && b.sequence != null) {
+          return a.sequence - b.sequence;
+        }
+        return 0;
+      });
       setSelectedRouteStops(out);
     }
   }, [filteredRoutes]);

@@ -24,6 +24,7 @@ export interface MapStopElement extends BaseMapElement {
   stopId: string;
   stopLat: number;
   stopLon: number;
+  sequence?: number;
 }
 
 export type MapElementType = MapRouteElement | MapStopElement;
