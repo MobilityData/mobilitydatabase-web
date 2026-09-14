@@ -45,14 +45,12 @@ export default async function DataQualitySummary({
         {config.enableFeedStatusBadge && (
           <FeedStatusChip status={feedStatus ?? ''}></FeedStatusChip>
         )}
-        {config.enableSealOfReliability && (
-          <SealOfReliabilityChip
-            hasSeal={hasSeal}
-            feedId={feedId}
-            feedDataType={feedDataType}
-            disableLink={disableSealLink}
-          />
-        )}
+        <SealOfReliabilityChip
+          hasSeal={hasSeal}
+          feedId={feedId}
+          feedDataType={feedDataType}
+          disableLink={disableSealLink}
+        />
         <FeedVerificationChip status={isOfficialFeed}></FeedVerificationChip>
         {latestDataset?.validation_report !== undefined &&
           latestDataset.validation_report !== null && (

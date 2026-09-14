@@ -46,6 +46,9 @@ function parseConfigValue(
 /**
  * Fetch Remote Config from Firebase Admin SDK.
  * Returns the template parameters merged with defaults.
+ *
+ * Deliberately does NOT swallow errors: this function runs inside
+ * unstable_cache, which caches resolved values but not rejections.
  */
 async function fetchRemoteConfigFromFirebase(): Promise<RemoteConfigValues> {
   // Dev/mock bypass: return defaults without touching Admin SDK
@@ -58,33 +61,27 @@ async function fetchRemoteConfigFromFirebase(): Promise<RemoteConfigValues> {
   const app = getFirebaseAdminApp();
   const remoteConfigAdmin = getRemoteConfig(app);
 
-  try {
-    const template = await remoteConfigAdmin.getTemplate();
-    const fetchedConfig = { ...defaultRemoteConfigValues };
+  const template = await remoteConfigAdmin.getTemplate();
+  const fetchedConfig = { ...defaultRemoteConfigValues };
 
-    // Process each parameter from the template
-    for (const [key, parameter] of Object.entries(template.parameters)) {
-      if (
-        key in defaultRemoteConfigValues &&
-        parameter.defaultValue != undefined
-      ) {
-        const defaultVal = parameter.defaultValue as { value?: string };
-        if (defaultVal.value !== undefined) {
-          const parsedValue = parseConfigValue(
-            defaultVal.value,
-            defaultRemoteConfigValues[key as keyof RemoteConfigValues],
-          );
-          (fetchedConfig as Record<string, unknown>)[key] = parsedValue;
-        }
+  // Process each parameter from the template
+  for (const [key, parameter] of Object.entries(template.parameters)) {
+    if (
+      key in defaultRemoteConfigValues &&
+      parameter.defaultValue != undefined
+    ) {
+      const defaultVal = parameter.defaultValue as { value?: string };
+      if (defaultVal.value !== undefined) {
+        const parsedValue = parseConfigValue(
+          defaultVal.value,
+          defaultRemoteConfigValues[key as keyof RemoteConfigValues],
+        );
+        (fetchedConfig as Record<string, unknown>)[key] = parsedValue;
       }
     }
-
-    return fetchedConfig;
-  } catch (error) {
-    console.error('Failed to fetch Remote Config from Firebase:', error);
-    // Return defaults on error
-    return defaultRemoteConfigValues;
   }
+
+  return fetchedConfig;
 }
 
 /**
@@ -107,7 +104,7 @@ const fetchRemoteConfigCached = unstable_cache(
  * - react cache() deduplicates calls within the same request (e.g., layout + page)
  * - unstable_cache persists across requests and Vercel function instances
  * - Cache revalidates after CACHE_DURATION_SECONDS
- * - On error, returns defaults
+ * - On error, returns defaults without caching them, so the next request retries
  */
 export const getRemoteConfigValues = cache(
   async (): Promise<RemoteConfigValues> => {

@@ -4,6 +4,7 @@ import { Button } from '@mui/material';
 import { sendGAEvent } from '@next/third-parties/google';
 import { useTranslations } from 'next-intl';
 import { Link } from '../../../../i18n/navigation';
+import { useRemoteConfig } from '../../../context/RemoteConfigProvider';
 
 export default function ClientQualityAnalysisButton({
   feedId,
@@ -11,8 +12,9 @@ export default function ClientQualityAnalysisButton({
 }: {
   feedId: string;
   feedDataType: string;
-}): React.ReactElement {
+}): React.ReactElement | null {
   const t = useTranslations('feeds');
+  const { config } = useRemoteConfig();
 
   const handleViewFeedQualityAnalysisClick = (): void => {
     sendGAEvent('event', 'view_feed_quality_analysis', {
@@ -20,6 +22,10 @@ export default function ClientQualityAnalysisButton({
       event_label: 'View Feed Quality Analysis',
     });
   };
+
+  if (!config.enableSealOfReliability) {
+    return null;
+  }
 
   return (
     <Button

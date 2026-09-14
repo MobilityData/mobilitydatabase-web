@@ -1,7 +1,11 @@
 import { type SvgIconComponent } from '@mui/icons-material';
-import { differenceInCalendarDays, isAfter, subMonths } from 'date-fns';
+import { isAfter } from 'date-fns';
 import { theme as appTheme } from '../Theme';
-import { formatDateShort } from '../utils/date';
+import {
+  formatDateShort,
+  subMonthsUtc,
+  utcCalendarDayDiff,
+} from '../utils/date';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import CodeIcon from '@mui/icons-material/Code';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -192,7 +196,7 @@ export function getGracePeriodCriteria(
  * already be in the past when the nightly job hasn't acted on it yet.
  */
 export function getDaysUntil(date: string, now = new Date()): number {
-  return Math.max(0, differenceInCalendarDays(new Date(date), now));
+  return Math.max(0, utcCalendarDayDiff(new Date(date), now));
 }
 
 /**
@@ -218,6 +222,30 @@ export interface ProbationWindow {
 /**
  * The API reports only when probation ends, and probation is defined as
  * PROBATION_MONTHS clean months, so the start is derived from the end.
+ *
+ * `undefined` when there is no end date - the feed or criterion is not on
+ * probation, or the window elapsed without the nightly job clearing it.
+ */
+export function getProbationWindowFromEnd(
+  endsAt: string | null | undefined,
+): ProbationWindow | undefined {
+  if (endsAt == null) {
+    return undefined;
+  }
+  const end = new Date(endsAt);
+  if (isNaN(end.getTime())) {
+    return undefined;
+  }
+  return { start: subMonthsUtc(end, PROBATION_MONTHS), end };
+}
+
+/**
+ * The feed-level probation window, for the seal banner.
+ *
+ * `probation_ends_at` is already the latest end across every criterion on
+ * probation, but each criterion serves its own fixed-length window, so the
+ * one ending last isn't necessarily the one that started first. The start is
+ * the earliest start among them instead of being derived from that end.
  */
 export function getProbationWindow(
   reliability: FeedReliabilityReport | undefined,
@@ -230,7 +258,18 @@ export function getProbationWindow(
   if (isNaN(end.getTime())) {
     return undefined;
   }
-  return { start: subMonths(end, PROBATION_MONTHS), end };
+
+  const starts = (reliability?.criteria ?? [])
+    .filter((c) => c.on_probation)
+    .map((c) => getProbationWindowFromEnd(c.probation_ends_at)?.start)
+    .filter((d): d is Date => d != null);
+
+  const start =
+    starts.length > 0
+      ? new Date(Math.min(...starts.map((d) => d.getTime())))
+      : subMonthsUtc(end, PROBATION_MONTHS);
+
+  return { start, end };
 }
 
 /** How far through the probation window `now` sits, as 0-100. */
@@ -299,7 +338,7 @@ export function isFeedWithinProbationWindow(
   if (isNaN(createdAt.getTime())) {
     return false;
   }
-  return isAfter(createdAt, subMonths(now, PROBATION_MONTHS));
+  return isAfter(createdAt, subMonthsUtc(now, PROBATION_MONTHS));
 }
 
 /**

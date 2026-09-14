@@ -41,6 +41,8 @@ function renderSection(
   criterion: ReliabilityCriterion,
   context?: SealCriterionContext,
   producerUrl?: string,
+  children?: React.ReactNode,
+  metaChips?: React.ReactNode,
 ): ReturnType<typeof render> {
   return render(
     <ThemeProvider theme={theme}>
@@ -48,8 +50,11 @@ function renderSection(
         criterion={criterion}
         context={context}
         producerUrl={producerUrl}
-        statusChip={null}
-      />
+        statusChip={<span data-testid='status-chip' />}
+        metaChips={metaChips}
+      >
+        {children}
+      </CriterionSection>
     </ThemeProvider>,
   );
 }
@@ -158,5 +163,83 @@ describe('CriterionSection stable', () => {
     expect(
       screen.getByText('sealCriterionGracePeriodNote'),
     ).toBeInTheDocument();
+  });
+});
+
+describe('CriterionSection body slot', () => {
+  it('keeps the header but drops the generic copy when a body is supplied', () => {
+    renderSection(
+      buildCriterion('available', { status: 'pass' }),
+      undefined,
+      undefined,
+      <p>custom body</p>,
+    );
+
+    expect(
+      screen.getByTestId('criterion-section-available'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('criteria.available.title')).toBeInTheDocument();
+    expect(screen.getByText('custom body')).toBeInTheDocument();
+    expect(
+      screen.queryByText('criteria.available.description'),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe('CriterionSection probation', () => {
+  it('says when probation ends, and how far through it is', () => {
+    renderSection(
+      buildCriterion('available', {
+        status: 'pass',
+        on_probation: true,
+        probation_ends_at: '2027-01-16T00:00:00Z',
+      }),
+      { now: NOW },
+    );
+
+    const note = screen.getByTestId('criterion-probation-note');
+    expect(note).toHaveTextContent('sealCriterionProbationNote');
+    // Window runs Jul 16 2026 - Jan 16 2027; NOW is Sep 8, roughly a third in.
+    const bar = note.querySelector('[role="progressbar"]');
+    expect(bar).toHaveAttribute('aria-valuenow', '29');
+  });
+
+  it('says when probation ends alongside a custom body', () => {
+    renderSection(
+      buildCriterion('compliant', {
+        status: 'pass',
+        on_probation: true,
+        probation_ends_at: '2027-01-16T00:00:00Z',
+      }),
+      { now: NOW },
+      undefined,
+      <p>custom body</p>,
+    );
+
+    expect(screen.getByText('custom body')).toBeInTheDocument();
+    expect(screen.getByTestId('criterion-probation-note')).toBeInTheDocument();
+  });
+
+  it('omits the note when the probation window has already elapsed', () => {
+    renderSection(
+      buildCriterion('available', { status: 'pass', on_probation: true }),
+    );
+
+    expect(
+      screen.queryByTestId('criterion-probation-note'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('omits the note when the criterion is not on probation', () => {
+    renderSection(
+      buildCriterion('available', {
+        status: 'pass',
+        probation_ends_at: '2027-01-16T00:00:00Z',
+      }),
+    );
+
+    expect(
+      screen.queryByTestId('criterion-probation-note'),
+    ).not.toBeInTheDocument();
   });
 });

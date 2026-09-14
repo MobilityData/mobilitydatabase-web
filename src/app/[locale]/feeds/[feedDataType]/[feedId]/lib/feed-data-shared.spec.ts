@@ -11,6 +11,7 @@ jest.mock('server-only', () => ({}));
 
 const mockGetGtfsFeedReliability = jest.fn();
 const mockGetGtfsFeed = jest.fn();
+const mockGetGtfsRtFeed = jest.fn();
 const mockGetGtfsFeedDatasets = jest.fn();
 const mockGetGtfsFeedRoutes = jest.fn();
 const mockGetGtfsFeedAvailability = jest.fn();
@@ -24,6 +25,7 @@ jest.mock('../../../../../services/feeds', () => ({
   getGtfsFeedContinuousCoverage: (...args: unknown[]) =>
     mockGetGtfsFeedContinuousCoverage(...args),
   getGtfsFeed: (...args: unknown[]) => mockGetGtfsFeed(...args),
+  getGtfsRtFeed: (...args: unknown[]) => mockGetGtfsRtFeed(...args),
   getGtfsFeedDatasets: (...args: unknown[]) => mockGetGtfsFeedDatasets(...args),
   getGtfsFeedRoutes: (...args: unknown[]) => mockGetGtfsFeedRoutes(...args),
 }));
@@ -60,20 +62,10 @@ describe('fetchCompleteFeedDataImpl', () => {
     mockGetGtfsFeedRoutes.mockResolvedValue(null);
   });
 
-  it('does not call the reliability API when enableSealOfReliability is false', async () => {
-    const result = await fetchCompleteFeedDataImpl(
-      'gtfs',
-      'mdb-1',
-      'token',
-      undefined,
-      false,
-    );
-
-    expect(mockGetGtfsFeedReliability).not.toHaveBeenCalled();
-    expect(result.reliability).toBeUndefined();
-  });
-
-  it('calls the reliability API when enableSealOfReliability is true', async () => {
+  // The seal is gated client-side by useRemoteConfig(), so the report is
+  // always fetched here - otherwise a Remote Config admin bypass would open
+  // the UI onto data the server never loaded.
+  it('always calls the reliability API for gtfs feeds', async () => {
     mockGetGtfsFeedReliability.mockResolvedValue(report);
 
     const result = await fetchCompleteFeedDataImpl(
@@ -81,12 +73,25 @@ describe('fetchCompleteFeedDataImpl', () => {
       'mdb-1',
       'token',
       undefined,
-      true,
     );
 
     expect(mockGetGtfsFeedReliability).toHaveBeenCalledTimes(1);
     expect(result.reliability).toEqual(report);
     expect(result.reliabilityError).toBe(false);
+  });
+
+  it('does not call the reliability API for non-gtfs feeds', async () => {
+    mockGetGtfsRtFeed.mockResolvedValue({ id: 'mdb-1', data_type: 'gtfs_rt' });
+
+    const result = await fetchCompleteFeedDataImpl(
+      'gtfs_rt',
+      'mdb-1',
+      'token',
+      undefined,
+    );
+
+    expect(mockGetGtfsFeedReliability).not.toHaveBeenCalled();
+    expect(result.reliability).toBeUndefined();
   });
 
   it('flags reliabilityError when the reliability API fails', async () => {
@@ -97,7 +102,6 @@ describe('fetchCompleteFeedDataImpl', () => {
       'mdb-1',
       'token',
       undefined,
-      true,
     );
 
     expect(result.reliability).toBeUndefined();
@@ -112,7 +116,7 @@ describe('fetchCompleteFeedDataImpl', () => {
   it('does not fetch the availability or continuous-coverage history', async () => {
     mockGetGtfsFeedReliability.mockResolvedValue(report);
 
-    await fetchCompleteFeedDataImpl('gtfs', 'mdb-1', 'token', undefined, true);
+    await fetchCompleteFeedDataImpl('gtfs', 'mdb-1', 'token', undefined);
 
     expect(mockGetGtfsFeedAvailability).not.toHaveBeenCalled();
     expect(mockGetGtfsFeedContinuousCoverage).not.toHaveBeenCalled();
