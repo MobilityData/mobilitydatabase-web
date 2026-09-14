@@ -27,6 +27,7 @@ import {
   Alert,
   IconButton,
   InputAdornment,
+  Paper,
   Snackbar,
   Tooltip,
 } from '@mui/material';
@@ -145,7 +146,7 @@ export default function SignUp(): React.ReactElement {
   };
 
   return (
-    <Container component='main' maxWidth='xs'>
+    <Container component='main' maxWidth='sm' sx={{ my: { xs: 4, sm: 6 } }}>
       <Snackbar
         open={showNoEmailSnackbar}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
@@ -164,12 +165,21 @@ export default function SignUp(): React.ReactElement {
         </Alert>
       </Snackbar>
       <CssBaseline />
-      <Box
+      <Paper
+        elevation={0}
+        variant='outlined'
         sx={{
-          display: 'flex',
-          flexDirection: 'column',
+          p: { xs: 3, sm: 4 },
+          borderRadius: 2,
+          backgroundColor: 'background.paper',
         }}
       >
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
         <Typography
           component='h1'
           variant='h5'
@@ -401,6 +411,7 @@ export default function SignUp(): React.ReactElement {
           Sign Up With Apple
         </Button>
       </Box>
+      </Paper>
     </Container>
   );
 }

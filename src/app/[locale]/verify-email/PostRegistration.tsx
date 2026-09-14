@@ -5,7 +5,7 @@ import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import { EmailOutlined, InfoOutlined, Sync } from '@mui/icons-material';
-import { Alert, Button } from '@mui/material';
+import { Alert, Button, Paper } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { emailVerified, verifyEmail } from '../../store/profile-reducer';
 import {
@@ -53,15 +53,22 @@ export default function PostRegistration(): React.ReactElement {
   }, []);
 
   return (
-    <Container component='main' maxWidth='sm'>
-      <Box
+    <Container component='main' maxWidth='sm' sx={{ my: { xs: 4, sm: 6 } }}>
+      <Paper
+        elevation={0}
+        variant='outlined'
         sx={{
-          ml: 2,
-          mr: 2,
-          display: 'flex',
-          flexDirection: 'column',
+          p: { xs: 3, sm: 4 },
+          borderRadius: 2,
+          backgroundColor: 'background.paper',
         }}
       >
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
         <Typography
           component='h1'
           variant='h5'
@@ -106,6 +113,7 @@ export default function PostRegistration(): React.ReactElement {
           verified.
         </Box>
       </Box>
+      </Paper>
     </Container>
   );
 }

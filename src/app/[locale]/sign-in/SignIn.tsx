@@ -34,6 +34,7 @@ import {
   Divider,
   IconButton,
   InputAdornment,
+  Paper,
   Snackbar,
   Tooltip,
   useTheme,
@@ -124,7 +125,7 @@ export default function SignIn(): React.ReactElement {
   };
 
   return (
-    <Container component='main' maxWidth='xs'>
+    <Container component='main' maxWidth='sm' sx={{ my: { xs: 4, sm: 6 } }}>
       <Backdrop
         open={isLoading}
         sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
@@ -150,12 +151,21 @@ export default function SignIn(): React.ReactElement {
         </Alert>
       </Snackbar>
       <CssBaseline />
-      <Box
+      <Paper
+        elevation={0}
+        variant='outlined'
         sx={{
-          display: 'flex',
-          flexDirection: 'column',
+          p: { xs: 3, sm: 4 },
+          borderRadius: 2,
+          backgroundColor: 'background.paper',
         }}
       >
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
         <Typography
           component='h1'
           variant='h5'
@@ -320,6 +330,7 @@ export default function SignIn(): React.ReactElement {
           Sign in With Apple
         </Button>
       </Box>
+      </Paper>
     </Container>
   );
 }

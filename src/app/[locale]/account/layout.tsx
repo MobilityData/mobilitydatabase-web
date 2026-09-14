@@ -127,6 +127,8 @@ function AccountLayoutContent({
       maxWidth='xl'
       sx={{
         mx: 'auto',
+        my: { xs: 3, md: 5 },
+        px: { xs: 2, sm: 3, md: 4 },
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
