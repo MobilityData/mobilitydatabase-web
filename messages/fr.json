@@ -168,6 +168,7 @@
       "signUp": "Sign up for a Mobility Database account or login to add or update a GTFS feed.",
       "signUpAction": "Sign up for an account",
       "loginSuccess": "You were successfully logged in, you can now add or update a feed.",
+      "emailVerificationRequired": "Veuillez vérifier votre adresse e-mail pour soumettre ou mettre à jour des flux.",
       "dataTypeRequired": "Data format required",
       "isOfficialFeedRequired": "Official feed required",
       "feedLinkRequired": "Feed link required",

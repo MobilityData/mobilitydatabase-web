@@ -36,6 +36,7 @@ interface AuthSession {
   uid: string | null;
   email: string | null;
   isAuthenticated: boolean;
+  isEmailVerified: boolean;
   displayName?: string | null;
 }
 
@@ -45,6 +46,7 @@ const AuthReadyContext = createContext<AuthSession>({
   uid: null,
   email: null,
   isAuthenticated: false,
+  isEmailVerified: false,
   displayName: null,
 });
 
@@ -84,6 +86,7 @@ export function AuthSessionProvider({
     uid: null,
     email: null,
     isAuthenticated: false,
+    isEmailVerified: false,
     displayName: null,
   });
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -119,6 +122,7 @@ export function AuthSessionProvider({
           uid: user.uid,
           email: user.email ?? null,
           isAuthenticated: !user.isAnonymous,
+          isEmailVerified: user.emailVerified ?? false,
           displayName: user.displayName ?? null,
         });
         syncSession(user.uid, user.isAnonymous);
@@ -139,6 +143,7 @@ export function AuthSessionProvider({
           uid: null,
           email: null,
           isAuthenticated: false,
+          isEmailVerified: false,
           displayName: null,
         });
         dispatch(anonymousLogin());

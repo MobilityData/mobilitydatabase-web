@@ -63,7 +63,7 @@ export default function AccessRequiredPopover({
 }: AccessRequiredPopoverProps): React.ReactElement {
   const t = useTranslations('common');
   const pathname = usePathname();
-  const { isAuthenticated } = useAuthSession();
+  const { isAuthenticated, isEmailVerified } = useAuthSession();
 
   return (
     <Popover
@@ -95,6 +95,18 @@ export default function AccessRequiredPopover({
           <Suspense fallback={null}>
             <LoginButton pathname={pathname} onClose={onClose} />
           </Suspense>
+        )}
+        {isAuthenticated && !isEmailVerified && (
+          <Button
+            variant='contained'
+            disableElevation
+            component={Link}
+            sx={{ width: '100%', mb: 1 }}
+            href='/verify-email'
+            onClick={onClose}
+          >
+            {t('verifyEmail') ?? 'Verify Email'}
+          </Button>
         )}
         <Button
           variant='outlined'
