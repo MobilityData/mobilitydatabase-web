@@ -11,7 +11,10 @@ import {
   Typography,
 } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
-import { selectIsAuthenticated } from '../../../store/profile-selectors';
+import {
+  selectIsAuthenticated,
+  selectIsEmailVerified,
+} from '../../../store/profile-selectors';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import FeedSubmissionForm from './Form';
@@ -24,6 +27,7 @@ function Component(): React.ReactElement {
     searchParams.get('from') === 'registration',
   );
   const isAuthenticated = useSelector(selectIsAuthenticated);
+  const isEmailVerified = useSelector(selectIsEmailVerified);
 
   return (
     <Container component='main' sx={{ my: 0, mx: 'auto' }}>
@@ -42,7 +46,18 @@ function Component(): React.ReactElement {
             </Button>
           </>
         )}
-        {isAuthenticated && (
+        {isAuthenticated && !isEmailVerified && (
+          <Box sx={{ my: 3 }}>
+            <Typography variant='h1'>{t('form.addOrUpdateFeed')}</Typography>
+            <Alert severity='warning' sx={{ my: 2 }}>
+              {t('form.emailVerificationRequired')}
+            </Alert>
+            <Button variant='contained' href='/verify-email'>
+              Verify Email
+            </Button>
+          </Box>
+        )}
+        {isAuthenticated && isEmailVerified && (
           <>
             {showLoginSuccess && (
               <Alert
