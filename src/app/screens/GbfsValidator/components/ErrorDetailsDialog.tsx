@@ -431,7 +431,7 @@ export function ErrorDetailsDialog({
                                     </Box>
                                   )}
                                   {renderHighlightedObject(
-                                    parentContextData as JSONValue,
+                                    parentContextData,
                                     null,
                                     null,
                                   )}
@@ -439,7 +439,7 @@ export function ErrorDetailsDialog({
                               );
                             }
                             return renderHighlightedObject(
-                              parentContextData as JSONValue,
+                              parentContextData,
                               lastPointerSegment ?? null,
                               lastArrayIndex,
                             );

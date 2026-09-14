@@ -85,20 +85,13 @@ export default function ValidationState(): ReactElement {
   };
 
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    if (loadingState) {
-      timer = setTimeout(() => {
-        setLongLoadingState(true);
-      }, 5000);
-    } else {
-      setLongLoadingState(false);
-    }
-
+    if (!loadingState) return;
+    const timer = setTimeout(() => {
+      setLongLoadingState(true);
+    }, 5000);
     return () => {
-      // cleanup timer on unmount or when loadingState changes
-      if (timer != null) {
-        clearTimeout(timer);
-      }
+      clearTimeout(timer);
+      setLongLoadingState(false);
     };
   }, [loadingState]);
 
@@ -117,6 +110,7 @@ export default function ValidationState(): ReactElement {
       >
         <Container maxWidth='lg' sx={{ my: 2 }}>
           <GbfsFeedSearchInput
+            key={feedUrl ?? ''}
             initialFeedUrl={feedUrl ?? ''}
             triggerDataFetch={triggerDataFetch}
           ></GbfsFeedSearchInput>
@@ -250,6 +244,7 @@ export default function ValidationState(): ReactElement {
         </Box> */}
 
         <ValidationReport
+          key={feedUrl ?? ''}
           validationResult={validationResult}
           loading={loadingState}
         ></ValidationReport>

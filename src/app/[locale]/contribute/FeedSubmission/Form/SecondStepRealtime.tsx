@@ -111,7 +111,11 @@ export default function FormSecondStepRT({
       >
         {t('gtfsRealtimeFeed')}
       </Typography>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form
+        onSubmit={(e) => {
+          void handleSubmit(onSubmit)(e);
+        }}
+      >
         <Grid container direction={'column'} rowSpacing={2}>
           <Grid>
             <FormControl

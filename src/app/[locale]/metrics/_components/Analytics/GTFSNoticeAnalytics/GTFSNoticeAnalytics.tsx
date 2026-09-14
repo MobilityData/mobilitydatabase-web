@@ -39,6 +39,7 @@ import { useRemoteConfig } from '../../../../../context/RemoteConfigProvider';
 
 export default function GTFSNoticeAnalytics(): React.ReactElement {
   const router = useRouter();
+  const theme = useTheme();
   const searchParams = useSearchParams();
   const noticeCode = searchParams.get('noticeCode');
   const [data, setData] = useState<NoticeMetrics[]>([]);
@@ -193,7 +194,6 @@ export default function GTFSNoticeAnalytics(): React.ReactElement {
     enableStickyFooter: true,
     muiTableContainerProps: { sx: { maxHeight: '70vh' } },
     renderDetailPanel: ({ row }) => {
-      const theme = useTheme();
       const metrics = row.original;
 
       const chartData = metrics.computed_on.map((date, index) => ({

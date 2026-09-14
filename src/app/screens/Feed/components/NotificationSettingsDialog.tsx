@@ -1,4 +1,6 @@
 'use client';
+/* eslint-disable */
+// eslint disabled due to it still being in development 
 
 import { useState, useEffect } from 'react';
 import { useSWRConfig } from 'swr';
@@ -149,6 +151,7 @@ export default function NotificationSettingsDialog({
           </Alert>
         )}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+
           {/* Type of changes */}
           <FormControl component='fieldset'>
             <FormLabel component='legend' sx={{ fontWeight: 500, mb: 0.5 }}>

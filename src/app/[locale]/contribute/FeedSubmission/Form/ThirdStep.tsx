@@ -74,7 +74,11 @@ export default function FormThirdStep({
 
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form
+        onSubmit={(e) => {
+          void handleSubmit(onSubmit)(e);
+        }}
+      >
         <Grid container direction={'column'} rowSpacing={2}>
           {/* Show required emptyLicenseUsage if official producer and no license provided */}
           {isOfficialProducer && noLicenseProvided && (

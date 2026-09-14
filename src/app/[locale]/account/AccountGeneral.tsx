@@ -42,6 +42,9 @@ export default function AccountGeneral(): React.ReactElement {
     draftIsRegisteredToReceiveAPIAnnouncements,
     setDraftIsRegisteredToReceiveAPIAnnouncements,
   ] = React.useState(false);
+  const [alertSeverity, setAlertSeverity] = React.useState<'success' | 'error'>(
+    'success',
+  );
 
   const handleEditClick = (): void => {
     setDraftFullName(user?.fullName ?? '');
@@ -76,14 +79,13 @@ export default function AccountGeneral(): React.ReactElement {
   React.useEffect(() => {
     if (saveStatus === 'success') {
       setIsEditing(false);
+      setAlertSeverity('success');
+    } else if (saveStatus === 'fail') {
+      setAlertSeverity('error');
     }
   }, [saveStatus]);
 
-  // Reference is due to dispatch save status acting faster than the exit animation of the alert, causing a flash of the wrong alert severity. With this reference, the severity will be consistent during the whole display of the alert.
   const isSaving = saveStatus === 'loading';
-  const alertSeverity = React.useRef<'success' | 'error'>('success');
-  if (saveStatus === 'success') alertSeverity.current = 'success';
-  if (saveStatus === 'fail') alertSeverity.current = 'error';
 
   return (
     <>
@@ -96,15 +98,13 @@ export default function AccountGeneral(): React.ReactElement {
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
         <Alert
-          severity={alertSeverity.current}
+          severity={alertSeverity}
           onClose={() => {
             dispatch(saveUserProfileReset());
           }}
           sx={{ width: '100%' }}
         >
-          {alertSeverity.current === 'success'
-            ? t('saveSuccess')
-            : t('saveError')}
+          {alertSeverity === 'success' ? t('saveSuccess') : t('saveError')}
         </Alert>
       </Snackbar>
       <AccountSectionContainer

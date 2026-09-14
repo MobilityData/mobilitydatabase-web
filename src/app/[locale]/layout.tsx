@@ -84,7 +84,7 @@ export default async function LocaleLayout({
   }
 
   // At this point, locale is guaranteed to be a valid Locale type
-  const validLocale = locale as Locale;
+  const validLocale = locale;
 
   // Enable static rendering for this locale
   setRequestLocale(validLocale);

@@ -532,7 +532,6 @@ export const GtfsVisualizationMap = ({
               scannedTiles={scannedTiles}
               scanRowsCols={scanRowsCols}
               handleCancelScan={handleCancelScan}
-              cancelRequestRef={cancelRequestRef}
             />
           )}
 
