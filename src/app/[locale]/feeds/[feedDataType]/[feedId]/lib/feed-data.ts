@@ -10,6 +10,7 @@ import {
   getSSRAccessToken,
   getUserContextJwtFromCookie,
   getCurrentUserFromCookie,
+  isMobilityDatabaseAdmin,
 } from '../../../../../utils/auth-server';
 import { getRemoteConfigValues } from '../../../../../../lib/remote-config.server';
 import {
@@ -23,13 +24,10 @@ export type FeedData = FeedDataResult;
  * Fetch all data needed for a feed page.
  *
  * Caching strategy:
- * - React cache(): Deduplicates within a single request (layout + page)
- * - unstable_cache with user ID: Server-side cache per user across navigations
- *
- * Each user gets their own cached version that persists across page navigations
- * (e.g., /feeds/gtfs/mdb-123 → /feeds/gtfs/mdb-123/map)
- *
- * Revalidation is short due to the per-user-per-feed cache, but can be adjusted based on needs.
+ * - React cache(): Deduplicates within a single request (layout + page + metadata)
+ * - unstable_cache with role: Server-side cache partitioned by role ('admin' | 'authenticated')
+ *   instead of per-user UID, preventing cache bloat across authenticated users.
+ * - Client-side SWR: Used for user-specific mutations and stale-while-revalidate client navigation.
  */
 export const fetchCompleteFeedData = cache(
   async (
@@ -44,7 +42,12 @@ export const fetchCompleteFeedData = cache(
         getRemoteConfigValues(),
       ],
     );
-    const userId = user?.uid ?? 'anonymous';
+    const userRole =
+      user?.email && isMobilityDatabaseAdmin(user.email)
+        ? 'admin'
+        : user
+          ? 'authenticated'
+          : 'guest';
 
     const cachedFetch = unstable_cache(
       async () => {
@@ -56,10 +59,10 @@ export const fetchCompleteFeedData = cache(
           remoteConfig.enableSealOfReliability,
         );
       },
-      [`feed-complete-${feedDataType}-${feedId}-${userId}`], // unique cache key per user
+      [`feed-role-${feedDataType}-${feedId}-${userRole}`], // shared cache key per role instead of per user
       {
-        tags: [`feed-${feedId}`, `user-${userId}`, `feed-type-${feedDataType}`],
-        revalidate: 600, // 10 minutes - to revisit based on user usage / cache storage availability
+        tags: [`feed-${feedId}`, `role-${userRole}`, `feed-type-${feedDataType}`],
+        revalidate: 600, // 10 minutes
       },
     );
 
