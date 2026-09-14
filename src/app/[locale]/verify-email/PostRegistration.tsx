@@ -80,6 +80,11 @@ export default function PostRegistration(): React.ReactElement {
           account registration. Please also check your junk or spam folder if
           you do not see it in your inbox.
         </Box>
+        <Alert severity='info' sx={{ mt: 2 }}>
+          Using Microsoft Outlook or a corporate email? Verification emails may
+          land in your Junk folder. If found there, please mark the message as
+          &quot;Not Junk&quot; to ensure future notifications arrive safely.
+        </Alert>
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
           <Button
             variant='contained'
