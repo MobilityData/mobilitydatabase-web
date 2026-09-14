@@ -13,6 +13,7 @@ module.exports = {
       ],
       numberOfRuns: 1, // 1 to speed up the CI process but can be increased for more reliable results
       settings: {
+        chromeFlags: '--no-sandbox --disable-dev-shm-usage --ignore-gpu-blocklist --enable-webgl',
         formFactor: 'desktop',
         throttlingMethod: 'provided',
         skipAudits: ['robots-txt', 'is-crawlable'],
