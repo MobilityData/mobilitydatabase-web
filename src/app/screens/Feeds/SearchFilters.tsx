@@ -15,69 +15,17 @@ import {
 import NestedCheckboxList, {
   type CheckboxStructure,
 } from '../../components/NestedCheckboxList';
-import AccessRequiredPopover from '../../components/AccessRequiredPopover';
 import { useTranslations } from 'next-intl';
 import { useRemoteConfig } from '../../context/RemoteConfigProvider';
 import { useSealOfReliabilityFilterAccess } from '../../hooks/useSealOfReliabilityFilterAccess';
 import { Link } from '../../../i18n/navigation';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import LockIcon from '@mui/icons-material/Lock';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { useEffect, useState } from 'react';
 import { DATASET_FEATURES, groupFeaturesByComponent } from '../../utils/consts';
 import { type GbfsVersionConfig } from '../../interface/RemoteConfig';
 import { SearchHeader } from '../../styles/Filters.styles';
 
-const SEAL_FILTER_ACCESS_FORM_URL =
-  'https://docs.google.com/forms/d/1jzrqXkxkRHp_TrRHM6fSxeF2nMX3RSvrAXC2dlovZDU/viewform?edit_requested=true';
-
-interface SealFilterRowProps {
-  checked: boolean;
-  disabled?: boolean;
-  locked?: boolean;
-  onClick?: (event: React.MouseEvent<HTMLElement>) => void;
-}
-
-function SealFilterRow({
-  checked,
-  disabled,
-  locked,
-  onClick,
-}: SealFilterRowProps): React.ReactElement {
-  return (
-    <List sx={{ width: '100%' }} dense>
-      <ListItem disablePadding>
-        <ListItemButton
-          disabled={disabled}
-          dense
-          sx={{ p: 0, display: 'flex', justifyContent: 'space-between' }}
-          onClick={onClick}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Checkbox
-              edge='start'
-              tabIndex={-1}
-              disableRipple
-              checked={checked}
-            />
-            <ListItemText
-              primary={<b>Seal of Reliability</b>}
-              slotProps={{
-                primary: {
-                  variant: 'body1',
-                  color: locked ? 'text.disabled' : undefined,
-                },
-              }}
-            />
-          </Box>
-          {locked === true && (
-            <LockIcon fontSize='small' sx={{ opacity: 0.6, mr: 1 }}></LockIcon>
-          )}
-        </ListItemButton>
-      </ListItem>
-    </List>
-  );
-}
 
 function setInitialExpandGroup(): Record<string, boolean> {
   const expandGroup: Record<string, boolean> = {};
@@ -142,12 +90,8 @@ export function SearchFilters({
   const { config } = useRemoteConfig();
   const {
     isFeatureLive: isSealOfReliabilityLive,
-    isPending: isSealAccessPending,
-    hasNoAccess: hasNoSealAccess,
+    hasAccess: hasSealAccess,
   } = useSealOfReliabilityFilterAccess();
-
-  const [sealAccessPopoverAnchor, setSealAccessPopoverAnchor] =
-    useState<HTMLElement | null>(null);
 
   const gbfsVersionsObject: GbfsVersionConfig = JSON.parse(config.gbfsVersions);
 
@@ -261,25 +205,8 @@ export function SearchFilters({
           ></NestedCheckboxList>
 
           {isSealOfReliabilityLive &&
-            (!areFeatureFiltersEnabled || isSealAccessPending ? (
-              <SealFilterRow
-                checked={
-                  !areFeatureFiltersEnabled || hasNoSealAccess
-                    ? false
-                    : hasSealFeedSearch
-                }
-                disabled
-                locked={hasNoSealAccess}
-              />
-            ) : hasNoSealAccess ? (
-              <SealFilterRow
-                checked={false}
-                locked
-                onClick={(e) => {
-                  setSealAccessPopoverAnchor(e.currentTarget);
-                }}
-              />
-            ) : (
+            hasSealAccess &&
+            areFeatureFiltersEnabled && (
               <NestedCheckboxList
                 checkboxData={[
                   {
@@ -292,37 +219,29 @@ export function SearchFilters({
                   setHasSealFeedSearch(checkboxData[0].checked);
                 }}
               ></NestedCheckboxList>
-            ))}
+            )}
         </Box>
 
-        {isSealOfReliabilityLive && (
-          <MuiLink
-            component={Link}
-            href='/seal-of-reliability'
-            target='_blank'
-            rel='noopener noreferrer'
-            variant='caption'
-            sx={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 0.25,
-              mt: 0.5,
-            }}
-          >
-            {t('sealOfReliabilityLearnMore')}
-            <OpenInNewIcon sx={{ fontSize: '0.9rem' }} />
-          </MuiLink>
-        )}
-
-        <AccessRequiredPopover
-          anchorEl={sealAccessPopoverAnchor}
-          onClose={() => {
-            setSealAccessPopoverAnchor(null);
-          }}
-          title='Seal of Reliability Filtering Access Required'
-          description='This feature requires a MobilityData membership. Log in or request access to continue'
-          requestAccessUrl={SEAL_FILTER_ACCESS_FORM_URL}
-        />
+        {isSealOfReliabilityLive &&
+          hasSealAccess &&
+          areFeatureFiltersEnabled && (
+            <MuiLink
+              component={Link}
+              href='/seal-of-reliability'
+              target='_blank'
+              rel='noopener noreferrer'
+              variant='caption'
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 0.25,
+                mt: 0.5,
+              }}
+            >
+              {t('sealOfReliabilityLearnMore')}
+              <OpenInNewIcon sx={{ fontSize: '0.9rem' }} />
+            </MuiLink>
+          )}
       </>
 
       <Accordion
