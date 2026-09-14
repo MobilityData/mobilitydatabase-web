@@ -1,10 +1,13 @@
 import { Box, Typography } from '@mui/material';
 
 import {
+  type AllFeedType,
   type GTFSFeedType,
   type GBFSVersionType,
   type GBFSFeedType,
+  isGtfsFeedType,
 } from '../../services/feeds/utils';
+import { type components } from '../../services/feeds/types';
 import {
   type LngLatTuple,
   type GeoJSONData,
@@ -16,6 +19,18 @@ export function formatProvidersSorted(provider: string): string[] {
   const providersTrimmed = providers.map((p) => p.trim());
   const providersSorted = providersTrimmed.sort();
   return providersSorted;
+}
+
+export function getLatestDataset(
+  feed: AllFeedType,
+  initialDatasets?: Array<components['schemas']['GtfsDataset']>,
+): components['schemas']['GtfsDataset'] | undefined {
+  if (!isGtfsFeedType(feed)) {
+    return undefined;
+  }
+  return initialDatasets?.find(
+    (dataset) => dataset.id === feed.latest_dataset?.id,
+  );
 }
 
 export function getFeedFormattedName(

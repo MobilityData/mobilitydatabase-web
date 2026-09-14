@@ -16,6 +16,8 @@ export interface DataQualitySummaryProps {
   feedId: string;
   feedDataType: string;
   hasSeal: boolean | undefined;
+  /** Render the seal chip without a link - used on the seal analysis page. */
+  disableSealLink?: boolean;
 }
 
 // Because this is a server component, the page will not render until the data is ready, hence the async
@@ -26,6 +28,7 @@ export default async function DataQualitySummary({
   feedId,
   feedDataType,
   hasSeal,
+  disableSealLink = false,
 }: DataQualitySummaryProps): Promise<React.ReactElement> {
   const [t, tCommon, config] = await Promise.all([
     getTranslations('feeds'),
@@ -34,7 +37,7 @@ export default async function DataQualitySummary({
   ]);
 
   return (
-    <Box data-testid='data-quality-summary' sx={{ my: 2 }}>
+    <Box data-testid='data-quality-summary' sx={{ my: 2, fontWeight: 700 }}>
       {latestDataset?.validation_report == undefined && (
         <WarningContentBox>{t('errorLoadingQualityReport')}</WarningContentBox>
       )}
@@ -47,6 +50,7 @@ export default async function DataQualitySummary({
             hasSeal={hasSeal}
             feedId={feedId}
             feedDataType={feedDataType}
+            disableLink={disableSealLink}
           />
         )}
         <FeedVerificationChip status={isOfficialFeed}></FeedVerificationChip>

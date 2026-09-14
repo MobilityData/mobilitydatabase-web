@@ -8,22 +8,27 @@ import {
 } from './feed-data-shared';
 
 jest.mock('server-only', () => ({}));
-jest.mock('next/cache', () => ({
-  unstable_cache: (fn: unknown) => fn,
-}));
 
 const mockGetGtfsFeedReliability = jest.fn();
 const mockGetGtfsFeed = jest.fn();
 const mockGetGtfsFeedDatasets = jest.fn();
 const mockGetGtfsFeedRoutes = jest.fn();
+const mockGetGtfsFeedAvailability = jest.fn();
+const mockGetGtfsFeedContinuousCoverage = jest.fn();
 
 jest.mock('../../../../../services/feeds', () => ({
   getGtfsFeedReliability: (...args: unknown[]) =>
     mockGetGtfsFeedReliability(...args),
+  getGtfsFeedAvailability: (...args: unknown[]) =>
+    mockGetGtfsFeedAvailability(...args),
+  getGtfsFeedContinuousCoverage: (...args: unknown[]) =>
+    mockGetGtfsFeedContinuousCoverage(...args),
   getGtfsFeed: (...args: unknown[]) => mockGetGtfsFeed(...args),
   getGtfsFeedDatasets: (...args: unknown[]) => mockGetGtfsFeedDatasets(...args),
   getGtfsFeedRoutes: (...args: unknown[]) => mockGetGtfsFeedRoutes(...args),
 }));
+
+const report = { feed_id: 'mdb-1', has_seal: true, criteria: [] };
 
 describe('fetchReliabilityData', () => {
   beforeEach(() => {
@@ -31,24 +36,19 @@ describe('fetchReliabilityData', () => {
   });
 
   it('returns the reliability report on success', async () => {
-    const report = { feed_id: 'mdb-1', has_seal: true, criteria: [] };
     mockGetGtfsFeedReliability.mockResolvedValue(report);
 
     const result = await fetchReliabilityData('mdb-1', 'token', undefined);
 
-    expect(result).toEqual(report);
+    expect(result).toEqual({ reliability: report, failed: false });
   });
 
-  // unstable_cache is mocked as a pass-through here, so this exercises the
-  // real cached-fetcher function: it must reject (not resolve to `null`)
-  // on failure, or a real unstable_cache would persist the failure as a
-  // 14-day negative-cache entry.
-  it('returns undefined without throwing when the API call fails', async () => {
+  it('reports failure without throwing when the API call fails', async () => {
     mockGetGtfsFeedReliability.mockRejectedValue(new Error('network error'));
 
     await expect(
       fetchReliabilityData('mdb-1', 'token', undefined),
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual({ reliability: undefined, failed: true });
   });
 });
 
@@ -74,7 +74,6 @@ describe('fetchCompleteFeedDataImpl', () => {
   });
 
   it('calls the reliability API when enableSealOfReliability is true', async () => {
-    const report = { feed_id: 'mdb-1', has_seal: true, criteria: [] };
     mockGetGtfsFeedReliability.mockResolvedValue(report);
 
     const result = await fetchCompleteFeedDataImpl(
@@ -87,5 +86,35 @@ describe('fetchCompleteFeedDataImpl', () => {
 
     expect(mockGetGtfsFeedReliability).toHaveBeenCalledTimes(1);
     expect(result.reliability).toEqual(report);
+    expect(result.reliabilityError).toBe(false);
+  });
+
+  it('flags reliabilityError when the reliability API fails', async () => {
+    mockGetGtfsFeedReliability.mockRejectedValue(new Error('network error'));
+
+    const result = await fetchCompleteFeedDataImpl(
+      'gtfs',
+      'mdb-1',
+      'token',
+      undefined,
+      true,
+    );
+
+    expect(result.reliability).toBeUndefined();
+    expect(result.reliabilityError).toBe(true);
+  });
+
+  // Regression guard for the feed detail page's ISR TTL. This function runs
+  // inside an unstable_cache, so the seal page's 6-hour entry must not be
+  // reached from here: a nested unstable_cache is bypassed outright, and
+  // reading that entry from the statically rendered feed page would cut the
+  // page's 14-day TTL to 6 hours. See seal-analysis-data.ts.
+  it('does not fetch the availability or continuous-coverage history', async () => {
+    mockGetGtfsFeedReliability.mockResolvedValue(report);
+
+    await fetchCompleteFeedDataImpl('gtfs', 'mdb-1', 'token', undefined, true);
+
+    expect(mockGetGtfsFeedAvailability).not.toHaveBeenCalled();
+    expect(mockGetGtfsFeedContinuousCoverage).not.toHaveBeenCalled();
   });
 });

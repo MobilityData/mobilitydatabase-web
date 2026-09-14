@@ -232,6 +232,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/gtfs_feeds/{id}/continuous_coverage': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The feed ID of the requested feed. */
+        id: components['parameters']['feed_id_path_param'];
+      };
+      cookie?: never;
+    };
+    /** @description Returns the continuous coverage history for a GTFS feed: one entry per dataset, ordered by `downloaded_at` from newest to oldest. Each entry carries the service window the dataset covers, the window declared in its `feed_info.txt`, whether the two agree, and how much that dataset overlaps the previous (older) one. */
+    get: operations['getGtfsFeedContinuousCoverage'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/datasets/gtfs/{id}': {
     parameters: {
       query?: never;
@@ -762,6 +782,12 @@ export interface components {
        */
       has_seal: boolean;
       /**
+       * @description Descriptive status of the feed's seal. `has_seal` is true only when this is `granted`. `not_granted`: at least one criterion is failing. `unknown`: none is failing, but not every criterion has been evaluated yet. `never_evaluated`: none of the criteria has  been evaluated yet.
+       * @example granted
+       * @enum {string}
+       */
+      seal_status?: 'granted' | 'not_granted' | 'unknown' | 'never_evaluated';
+      /**
        * Format: date-time
        * @description When the feed most recently earned the seal, in ISO 8601 date-time format.
        * @example 2026-01-15T00:00:00Z
@@ -937,6 +963,160 @@ export interface components {
        * @example timeout
        */
       error_type?: string | null;
+    };
+    GtfsFeedContinuousCoverageResponse: {
+      /**
+       * @description Unique identifier of the GTFS feed.
+       * @example mdb-123
+       */
+      feed_id: string;
+      /** @description The files the calculation reads for the feed's latest dataset (the `items[]` entry with `is_latest: true`), and whether each was present. Always returned in the same order with one entry per file, so a client can render a fixed row. */
+      latest_files: components['schemas']['GtfsFeedContinuousCoverageFile'][];
+      latest_coverage_window?: components['schemas']['ServiceDateWindow'];
+      /**
+       * @description Which input the latest dataset's `latest_coverage_window` was taken from.
+       *     * `service_dates` - the service dates derived by the validator from `calendar.txt` and
+       *       `calendar_dates.txt`.
+       *     * `feed_info` - the dates declared in `feed_info.txt`, used only when the service dates
+       *       are missing.
+       * @example service_dates
+       * @enum {string|null}
+       */
+      latest_coverage_window_source?: 'service_dates' | 'feed_info' | null;
+      /**
+       * @description Whether the latest dataset's `latest_coverage_window` stays inside the maximum coverage window the seal allows (two years). Null when there is no coverage window to measure.
+       * @example true
+       */
+      latest_within_max_coverage_window?: boolean | null;
+      latest_service_window?: components['schemas']['ServiceDateWindow'];
+      latest_feed_info_window?: components['schemas']['ServiceDateWindow'];
+      /**
+       * @description Whether the latest dataset's `latest_feed_info_window` agrees with `latest_service_window` on both bounds. Null when either window is missing, which is not the same as a mismatch.
+       * @example true
+       */
+      latest_feed_info_matches?: boolean | null;
+      /**
+       * @description Days of overlap between the latest dataset's coverage window and that of the dataset immediately older than it. Zero means the windows meet exactly; a gap is reported as `latest_gap_days` instead. Null when either window is missing or there is no older dataset.
+       * @example 15
+       */
+      latest_overlap_days?: number | null;
+      /**
+       * @description Days of uncovered service between the end of the older dataset's window and the start of the latest dataset's window. Null when the windows overlap or meet, which is the passing case.
+       * @example 3
+       */
+      latest_gap_days?: number | null;
+      /**
+       * @description Total number of matching datasets regardless of limit and offset.
+       * @example 42
+       */
+      total: number;
+      /**
+       * @description Offset of the first returned item.
+       * @example 0
+       */
+      offset: number;
+      /**
+       * @description Maximum number of items returned.
+       * @example 20
+       */
+      limit: number;
+      /** @description One entry per dataset, ordered by downloaded_at from newest to oldest. The first entry of the unpaged list is the feed's current coverage; it is marked with `is_latest`. */
+      items: components['schemas']['GtfsFeedContinuousCoverage'][];
+    };
+    /**
+     * @description The coverage one dataset contributes, and how it lines up with the dataset downloaded just before it.
+     *
+     *     Three windows are reported. `service_window` is the service dates the validator derived from `calendar.txt` and `calendar_dates.txt`; `feed_info_window` is what the dataset's `feed_info.txt` declares; `coverage_window` is the one the calculation actually used, with `coverage_window_source` naming which of the two it came from. Any of them may be absent when the dataset did not supply the underlying files.
+     */
+    GtfsFeedContinuousCoverage: {
+      /**
+       * @description Stable identifier of the dataset this entry describes.
+       * @example mdb-123-202604290029
+       */
+      dataset_id: string;
+      /**
+       * @description Whether this is the feed's latest dataset. Exactly one entry in the unpaged list has this set, so a client can identify the headline entry without assuming it is on the current page.
+       * @example true
+       */
+      is_latest: boolean;
+      /**
+       * Format: date-time
+       * @description Timestamp when the dataset was downloaded.
+       * @example 2026-06-28T00:29:00Z
+       */
+      downloaded_at?: string | null;
+      coverage_window?: components['schemas']['ServiceDateWindow'];
+      /**
+       * @description Which input `coverage_window` was taken from.
+       *     * `service_dates` - the service dates derived by the validator from `calendar.txt` and
+       *       `calendar_dates.txt`.
+       *     * `feed_info` - the dates declared in `feed_info.txt`, used only when the service dates
+       *       are missing.
+       * @example service_dates
+       * @enum {string|null}
+       */
+      coverage_window_source?: 'service_dates' | 'feed_info' | null;
+      /**
+       * @description Whether `coverage_window` stays inside the maximum coverage window the seal allows (two years). Null when there is no coverage window to measure.
+       * @example true
+       */
+      within_max_coverage_window?: boolean | null;
+      service_window?: components['schemas']['ServiceDateWindow'];
+      feed_info_window?: components['schemas']['ServiceDateWindow'];
+      /**
+       * @description Whether `feed_info_window` agrees with `service_window` on both bounds. Null when either window is missing, which is not the same as a mismatch.
+       * @example true
+       */
+      feed_info_matches?: boolean | null;
+      /**
+       * @description Stable identifier of the dataset downloaded immediately before this one. Null for the oldest dataset of the feed. Populated even when that dataset falls outside the requested page or date range, so overlap is never reported as absent merely because of paging.
+       * @example mdb-123-202604290029
+       */
+      previous_dataset_id?: string | null;
+      /**
+       * @description Days of overlap between this dataset's coverage window and that of the dataset immediately older than it. Zero means the windows meet exactly; a gap is reported as `gap_days` instead. Null when either window is missing or there is no older dataset.
+       * @example 15
+       */
+      overlap_days?: number | null;
+      /**
+       * @description Days of uncovered service between the end of the older dataset's window and the start of this one. Null when the windows overlap or meet, which is the passing case.
+       * @example 3
+       */
+      gap_days?: number | null;
+      /** @description The files the calculation reads, and whether each was present in this dataset. Always returned in the same order with one entry per file, so a client can render a fixed row. */
+      files: components['schemas']['GtfsFeedContinuousCoverageFile'][];
+    };
+    GtfsFeedContinuousCoverageFile: {
+      /**
+       * @description Name of the GTFS file.
+       * @example calendar.txt
+       */
+      name: string;
+      /**
+       * @description Whether the file was present in the dataset.
+       * @example true
+       */
+      present: boolean;
+    };
+    /** @description A closed range of service dates, with its length in days. */
+    ServiceDateWindow: {
+      /**
+       * Format: date
+       * @description First date covered by the window.
+       * @example 2026-09-16
+       */
+      start: string;
+      /**
+       * Format: date
+       * @description Last date covered by the window.
+       * @example 2027-07-28
+       */
+      end: string;
+      /**
+       * @description Length of the window in days, counting both bounds.
+       * @example 316
+       */
+      days?: number | null;
     };
     LatestDataset: {
       /**
@@ -1614,6 +1794,12 @@ export interface components {
     availability_from: string;
     /** @description Return availability checks performed at or before this timestamp. Date should be in ISO 8601 date-time format. */
     availability_to: string;
+    /** @description The number of items to be returned. Maximum is 100. */
+    limit_query_param_continuous_coverage_endpoint: number;
+    /** @description Only include datasets downloaded at or after this timestamp. Date should be in ISO 8601 date-time format. The dataset immediately older than the oldest included one is still used to compute its overlap. */
+    continuous_coverage_downloaded_after: string;
+    /** @description Only include datasets downloaded at or before this timestamp. Date should be in ISO 8601 date-time format. */
+    continuous_coverage_downloaded_before: string;
     /** @description Sort order of results by checked_at. Use `desc` for newest first (default) or `asc` for oldest first. */
     availability_sort: 'asc' | 'desc';
   };
@@ -2011,6 +2197,59 @@ export interface operations {
         content: {
           'application/json': components['schemas']['FeedReliabilityReport'];
         };
+      };
+      /** @description GTFS feed not found. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getGtfsFeedContinuousCoverage: {
+    parameters: {
+      query?: {
+        /** @description Only include datasets downloaded at or after this timestamp. Date should be in ISO 8601 date-time format. The dataset immediately older than the oldest included one is still used to compute its overlap. */
+        downloaded_after?: components['parameters']['continuous_coverage_downloaded_after'];
+        /** @description Only include datasets downloaded at or before this timestamp. Date should be in ISO 8601 date-time format. */
+        downloaded_before?: components['parameters']['continuous_coverage_downloaded_before'];
+        /** @description The number of items to be returned. Maximum is 100. */
+        limit?: components['parameters']['limit_query_param_continuous_coverage_endpoint'];
+        /** @description Offset of the first item to return. */
+        offset?: components['parameters']['offset'];
+      };
+      header?: never;
+      path: {
+        /** @description The feed ID of the requested feed. */
+        id: components['parameters']['feed_id_path_param'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Continuous coverage history for the GTFS feed, ordered by downloaded_at (newest first). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GtfsFeedContinuousCoverageResponse'];
+        };
+      };
+      /** @description Invalid request parameters. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description GTFS feed not found. */
       404: {

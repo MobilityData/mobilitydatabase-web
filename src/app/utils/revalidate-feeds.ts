@@ -2,10 +2,13 @@ import 'server-only';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { AVAILABLE_LOCALES } from '../../i18n/routing';
 
+/** Feed detail page and each of its sub-routes, relative to the feed path. */
+const FEED_SUB_ROUTES = ['', '/map', '/seal-of-reliability'] as const;
+
 /**
  * Revalidates the ISR cache for specific feed pages.
  * Applies to all feed types (gtfs, gtfs_rt, gbfs) since we don't know the type from the id alone.
- * Also revalidates localized paths and /map sub-routes.
+ * Also revalidates localized paths and the /map and /seal-of-reliability sub-routes.
  */
 export function revalidateSpecificFeeds(feedIds: string[]): void {
   const localPaths = AVAILABLE_LOCALES.filter((loc) => loc !== 'en');
@@ -22,11 +25,11 @@ export function revalidateSpecificFeeds(feedIds: string[]): void {
   console.log('Revalidating paths:', pathsToRevalidate);
 
   pathsToRevalidate.forEach((path) => {
-    revalidatePath(path);
-    revalidatePath(path + '/map');
-    localPaths.forEach((loc) => {
-      revalidatePath(`/${loc}${path}`);
-      revalidatePath(`/${loc}${path}/map`);
+    FEED_SUB_ROUTES.forEach((subRoute) => {
+      revalidatePath(path + subRoute);
+      localPaths.forEach((loc) => {
+        revalidatePath(`/${loc}${path}${subRoute}`);
+      });
     });
   });
 }

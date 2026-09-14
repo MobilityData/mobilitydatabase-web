@@ -3,11 +3,14 @@ import Image from 'next/image';
 import { Tooltip } from '@mui/material';
 import { useTranslations } from 'next-intl';
 
+export type SealOfReliabilitySize = 'xlarge' | 'large' | 'small';
+
 export interface SealOfReliabilityProps {
-  size?: 'large' | 'small';
+  size?: SealOfReliabilitySize;
 }
 
-const SEAL_SIZE_PX: Record<'large' | 'small', number> = {
+const SEAL_SIZE_PX: Record<SealOfReliabilitySize, number> = {
+  xlarge: 160,
   large: 48,
   small: 24,
 };

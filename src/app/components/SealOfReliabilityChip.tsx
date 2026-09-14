@@ -8,6 +8,8 @@ export interface SealOfReliabilityChipProps {
   hasSeal: boolean | undefined;
   feedId: string;
   feedDataType: string;
+  /** Render as a plain chip - used when already on the seal analysis page. */
+  disableLink?: boolean;
 }
 
 // TODO: revisit once logo is finalized
@@ -15,6 +17,7 @@ export default function SealOfReliabilityChip({
   hasSeal,
   feedId,
   feedDataType,
+  disableLink = false,
 }: SealOfReliabilityChipProps): React.ReactElement | null {
   const t = useTranslations('feeds');
 
@@ -23,15 +26,16 @@ export default function SealOfReliabilityChip({
   }
 
   const href = `/feeds/${feedDataType}/${feedId}/seal-of-reliability`;
+  const linkProps = disableLink
+    ? {}
+    : { component: Link, href, clickable: true };
 
   if (hasSeal) {
     return (
       <Tooltip title={t('sealOfReliabilityTooltipShort')} placement='top'>
         <Chip
           data-testid='seal-of-reliability-chip'
-          component={Link}
-          href={href}
-          clickable
+          {...linkProps}
           icon={<SealOfReliability size='small' />}
           label={t('sealOfReliabilityAlt')}
           sx={{

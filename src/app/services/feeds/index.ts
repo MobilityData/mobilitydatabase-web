@@ -208,6 +208,51 @@ export const getGtfsFeedReliability = async (
   });
 };
 
+export const getGtfsFeedAvailability = async (
+  id: string,
+  accessToken: string,
+  queryParams?: paths['/v1/gtfs_feeds/{id}/availability']['get']['parameters']['query'],
+  userContextJwt?: string,
+): Promise<
+  | paths['/v1/gtfs_feeds/{id}/availability']['get']['responses'][200]['content']['application/json']
+  | undefined
+> => {
+  const authMiddleware = generateAuthMiddlewareWithToken(
+    accessToken,
+    userContextJwt,
+  );
+  return await withAuthMiddleware(authMiddleware, async () => {
+    const response = await client.GET('/v1/gtfs_feeds/{id}/availability', {
+      params: { query: queryParams, path: { id } },
+    });
+    return response.data;
+  });
+};
+
+export const getGtfsFeedContinuousCoverage = async (
+  id: string,
+  accessToken: string,
+  queryParams?: paths['/v1/gtfs_feeds/{id}/continuous_coverage']['get']['parameters']['query'],
+  userContextJwt?: string,
+): Promise<
+  | paths['/v1/gtfs_feeds/{id}/continuous_coverage']['get']['responses'][200]['content']['application/json']
+  | undefined
+> => {
+  const authMiddleware = generateAuthMiddlewareWithToken(
+    accessToken,
+    userContextJwt,
+  );
+  return await withAuthMiddleware(authMiddleware, async () => {
+    const response = await client.GET(
+      '/v1/gtfs_feeds/{id}/continuous_coverage',
+      {
+        params: { query: queryParams, path: { id } },
+      },
+    );
+    return response.data;
+  });
+};
+
 export const getGtfsFeedDatasets = async (
   id: string,
   accessToken: string,
