@@ -44,7 +44,7 @@ export const defaultRemoteConfigValues: RemoteConfigValues = {
   gbfsMetricsBucketEndpoint:
     'https://storage.googleapis.com/mobilitydata-gbfs-analytics-dev',
   featureFlagBypass: '',
-  enableFeedStatusBadge: false,
+  enableFeedStatusBadge: true,
   gbfsVersions: JSON.stringify(gbfsVersionsDefault),
   visualizationMapFullDataLimit: 5,
   visualizationMapPreviewDataLimit: 3,
