@@ -1,5 +1,5 @@
 import { type ReactElement } from 'react';
-import FeedView from '../../../../../screens/Feed/FeedView';
+import FeedView from '@mdb/screens/Feed/FeedView';
 import FeedJsonLd from '../lib/FeedJsonLd';
 import type { Metadata, ResolvingMetadata } from 'next';
 import { getTranslations } from 'next-intl/server';
@@ -8,7 +8,7 @@ import { generateFeedMetadata } from '../lib/generate-feed-metadata';
 import {
   getCurrentUserFromCookie,
   isMobilityDatabaseAdmin,
-} from '../../../../../utils/auth-server';
+} from '@mdb/utils/auth-server';
 
 interface Props {
   params: Promise<{ locale: string; feedDataType: string; feedId: string }>;

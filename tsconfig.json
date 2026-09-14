@@ -24,7 +24,10 @@
       "jest",
       "cypress"
     ],
+    "baseUrl": ".",
     "paths": {
+      "@/*": ["./src/*"],
+      "@mdb/*": ["./src/app/*"],
       "react": [
         "./node_modules/@types/react"
       ]

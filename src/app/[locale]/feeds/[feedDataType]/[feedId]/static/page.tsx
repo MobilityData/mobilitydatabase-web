@@ -1,5 +1,5 @@
 import { type ReactElement } from 'react';
-import FeedView from '../../../../../screens/Feed/FeedView';
+import FeedView from '@mdb/screens/Feed/FeedView';
 import FeedJsonLd from '../lib/FeedJsonLd';
 import type { Metadata, ResolvingMetadata } from 'next';
 import { notFound } from 'next/navigation';
