@@ -10,9 +10,12 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: isProd ? '/' : '',
-        disallow: isProd ? '' : '/',
+        disallow: isProd
+          ? ['/api/', '/*/account/', '/*/authed/', '/admin/']
+          : '/',
       },
     ],
     sitemap: isProd ? 'https://mobilitydatabase.org/sitemap.xml' : undefined,
+    host: 'https://mobilitydatabase.org',
   };
 }
