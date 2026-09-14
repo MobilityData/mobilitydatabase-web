@@ -25,7 +25,7 @@ export const generateAuthMiddlewareWithToken = (
   userContextJwt?: string,
 ): Middleware => {
   return {
-    async onRequest(req) {
+    onRequest(req) {
       // Always attach the bearer token for IAP/GCIP.
       req.headers.set('Authorization', `Bearer ${accessToken}`);
 
