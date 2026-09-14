@@ -16,7 +16,6 @@ const ICON_SIZES: ReadonlySet<SealOfReliabilitySize> = new Set([
 
 export type SealOfReliabilityBackground = 'transparent' | 'white';
 
-
 export type SealOfReliabilityDetail = 'full' | 'compact';
 
 /**

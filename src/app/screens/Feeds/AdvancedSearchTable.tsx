@@ -342,9 +342,7 @@ export default function AdvancedSearchTable({
                   <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                     {enableSealOfReliability &&
                       feed.reliability_seal?.has_seal === true && (
-                        <SealOfReliability
-                          size='small'
-                        ></SealOfReliability>
+                        <SealOfReliability size='small'></SealOfReliability>
                       )}
                     <FeedVerificationChip
                       isLongDisplay={false}
