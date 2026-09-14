@@ -15,6 +15,7 @@ import {
   Checkbox,
   CssBaseline,
   FormControlLabel,
+  Paper,
 } from '@mui/material';
 import { useAppDispatch, useRegistrationFlowRedirect } from '../../hooks';
 import { refreshUserInformation } from '../../store/profile-reducer';
@@ -101,14 +102,23 @@ export default function CompleteRegistration(): React.ReactElement {
   });
 
   return (
-    <Container component='main' maxWidth='sm'>
+    <Container component='main' maxWidth='sm' sx={{ my: { xs: 4, sm: 6 } }}>
       <CssBaseline />
-      <Box
+      <Paper
+        elevation={0}
+        variant='outlined'
         sx={{
-          display: 'flex',
-          flexDirection: 'column',
+          p: { xs: 3, sm: 4 },
+          borderRadius: 2,
+          backgroundColor: 'background.paper',
         }}
       >
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
         <Typography
           component='h1'
           variant='h5'
@@ -218,6 +228,7 @@ export default function CompleteRegistration(): React.ReactElement {
           </Alert>
         ) : null}
       </Box>
+      </Paper>
     </Container>
   );
 }
