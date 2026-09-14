@@ -37,7 +37,6 @@ export default function FeedVerificationChip({
           sx={(theme) => ({
             display: 'block',
             ml: 0,
-            mr: 2,
             opacity: 0.6,
             backgroundColor: theme.vars.palette.action.selected,
             color: theme.vars.palette.text.primary,
@@ -70,7 +69,6 @@ export default function FeedVerificationChip({
           borderRadius: '50%',
           padding: '0.1rem',
           ml: 0,
-          mr: 2,
           background: `linear-gradient(25deg, ${theme.vars.palette.primary.light}, ${theme.vars.palette.primary.dark})`,
           color: 'white',
         })}

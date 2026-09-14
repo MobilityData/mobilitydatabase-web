@@ -29,7 +29,7 @@ export default function ClientQualityReportButton({
       endIcon={<OpenInNewIcon />}
       onClick={handleOpenFullQualityReportClick}
     >
-      {t('openFullQualityReport')}
+      {t('openFullValidationReport')}
     </Button>
   );
 }

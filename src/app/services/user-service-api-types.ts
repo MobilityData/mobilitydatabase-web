@@ -59,13 +59,13 @@ export interface paths {
     };
     /**
      * List the current user's notification subscriptions
-     * @description Returns all notification subscriptions for the authenticated user.
+     * @description Returns all notification subscriptions for the authenticated user. This feature is available to selected users. To request access or learn more, contact us at api@mobilitydata.org.
      */
     get: operations['getUserSubscriptions'];
     put?: never;
     /**
      * Create a notification subscription
-     * @description Subscribes the authenticated user to a notification type.
+     * @description Subscribes the authenticated user to a notification type. This feature is available to selected users. To request access or learn more, contact us at api@mobilitydata.org.
      */
     post: operations['createUserSubscription'];
     delete?: never;
@@ -85,17 +85,44 @@ export interface paths {
     put?: never;
     post?: never;
     /**
-     * Delete a notification subscription
-     * @description Removes a notification subscription by ID.
+     * Delete or disable a notification subscription
+     * @description Removes a notification subscription by ID. The announcements subscription (`api.announcements`) cannot be deleted; calling this endpoint for it disables the subscription (sets it inactive) instead of removing it. This feature is available to selected users. To request access or learn more, contact us at api@mobilitydata.org.
      */
     delete: operations['deleteUserSubscription'];
     options?: never;
     head?: never;
     /**
      * Toggle a notification subscription
-     * @description Activates or deactivates a notification subscription by ID.
+     * @description Activates or deactivates a notification subscription by ID. This feature is available to selected users. To request access or learn more, contact us at api@mobilitydata.org.
      */
     patch: operations['updateUserSubscription'];
+    trace?: never;
+  };
+  '/v1/subscriptions/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a subscription by ID
+     * @description Returns a single notification subscription identified by its ID.
+     */
+    get: operations['getSubscription'];
+    put?: never;
+    post?: never;
+    /**
+     * Delete or disable a subscription by ID
+     * @description Removes a notification subscription identified by its ID. The
+     *     announcements subscription (`api.announcements`) cannot be deleted;
+     *     calling this endpoint for it disables the subscription (sets it inactive)
+     *     instead of removing it. This feature is available to selected users. To request access or learn more, contact us at api@mobilitydata.org.
+     */
+    delete: operations['deleteSubscription'];
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
 }
@@ -132,6 +159,11 @@ export interface components {
        * @default false
        */
       is_registered_to_receive_api_announcements: boolean;
+      /**
+       * @description All active feature flags for this user. Each flag's value is resolved to the user's override when set, otherwise the global default. Disabled flags are not included.
+       * @default []
+       */
+      features: components['schemas']['FeatureFlag'][];
       /**
        * Format: date-time
        * @description Timestamp when the user record was created.
@@ -191,14 +223,31 @@ export interface components {
       active: boolean;
       /**
        * Format: date-time
-       * @description Timestamp of the last notification sent for this subscription.
-       */
-      last_notified_at?: string | null;
-      /**
-       * Format: date-time
        * @description Timestamp when the subscription was created.
        */
       created_at: string;
+      /** @description The feeds this subscription targets (feed-scoped notification types: feed.url_updated, feed.url_availability, feed.coverage), each with its resolved metadata. Resolved from the feeds database at read time using the stable feed IDs — not persisted on the subscription. Consumers can build a human-readable description from these fields. */
+      feeds?: components['schemas']['SubscriptionFeed'][] | null;
+    };
+    /** @description Metadata for a feed targeted by a notification subscription, resolved from the feed's stable ID at read time (not persisted). */
+    SubscriptionFeed: {
+      /**
+       * @description The feed's stable ID.
+       * @example mdb-1
+       */
+      feed_id: string;
+      /**
+       * @description The feed's data type.
+       * @example gtfs
+       */
+      data_type?: string | null;
+      /**
+       * @description The transit/mobility data provider name.
+       * @example Metropolitan Transit Authority
+       */
+      provider?: string | null;
+      /** @description The feed's display name. */
+      feed_name?: string | null;
     };
     CreateNotificationSubscriptionRequest: {
       /**
@@ -206,10 +255,37 @@ export interface components {
        * @example feed.published
        */
       notification_id: string;
+      /**
+       * @description Feed stable IDs to subscribe to. Required (non-empty) for the feed-scoped notification types feed.url_updated, feed.url_availability and feed.coverage; must be omitted or empty for other types. Validation is enforced in code, not the schema.
+       * @example [
+       *       "mdb-1",
+       *       "mdb-42"
+       *     ]
+       */
+      feed_ids?: string[];
     };
     UpdateNotificationSubscriptionRequest: {
       /** @description Whether the subscription should be active. */
       active: boolean;
+    };
+    FeatureFlag: {
+      /**
+       * @description Unique slug identifier for the feature flag.
+       * @example beta_editor
+       */
+      id: string;
+      /**
+       * @description Optional human-readable display name.
+       * @example Beta Editor
+       */
+      name?: string | null;
+      /**
+       * @description The type of value this flag carries.
+       * @enum {string}
+       */
+      value_type: 'boolean' | 'string' | 'numeric' | 'array' | 'json';
+      /** @description Resolved flag value — the user's override if set, otherwise the global default. */
+      value: unknown;
     };
   };
   responses: never;
@@ -231,19 +307,25 @@ export interface operations {
     responses: {
       /** @description User profile retrieved (or created) successfully. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['UserProfile'];
         };
       };
       /** @description Unauthorized — missing or invalid token. */
       401: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Internal server error. */
       500: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
     };
@@ -263,34 +345,46 @@ export interface operations {
     responses: {
       /** @description User profile updated successfully. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['UserProfile'];
         };
       };
       /** @description Invalid request body. */
       400: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Unauthorized — missing or invalid token. */
       401: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Forbidden — insufficient permissions to update this profile. */
       403: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description User not found. */
       404: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Internal server error. */
       500: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
     };
@@ -306,19 +400,18 @@ export interface operations {
     responses: {
       /** @description List of notification types. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
-          'application/json': Array<components['schemas']['NotificationType']>;
+          'application/json': components['schemas']['NotificationType'][];
         };
       };
       /** @description Unauthorized. */
       401: {
-        headers: Record<string, unknown>;
-        content?: never;
-      };
-      /** @description Not yet implemented. */
-      501: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
     };
@@ -334,21 +427,18 @@ export interface operations {
     responses: {
       /** @description List of subscriptions. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
-          'application/json': Array<
-            components['schemas']['NotificationSubscription']
-          >;
+          'application/json': components['schemas']['NotificationSubscription'][];
         };
       };
       /** @description Unauthorized. */
       401: {
-        headers: Record<string, unknown>;
-        content?: never;
-      };
-      /** @description Not yet implemented. */
-      501: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
     };
@@ -368,24 +458,25 @@ export interface operations {
     responses: {
       /** @description Subscription created. */
       201: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['NotificationSubscription'];
         };
       };
       /** @description Invalid request. */
       400: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Unauthorized. */
       401: {
-        headers: Record<string, unknown>;
-        content?: never;
-      };
-      /** @description Not yet implemented. */
-      501: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
     };
@@ -402,24 +493,25 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Subscription deleted. */
+      /** @description Subscription deleted, or disabled for the announcements type. */
       204: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Unauthorized. */
       401: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Subscription not found. */
       404: {
-        headers: Record<string, unknown>;
-        content?: never;
-      };
-      /** @description Not yet implemented. */
-      501: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
     };
@@ -442,24 +534,83 @@ export interface operations {
     responses: {
       /** @description Subscription updated. */
       200: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
           'application/json': components['schemas']['NotificationSubscription'];
         };
       };
       /** @description Unauthorized. */
       401: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
       /** @description Subscription not found. */
       404: {
-        headers: Record<string, unknown>;
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
-      /** @description Not yet implemented. */
-      501: {
-        headers: Record<string, unknown>;
+    };
+  };
+  getSubscription: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Subscription ID. */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Subscription retrieved. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['NotificationSubscription'];
+        };
+      };
+      /** @description Subscription not found. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  deleteSubscription: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Subscription ID. */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Subscription deleted, or disabled for the announcements type. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Subscription not found. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
         content?: never;
       };
     };

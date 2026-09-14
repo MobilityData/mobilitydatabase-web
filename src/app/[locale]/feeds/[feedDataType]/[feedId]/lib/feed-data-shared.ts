@@ -12,6 +12,7 @@ import {
   getGtfsFeedDatasets,
   getGtfsFeedRoutes,
   getGtfsFeedAssociatedGtfsRtFeeds,
+  getGtfsFeedReliability,
 } from '../../../../../services/feeds';
 import {
   type GTFSFeedType,
@@ -22,6 +23,7 @@ import type { components } from '../../../../../services/feeds/types';
 import type { GtfsRoute } from '../../../../../types';
 
 type DatasetType = components['schemas']['GtfsDataset'];
+type ReliabilityReport = components['schemas']['FeedReliabilityReport'];
 
 export interface FeedDataResult {
   feed: AllFeedType;
@@ -32,6 +34,8 @@ export interface FeedDataResult {
   totalRoutes?: number;
   routeTypes?: string[];
   routes?: GtfsRoute[];
+  reliability?: ReliabilityReport;
+  reliabilityError?: boolean;
 }
 
 /**
@@ -74,6 +78,41 @@ export async function fetchDatasets(
     return datasets ?? [];
   } catch (e) {
     return [];
+  }
+}
+
+export interface ReliabilityFetchResult {
+  reliability?: ReliabilityReport;
+  /** True when the underlying API call failed - distinct from "no data yet". */
+  failed: boolean;
+}
+
+/**
+ * Fetch the Seal of Reliability breakdown for the feed detail page.
+ *
+ *
+ * That makes the summary on the feed detail page up to 14 days stale, which
+ * is intentional - the page keeps its long ISR TTL, and a top-level read of
+ * the 6-hour seal cache would drag that TTL down to 6 hours. The dedicated
+ * seal page reads the fresher entry instead; see seal-analysis-data.ts.
+ *
+ * Failures are reported via `failed` rather than thrown, so a broken
+ * reliability call doesn't take down the rest of the feed page.
+ */
+export async function fetchReliabilityData(
+  feedId: string,
+  accessToken: string,
+  userContextJwt: string | undefined,
+): Promise<ReliabilityFetchResult> {
+  try {
+    const reliability = await getGtfsFeedReliability(
+      feedId,
+      accessToken,
+      userContextJwt,
+    );
+    return { reliability: reliability ?? undefined, failed: false };
+  } catch (e) {
+    return { reliability: undefined, failed: true };
   }
 }
 
@@ -170,6 +209,7 @@ export async function fetchCompleteFeedDataImpl(
   feedId: string,
   accessToken: string,
   userContextJwt: string | undefined,
+  enableSealOfReliability: boolean,
 ): Promise<FeedDataResult> {
   // Fetch core feed data
   const feed = await fetchFeedByType(
@@ -182,24 +222,33 @@ export async function fetchCompleteFeedDataImpl(
     throw new Error(`Feed ${feedId} not found`);
   }
 
-  // Fetch datasets and routes in parallel for GTFS feeds
+  // Fetch datasets, routes, and reliability in parallel for GTFS feeds
   let initialDatasets: DatasetType[] = [];
   let totalRoutes: number | undefined;
   let routeTypes: string[] | undefined;
   let routes: GtfsRoute[] | undefined;
+  let reliability: ReliabilityReport | undefined;
+  let reliabilityError = false;
 
   if (feedDataType === 'gtfs') {
-    const [datasetsResult, routesResult] = await Promise.all([
-      fetchDatasets(feedId, accessToken, userContextJwt),
-      fetchRoutesData(
-        feedId,
-        (feed as GTFSFeedType)?.visualization_dataset_id ?? '',
-      ),
-    ]);
+    const [datasetsResult, routesResult, reliabilityResult] = await Promise.all(
+      [
+        fetchDatasets(feedId, accessToken, userContextJwt),
+        fetchRoutesData(
+          feedId,
+          (feed as GTFSFeedType)?.visualization_dataset_id ?? '',
+        ),
+        enableSealOfReliability
+          ? fetchReliabilityData(feedId, accessToken, userContextJwt)
+          : Promise.resolve({ reliability: undefined, failed: false }),
+      ],
+    );
     initialDatasets = datasetsResult;
     totalRoutes = routesResult.totalRoutes;
     routeTypes = routesResult.routeTypes;
     routes = routesResult.routes;
+    reliability = reliabilityResult.reliability;
+    reliabilityError = reliabilityResult.failed;
   }
 
   // Fetch related feeds for GTFS-RT
@@ -250,5 +299,7 @@ export async function fetchCompleteFeedDataImpl(
     totalRoutes,
     routeTypes,
     routes,
+    reliability,
+    reliabilityError,
   };
 }

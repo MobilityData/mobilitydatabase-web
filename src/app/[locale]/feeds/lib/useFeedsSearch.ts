@@ -7,6 +7,7 @@ import {
 } from '../../../services/feeds/utils';
 import { getUserAccessToken } from '../../../services/profile-service';
 import { useAuthSession } from '../../../components/AuthSessionProvider';
+import { useSealOfReliabilityFilterAccess } from '../../../hooks/useSealOfReliabilityFilterAccess';
 import {
   getDataTypeParamFromSelectedFeedTypes,
   getInitialSelectedFeedTypes,
@@ -26,6 +27,7 @@ export function deriveSearchParams(searchParams: URLSearchParams): {
   page: number;
   feedTypes: Record<string, boolean>;
   isOfficial: boolean;
+  hasSeal: boolean;
   features: string[];
   gbfsVersions: string[];
   licenses: string[];
@@ -39,6 +41,7 @@ export function deriveSearchParams(searchParams: URLSearchParams): {
     page: searchParams.get('o') !== null ? Number(searchParams.get('o')) : 1,
     feedTypes,
     isOfficial: searchParams.get('official') === 'true',
+    hasSeal: searchParams.get('has_seal') === 'true',
     features: searchParams.get('features')?.split(',').filter(Boolean) ?? [],
     gbfsVersions:
       searchParams.get('gbfs_versions')?.split(',').filter(Boolean) ?? [],
@@ -73,20 +76,31 @@ export function deriveFilterFlags(feedTypes: Record<string, boolean>): {
 }
 
 /**
+ * All inputs needed to build the search: the URL-derived params plus
+ * whatever depends on React context (auth, Remote Config, user feature
+ * flags) and therefore can't be computed inside deriveSearchParams itself.
+ */
+type SearchFetchParams = ReturnType<typeof deriveSearchParams> & {
+  canFilterBySeal: boolean;
+};
+
+/**
  * Builds a stable SWR cache key from the derived search params.
  * Returns null when we shouldn't fetch (e.g. no auth available).
  */
-function buildSwrKey(derived: ReturnType<typeof deriveSearchParams>): string {
+function buildSwrKey(searchFetchParams: SearchFetchParams): string {
   const {
     searchQuery,
     page,
     feedTypes,
     isOfficial,
+    hasSeal,
     features,
     gbfsVersions,
     licenses,
     licenseTags,
-  } = derived;
+    canFilterBySeal,
+  } = searchFetchParams;
   const flags = deriveFilterFlags(feedTypes);
   const cacheWindow = Math.floor(Date.now() / CACHE_TTL_MS);
 
@@ -98,6 +112,9 @@ function buildSwrKey(derived: ReturnType<typeof deriveSearchParams>): string {
   params.set('dt', getDataTypeParamFromSelectedFeedTypes(feedTypes) ?? '');
   if (flags.isOfficialTagFilterEnabled && isOfficial) {
     params.set('official', 'true');
+  }
+  if (flags.areFeatureFiltersEnabled && canFilterBySeal && hasSeal) {
+    params.set('has_seal', 'true');
   }
   if (flags.areFeatureFiltersEnabled && features.length > 0) {
     params.set('features', features.join(','));
@@ -118,7 +135,7 @@ function buildSwrKey(derived: ReturnType<typeof deriveSearchParams>): string {
  * Fetcher function: obtains an access token and calls the search API.
  */
 async function feedsFetcher(
-  derivedSearchParams: ReturnType<typeof deriveSearchParams>,
+  searchFetchParams: SearchFetchParams,
 ): Promise<AllFeedsType | undefined> {
   const accessToken = await getUserAccessToken();
   const {
@@ -126,11 +143,13 @@ async function feedsFetcher(
     page,
     feedTypes,
     isOfficial,
+    hasSeal,
     features,
     gbfsVersions,
     licenses,
     licenseTags,
-  } = derivedSearchParams;
+    canFilterBySeal,
+  } = searchFetchParams;
   const flags = deriveFilterFlags(feedTypes);
   const offset = (page - 1) * SEARCH_LIMIT;
 
@@ -143,6 +162,10 @@ async function feedsFetcher(
       is_official: flags.isOfficialTagFilterEnabled
         ? isOfficial || undefined
         : undefined,
+      has_seal:
+        flags.areFeatureFiltersEnabled && canFilterBySeal
+          ? hasSeal || undefined
+          : undefined,
       status: ['active', 'inactive', 'development', 'future'],
       feature: flags.areFeatureFiltersEnabled ? features : undefined,
       version: flags.areGBFSFiltersEnabled
@@ -168,9 +191,13 @@ export function useFeedsSearch(searchParams: URLSearchParams): {
   searchLimit: number;
 } {
   const { isAuthReady: authReady } = useAuthSession();
+  const { isFeatureLive, hasAccess } = useSealOfReliabilityFilterAccess();
   const { cache } = useSWRConfig();
-  const derivedSearchParams = deriveSearchParams(searchParams);
-  const key = authReady ? buildSwrKey(derivedSearchParams) : null;
+  const searchFetchParams: SearchFetchParams = {
+    ...deriveSearchParams(searchParams),
+    canFilterBySeal: isFeatureLive && hasAccess,
+  };
+  const key = authReady ? buildSwrKey(searchFetchParams) : null;
 
   const cachedState = key !== null ? cache.get(key) : undefined;
   const hasCachedDataForKey =
@@ -187,7 +214,7 @@ export function useFeedsSearch(searchParams: URLSearchParams): {
     isValidating: swrIsValidating,
   } = useSWR<AllFeedsType | undefined>(
     key,
-    async () => await feedsFetcher(derivedSearchParams),
+    async () => await feedsFetcher(searchFetchParams),
     {
       // Keep previous data visible while revalidating (no flash to skeleton)
       keepPreviousData: true,
@@ -221,6 +248,7 @@ export function buildSearchUrl(
     page?: number;
     feedTypes?: Record<string, boolean>;
     isOfficial?: boolean;
+    hasSeal?: boolean;
     features?: string[];
     gbfsVersions?: string[];
     licenses?: string[];
@@ -259,6 +287,9 @@ export function buildSearchUrl(
   }
   if (filters.isOfficial === true) {
     params.set('official', 'true');
+  }
+  if (filters.hasSeal === true) {
+    params.set('has_seal', 'true');
   }
   if (filters.utmSource != null && filters.utmSource !== '') {
     params.set('utm_source', filters.utmSource);

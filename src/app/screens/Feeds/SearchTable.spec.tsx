@@ -52,6 +52,7 @@ const mockFeedsData: AllFeedsType = {
       },
       entity_types: undefined,
       feed_references: undefined,
+      seasonal: false,
     },
     {
       id: 'mdb-1003',
@@ -93,6 +94,7 @@ const mockFeedsData: AllFeedsType = {
       },
       entity_types: undefined,
       feed_references: undefined,
+      seasonal: false,
     },
     {
       id: 'g',
@@ -135,6 +137,7 @@ const mockFeedsData: AllFeedsType = {
       },
       entity_types: undefined,
       feed_references: undefined,
+      seasonal: false,
     },
   ],
 };

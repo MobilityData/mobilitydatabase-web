@@ -61,6 +61,7 @@ export default async function AuthedFeedPage({
     relatedGtfsRtFeeds,
     totalRoutes,
     routeTypes,
+    reliability,
   } = feedData;
 
   return (
@@ -77,6 +78,7 @@ export default async function AuthedFeedPage({
         relatedGtfsRtFeeds={relatedGtfsRtFeeds}
         totalRoutes={totalRoutes}
         routeTypes={routeTypes}
+        reliability={reliability}
         isMobilityDatabaseAdmin={isAdmin}
       />
     </>

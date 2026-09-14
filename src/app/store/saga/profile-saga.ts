@@ -24,7 +24,7 @@ import {
 import { getAppError } from '../../utils/error';
 import { selectUserProfile } from '../profile-selectors';
 
-function* refreshAccessTokenSaga(): Generator<StrictEffect, void, User> {
+function* refreshAccessTokenSaga(): Generator {
   try {
     const currentUser = yield select(selectUserProfile);
     const user = yield call(generateUserAccessToken, currentUser);

@@ -30,6 +30,7 @@ export interface RemoteConfigValues {
   gtfsFeatureTracker: boolean;
   /** Enable feed subscription / notifications UI */
   isNotificationsEnabled: boolean;
+  enableSealOfReliability: boolean;
 }
 
 const gbfsVersionsDefault: GbfsVersionConfig = [];
@@ -51,6 +52,7 @@ export const defaultRemoteConfigValues: RemoteConfigValues = {
   gbfsValidator: false,
   gtfsFeatureTracker: false,
   isNotificationsEnabled: false,
+  enableSealOfReliability: false,
 };
 
 /**

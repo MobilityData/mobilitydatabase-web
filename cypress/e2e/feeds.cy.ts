@@ -44,8 +44,6 @@ describe('Feed page', () => {
     cy.get('[data-testid="data-quality-summary"]', { timeout: 10000 }).within(
       () => {
         cy.get('[data-testid="error-count"]').should('exist');
-        cy.get('[data-testid="warning-count"]').should('exist');
-        cy.get('[data-testid="info-count"]').should('exist');
       },
     );
   });

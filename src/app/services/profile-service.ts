@@ -122,6 +122,7 @@ export const retrieveUserInformation = async (): Promise<
       organization: data.legacy_org_name ?? undefined,
       isRegisteredToReceiveAPIAnnouncements:
         data.is_registered_to_receive_api_announcements,
+      features: data.features ?? [],
     };
   } finally {
     userServiceClient.eject(authMiddleware);

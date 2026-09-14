@@ -40,6 +40,7 @@ import {
   sendEmailVerification,
 } from '../../services';
 import { clearUserCookieSession } from '../../services/session-service';
+import { setUserFeatureFlagsCache } from '../../services/user-feature-flag-service';
 import {
   type AdditionalUserInfo,
   type UserCredential,
@@ -60,20 +61,22 @@ import {
 
 function* emailLoginSaga({
   payload: { email, password },
-}: PayloadAction<{ email: string; password: string }>): Generator<
-  unknown,
-  void,
-  User
-> {
+}: PayloadAction<{ email: string; password: string }>): Generator {
   try {
     yield app.auth().signInWithEmailAndPassword(email, password);
     const user = yield call(getUserFromSession);
-    const userData = (yield call(retrieveUserInformation)) as UserData;
+    const userData = (yield call(retrieveUserInformation)) as
+      | UserData
+      | undefined;
     const userEnhanced = populateUserWithAdditionalInfo(
       user,
       userData,
       undefined,
     );
+    const uid = app.auth().currentUser?.uid;
+    if (userData !== undefined && uid != null) {
+      setUserFeatureFlagsCache(uid, userData.features);
+    }
     yield put(loginSuccess(userEnhanced));
     broadcastMessage(LOGIN_CHANNEL);
   } catch (error) {
@@ -93,6 +96,7 @@ function* logoutSaga({
     // Clear the HTTP-only md_session cookie on logout so that
     // server-side requests immediately see the user as logged out.
     yield call(clearUserCookieSession);
+
     yield put(logoutSuccess());
     if (propagate) {
       try {
@@ -116,16 +120,22 @@ function* signUpSaga({
   try {
     yield app.auth().createUserWithEmailAndPassword(email, password);
     yield call(sendEmailVerification);
-    const user = yield call(getUserFromSession);
+    const user = (yield call(getUserFromSession)) as User | null;
     if (user === null) {
       throw new Error('User not found');
     }
-    const userData = (yield call(retrieveUserInformation)) as UserData;
+    const userData = (yield call(retrieveUserInformation)) as
+      | UserData
+      | undefined;
     const userEnhanced = populateUserWithAdditionalInfo(
-      user as User,
+      user,
       userData,
       undefined,
     );
+    const uid = app.auth().currentUser?.uid;
+    if (userData !== undefined && uid != null) {
+      setUserFeatureFlagsCache(uid, userData.features);
+    }
     yield put(signUpSuccess(userEnhanced));
   } catch (error) {
     yield put(signUpFail(getAppError(error) as ProfileError));
@@ -176,12 +186,18 @@ function* loginWithProviderSaga({
       getAdditionalUserInfo,
       userCredential,
     )) as AdditionalUserInfo;
-    const userData = (yield call(retrieveUserInformation)) as UserData;
+    const userData = (yield call(retrieveUserInformation)) as
+      | UserData
+      | undefined;
     const userEnhanced = populateUserWithAdditionalInfo(
       user,
       userData,
       additionalUserInfo,
     );
+    const uid = app.auth().currentUser?.uid;
+    if (userData !== undefined && uid != null) {
+      setUserFeatureFlagsCache(uid, userData.features);
+    }
     yield put(
       loginSuccess({
         ...userEnhanced,

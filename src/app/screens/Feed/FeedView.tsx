@@ -6,11 +6,9 @@ import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 
 // Components
-import FeedTitle from './components/FeedTitle';
-import FeedVerificationChip from '../../components/FeedVerificationChip';
 import DataQualitySummary from './components/DataQualitySummary';
+import FeedDetailHeader from './components/FeedDetailHeader';
 import FeedSummary from './components/FeedSummary';
-import FeedNavigationControls from './components/FeedNavigationControls';
 import ScrollToTop from './components/ScrollToTop';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { getTranslations } from 'next-intl/server';
@@ -18,31 +16,32 @@ import { notFound } from 'next/navigation';
 
 // Utils
 import {
-  type BasicFeedType,
+  type AllFeedType,
   type GBFSFeedType,
   type GTFSFeedType,
   type GTFSRTFeedType,
+  isGtfsFeedType,
+  isGtfsOrGtfsRtFeedType,
 } from '../../services/feeds/utils';
 import ClientDownloadButton from './components/ClientDownloadButton';
 import RevalidateCacheButton from './components/RevalidateCacheButton';
 import { type components } from '../../services/feeds/types';
 import ClientQualityReportButton from './components/ClientQualityReportButton';
+import ClientQualityAnalysisButton from './components/ClientQualityAnalysisButton';
 import ClientSubscribeControls from './components/ClientSubscribeControls';
-import { getBoundingBox } from './Feed.functions';
+import {
+  formatProvidersSorted,
+  getBoundingBox,
+  getLatestDataset,
+} from './Feed.functions';
 import dynamic from 'next/dynamic';
 import { ContentBox } from '../../components/ContentBox';
+import { getRemoteConfigValues } from '../../../lib/remote-config.server';
+import SectionContainer from '../../components/SectionContainer';
 
 const CoveredAreaMap = dynamic(
   async () =>
     await import('../../components/CoveredAreaMap').then((mod) => mod.default),
-  {},
-);
-
-const WarningContentBox = dynamic(
-  async () =>
-    await import('../../components/WarningContentBox').then(
-      (mod) => mod.WarningContentBox,
-    ),
   {},
 );
 
@@ -64,13 +63,22 @@ const PreviousDatasets = dynamic(
   {},
 );
 
+const WarningContentBox = dynamic(
+  async () =>
+    await import('../../components/WarningContentBox').then(
+      (mod) => mod.WarningContentBox,
+    ),
+  {},
+);
+
 interface Props {
-  feed: BasicFeedType;
+  feed: AllFeedType;
   initialDatasets?: Array<components['schemas']['GtfsDataset']>;
   relatedFeeds?: GTFSFeedType[];
   relatedGtfsRtFeeds?: GTFSRTFeedType[];
   totalRoutes?: number;
   routeTypes?: string[];
+  reliability?: components['schemas']['FeedReliabilityReport'];
   isMobilityDatabaseAdmin?: boolean;
 }
 
@@ -83,24 +91,22 @@ export default async function FeedView({
   relatedGtfsRtFeeds = [],
   totalRoutes,
   routeTypes,
+  reliability,
   isMobilityDatabaseAdmin = false,
 }: Props): Promise<React.ReactElement> {
   if (feed == undefined) notFound();
-
-  const [t, tGbfs, tCommon] = await Promise.all([
+  const [t, tGbfs, config] = await Promise.all([
     getTranslations('feeds'),
     getTranslations('gbfs'),
-    getTranslations('common'),
+    getRemoteConfigValues(),
   ]);
 
+  // Pinned on the server so the six-month "building record" branch in the
+  // criterion copy resolves to the same instant during SSR and hydration.
+  const now = new Date();
+
   // Basic derived data
-  const sortedProviders =
-    feed.provider != null && String(feed.provider).trim().length > 0
-      ? String(feed.provider)
-          .split(',')
-          .map((s) => s.trim())
-          .sort()
-      : [];
+  const sortedProviders = formatProvidersSorted(feed.provider ?? '');
 
   const downloadLatestUrl =
     feed?.data_type === 'gtfs'
@@ -125,8 +131,6 @@ export default async function FeedView({
     );
   };
 
-  const hasFeedRedirect = feed?.redirects != null && feed.redirects.length > 0;
-
   const gbfsAutodiscoveryUrl =
     feed?.data_type === 'gbfs'
       ? (feed as GBFSFeedType)?.source_info?.producer_url
@@ -134,14 +138,12 @@ export default async function FeedView({
 
   const boundingBox = getBoundingBox(feed);
 
-  let latestDataset: LatestDatasetFull;
-  if (feed.data_type === 'gtfs') {
-    const gtfsFeed: GTFSFeedType = feed;
-    latestDataset = initialDatasets?.find(
-      (dataset) => dataset.id === gtfsFeed.latest_dataset?.id,
-    );
-  }
+  const latestDataset: LatestDatasetFull = getLatestDataset(
+    feed,
+    initialDatasets,
+  );
 
+  const hasFeedRedirect = feed?.redirects != null && feed.redirects.length > 0;
   const hasDatasets =
     initialDatasets != undefined && initialDatasets.length > 0;
 
@@ -154,153 +156,20 @@ export default async function FeedView({
       <ScrollToTop />
       <CssBaseline />
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-        <Box
-          sx={{
-            width: '100%',
-            bgcolor: 'background.paper',
-            borderRadius: '6px 0px 0px 6px',
-            p: 3,
-            color: 'text.primary',
-            fontSize: '18px',
-            fontWeight: 700,
-            position: 'relative',
-          }}
-        >
+        <SectionContainer maxWidth='xl'>
           <Box sx={{ position: 'relative' }}>
-            <FeedNavigationControls
-              feedDataType={feed.data_type ?? ''}
-              feedId={feed.id ?? ''}
-            />
+            <FeedDetailHeader feed={feed} sortedProviders={sortedProviders} />
 
-            <Box sx={{ mt: 1 }}>
-              <FeedTitle sortedProviders={sortedProviders} feed={feed} />
-            </Box>
-
-            {feed?.feed_name !== '' && feed?.data_type === 'gtfs' && (
-              <Grid size={12}>
-                <Typography
-                  component={'h2'}
-                  sx={{
-                    fontWeight: 'bold',
-                    fontSize: { xs: 18, sm: 24 },
-                  }}
-                  data-testid='feed-name'
-                >
-                  {feed?.feed_name}
-                </Typography>
-              </Grid>
-            )}
-
-            {feed?.data_type === 'gtfs' && (
+            {isGtfsFeedType(feed) && (
               <DataQualitySummary
-                feedStatus={feed?.status}
+                feedStatus={feed.status}
                 isOfficialFeed={feed.official}
                 latestDataset={latestDataset}
+                feedId={feed.id ?? ''}
+                feedDataType={feed.data_type ?? 'gtfs'}
+                hasSeal={feed.reliability_seal?.has_seal}
               />
             )}
-
-            {feed?.data_type === 'gtfs_rt' && feed.official != null && (
-              <Box sx={{ my: 1 }}>
-                <FeedVerificationChip
-                  status={feed.official}
-                ></FeedVerificationChip>
-              </Box>
-            )}
-
-            <Box>
-              {latestDataset?.validation_report?.validated_at != null && (
-                <Typography
-                  data-testid='last-updated'
-                  variant='caption'
-                  width={'100%'}
-                  component='div'
-                >
-                  {`${t('qualityReportUpdated')}: ${new Date(
-                    latestDataset.validation_report.validated_at,
-                  ).toDateString()}`}
-                </Typography>
-              )}
-              {feed?.official_updated_at != undefined && (
-                <Typography
-                  data-testid='last-updated'
-                  variant={'caption'}
-                  width={'100%'}
-                  component={'div'}
-                >
-                  {`${t('officialFeedUpdated')}: ${new Date(
-                    feed?.official_updated_at,
-                  ).toDateString()}`}
-                </Typography>
-              )}
-              <Typography
-                data-testid='page-generated'
-                variant={'caption'}
-                width={'100%'}
-                component={'div'}
-              >
-                {`Page generated at: ${new Date().toUTCString().replace(' GMT', ' UTC')}`}
-              </Typography>
-              {feed.external_ids?.some((eId) => eId.source === 'tld') ===
-                true && (
-                <Typography
-                  data-testid='transitland-attribution'
-                  variant={'caption'}
-                  width={'100%'}
-                  component={'div'}
-                >
-                  {t('dataAttribution')}{' '}
-                  <a
-                    rel='noreferrer nofollow'
-                    target='_blank'
-                    href='https://www.transit.land/terms'
-                  >
-                    Transitland
-                  </a>
-                </Typography>
-              )}
-              {feed.external_ids?.some((eId) => eId.source === 'ntd') ===
-                true && (
-                <Typography
-                  data-testid='fta-attribution'
-                  variant={'caption'}
-                  width={'100%'}
-                  component={'div'}
-                >
-                  {t('dataAttribution')}
-                  {' the United States '}
-                  <a
-                    rel='noreferrer nofollow'
-                    target='_blank'
-                    href='https://www.transit.dot.gov/ntd/data-product/2023-annual-database-general-transit-feed-specification-gtfs-weblinks'
-                  >
-                    National Transit Database
-                  </a>
-                </Typography>
-              )}
-            </Box>
-
-            {feed?.data_type === 'gtfs_rt' &&
-              (feed as GTFSRTFeedType)?.entity_types != undefined && (
-                <Grid size={12}>
-                  <Typography variant='h5'>
-                    {' '}
-                    {((feed as GTFSRTFeedType)?.entity_types ?? [])
-                      .map(
-                        (entityType) =>
-                          (
-                            ({
-                              tu: tCommon('gtfsRealtimeEntities.tripUpdates'),
-                              vp: tCommon(
-                                'gtfsRealtimeEntities.vehiclePositions',
-                              ),
-                              sa: tCommon('gtfsRealtimeEntities.serviceAlerts'),
-                            }) as const satisfies Record<string, string>
-                          )[entityType],
-                      )
-                      .join(` ${tCommon('and')} `)}
-                  </Typography>
-                </Grid>
-              )}
 
             {/* Warnings */}
             {feed.data_type === 'gtfs' && !hasDatasets && !hasFeedRedirect && (
@@ -354,6 +223,12 @@ export default async function FeedView({
                 downloadLatestUrl.length > 0 && (
                   <ClientDownloadButton url={downloadLatestUrl} />
                 )}
+              {isGtfsFeedType(feed) && config.enableSealOfReliability && (
+                <ClientQualityAnalysisButton
+                  feedId={feed.id ?? ''}
+                  feedDataType={feed.data_type ?? 'gtfs'}
+                />
+              )}
               {latestDataset?.validation_report?.url_html != null &&
                 latestDataset.validation_report.url_html.length > 0 && (
                   <ClientQualityReportButton
@@ -361,7 +236,7 @@ export default async function FeedView({
                   />
                 )}
               {feed?.data_type === 'gbfs' && <>{gbfsOpenFeedUrlElement()}</>}
-              <ClientSubscribeControls />
+              {feed.id != null && <ClientSubscribeControls feedId={feed.id} />}
             </Box>
 
             <Grid size={12}>
@@ -398,6 +273,9 @@ export default async function FeedView({
                     autoDiscoveryUrl={gbfsAutodiscoveryUrl}
                     totalRoutes={totalRoutes}
                     routeTypes={routeTypes}
+                    enableSealOfReliability={config.enableSealOfReliability}
+                    reliability={reliability}
+                    now={now}
                   />
                 </Box>
                 {feed?.data_type === 'gtfs_rt' && (
@@ -424,7 +302,89 @@ export default async function FeedView({
               </Grid>
             )}
           </Box>
-        </Box>
+        </SectionContainer>
+      </Box>
+      <Box
+        sx={{
+          mt: 4,
+          pt: 2,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 0.5,
+        }}
+      >
+        {latestDataset?.validation_report?.validated_at != null && (
+          <Typography
+            data-testid='last-updated'
+            variant='caption'
+            color='text.secondary'
+            component='div'
+          >
+            {`${t('qualityReportUpdated')}: ${new Date(
+              latestDataset.validation_report.validated_at,
+            ).toDateString()}`}
+          </Typography>
+        )}
+        {isGtfsOrGtfsRtFeedType(feed) &&
+          feed.official_updated_at != undefined && (
+            <Typography
+              data-testid='last-updated'
+              variant='caption'
+              color='text.secondary'
+              component='div'
+            >
+              {`${t('officialFeedUpdated')}: ${new Date(
+                feed.official_updated_at,
+              ).toDateString()}`}
+            </Typography>
+          )}
+        {isGtfsFeedType(feed) && feed.reliability_seal?.earned_at != null && (
+          <Typography
+            data-testid='seal-earned-at'
+            variant='caption'
+            color='text.secondary'
+            component='div'
+          >
+            {`${t('sealEarnedAt')}: ${new Date(
+              feed.reliability_seal.earned_at,
+            ).toDateString()}`}
+          </Typography>
+        )}
+        {isGtfsFeedType(feed) && feed.reliability_seal?.lost_at != null && (
+          <Typography
+            data-testid='seal-lost-at'
+            variant='caption'
+            color='text.secondary'
+            component='div'
+          >
+            {`${t('sealLostAt')}: ${new Date(
+              feed.reliability_seal.lost_at,
+            ).toDateString()}`}
+          </Typography>
+        )}
+        {isGtfsFeedType(feed) &&
+          feed.reliability_seal?.evaluated_at != null && (
+            <Typography
+              data-testid='seal-evaluated-at'
+              variant='caption'
+              color='text.secondary'
+              component='div'
+            >
+              {`${t('sealEvaluatedAt')}: ${new Date(
+                feed.reliability_seal.evaluated_at,
+              ).toDateString()}`}
+            </Typography>
+          )}
+        <Typography
+          data-testid='page-generated'
+          variant='caption'
+          color='text.secondary'
+          component='div'
+        >
+          {`${t('pageGeneratedAt')}: ${new Date().toUTCString().replace(' GMT', ' UTC')}`}
+        </Typography>
       </Box>
       {isMobilityDatabaseAdmin && (
         <ContentBox
