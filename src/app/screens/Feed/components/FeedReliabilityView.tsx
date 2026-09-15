@@ -16,6 +16,9 @@ import CriterionStatusChip from './CriterionStatusChip';
 import AvailabilityCriterionBody from './AvailabilityCriterionBody';
 import AvailabilityUptimeChip from './AvailabilityUptimeChip';
 import ComplianceCriterionBody from './ComplianceCriterionBody';
+import ContinuousCoverageCriterionBody from './ContinuousCoverageCriterionBody';
+import CoverageWindowChip from './CoverageWindowChip';
+import FreshCoverageCriterionBody from './FreshCoverageCriterionBody';
 
 // Utils
 import { type AllFeedType } from '../../../services/feeds/utils';
@@ -27,6 +30,8 @@ import {
 } from '../../../constants/sealCriteria';
 import { formatProvidersSorted } from '../Feed.functions';
 import { buildAvailabilityCalendar } from '../lib/availability-history';
+import { getCoverageWindowLength } from '../lib/continuous-coverage';
+import { getLatestCoverageWindow } from '../lib/fresh-coverage';
 import { displayFormattedDate } from '../../../utils/date';
 import SectionContainer from '../../../components/SectionContainer';
 
@@ -70,6 +75,17 @@ export default async function FeedReliabilityView({
   const stableCriterion = findCriterion('stable');
   const availableCriterion = findCriterion('available');
   const compliantCriterion = findCriterion('compliant');
+  const freshCoverageCriterion = findCriterion('fresh_coverage');
+  const freshContinuousCriterion = findCriterion('fresh_continuous');
+
+  const continuousCoverage = sealAnalysis?.continuousCoverage;
+  const serviceWindow = getLatestCoverageWindow(
+    continuousCoverage,
+    latestDataset,
+  );
+  const coverageWindowLength = getCoverageWindowLength(
+    continuousCoverage?.latest_state?.newer.coverage_window,
+  );
 
   // Built once and handed down, so the header's uptime chip and the grid in
   // the body are reading the same window.
@@ -175,8 +191,9 @@ export default async function FeedReliabilityView({
               </Box>
             )}
 
-            {/* Available and Compliant each carry a full history, so they get
-                a row of their own rather than sharing the two-up grid. */}
+            {/* Available, Compliant and the two Fresh criteria each carry a
+                full history or a diagram, so they get a row of their own
+                rather than sharing the two-up grid. */}
             {availableCriterion != undefined && (
               <Box sx={{ mt: 2 }}>
                 <CriterionSection
@@ -228,6 +245,67 @@ export default async function FeedReliabilityView({
                     criterion={compliantCriterion}
                     report={latestDataset?.validation_report}
                     now={now}
+                  />
+                </CriterionSection>
+              </Box>
+            )}
+
+            {freshCoverageCriterion != undefined && (
+              <Box sx={{ mt: 2 }}>
+                <CriterionSection
+                  criterion={freshCoverageCriterion}
+                  context={criterionContext}
+                  hideProbationProgress
+                  statusChip={
+                    <CriterionStatusChip
+                      displayStatus={getCriterionDisplayStatus(
+                        freshCoverageCriterion,
+                      )}
+                    />
+                  }
+                >
+                  <FreshCoverageCriterionBody
+                    criterion={freshCoverageCriterion}
+                    serviceWindow={serviceWindow}
+                    now={now}
+                  />
+                </CriterionSection>
+              </Box>
+            )}
+
+            {freshContinuousCriterion != undefined && (
+              <Box sx={{ mt: 2 }}>
+                <CriterionSection
+                  criterion={freshContinuousCriterion}
+                  context={criterionContext}
+                  hideProbationProgress
+                  metaChips={
+                    coverageWindowLength != undefined && (
+                      <CoverageWindowChip
+                        windowLength={coverageWindowLength}
+                        displayStatus={getCriterionDisplayStatus(
+                          freshContinuousCriterion,
+                        )}
+                        withinMax={
+                          continuousCoverage?.latest_state?.newer
+                            .within_max_coverage_window
+                        }
+                      />
+                    )
+                  }
+                  statusChip={
+                    <CriterionStatusChip
+                      displayStatus={getCriterionDisplayStatus(
+                        freshContinuousCriterion,
+                      )}
+                    />
+                  }
+                >
+                  <ContinuousCoverageCriterionBody
+                    criterion={freshContinuousCriterion}
+                    coverage={continuousCoverage}
+                    now={now}
+                    feedId={feed.id}
                   />
                 </CriterionSection>
               </Box>

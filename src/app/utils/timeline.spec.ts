@@ -1,7 +1,9 @@
 import {
   type DateRange,
+  anchorBandToBar,
   daysBetween,
   findGapSpans,
+  placeAnnotationOnAxis,
   placeDateOnAxis,
   placeRangeOnAxis,
 } from './timeline';
@@ -110,5 +112,98 @@ describe('placeRangeOnAxis', () => {
       { start: '2026-01-01', end: '2026-01-04' },
     );
     expect(leftPercent).toBe(33.33);
+  });
+});
+
+describe('anchorBandToBar', () => {
+  // A dataset covering the left half of the axis.
+  const bar = { leftPercent: 10, widthPercent: 40 };
+
+  it('grows a band inwards from the end of the bar it sits on', () => {
+    // The overlap is the bar's last day, so growing rightwards would leave it
+    // hanging off the end.
+    expect(anchorBandToBar({ leftPercent: 50, widthPercent: 0 }, bar)).toBe(
+      'end',
+    );
+  });
+
+  it('grows a band at the start of the bar rightwards, into it', () => {
+    expect(anchorBandToBar({ leftPercent: 10, widthPercent: 0 }, bar)).toBe(
+      'start',
+    );
+  });
+
+  it('grows a band inside the bar rightwards', () => {
+    expect(anchorBandToBar({ leftPercent: 20, widthPercent: 10 }, bar)).toBe(
+      'start',
+    );
+  });
+
+  it('grows a band beyond the bar back towards it', () => {
+    // A gap drawn past the end of the older dataset.
+    expect(anchorBandToBar({ leftPercent: 60, widthPercent: 5 }, bar)).toBe(
+      'end',
+    );
+  });
+});
+
+describe('placeAnnotationOnAxis', () => {
+  /** The box the annotation is centred in, as [left, right] on the track. */
+  const boxFor = (center: number): [number, number] => {
+    const { paddingLeftPercent, paddingRightPercent } =
+      placeAnnotationOnAxis(center);
+    return [paddingLeftPercent, 100 - paddingRightPercent];
+  };
+
+  it('centres an annotation under a span in the middle of the track', () => {
+    expect(placeAnnotationOnAxis(50)).toEqual({
+      flexDirection: 'row',
+      paddingLeftPercent: 0,
+      paddingRightPercent: 0,
+    });
+    // Inset on the left by as much as the right has to spare, so the box it
+    // is centred in has its own centre at 60%.
+    expect(placeAnnotationOnAxis(60)).toEqual({
+      flexDirection: 'row-reverse',
+      paddingLeftPercent: 20,
+      paddingRightPercent: 0,
+    });
+    expect(placeAnnotationOnAxis(40)).toEqual({
+      flexDirection: 'row',
+      paddingLeftPercent: 0,
+      paddingRightPercent: 20,
+    });
+  });
+
+  it('centres on a span near either end too, in a box that still fits', () => {
+    // The box is centred on the span wherever the span falls, so the chip is
+    // centred on it rather than hung off one of its ends.
+    for (const center of [5, 10, 25, 33, 50, 67, 75, 90, 95]) {
+      const [left, right] = boxFor(center);
+      expect((left + right) / 2).toBeCloseTo(center, 5);
+      expect(left).toBeGreaterThanOrEqual(0);
+      expect(right).toBeLessThanOrEqual(100);
+    }
+  });
+
+  it('falls back against the near edge, which is where the row starts', () => {
+    // A chip too wide for its box is centred `safe`ly, which aligns it to the
+    // start of the row instead of overflowing - so the row has to start at
+    // the edge the chip should rest against.
+    expect(placeAnnotationOnAxis(10).flexDirection).toBe('row');
+    expect(placeAnnotationOnAxis(95).flexDirection).toBe('row-reverse');
+  });
+
+  it('never pads past the track, whatever it is handed', () => {
+    expect(placeAnnotationOnAxis(0)).toEqual({
+      flexDirection: 'row',
+      paddingLeftPercent: 0,
+      paddingRightPercent: 100,
+    });
+    expect(placeAnnotationOnAxis(140)).toEqual({
+      flexDirection: 'row-reverse',
+      paddingLeftPercent: 100,
+      paddingRightPercent: 0,
+    });
   });
 });
