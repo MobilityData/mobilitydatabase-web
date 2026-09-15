@@ -13,6 +13,7 @@ import {
   CONTINUOUS_MAX_COVERAGE_YEARS,
   buildCoverageComparison,
   getContinuousCoverageSummary,
+  getCoverageViolation,
   getCoverageWindowLength,
   getCoverageWindowTooltip,
   getDistinctFailureBoundary,
@@ -77,10 +78,10 @@ export default async function ContinuousCoverageCriterionBody({
   const withinMax = latest?.within_max_coverage_window;
 
   const tone: TrackTone =
-    displayStatus === 'fail' || displayStatus === 'atRisk'
-      ? 'error'
-      : displayStatus === 'notApplicable' || displayStatus === 'notEvaluated'
-        ? 'neutral'
+    displayStatus === 'notApplicable' || displayStatus === 'notEvaluated'
+      ? 'neutral'
+      : getCoverageViolation(latest) === 'gap'
+        ? 'error'
         : 'success';
 
   const probationWindow =
