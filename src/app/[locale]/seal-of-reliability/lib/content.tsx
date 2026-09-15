@@ -158,4 +158,8 @@ export const faqEntries: FaqEntry[] = [
     questionKey: 'faq.freshRolling7Days.question',
     answerKey: 'faq.freshRolling7Days.answer',
   },
+  {
+    questionKey: 'faq.crossCheck.question',
+    answerKey: 'faq.crossCheck.answer',
+  },
 ];
