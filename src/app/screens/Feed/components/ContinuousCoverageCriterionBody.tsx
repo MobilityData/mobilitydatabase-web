@@ -87,7 +87,9 @@ export default async function ContinuousCoverageCriterionBody({
   const tone: TrackTone =
     displayStatus === 'fail' || displayStatus === 'atRisk'
       ? 'error'
-      : 'success';
+      : displayStatus === 'notApplicable' || displayStatus === 'notEvaluated'
+        ? 'neutral'
+        : 'success';
 
   const probationWindow =
     displayStatus === 'probation'
