@@ -7,11 +7,13 @@ export type SealOfReliabilitySize =
   | 'xlarge'
   | 'large'
   | 'medium'
-  | 'small';
+  | 'small'
+  | 'inherit';
 
 const ICON_SIZES: ReadonlySet<SealOfReliabilitySize> = new Set([
   'small',
   'medium',
+  'inherit',
 ]);
 
 export type SealOfReliabilityBackground = 'transparent' | 'white';
@@ -29,6 +31,10 @@ export type SealOfReliabilityDetail = 'full' | 'compact';
 export type SealOfReliabilityTone = 'auto' | 'ink' | 'white' | 'reverse';
 
 export interface SealOfReliabilityProps {
+  /**
+   * `inherit` sizes the mark off the surrounding font size, the way an MUI
+   * icon with `fontSize='inherit'` does, so it sits inline with a label.
+   */
   size?: SealOfReliabilitySize;
   background?: SealOfReliabilityBackground;
   detail?: SealOfReliabilityDetail;
@@ -48,6 +54,11 @@ export interface SealOfReliabilityProps {
    * for `white`, whose inner detail any recolouring would flatten away.
    */
   tone?: SealOfReliabilityTone;
+  /**
+   * Drop the mark out of the accessibility tree - for a mark sitting beside
+   * a label that already names it, where the alt text only repeats the label.
+   */
+  decorative?: boolean;
   disableTooltip?: boolean;
 }
 
@@ -69,7 +80,10 @@ const SEAL_SRC: Record<
 };
 
 /** Overall height in px; width follows the artwork's own aspect ratio. */
-const SEAL_HEIGHT_PX: Record<SealOfReliabilitySize, number> = {
+const SEAL_HEIGHT_PX: Record<
+  Exclude<SealOfReliabilitySize, 'inherit'>,
+  number
+> = {
   xxlarge: 250,
   xlarge: 160,
   large: 48,
@@ -119,7 +133,7 @@ type ResolvedTone = 'ink' | 'white' | 'adaptive' | 'reverse';
  */
 const SealDisc = styled('span', {
   shouldForwardProp: (prop) => prop !== 'diameter',
-})<{ diameter: number }>(({ theme, diameter }) => ({
+})<{ diameter: string }>(({ theme, diameter }) => ({
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -153,18 +167,32 @@ export default function SealOfReliability({
   detail = ICON_SIZES.has(size) ? 'compact' : 'full',
   enableBackground = false,
   tone = background === 'transparent' ? 'auto' : 'ink',
+  decorative = false,
   disableTooltip = false,
 }: SealOfReliabilityProps): React.ReactElement {
   const t = useTranslations('feeds');
 
+  // An `inherit` mark is measured in em off the surrounding font size, so it
+  // has no fixed device-pixel footprint - rounding and disc snapping, both of
+  // which are px-grid tricks, are skipped for it.
+  const isInherit = size === 'inherit';
+  const unit = isInherit ? 'em' : 'px';
+
   // The disc keeps the overall footprint at `size`, so turning it on shrinks
   // the mark rather than growing the component.
-  const diameter = SEAL_HEIGHT_PX[size];
-  const height = enableBackground
-    ? snapToDisc(diameter, Math.round(diameter * SEAL_INSET_RATIO))
-    : diameter;
-  const rawWidth = Math.round(height * SEAL_ASPECT_RATIO[detail]);
-  const width = enableBackground ? snapToDisc(diameter, rawWidth) : rawWidth;
+  const diameter = isInherit ? 1 : SEAL_HEIGHT_PX[size];
+  const inset = diameter * SEAL_INSET_RATIO;
+  const height = !enableBackground
+    ? diameter
+    : isInherit
+      ? inset
+      : snapToDisc(diameter, Math.round(inset));
+  const rawWidth = height * SEAL_ASPECT_RATIO[detail];
+  const width = isInherit
+    ? rawWidth
+    : enableBackground
+      ? snapToDisc(diameter, Math.round(rawWidth))
+      : Math.round(rawWidth);
 
   const resolvedTone: ResolvedTone = enableBackground
     ? 'reverse'
@@ -176,15 +204,17 @@ export default function SealOfReliability({
     <SealImage
       data-testid='seal-of-reliability-image'
       src={SEAL_SRC[detail][background]}
-      alt={t('sealOfReliabilityAlt')}
-      width={width}
-      height={height}
+      alt={decorative ? '' : t('sealOfReliabilityAlt')}
+      aria-hidden={decorative ? true : undefined}
+      {...(isInherit
+        ? { style: { width: `${width}em`, height: `${height}em` } }
+        : { width, height })}
       tone={resolvedTone}
     />
   );
 
   if (enableBackground) {
-    image = <SealDisc diameter={diameter}>{image}</SealDisc>;
+    image = <SealDisc diameter={`${diameter}${unit}`}>{image}</SealDisc>;
   }
 
   if (ICON_SIZES.has(size) && !disableTooltip) {

@@ -20,6 +20,8 @@ import { SEAL_CRITERION_ICONS } from '../../../../constants/sealCriteria';
 import { fontFamily, theme } from '../../../../Theme';
 import SectionContainer from '../../../../components/SectionContainer';
 import CardSectionTitle from '../../../../components/CardSectionTitle';
+import BreadcrumbNavigation from '../../../../components/BreadcrumbNavigation';
+import SealOfReliability from '../../../../components/SealOfReliability';
 import {
   GTFS_VALIDATOR_URL,
   clockStartEntries,
@@ -107,27 +109,55 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
 
   return (
     <Container component='main' sx={{ width: '100%', m: 'auto' }} maxWidth='lg'>
-      <SectionContainer sx={{ mt: 0, p: { xs: 3, md: 4 } }} maxWidth='lg'>
-        <Typography
-          variant='subtitle2'
-          color='primary'
-          sx={{ fontWeight: 700, mb: 1 }}
-        >
-          {t('eyebrow')}
-        </Typography>
-        <Typography variant='h1' sx={{ mb: 2 }}>
-          {t('title')}
-        </Typography>
-        <Typography
-          variant='body1'
+       <BreadcrumbNavigation
+          crumbs={[
+            { label: t('eyebrow'), href: '/seal-of-reliability' },
+            { label: t('title') },
+          ]}
+          backFallbackHref='/seal-of-reliability'
+        />
+      <SectionContainer sx={{ mt: 1, p: { xs: 3, md: 4 } }} maxWidth='lg'>
+        <Box
           sx={{
-            color: 'text.secondary',
-            lineHeight: '1.4rem',
-            maxWidth: '46rem',
+            display: 'flex',
+            flexWrap: { xs: 'wrap', md: 'nowrap' },
+            alignItems: 'center',
+            gap: 2,
+
           }}
         >
-          {t('intro')}
-        </Typography>
+          <Box sx={{ width: { xs: '100%', md: '70%' },             mt: 2, }}>
+            <Typography
+              variant='subtitle2'
+              color='primary'
+              sx={{ fontWeight: 700, mb: 1 }}
+            >
+              {t('eyebrow')}
+            </Typography>
+            <Typography variant='h1' sx={{ mb: 2 }}>
+              {t('title')}
+            </Typography>
+            <Typography
+              variant='body1'
+              sx={{
+                color: 'text.secondary',
+                lineHeight: '1.4rem',
+                maxWidth: '46rem',
+              }}
+            >
+              {t('intro')}
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              width: { xs: '100%', md: '30%' },
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
+            <SealOfReliability size='xlarge' />
+          </Box>
+        </Box>
       </SectionContainer>
 
       <SectionContainer sx={{ mt: 5 }}>
