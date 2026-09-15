@@ -220,14 +220,20 @@ export interface ProbationWindow {
 }
 
 /**
- * The API reports only when probation ends, and probation is defined as
- * PROBATION_MONTHS clean months, so the start is derived from the end.
+ * `lastFailureAt` is the actual date probation is rebuilding its record
+ * from, so it is preferred whenever the API reports one. Subtracting
+ * PROBATION_MONTHS from the end is only a fallback for when it doesn't:
+ * probation isn't necessarily exactly six calendar months long (the nightly
+ * job measures elapsed time, not calendar months), so that arithmetic can
+ * land a day or two off - even, on occasion, before the failure it is
+ * supposedly counted from.
  *
  * `undefined` when there is no end date - the feed or criterion is not on
  * probation, or the window elapsed without the nightly job clearing it.
  */
 export function getProbationWindowFromEnd(
   endsAt: string | null | undefined,
+  lastFailureAt?: string | null,
 ): ProbationWindow | undefined {
   if (endsAt == null) {
     return undefined;
@@ -235,6 +241,12 @@ export function getProbationWindowFromEnd(
   const end = new Date(endsAt);
   if (isNaN(end.getTime())) {
     return undefined;
+  }
+  if (lastFailureAt != null) {
+    const failedAt = new Date(lastFailureAt);
+    if (!isNaN(failedAt.getTime()) && failedAt < end) {
+      return { start: failedAt, end };
+    }
   }
   return { start: subMonthsUtc(end, PROBATION_MONTHS), end };
 }
@@ -261,7 +273,11 @@ export function getProbationWindow(
 
   const starts = (reliability?.criteria ?? [])
     .filter((c) => c.on_probation)
-    .map((c) => getProbationWindowFromEnd(c.probation_ends_at)?.start)
+    .map(
+      (c) =>
+        getProbationWindowFromEnd(c.probation_ends_at, c.last_failure_at)
+          ?.start,
+    )
     .filter((d): d is Date => d != null);
 
   const start =

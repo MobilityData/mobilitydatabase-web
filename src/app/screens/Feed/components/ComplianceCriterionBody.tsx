@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { getTranslations } from 'next-intl/server';
+import { highlight } from './criterionHighlight';
 import CriterionGraceCountdown from './CriterionGraceCountdown';
 import { getComplianceSummary } from '../lib/compliance-report';
 import { type components } from '../../../services/feeds/types';
@@ -39,7 +40,7 @@ export default async function ComplianceCriterionBody({
         {t(summary.subtitleKey)}
       </Typography>
       <Typography variant='body1' sx={{ mt: 1 }}>
-        {t(summary.key, summary.values)}
+        {t.rich(summary.key, { ...summary.values, b: highlight })}
       </Typography>
 
       {summary.graceDaysLeft != undefined && (

@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { Box, Container, Skeleton } from '@mui/material';
 
 const CRITERION_CHIP_COUNT = 6;
@@ -9,11 +10,17 @@ const CRITERION_CHIP_COUNT = 6;
  */
 const HEATMAP_ASPECT_RATIO = '27 / 7';
 
+/** feed_info.txt, calendar.txt and calendar_dates.txt. */
+const COVERAGE_FILE_COUNT = 3;
+
+/** The latest dataset and the one published before it. */
+const COVERAGE_DATASET_COUNT = 2;
+
 /**
  * Loading skeleton for the Seal of Reliability analysis page, mirroring
  * `FeedReliabilityView`'s layout: header, page title row, seal banner with
  * its criteria chips, the two-up Official / Stable cards, then the full-width
- * Available and Compliant cards.
+ * Available, Compliant and Fresh cards.
  * ref: https://nextjs.org/docs/app/api-reference/file-conventions/loading
  */
 export default function SealReliabilitySkeleton(): React.ReactElement {
@@ -188,8 +195,106 @@ export default function SealReliabilitySkeleton(): React.ReactElement {
             />
           </Box>
         </Box>
+
+        {/* Fresh: rolling coverage card skeleton: summary line, the two date
+            boxes with the span between them, then the timeline track */}
+        <Box sx={{ p: 2, mt: 2, borderRadius: 1 }}>
+          <CriterionHeaderSkeleton />
+          <Skeleton
+            animation='wave'
+            variant='text'
+            sx={{ fontSize: '1rem', width: '80%', mb: 2 }}
+          />
+          <CoverageStepsSkeleton stops={3} />
+          <Skeleton
+            animation='wave'
+            variant='rounded'
+            height={28}
+            sx={{ mt: 3 }}
+          />
+        </Box>
+
+        {/* Fresh: continuous coverage card skeleton: summary line, the file
+            chips, the coverage span boxes, then a bar pair per dataset */}
+        <Box sx={{ p: 2, mt: 2, borderRadius: 1 }}>
+          {/* Two chips: the window length sits beside the status chip. */}
+          <CriterionHeaderSkeleton chipCount={2} />
+          <Skeleton
+            animation='wave'
+            variant='text'
+            sx={{ fontSize: '1rem', width: '85%' }}
+          />
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
+            {Array.from({ length: COVERAGE_FILE_COUNT }).map((_, i) => (
+              <Skeleton
+                key={i}
+                animation='wave'
+                variant='rounded'
+                height={24}
+                width={130}
+                sx={{ borderRadius: '16px' }}
+              />
+            ))}
+          </Box>
+          <CoverageStepsSkeleton />
+          {Array.from({ length: COVERAGE_DATASET_COUNT }).map((_, i) => (
+            <Box key={i} sx={{ mt: 2 }}>
+              <Skeleton
+                animation='wave'
+                variant='text'
+                sx={{ fontSize: '0.875rem', width: '180px', mb: 1 }}
+              />
+              {Array.from({ length: 2 }).map((__, row) => (
+                <Skeleton
+                  key={row}
+                  animation='wave'
+                  variant='rounded'
+                  height={28}
+                  sx={{ mb: 0.5 }}
+                />
+              ))}
+            </Box>
+          ))}
+        </Box>
       </Box>
     </Container>
+  );
+}
+
+/** The dated stops both Fresh criteria open with, and the connectors between. */
+function CoverageStepsSkeleton({
+  stops = 2,
+}: {
+  stops?: number;
+}): React.ReactElement {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        gap: 1,
+        mt: 2,
+      }}
+    >
+      {Array.from({ length: stops }).map((_, i) => (
+        <React.Fragment key={i}>
+          {i > 0 && (
+            <Skeleton
+              animation='wave'
+              variant='text'
+              sx={{ fontSize: '0.75rem', flex: '0 0 72px' }}
+            />
+          )}
+          <Skeleton
+            animation='wave'
+            variant='rounded'
+            height={64}
+            sx={{ flex: '1 1 140px' }}
+          />
+        </React.Fragment>
+      ))}
+    </Box>
   );
 }
 
