@@ -13,6 +13,7 @@ import {
   getGtfsFeedAvailability,
   getGtfsFeedContinuousCoverage,
   getGtfsFeedReliability,
+  getGtfsFeedValidationReports,
 } from '../../../../../services/feeds';
 import type { components } from '../../../../../services/feeds/types';
 import {
@@ -27,6 +28,8 @@ type AvailabilityResponse =
   components['schemas']['GtfsFeedAvailabilityResponse'];
 type ContinuousCoverageResponse =
   components['schemas']['GtfsFeedContinuousCoverageResponse'];
+type ValidationReportsResponse =
+  components['schemas']['GtfsFeedValidationReportsResponse'];
 
 /**
  * 6 hours
@@ -34,6 +37,12 @@ type ContinuousCoverageResponse =
 export const SEAL_ANALYSIS_REVALIDATE = 21600;
 
 const COVERAGE_LIMIT = 100;
+/**
+ * How many past datasets the Compliant criterion shows alongside the latest
+ * one. The endpoint caps `limit` at 100; 20 is a couple of months of daily
+ * datasets, which is as far back as the history panel reads.
+ */
+export const VALIDATION_REPORTS_LIMIT = 20;
 /** Exported so the specs follow it rather than restating the page size. */
 export const AVAILABILITY_LIMIT = 200;
 
@@ -119,12 +128,14 @@ export interface SealAnalysisData {
   reliability?: ReliabilityReport;
   availability?: AvailabilityResponse;
   continuousCoverage?: ContinuousCoverageResponse;
+  validationReports?: ValidationReportsResponse;
   /**
    * True when the reliability call failed outright - distinct from "this feed
    * has no verdict yet", which comes back as a successful response.
    */
   reliabilityError: boolean;
   availabilityError: boolean;
+  validationReportsError: boolean;
 }
 
 /**
@@ -198,7 +209,35 @@ function cachedContinuousCoverage(
 }
 
 /**
- * Fetch the three seal endpoints together.
+ * The validation history, unfiltered.
+ *
+ * No `severity` is sent: the panel filters the notices it already holds, so
+ * one cached response serves every filter the reader picks rather than a
+ * round trip per toggle.
+ */
+function cachedValidationReports(
+  feedId: string,
+  accessToken: string,
+  userContextJwt: string | undefined,
+): () => Promise<ValidationReportsResponse | undefined> {
+  return unstable_cache(
+    async () =>
+      await getGtfsFeedValidationReports(
+        feedId,
+        accessToken,
+        { limit: VALIDATION_REPORTS_LIMIT },
+        userContextJwt,
+      ),
+    [`seal-analysis-validation-reports-${feedId}`],
+    {
+      tags: [`feed-${feedId}`, 'seal-analysis'],
+      revalidate: SEAL_ANALYSIS_REVALIDATE,
+    },
+  );
+}
+
+/**
+ * Fetch the four seal endpoints together.
  *
  * `allSettled`, not `all`: the availability and continuous-coverage history
  * are supporting detail, so one of them failing degrades to `undefined` (with
@@ -213,12 +252,17 @@ async function fetchSealAnalysisImpl(
   accessToken: string,
   userContextJwt: string | undefined,
 ): Promise<SealAnalysisData> {
-  const [reliabilityResult, availabilityResult, coverageResult] =
-    await Promise.allSettled([
-      cachedReliability(feedId, accessToken, userContextJwt)(),
-      cachedAvailability(feedId, accessToken, userContextJwt)(),
-      cachedContinuousCoverage(feedId, accessToken, userContextJwt)(),
-    ]);
+  const [
+    reliabilityResult,
+    availabilityResult,
+    coverageResult,
+    validationReportsResult,
+  ] = await Promise.allSettled([
+    cachedReliability(feedId, accessToken, userContextJwt)(),
+    cachedAvailability(feedId, accessToken, userContextJwt)(),
+    cachedContinuousCoverage(feedId, accessToken, userContextJwt)(),
+    cachedValidationReports(feedId, accessToken, userContextJwt)(),
+  ]);
 
   return {
     reliability:
@@ -233,6 +277,11 @@ async function fetchSealAnalysisImpl(
     availabilityError: availabilityResult.status === 'rejected',
     continuousCoverage:
       coverageResult.status === 'fulfilled' ? coverageResult.value : undefined,
+    validationReports:
+      validationReportsResult.status === 'fulfilled'
+        ? validationReportsResult.value
+        : undefined,
+    validationReportsError: validationReportsResult.status === 'rejected',
   };
 }
 

@@ -43,19 +43,30 @@ export interface ComplianceSummary {
   errorCount?: number;
 }
 
+/** Distinct codes, matching the list the criterion body renders. */
 export function getComplianceErrorCount(
   report: ValidationReport | undefined,
 ): number | undefined {
-  return report?.total_error ?? report?.unique_error_count;
+  return report?.unique_error_count ?? report?.total_error;
+}
+
+export interface ComplianceSummaryOptions {
+  /**
+   * Used when the dataset's own validation report carries no count, which
+   * happens for feeds whose `latest_dataset.validation_report` is empty.
+   */
+  fallbackErrorCount?: number;
 }
 
 export function getComplianceSummary(
   criterion: ReliabilityCriterion,
   report: ValidationReport | undefined,
   now: Date = new Date(),
+  options: ComplianceSummaryOptions = {},
 ): ComplianceSummary {
   const displayStatus = getCriterionDisplayStatus(criterion);
-  const errorCount = getComplianceErrorCount(report) ?? 0;
+  const errorCount =
+    getComplianceErrorCount(report) ?? options.fallbackErrorCount ?? 0;
   const graceDays = COMPLIANCE_GRACE_DAYS;
 
   if (displayStatus === 'notApplicable') {
