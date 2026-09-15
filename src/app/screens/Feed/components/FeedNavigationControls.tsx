@@ -1,9 +1,9 @@
 'use client';
 
-import { Button, Grid, Typography } from '@mui/material';
-import { ChevronLeft } from '@mui/icons-material';
 import { useTranslations } from 'next-intl';
-import { Link, useRouter } from '../../../../i18n/navigation';
+import BreadcrumbNavigation, {
+  type Crumb,
+} from '../../../components/BreadcrumbNavigation';
 
 interface Props {
   feedDataType: string;
@@ -24,76 +24,23 @@ export default function FeedNavigationControls({
   backFallbackHref = '/feeds',
 }: Props): React.ReactElement {
   const t = useTranslations('common');
-  const router = useRouter();
-
-  const handleBack = (): void => {
-    if (window.history.length > 1) {
-      router.back();
-      return;
-    }
-    router.push(backFallbackHref);
-  };
 
   const feedIdLabel =
     feedDataType === 'gbfs' ? feedId?.replace('gbfs-', '') : feedId;
 
-  return (
-    <Grid container spacing={3} alignItems='center'>
-      <Button
-        size='large'
-        startIcon={<ChevronLeft />}
-        color={'inherit'}
-        onClick={handleBack}
-      >
-        {t('back')}
-      </Button>
+  const crumbs: Crumb[] = [
+    { label: t('feeds'), href: '/feeds' },
+    { label: t(`${feedDataType}`), href: `/feeds?${feedDataType}=true` },
+    currentPageLabel != undefined
+      ? { label: feedIdLabel, href: `/feeds/${feedDataType}/${feedId}` }
+      : { label: feedIdLabel },
+  ];
 
-      <Grid>
-        <Typography
-          sx={{
-            a: {
-              textDecoration: 'none',
-            },
-          }}
-        >
-          <Button
-            variant='text'
-            component={Link}
-            href='/feeds'
-            className='inline'
-          >
-            {t('feeds')}
-          </Button>
-          /
-          <Button
-            variant='text'
-            component={Link}
-            href={`/feeds?${feedDataType}=true`}
-            className='inline'
-          >
-            {t(`${feedDataType}`)}
-          </Button>
-          /{' '}
-          {currentPageLabel != undefined ? (
-            <>
-              <Button
-                variant='text'
-                component={Link}
-                href={`/feeds/${feedDataType}/${feedId}`}
-                className='inline'
-              >
-                {feedIdLabel}
-              </Button>
-              /{' '}
-              <span data-testid='breadcrumb-current-page'>
-                {currentPageLabel}
-              </span>
-            </>
-          ) : (
-            feedIdLabel
-          )}
-        </Typography>
-      </Grid>
-    </Grid>
+  if (currentPageLabel != undefined) {
+    crumbs.push({ label: currentPageLabel });
+  }
+
+  return (
+    <BreadcrumbNavigation crumbs={crumbs} backFallbackHref={backFallbackHref} />
   );
 }
