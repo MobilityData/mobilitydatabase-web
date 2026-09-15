@@ -814,6 +814,10 @@
       "freshRolling7Days": {
         "question": "Why did you choose 7 days for the freshness: rolling coverage criteria?",
         "answer": "Placeholder answer for the 7-day freshness rolling coverage threshold."
+      },
+      "crossCheck": {
+        "question": "How do I cross check the data referenced on the per feed analysis pages?",
+        "answer": "Placeholder answer."
       }
     },
     "howItIsCalculated": {
@@ -991,29 +995,27 @@
         "notice": "Les interruptions entre jeux de données et les fenêtres de service de plus de deux ans font perdre le Sceau immédiatement. La situation doit être corrigée de façon constante pendant six mois pour réussir la période probatoire et regagner le Sceau."
       },
       "earning": {
-        "title": "Comment le Sceau s'obtient dans le temps",
+        "title": "Comment le Sceau est regagné après un échec",
         "phaseLabel": "Phase {number}",
         "phases": {
           "added": {
-            "title": "Flux ajouté",
-            "description": "Évalué immédiatement selon tous les critères"
+            "title": "Sceau perdu",
+            "description": "Un critère en échec déclenche une période probatoire de six mois"
           },
           "window": {
             "title": "Période probatoire",
-            "description": "6 mois par critère (sauf Officiel), à compter du premier jour où chacun est satisfait"
+            "description": "6 mois par critère (sauf Officiel), à compter du premier jour où chacun est de nouveau satisfait"
           },
           "earned": {
-            "title": "Sceau obtenu",
-            "description": "Les périodes de grâce s'appliquent désormais"
+            "title": "Sceau regagné",
+            "description": "Les périodes de grâce s'appliquent à nouveau"
           }
         },
         "paragraphs": [
-          "Lorsqu'un flux est ajouté à la Mobility Database, il est évalué selon chaque critère. Pour chaque critère (sauf Officiel), une période probatoire de six mois démarre le premier jour où il est satisfait, et non le jour où le flux a été ajouté. Les cinq critères doivent chacun compléter leur période probatoire de six mois avant que le Sceau ne soit attribué.",
-          "Le critère Stable exige six mois d'historique d'URL ininterrompu : aucun flux nouvellement ajouté ne peut donc satisfaire Stable avant d'être présent dans la base de données depuis au moins six mois.",
-          "MobilityData évalue les flux dans la durée afin de garantir une fiabilité constante. Certains flux respectaient peut-être déjà les critères du Sceau avant leur ajout à la Mobility Database, mais l'évaluation porte sur ce qui peut être mesuré à partir de la date d'ajout."
+          "Lorsqu'un flux échoue à un critère, une période probatoire de six mois démarre le premier jour où ce critère est de nouveau satisfait. Tous les critères en échec doivent chacun compléter leur période probatoire de six mois avant que le Sceau ne soit rétabli."
         ],
         "clock": {
-          "title": "Quand le compte à rebours démarre",
+          "title": "Quand le compte à rebours de la période probatoire démarre",
           "tableAriaLabel": "Quand la période probatoire démarre pour chaque critère",
           "columns": {
             "criterion": "Critère",
@@ -1040,8 +1042,8 @@
             "description": "À la première version de jeu de données sans interruption entre jeux consécutifs et avec une fenêtre de service de deux ans ou moins, à partir des données de `feed_info.txt` et du calendrier"
           }
         },
-        "noticeTitle": "Les périodes de grâce ne s'appliquent qu'une fois le Sceau obtenu.",
-        "notice": "Pendant la période d'acquisition, avant que le flux n'ait le Sceau, un manquement à un critère réinitialise le compte à rebours de ce critère à la date où il est de nouveau satisfait. Il n'y a aucune marge. Les périodes de grâce ne deviennent disponibles qu'une fois le Sceau attribué."
+        "noticeTitle": "Les périodes de grâce ne s'appliquent pas pendant la période probatoire.",
+        "notice": "Pendant la période probatoire pour regagner le Sceau, un manquement à un critère réinitialise le compte à rebours de ce critère à la date où il est de nouveau satisfait. Il n'y a aucune marge."
       },
       "result": {
         "pass": "Réussite",
