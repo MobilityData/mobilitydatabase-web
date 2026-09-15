@@ -6,6 +6,7 @@ import {
   AVAILABILITY_LIMIT,
   AVAILABILITY_MAX_EXTRA_PAGES,
   SEAL_ANALYSIS_REVALIDATE,
+  VALIDATION_REPORTS_LIMIT,
   fetchGuestSealAnalysisData,
 } from './seal-analysis-data';
 
@@ -29,6 +30,7 @@ jest.mock('next/cache', () => ({
 const mockGetGtfsFeedReliability = jest.fn();
 const mockGetGtfsFeedAvailability = jest.fn();
 const mockGetGtfsFeedContinuousCoverage = jest.fn();
+const mockGetGtfsFeedValidationReports = jest.fn();
 
 jest.mock('../../../../../services/feeds', () => ({
   getGtfsFeedReliability: (...args: unknown[]) =>
@@ -37,6 +39,8 @@ jest.mock('../../../../../services/feeds', () => ({
     mockGetGtfsFeedAvailability(...args),
   getGtfsFeedContinuousCoverage: (...args: unknown[]) =>
     mockGetGtfsFeedContinuousCoverage(...args),
+  getGtfsFeedValidationReports: (...args: unknown[]) =>
+    mockGetGtfsFeedValidationReports(...args),
 }));
 
 jest.mock('../../../../../utils/auth-server', () => ({
@@ -58,6 +62,13 @@ const availability = {
 // came back rather than the page size it asked for.
 const flattenedAvailability = { ...availability, offset: 0, limit: 1 };
 const coverage = { feed_id: 'mdb-1', latest_files: [] };
+const validationReports = {
+  feed_id: 'mdb-1',
+  total: 0,
+  offset: 0,
+  limit: VALIDATION_REPORTS_LIMIT,
+  items: [],
+};
 
 describe('fetchGuestSealAnalysisData', () => {
   beforeEach(() => {
@@ -65,17 +76,20 @@ describe('fetchGuestSealAnalysisData', () => {
     mockGetGtfsFeedReliability.mockResolvedValue(report);
     mockGetGtfsFeedAvailability.mockResolvedValue(availability);
     mockGetGtfsFeedContinuousCoverage.mockResolvedValue(coverage);
+    mockGetGtfsFeedValidationReports.mockResolvedValue(validationReports);
   });
 
-  it('returns all three payloads on success', async () => {
+  it('returns all four payloads on success', async () => {
     const result = await fetchGuestSealAnalysisData('gtfs', 'mdb-1');
 
     expect(result).toEqual({
       reliability: report,
       availability: flattenedAvailability,
       continuousCoverage: coverage,
+      validationReports,
       reliabilityError: false,
       availabilityError: false,
+      validationReportsError: false,
     });
   });
 
@@ -84,11 +98,12 @@ describe('fetchGuestSealAnalysisData', () => {
 
     expect(SEAL_ANALYSIS_REVALIDATE).toBe(21600);
     // Keys exclude the caller so guest and authed share the same entries.
-    expect(mockUnstableCache).toHaveBeenCalledTimes(3);
+    expect(mockUnstableCache).toHaveBeenCalledTimes(4);
     for (const key of [
       'seal-analysis-reliability-mdb-1',
       'seal-analysis-availability-mdb-1',
       'seal-analysis-coverage-mdb-1',
+      'seal-analysis-validation-reports-mdb-1',
     ]) {
       expect(mockUnstableCache).toHaveBeenCalledWith(
         [key],

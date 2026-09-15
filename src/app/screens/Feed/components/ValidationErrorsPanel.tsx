@@ -1,0 +1,236 @@
+import * as React from 'react';
+import {
+  Box,
+  Button,
+  Divider,
+  Link as MuiLink,
+  Typography,
+} from '@mui/material';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import DownloadIcon from '@mui/icons-material/Download';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { getTranslations } from 'next-intl/server';
+import {
+  type ErrorRow,
+  type ValidationErrorsModel,
+  humanizeNoticeCode,
+} from '../lib/validation-notices';
+import { getValidatorRuleUrl } from '../lib/validator-rules';
+import { formatDateShort } from '../../../utils/date';
+
+type Translate = Awaited<ReturnType<typeof getTranslations<'feeds'>>>;
+
+export interface ValidationErrorsPanelProps {
+  model: ValidationErrorsModel;
+  /** Built on the server, which has the environment's files host. */
+  downloadUrl?: string;
+}
+
+/**
+ * The validation errors of the dataset on show, each marked when it is new
+ * rather than carried from an earlier dataset.
+ */
+export default async function ValidationErrorsPanel({
+  model,
+  downloadUrl,
+}: ValidationErrorsPanelProps): Promise<React.ReactElement | null> {
+  const t = await getTranslations('feeds');
+  // Kept for a passing criterion too: the dataset and its report are still
+  // worth reaching, and the section would otherwise be empty.
+  if (model.datasetId == undefined) return null;
+
+  const hasErrors = model.rows.length > 0;
+  const headingKey =
+    model.validatedAt == undefined
+      ? hasErrors
+        ? 'sealComplianceErrorsCurrent'
+        : 'sealComplianceValidated'
+      : hasErrors
+        ? 'sealComplianceErrorsAsOf'
+        : 'sealComplianceValidatedOn';
+
+  return (
+    <Box sx={{ mt: 3 }} data-testid='validation-errors-panel'>
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          rowGap: 1.5,
+          columnGap: 2,
+          pb: 1.5,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <Typography component='h4' variant='subtitle1' sx={{ fontWeight: 700 }}>
+          {model.validatedAt != undefined
+            ? t(headingKey, { date: formatDateShort(model.validatedAt) })
+            : t(headingKey)}
+        </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+          {downloadUrl != undefined && (
+            <Button
+              size='small'
+              variant='outlined'
+              href={downloadUrl}
+              target='_blank'
+              rel='noreferrer nofollow'
+              startIcon={<DownloadIcon fontSize='small' />}
+              data-testid='validation-errors-download'
+            >
+              {t('sealComplianceDownloadDataset')}
+            </Button>
+          )}
+          {model.reportUrl != undefined && (
+            <Button
+              size='small'
+              variant='text'
+              href={model.reportUrl}
+              target='_blank'
+              rel='noreferrer'
+              endIcon={<OpenInNewIcon fontSize='small' />}
+            >
+              {t('sealComplianceViewReportLink')}
+            </Button>
+          )}
+        </Box>
+      </Box>
+
+      {hasErrors && (
+        <>
+          <ProvenanceLine model={model} t={t} />
+          <Box sx={{ mt: 0.5 }}>
+            {model.rows.map((row, index) => (
+              <React.Fragment key={row.code}>
+                {index > 0 && <Divider />}
+                <ErrorListRow row={row} t={t} />
+              </React.Fragment>
+            ))}
+          </Box>
+        </>
+      )}
+    </Box>
+  );
+}
+
+/** Says once what would otherwise repeat on every row. */
+function ProvenanceLine({
+  model,
+  t,
+}: {
+  model: ValidationErrorsModel;
+  t: Translate;
+}): React.ReactElement | null {
+  const parts: string[] = [];
+  if (model.carriedCount > 0) {
+    parts.push(
+      t('sealComplianceCarriedSummary', { count: model.carriedCount }),
+    );
+  }
+  if (model.newCount > 0) {
+    parts.push(t('sealComplianceNewSummary', { count: model.newCount }));
+  }
+  if (parts.length === 0) return null;
+
+  return (
+    <Typography
+      variant='body2'
+      color='text.secondary'
+      sx={{ mt: 1.5 }}
+      data-testid='validation-errors-provenance'
+    >
+      {parts.join(' ')}
+    </Typography>
+  );
+}
+
+function ErrorListRow({
+  row,
+  t,
+}: {
+  row: ErrorRow;
+  t: Translate;
+}): React.ReactElement {
+  return (
+    <Box
+      sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, py: 1.75 }}
+      data-testid={`validation-error-${row.code}`}
+    >
+      <ErrorOutlineIcon
+        fontSize='small'
+        aria-hidden
+        sx={{
+          color: 'error.main',
+          flexShrink: 0,
+          alignSelf: 'flex-start',
+          mt: '1px',
+        }}
+      />
+      <Box sx={{ minWidth: 0, flexGrow: 1 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'baseline',
+            gap: 1,
+          }}
+        >
+          <MuiLink
+            href={getValidatorRuleUrl(row.code)}
+            target='_blank'
+            rel='noreferrer'
+            variant='body2'
+            sx={{
+              fontFamily: 'monospace',
+              fontWeight: 700,
+              overflowWrap: 'anywhere',
+            }}
+          >
+            {row.code}
+          </MuiLink>
+          {row.files.map((file) => (
+            <Typography
+              key={file}
+              component='span'
+              variant='caption'
+              color='text.secondary'
+              sx={{ fontFamily: 'monospace' }}
+            >
+              {file}
+            </Typography>
+          ))}
+          {row.isNew && (
+            <Typography
+              component='span'
+              variant='caption'
+              sx={{
+                fontWeight: 700,
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
+                color: 'error.main',
+              }}
+            >
+              {t('sealComplianceNewBadge')}
+            </Typography>
+          )}
+        </Box>
+        <Typography variant='body2' color='text.secondary' sx={{ mt: 0.25 }}>
+          {row.summary ?? humanizeNoticeCode(row.code)}
+        </Typography>
+      </Box>
+      <Typography
+        variant='body2'
+        sx={{
+          flexShrink: 0,
+          fontVariantNumeric: 'tabular-nums',
+          color: 'text.secondary',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {t('sealComplianceOccurrences', { count: row.total })}
+      </Typography>
+    </Box>
+  );
+}

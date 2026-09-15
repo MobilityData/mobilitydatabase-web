@@ -253,6 +253,30 @@ export const getGtfsFeedContinuousCoverage = async (
   });
 };
 
+export const getGtfsFeedValidationReports = async (
+  id: string,
+  accessToken: string,
+  queryParams?: paths['/v1/gtfs_feeds/{id}/validation_reports']['get']['parameters']['query'],
+  userContextJwt?: string,
+): Promise<
+  | paths['/v1/gtfs_feeds/{id}/validation_reports']['get']['responses'][200]['content']['application/json']
+  | undefined
+> => {
+  const authMiddleware = generateAuthMiddlewareWithToken(
+    accessToken,
+    userContextJwt,
+  );
+  return await withAuthMiddleware(authMiddleware, async () => {
+    const response = await client.GET(
+      '/v1/gtfs_feeds/{id}/validation_reports',
+      {
+        params: { query: queryParams, path: { id } },
+      },
+    );
+    return response.data;
+  });
+};
+
 export const getGtfsFeedDatasets = async (
   id: string,
   accessToken: string,
@@ -353,6 +377,23 @@ export const getLicense = async (
  * @param datasetId - The dataset ID (visualization_dataset_id )
  * @returns The URL for the routes.json file
  */
+/**
+ * Builds the download URL for a dataset's GTFS zip.
+ *
+ * The history endpoints return a `dataset_id` but no `hosted_url`, so the
+ * canonical hosted path is rebuilt here, the same way `buildRoutesUrl` does
+ * for the map tiles of a dataset.
+ * @param feedId - The feed ID
+ * @param datasetId - The stable dataset ID, e.g. mdb-123-202604290029
+ * @returns The URL of that dataset's zip
+ */
+export function buildDatasetDownloadUrl(
+  feedId: string,
+  datasetId: string,
+): string {
+  return `${getFeedFilesBaseUrl()}/${feedId}/${datasetId}/${datasetId}.zip`;
+}
+
 export function buildRoutesUrl(feedId: string, datasetId: string): string {
   return `${getFeedFilesBaseUrl()}/${feedId}/${datasetId}/pmtiles/routes.json`;
 }
