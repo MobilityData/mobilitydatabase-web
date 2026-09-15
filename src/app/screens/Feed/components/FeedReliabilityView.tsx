@@ -77,7 +77,7 @@ export default async function FeedReliabilityView({
   const compliantCriterion = findCriterion('compliant');
   const freshCoverageCriterion = findCriterion('fresh_coverage');
   const freshContinuousCriterion = findCriterion('fresh_continuous');
-  
+
   const continuousCoverage = sealAnalysis?.continuousCoverage;
   const serviceWindow = getLatestCoverageWindow(
     continuousCoverage,
