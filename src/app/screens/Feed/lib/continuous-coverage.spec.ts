@@ -3,7 +3,6 @@ import {
   buildCoverageComparison,
   getContinuousCoverageSummary,
   getCoverageViolation,
-  getUndisplayedHistoryNote,
   getCoverageWindowLength,
   getCoverageWindowTooltip,
   getDistinctFailureBoundary,
@@ -385,94 +384,6 @@ describe('getDistinctFailureBoundary', () => {
     expect(
       getDistinctFailureBoundary(response({ latest_failure: failure })),
     ).toEqual(failure);
-  });
-});
-
-describe('getUndisplayedHistoryNote', () => {
-  it('owns up to the window holding more datasets than are drawn', () => {
-    expect(
-      getUndisplayedHistoryNote(criterion(), response({ total: 9 }), 2),
-    ).toEqual({
-      key: 'sealContinuousMoreHistory',
-      values: { datasets: 9, months: 6 },
-    });
-  });
-
-  it('says nothing when every dataset of the window is already drawn', () => {
-    expect(
-      getUndisplayedHistoryNote(criterion(), response({ total: 2 }), 2),
-    ).toBeUndefined();
-  });
-
-  it('says nothing while the criterion is failing or at risk', () => {
-    for (const failing of [
-      criterion({ status: 'fail' }),
-      criterion({ in_grace_period: true }),
-    ]) {
-      expect(
-        getUndisplayedHistoryNote(failing, response({ total: 9 }), 2),
-      ).toBeUndefined();
-    }
-  });
-
-  it('says nothing when a distinct failure is drawn below it', () => {
-    expect(
-      getUndisplayedHistoryNote(
-        criterion(),
-        response({
-          total: 9,
-          latest_failure: boundary(entry({ dataset_id: 'd0', gap_days: 4 })),
-        }),
-        2,
-      ),
-    ).toBeUndefined();
-  });
-
-  it('says nothing for a failure the API still reports, however old', () => {
-    // Reverting the age check means an old failure counts the same as a
-    // recent one: it contradicts the "rest of the window is clean" claim
-    // either way, so the note stays withheld rather than drawn.
-    const staleFailure = boundary(
-      entry({ dataset_id: 'd0', downloaded_at: '2025-08-12T00:29:00Z' }),
-    );
-    expect(
-      getUndisplayedHistoryNote(
-        criterion({ on_probation: true }),
-        response({ total: 9, latest_failure: staleFailure }),
-        2,
-      ),
-    ).toBeUndefined();
-  });
-
-  it('says nothing when the drawn pair itself breaks, verdict or not', () => {
-    // The API's verdict is debounced, so a gap can be on screen while the
-    // criterion still reads pass.
-    expect(
-      getUndisplayedHistoryNote(
-        criterion(),
-        response({
-          total: 9,
-          latest_state: boundary(entry({ gap_days: 4 }), previousEntry),
-        }),
-        2,
-      ),
-    ).toBeUndefined();
-  });
-
-  it('still speaks for a feed on probation once the API drops the distinct failure', () => {
-    expect(
-      getUndisplayedHistoryNote(
-        criterion({ on_probation: true }),
-        response({ total: 9 }),
-        2,
-      ),
-    ).toMatchObject({ key: 'sealContinuousMoreHistory' });
-  });
-
-  it('says nothing without a coverage response at all', () => {
-    expect(
-      getUndisplayedHistoryNote(criterion(), undefined, 0),
-    ).toBeUndefined();
   });
 });
 

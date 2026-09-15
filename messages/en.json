@@ -423,7 +423,6 @@
     "sealContinuousFailureTitle": "Last recorded failure",
     "sealFreshRollingServiceEndDate": "{date}",
     "sealFreshRollingServiceStartDate": "{date}",
-    "sealContinuousMoreHistory": "Only the most recent datasets are shown. Coverage is continuous across all {datasets, plural, one {# dataset} other {# datasets}} published in the past {months} months.",
     "sealContinuousRangeCaption": "{start} → {end}",
     "sealContinuousDownloadedOn": "Downloaded {date}",
     "sealContinuousDownloadedUnknown": "Download date unknown",
