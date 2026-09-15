@@ -109,13 +109,13 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
 
   return (
     <Container component='main' sx={{ width: '100%', m: 'auto' }} maxWidth='lg'>
-       <BreadcrumbNavigation
-          crumbs={[
-            { label: t('eyebrow'), href: '/seal-of-reliability' },
-            { label: t('title') },
-          ]}
-          backFallbackHref='/seal-of-reliability'
-        />
+      <BreadcrumbNavigation
+        crumbs={[
+          { label: t('eyebrow'), href: '/seal-of-reliability' },
+          { label: t('title') },
+        ]}
+        backFallbackHref='/seal-of-reliability'
+      />
       <SectionContainer sx={{ mt: 1, p: { xs: 3, md: 4 } }} maxWidth='lg'>
         <Box
           sx={{
@@ -123,10 +123,9 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
             flexWrap: { xs: 'wrap', md: 'nowrap' },
             alignItems: 'center',
             gap: 2,
-
           }}
         >
-          <Box sx={{ width: { xs: '100%', md: '70%' },             mt: 2, }}>
+          <Box sx={{ width: { xs: '100%', md: '70%' }, mt: 2 }}>
             <Typography
               variant='subtitle2'
               color='primary'
