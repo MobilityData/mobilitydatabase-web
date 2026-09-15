@@ -80,9 +80,12 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
                 alignItems: 'flex-start',
               }}
             >
-              <Button variant='text' sx={{ ml: -1 }}>
-                {t(heroContent.ctaButtonKey)}
-              </Button>
+              <LocaleLink href='feeds/gtfs/mdb-510/seal-of-reliability'>
+                <Button variant='text' sx={{ ml: -1 }}>
+                  {t(heroContent.ctaButtonKey)}
+                </Button>
+              </LocaleLink>
+
               <LocaleLink href='/seal-of-reliability/how-it-is-calculated'>
                 <Button variant='text' sx={{ ml: -1 }}>
                   {t('hero.calculationButton')}
