@@ -16,7 +16,6 @@ import {
   getCoverageWindowLength,
   getCoverageWindowTooltip,
   getDistinctFailureBoundary,
-  getUndisplayedHistoryNote,
 } from '../lib/continuous-coverage';
 import {
   getCriterionDisplayStatus,
@@ -71,13 +70,6 @@ export default async function ContinuousCoverageCriterionBody({
     displayStatus === 'fail'
       ? buildCoverageComparison(getDistinctFailureBoundary(coverage), feedId)
       : undefined;
-
-  // At most two datasets are drawn, so the window can be left part bare.
-  const historyNote = getUndisplayedHistoryNote(
-    criterion,
-    coverage,
-    latestComparison?.rows.length ?? 0,
-  );
 
   const latest = coverage?.latest_state?.newer;
   const coverageWindow = latest?.coverage_window;
@@ -231,16 +223,6 @@ export default async function ContinuousCoverageCriterionBody({
               tone='error'
             />
           </Box>
-        )}
-
-        {historyNote != undefined && (
-          <Typography
-            data-testid='continuous-coverage-history-note'
-            variant='caption'
-            sx={{ display: 'block', mt: 1.5, color: 'text.secondary' }}
-          >
-            {t(historyNote.key, historyNote.values)}
-          </Typography>
         )}
 
         {latestComparison == undefined && failureComparison == undefined && (

@@ -435,7 +435,6 @@
     "sealContinuousFailureTitle": "Dernier échec enregistré",
     "sealFreshRollingServiceEndDate": "{date}",
     "sealFreshRollingServiceStartDate": "{date}",
-    "sealContinuousMoreHistory": "Seuls les jeux de données les plus récents sont affichés. La couverture est continue sur {datasets, plural, one {# jeu de données publié} other {# jeux de données publiés}} au cours des {months} derniers mois.",
     "sealContinuousRangeCaption": "{start} → {end}",
     "sealContinuousDownloadedOn": "Téléchargé le {date}",
     "sealContinuousDownloadedUnknown": "Date de téléchargement inconnue",

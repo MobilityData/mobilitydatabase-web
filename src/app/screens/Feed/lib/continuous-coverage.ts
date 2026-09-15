@@ -37,9 +37,6 @@ type ServiceDateWindow = components['schemas']['ServiceDateWindow'];
 /** Longest service window a single dataset may declare. */
 export const CONTINUOUS_MAX_COVERAGE_YEARS = 2;
 
-/** How far back the criterion's history is shown. Mirrors the fetch window. */
-export const COVERAGE_HISTORY_MONTHS = 6;
-
 /** Days in a year, averaged over the leap cycle, for the window-length chip. */
 const DAYS_PER_YEAR = 365.25;
 const DAYS_PER_MONTH = DAYS_PER_YEAR / 12;
@@ -464,54 +461,6 @@ export function getDistinctFailureBoundary(
   return failure.newer.dataset_id === coverage?.latest_state?.newer.dataset_id
     ? undefined
     : failure;
-}
-
-export interface CoverageHistoryNote {
-  /** Key in the `feeds` namespace. */
-  key: string;
-  values: { datasets: number; months: number };
-}
-
-/**
- * The note that owns up to the diagrams showing only part of the window.
- *
- * At most two datasets are drawn - the pair the criterion is judged on - so a
- * feed publishing often has history inside the window that never reaches the
- * page. Saying so is only honest if the rest of that window is known to be
- * clean, which is why the note is withheld unless the criterion passes and
- * the API reports no distinct failure at all, nor a break on the pair that is
- * drawn: a failure there contradicts the claim outright.
- *
- * `displayedCount` is how many datasets the page actually draws; `total` is
- * what the endpoint reports for the window, which is already filtered to it.
- */
-export function getUndisplayedHistoryNote(
-  criterion: ReliabilityCriterion,
-  coverage: ContinuousCoverageResponse | undefined,
-  displayedCount: number,
-): CoverageHistoryNote | undefined {
-  if (coverage == undefined || coverage.total <= displayedCount) {
-    return undefined;
-  }
-  const displayStatus = getCriterionDisplayStatus(criterion);
-  // Probation counts: coverage is continuous again, and the failure it is
-  // serving out is not one the API still reports as the distinct failure.
-  if (displayStatus !== 'pass' && displayStatus !== 'probation') {
-    return undefined;
-  }
-  if (getDistinctFailureBoundary(coverage) != undefined) {
-    return undefined;
-  }
-  // The verdict is debounced and re-evaluated nightly, so the latest pair can
-  // show a break the criterion has not been marked down for yet. Drawing that
-  // break and calling the window clean underneath it would be nonsense.
-  if (getCoverageViolation(coverage.latest_state?.newer) != undefined) {
-    return undefined;
-  }
-  return {
-    key: 'sealContinuousMoreHistory',
-    values: { datasets: coverage.total, months: COVERAGE_HISTORY_MONTHS },
-  };
 }
 
 export function getContinuousCoverageSummary(
