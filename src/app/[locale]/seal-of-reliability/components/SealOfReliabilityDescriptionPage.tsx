@@ -33,7 +33,7 @@ import {
   heroContent,
 } from '../lib/content';
 
-const FEEDS_MEETING_STANDARD_PERCENT = 41;
+const FEEDS_MEETING_STANDARD_PERCENT = 36;
 const FEEDS_BELOW_STANDARD_PERCENT = 100 - FEEDS_MEETING_STANDARD_PERCENT;
 
 export default async function SealOfReliabilityDescriptionPage(): Promise<ReactElement> {
