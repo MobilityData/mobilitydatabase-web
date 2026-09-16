@@ -3,7 +3,7 @@ import { Box, Chip, Tooltip } from '@mui/material';
 import { useTranslations } from 'next-intl';
 import { Link } from '../../i18n/navigation';
 import SealOfReliability, { SEAL_INK } from './SealOfReliability';
-import { useRemoteConfig } from '../context/RemoteConfigProvider';
+import { useUserFeatureFlags } from '../hooks/useUserFeatureFlags';
 
 export interface SealOfReliabilityChipProps {
   hasSeal: boolean | undefined;
@@ -20,9 +20,11 @@ export default function SealOfReliabilityChip({
   disableLink = false,
 }: SealOfReliabilityChipProps): React.ReactElement | null {
   const t = useTranslations('feeds');
-  const { config } = useRemoteConfig();
+  const {
+    flags: { isSealEnabled },
+  } = useUserFeatureFlags();
 
-  if (!config.enableSealOfReliability || hasSeal == undefined) {
+  if (!isSealEnabled || hasSeal == undefined) {
     return null;
   }
 

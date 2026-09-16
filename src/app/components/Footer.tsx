@@ -9,12 +9,16 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { FooterLink, FooterColumnTitle } from './FooterElements';
 import { useRemoteConfig } from '../context/RemoteConfigProvider';
+import { useUserFeatureFlags } from '../hooks/useUserFeatureFlags';
 
 const Footer: React.FC = () => {
   const theme = useTheme();
   const { colorScheme } = useColorScheme();
   const t = useTranslations('footer');
   const { config } = useRemoteConfig();
+  const {
+    flags: { isSealEnabled },
+  } = useUserFeatureFlags();
   const FOOTER_COLUMN_WIDTH = '185px';
   const SlackSvg = (
     <svg
@@ -184,7 +188,7 @@ const Footer: React.FC = () => {
           </Box>
 
           {/* Resources column */}
-          {config.enableSealOfReliability && (
+          {isSealEnabled && (
             <Box sx={{ width: FOOTER_COLUMN_WIDTH }}>
               <FooterColumnTitle>{t('columns.resources')}</FooterColumnTitle>
               <FooterLink href='/seal-of-reliability'>

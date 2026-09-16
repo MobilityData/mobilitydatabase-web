@@ -12,12 +12,15 @@ export interface UserFeatureFlags {
   isNotificationsEnabled: boolean;
   /** Enable the Seal of Reliability filter in the feeds search */
   isSealFilterEnabled: boolean;
+  /** Enable all of the Seal of Reliability UI elements to display on the app */
+  isSealEnabled: boolean;
 }
 
 /** Default values returned when the cookie is absent or a flag is not set for the user. */
 export const defaultUserFeatureFlags: UserFeatureFlags = {
   isNotificationsEnabled: false,
   isSealFilterEnabled: false,
+  isSealEnabled: false,
 };
 
 /** Union of all known feature flag IDs — derived from UserFeatureFlags. */
