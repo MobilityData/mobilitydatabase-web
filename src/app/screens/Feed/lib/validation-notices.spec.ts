@@ -2,6 +2,7 @@ import {
   MAX_ERROR_ROWS,
   buildValidationErrorsModel,
   humanizeNoticeCode,
+  parseInlineCode,
 } from './validation-notices';
 import { type components } from '../../../services/feeds/types';
 
@@ -304,5 +305,47 @@ describe('the top-errors cap', () => {
 
     expect(model.rows).toHaveLength(3);
     expect(model.totalCount).toBe(3);
+  });
+});
+
+describe('parseInlineCode', () => {
+  it('splits a backtick span out of the surrounding text', () => {
+    expect(
+      parseInlineCode('Decreasing `shape_dist_traveled` in `shapes.txt`.'),
+    ).toEqual([
+      { text: 'Decreasing ', isCode: false },
+      { text: 'shape_dist_traveled', isCode: true },
+      { text: ' in ', isCode: false },
+      { text: 'shapes.txt', isCode: true },
+      { text: '.', isCode: false },
+    ]);
+  });
+
+  it('leaves text with no backticks in one plain segment', () => {
+    expect(parseInlineCode('A required field is missing.')).toEqual([
+      { text: 'A required field is missing.', isCode: false },
+    ]);
+  });
+
+  it('does not read underscores in an identifier as emphasis', () => {
+    const [segment] = parseInlineCode('`shape_dist_traveled`');
+
+    expect(segment).toEqual({ text: 'shape_dist_traveled', isCode: true });
+  });
+
+  it('keeps an unmatched backtick literal rather than swallowing the rest', () => {
+    expect(parseInlineCode('Missing `stops.txt and more')).toEqual([
+      { text: 'Missing `stops.txt and more', isCode: false },
+    ]);
+  });
+
+  it('drops the empty segments a leading span leaves behind', () => {
+    expect(parseInlineCode('`stops.txt`')).toEqual([
+      { text: 'stops.txt', isCode: true },
+    ]);
+  });
+
+  it('returns nothing for an empty string', () => {
+    expect(parseInlineCode('')).toEqual([]);
   });
 });

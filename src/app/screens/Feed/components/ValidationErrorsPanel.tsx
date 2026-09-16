@@ -14,6 +14,7 @@ import {
   type ErrorRow,
   type ValidationErrorsModel,
   humanizeNoticeCode,
+  parseInlineCode,
 } from '../lib/validation-notices';
 import { getValidatorRuleUrl } from '../lib/validator-rules';
 import { formatDateShort } from '../../../utils/date';
@@ -119,9 +120,24 @@ export default async function ValidationErrorsPanel({
               sx={{ mt: 1.5 }}
               data-testid='validation-errors-truncated'
             >
-              {t('sealComplianceTruncated', {
+              {t.rich('sealComplianceTruncated', {
                 shown: model.rows.length,
                 total: model.totalCount,
+                // Inline so the report is one click from the sentence that
+                // sends you there, rather than back up at the header.
+                link: (chunks) =>
+                  model.reportUrl != undefined ? (
+                    <MuiLink
+                      href={model.reportUrl}
+                      target='_blank'
+                      rel='noreferrer'
+                      sx={{ fontSize: 'inherit' }}
+                    >
+                      {chunks}
+                    </MuiLink>
+                  ) : (
+                    <>{chunks}</>
+                  ),
               })}
             </Typography>
           )}
@@ -232,7 +248,26 @@ function ErrorListRow({
           )}
         </Box>
         <Typography variant='body2' color='text.secondary' sx={{ mt: 0.25 }}>
-          {row.summary ?? humanizeNoticeCode(row.code)}
+          {parseInlineCode(row.summary ?? humanizeNoticeCode(row.code)).map(
+            (segment, index) =>
+              segment.isCode ? (
+                <Box
+                  key={index}
+                  component='code'
+                  sx={{
+                    fontFamily: 'monospace',
+                    fontSize: '0.9em',
+                    px: 0.5,
+                    borderRadius: '3px',
+                    backgroundColor: 'action.hover',
+                  }}
+                >
+                  {segment.text}
+                </Box>
+              ) : (
+                <React.Fragment key={index}>{segment.text}</React.Fragment>
+              ),
+          )}
         </Typography>
       </Box>
       <Typography

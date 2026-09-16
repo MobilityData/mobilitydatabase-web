@@ -134,3 +134,23 @@ export function humanizeNoticeCode(code: string): string {
     )
     .join(' ');
 }
+
+export interface TextSegment {
+  text: string;
+  /** Rendered in the monospace face, as `stops.txt` is in the source. */
+  isCode: boolean;
+}
+
+/**
+ * Splits the validator's wording on backtick spans.
+ *
+ * Backticks are the only markup these summaries use, and a general markdown
+ * renderer would read the underscores in identifiers like
+ * `shape_dist_traveled` as emphasis. An unmatched backtick stays literal.
+ */
+export function parseInlineCode(text: string): TextSegment[] {
+  return text
+    .split(/`([^`]+)`/)
+    .map((part, index) => ({ text: part, isCode: index % 2 === 1 }))
+    .filter((segment) => segment.text.length > 0);
+}
