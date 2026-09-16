@@ -141,31 +141,30 @@ export function generateMapDescriptionMetaTag(
   return t('feeds.mapPageDescription', { formattedName, dataTypeVerbose });
 }
 
+/**
+ * The Seal of Reliability only exists for GTFS Schedule feeds - both seal
+ * pages throw for any other data type - so there is no data type to branch on.
+ */
 export function generateSealPageTitle(
   sortedProviders: string[],
-  dataType: 'gtfs' | 'gtfs_rt' | 'gbfs' | undefined,
   feedName?: string,
 ): string {
   let newDocTitle = getFeedFormattedName(sortedProviders, feedName);
 
   if (newDocTitle !== '') {
-    if (dataType === 'gtfs') {
-      newDocTitle += ' GTFS Schedule Feed Seal of Reliability - ';
-    } else if (dataType === 'gtfs_rt') {
-      newDocTitle += ' GTFS Realtime Feed Seal of Reliability - ';
-    } else if (dataType === 'gbfs') {
-      newDocTitle += ' GBFS Feed Seal of Reliability - ';
-    }
+    newDocTitle += ' GTFS Schedule Feed Seal of Reliability - ';
   }
 
   newDocTitle += 'Mobility Database';
   return newDocTitle;
 }
 
+/**
+ * See generateSealPageTitle - GTFS Schedule is the only applicable data type.
+ */
 export function generateSealDescriptionMetaTag(
   t: (key: string, options?: Record<string, string>) => string,
   sortedProviders: string[],
-  dataType: 'gtfs' | 'gtfs_rt' | 'gbfs' | undefined,
   feedName?: string,
 ): string {
   const formattedName = getFeedFormattedName(sortedProviders, feedName);
@@ -175,15 +174,10 @@ export function generateSealDescriptionMetaTag(
   ) {
     return '';
   }
-  let dataTypeVerbose = '';
-  if (dataType === 'gtfs') {
-    dataTypeVerbose = t('common.gtfsSchedule');
-  } else if (dataType === 'gtfs_rt') {
-    dataTypeVerbose = t('common.gtfsRealtime');
-  } else if (dataType === 'gbfs') {
-    dataTypeVerbose = t('common.gbfs');
-  }
-  return t('feeds.sealPageDescription', { formattedName, dataTypeVerbose });
+  return t('feeds.sealPageDescription', {
+    formattedName,
+    dataTypeVerbose: t('common.gtfsSchedule'),
+  });
 }
 
 export const formatServiceDateRange = (

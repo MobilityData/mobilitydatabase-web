@@ -302,14 +302,13 @@ describe('Feed page', () => {
   it('should generate the correct seal of reliability page title', () => {
     const titleAllInfo = generateSealPageTitle(
       ['Department of Transport', 'Public Transport'],
-      'gtfs',
       'Darwin public bus network',
     );
     expect(titleAllInfo).toEqual(
       'Department of Transport, Darwin public bus network GTFS Schedule Feed Seal of Reliability - Mobility Database',
     );
 
-    const titleAllEmpty = generateSealPageTitle([], 'gtfs', '');
+    const titleAllEmpty = generateSealPageTitle([], '');
     expect(titleAllEmpty).toEqual('Mobility Database');
   });
 

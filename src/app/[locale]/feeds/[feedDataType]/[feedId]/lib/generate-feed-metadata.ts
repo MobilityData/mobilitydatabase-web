@@ -418,13 +418,11 @@ export function generateSealFeedMetadata({
   const sortedProviders = formatProvidersSorted(feed?.provider ?? '');
   const title = generateSealPageTitle(
     sortedProviders,
-    feedDataType as 'gtfs' | 'gtfs_rt' | 'gbfs',
     (feed as { feed_name?: string })?.feed_name,
   );
   const description = generateSealDescriptionMetaTag(
     t,
     sortedProviders,
-    feedDataType as 'gtfs' | 'gtfs_rt' | 'gbfs',
     (feed as { feed_name?: string })?.feed_name,
   );
   const url = `https://mobilitydatabase.org/feeds/${feedDataType}/${feedId}/seal-of-reliability`;
