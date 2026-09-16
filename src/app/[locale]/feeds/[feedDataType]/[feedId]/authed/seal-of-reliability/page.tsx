@@ -4,9 +4,12 @@ import { fetchCompleteFeedData } from '../../lib/feed-data';
 import { fetchAuthedSealAnalysisData } from '../../lib/seal-analysis-data';
 import { getLatestDataset } from '../../../../../../screens/Feed/Feed.functions';
 import { notFound } from 'next/navigation';
+import type { Metadata, ResolvingMetadata } from 'next';
+import { getTranslations } from 'next-intl/server';
+import { generateSealFeedMetadata } from '../../lib/generate-feed-metadata';
 
 interface Props {
-  params: Promise<{ feedDataType: string; feedId: string }>;
+  params: Promise<{ locale: string; feedDataType: string; feedId: string }>;
 }
 
 /**
@@ -14,6 +17,22 @@ interface Props {
  * This allows cookie() and headers() access.
  */
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  const { locale, feedId, feedDataType } = await params;
+  const t = await getTranslations({ locale });
+
+  // Same cache as the page component - no extra API call.
+  const feedData = await fetchCompleteFeedData(feedDataType, feedId);
+
+  return generateSealFeedMetadata({
+    feed: feedData?.feed,
+    t,
+  });
+}
 
 export default async function AuthedFeedReliabilityPage({
   params,
