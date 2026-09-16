@@ -3,7 +3,7 @@ import { type SvgIconProps } from '@mui/material/SvgIcon';
 import ForumIcon from '@mui/icons-material/Forum';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
-import { type DateRange } from './timeline';
+import { type DateRange } from '../../../../utils/timeline';
 
 export interface MethodologyEntry {
   titleKey: string;

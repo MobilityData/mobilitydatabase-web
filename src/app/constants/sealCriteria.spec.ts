@@ -10,6 +10,7 @@ import {
   getCriterionCopy,
   getProbationProgressPercent,
   getProbationWindow,
+  getProbationWindowFromEnd,
   getSealDisplayStatus,
   getSoonestGracePeriodEnd,
   isFeedWithinProbationWindow,
@@ -247,6 +248,53 @@ describe('getDaysUntil', () => {
   });
 });
 
+describe('getProbationWindowFromEnd', () => {
+  it('derives the start from the end minus the probation length by default', () => {
+    const probationWindow = getProbationWindowFromEnd('2027-01-16T00:00:00Z');
+    expect(probationWindow?.start.toISOString()).toBe(
+      '2026-07-16T00:00:00.000Z',
+    );
+  });
+
+  it('prefers the actual last-failure date over the derived one', () => {
+    // Probation isn't necessarily exactly six calendar months, so the two
+    // can disagree - and the real failure date is what the criterion's own
+    // "last recorded failure" text already states.
+    const probationWindow = getProbationWindowFromEnd(
+      '2026-10-21T00:00:00Z',
+      '2026-04-23T00:00:00Z',
+    );
+    expect(probationWindow).toEqual({
+      start: new Date('2026-04-23T00:00:00Z'),
+      end: new Date('2026-10-21T00:00:00Z'),
+    });
+  });
+
+  it('falls back to the derived start when the last-failure date is unusable', () => {
+    expect(
+      getProbationWindowFromEnd('2027-01-16T00:00:00Z', null)?.start,
+    ).toEqual(new Date('2026-07-16T00:00:00Z'));
+    expect(
+      getProbationWindowFromEnd('2027-01-16T00:00:00Z', 'not-a-date')?.start,
+    ).toEqual(new Date('2026-07-16T00:00:00Z'));
+  });
+
+  it('falls back to the derived start rather than a last failure that is not before the end', () => {
+    // A failure on or after the end it is meant to explain is a data
+    // anomaly, not a start date worth drawing a progress bar from.
+    expect(
+      getProbationWindowFromEnd('2027-01-16T00:00:00Z', '2027-01-16T00:00:00Z')
+        ?.start,
+    ).toEqual(new Date('2026-07-16T00:00:00Z'));
+  });
+
+  it('is undefined when the API reports no end date', () => {
+    expect(
+      getProbationWindowFromEnd(undefined, '2026-04-23T00:00:00Z'),
+    ).toBeUndefined();
+  });
+});
+
 describe('getProbationWindow', () => {
   it('derives the start from the end minus the probation length', () => {
     const probationWindow = getProbationWindow({
@@ -301,6 +349,26 @@ describe('getProbationWindow', () => {
     // end-minus-PROBATION_MONTHS shortcut would have produced instead).
     expect(probationWindow?.start.toISOString()).toBe(
       '2026-04-16T00:00:00.000Z',
+    );
+  });
+
+  it("prefers a criterion's actual last-failure date over its derived start", () => {
+    const probationWindow = getProbationWindow({
+      feed_id: 'mdb-1',
+      has_seal: false,
+      on_probation: true,
+      probation_ends_at: '2026-10-21T00:00:00Z',
+      criteria: [
+        buildCriterion('fresh_coverage', {
+          on_probation: true,
+          probation_ends_at: '2026-10-21T00:00:00Z',
+          last_failure_at: '2026-04-23T00:00:00Z',
+        }),
+      ],
+    });
+
+    expect(probationWindow?.start.toISOString()).toBe(
+      '2026-04-23T00:00:00.000Z',
     );
   });
 });

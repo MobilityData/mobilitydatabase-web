@@ -2,9 +2,9 @@ import { Box, Card, Typography } from '@mui/material';
 import { type ReactElement } from 'react';
 import { getTranslations } from 'next-intl/server';
 import { type RollingCoverageExample } from '../lib/content';
-import { placeDateOnAxis, placeRangeOnAxis } from '../lib/timeline';
-import TimelineTrack from './TimelineTrack';
-import ResultChip from './ResultChip';
+import { placeDateOnAxis, placeRangeOnAxis } from '../../../../utils/timeline';
+import TimelineTrack from '../../../../components/TimelineTrack';
+import ResultChip from '../../../../components/ResultChip';
 
 export default async function RollingCoverageCard({
   example,

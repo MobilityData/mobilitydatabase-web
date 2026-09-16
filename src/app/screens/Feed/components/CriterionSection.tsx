@@ -85,7 +85,10 @@ export default function CriterionSection({
   // which leaves the chip to carry the state on its own.
   const probationWindow =
     displayStatus === 'probation'
-      ? getProbationWindowFromEnd(criterion.probation_ends_at)
+      ? getProbationWindowFromEnd(
+          criterion.probation_ends_at,
+          criterion.last_failure_at,
+        )
       : undefined;
 
   // Only the flagged-URL case is about the URL's shape, so only it earns the

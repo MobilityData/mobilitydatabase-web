@@ -7,13 +7,13 @@ import {
   findGapSpans,
   placeDateOnAxis,
   placeRangeOnAxis,
-} from '../lib/timeline';
+} from '../../../../utils/timeline';
 import TimelineTrack, {
   type TrackSegment,
   type TrackTone,
-} from './TimelineTrack';
-import AxisTicks from './AxisTicks';
-import ResultChip from './ResultChip';
+} from '../../../../components/TimelineTrack';
+import AxisTicks from '../../../../components/AxisTicks';
+import ResultChip from '../../../../components/ResultChip';
 import RichText from '../../../../components/RichText';
 
 export default async function ScenarioCard({
