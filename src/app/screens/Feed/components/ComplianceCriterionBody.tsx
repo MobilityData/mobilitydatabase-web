@@ -4,8 +4,10 @@ import { getTranslations } from 'next-intl/server';
 import CriterionGraceCountdown from './CriterionGraceCountdown';
 import ValidationErrorsPanel from './ValidationErrorsPanel';
 import { getComplianceSummary } from '../lib/compliance-report';
-import { buildValidationErrorsModel } from '../lib/validation-notices';
-import { getValidatorRules } from '../lib/validator-rules';
+import {
+  type ValidatorRuleInfo,
+  buildValidationErrorsModel,
+} from '../lib/validation-notices';
 import { buildDatasetDownloadUrl } from '../../../services/feeds';
 import { type components } from '../../../services/feeds/types';
 
@@ -23,6 +25,8 @@ export interface ComplianceCriterionBodyProps {
   /** Validation history of the feed, one entry per dataset. */
   validationReports?: ValidationReportsResponse;
   validationReportsError?: boolean;
+  /** Validator rule index, fetched with the seal endpoints. */
+  validatorRules?: Record<string, ValidatorRuleInfo>;
   /** Pinned by the page so every date-derived branch agrees. */
   now: Date;
 }
@@ -38,12 +42,12 @@ export default async function ComplianceCriterionBody({
   feedId,
   validationReports,
   validationReportsError = false,
+  validatorRules,
   now,
 }: ComplianceCriterionBodyProps): Promise<React.ReactElement> {
   const t = await getTranslations('feeds');
 
-  const rules = await getValidatorRules();
-  const model = buildValidationErrorsModel(validationReports, rules);
+  const model = buildValidationErrorsModel(validationReports, validatorRules);
 
   // The criterion counts distinct codes, not occurrences, so the sentence
   // and the list below it agree.

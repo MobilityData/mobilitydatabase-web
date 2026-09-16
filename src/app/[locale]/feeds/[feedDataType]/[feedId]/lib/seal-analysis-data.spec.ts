@@ -12,6 +12,11 @@ import {
 
 jest.mock('server-only', () => ({}));
 
+const mockGetValidatorRules = jest.fn();
+jest.mock('../../../../../screens/Feed/lib/validator-rules', () => ({
+  getValidatorRules: async () => await mockGetValidatorRules(),
+}));
+
 // Pass-throughs so the real fetcher body runs. `cache` is stubbed because
 // React's request-scoped memoization has no scope in a bare node test.
 jest.mock('react', () => ({
@@ -62,6 +67,9 @@ const availability = {
 // came back rather than the page size it asked for.
 const flattenedAvailability = { ...availability, offset: 0, limit: 1 };
 const coverage = { feed_id: 'mdb-1', latest_files: [] };
+const validatorRules = {
+  invalid_color: { summary: 'A color is invalid.', files: ['routes.txt'] },
+};
 const validationReports = {
   feed_id: 'mdb-1',
   total: 0,
@@ -77,6 +85,22 @@ describe('fetchGuestSealAnalysisData', () => {
     mockGetGtfsFeedAvailability.mockResolvedValue(availability);
     mockGetGtfsFeedContinuousCoverage.mockResolvedValue(coverage);
     mockGetGtfsFeedValidationReports.mockResolvedValue(validationReports);
+    mockGetValidatorRules.mockResolvedValue(validatorRules);
+  });
+
+  it('fetches the validator rules alongside the endpoints, not after them', async () => {
+    await fetchGuestSealAnalysisData('gtfs', 'mdb-1');
+
+    expect(mockGetValidatorRules).toHaveBeenCalledTimes(1);
+  });
+
+  it('degrades to an empty rule index when that fetch fails', async () => {
+    mockGetValidatorRules.mockRejectedValue(new Error('boom'));
+
+    const result = await fetchGuestSealAnalysisData('gtfs', 'mdb-1');
+
+    expect(result?.validatorRules).toEqual({});
+    expect(result?.reliability).toEqual(report);
   });
 
   it('returns all four payloads on success', async () => {
@@ -87,6 +111,7 @@ describe('fetchGuestSealAnalysisData', () => {
       availability: flattenedAvailability,
       continuousCoverage: coverage,
       validationReports,
+      validatorRules,
       reliabilityError: false,
       availabilityError: false,
       validationReportsError: false,

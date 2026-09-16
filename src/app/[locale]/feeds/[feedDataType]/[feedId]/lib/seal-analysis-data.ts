@@ -22,6 +22,8 @@ import {
   getUserContextJwtFromCookie,
 } from '../../../../../utils/auth-server';
 import { subMonthsUtc } from '../../../../../utils/date';
+import { getValidatorRules } from '../../../../../screens/Feed/lib/validator-rules';
+import { type ValidatorRuleInfo } from '../../../../../screens/Feed/lib/validation-notices';
 
 type ReliabilityReport = components['schemas']['FeedReliabilityReport'];
 type AvailabilityResponse =
@@ -129,6 +131,8 @@ export interface SealAnalysisData {
   availability?: AvailabilityResponse;
   continuousCoverage?: ContinuousCoverageResponse;
   validationReports?: ValidationReportsResponse;
+  /** Validator rule index, joined onto the notice codes at render time. */
+  validatorRules: Record<string, ValidatorRuleInfo>;
   /**
    * True when the reliability call failed outright - distinct from "this feed
    * has no verdict yet", which comes back as a successful response.
@@ -237,7 +241,7 @@ function cachedValidationReports(
 }
 
 /**
- * Fetch the four seal endpoints together.
+ * Fetch the four seal endpoints and the validator rule index together.
  *
  * `allSettled`, not `all`: the availability and continuous-coverage history
  * are supporting detail, so one of them failing degrades to `undefined` (with
@@ -257,11 +261,15 @@ async function fetchSealAnalysisImpl(
     availabilityResult,
     coverageResult,
     validationReportsResult,
+    validatorRulesResult,
   ] = await Promise.allSettled([
     cachedReliability(feedId, accessToken, userContextJwt)(),
     cachedAvailability(feedId, accessToken, userContextJwt)(),
     cachedContinuousCoverage(feedId, accessToken, userContextJwt)(),
     cachedValidationReports(feedId, accessToken, userContextJwt)(),
+    // Fetched here rather than at render time so it runs alongside the
+    // endpoints above instead of after them.
+    getValidatorRules(),
   ]);
 
   return {
@@ -282,6 +290,10 @@ async function fetchSealAnalysisImpl(
         ? validationReportsResult.value
         : undefined,
     validationReportsError: validationReportsResult.status === 'rejected',
+    validatorRules:
+      validatorRulesResult.status === 'fulfilled'
+        ? validatorRulesResult.value
+        : {},
   };
 }
 

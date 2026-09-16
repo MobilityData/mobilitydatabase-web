@@ -59,9 +59,11 @@ export default async function ValidationErrorsPanel({
           justifyContent: 'space-between',
           rowGap: 1.5,
           columnGap: 2,
-          pb: 1.5,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
+          pb: hasErrors ? 1.5 : 0,
+          ...(hasErrors && {
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+          }),
         }}
       >
         <Typography component='h4' variant='subtitle1' sx={{ fontWeight: 700 }}>
@@ -190,17 +192,16 @@ function ErrorListRow({
           >
             {row.code}
           </MuiLink>
-          {row.files.map((file) => (
+          {row.files.length > 0 && (
             <Typography
-              key={file}
               component='span'
               variant='caption'
               color='text.secondary'
               sx={{ fontFamily: 'monospace' }}
             >
-              {file}
+              {row.files.join(', ')}
             </Typography>
-          ))}
+          )}
           {row.isNew && (
             <Typography
               component='span'

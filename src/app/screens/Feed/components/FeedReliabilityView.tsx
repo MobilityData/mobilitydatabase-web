@@ -232,6 +232,7 @@ export default async function FeedReliabilityView({
                     validationReportsError={
                       sealAnalysis?.validationReportsError
                     }
+                    validatorRules={sealAnalysis?.validatorRules}
                     now={now}
                   />
                 </CriterionSection>
