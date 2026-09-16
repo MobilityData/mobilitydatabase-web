@@ -419,7 +419,7 @@
     "sealContinuousFailingUndated": "<b>Continuous coverage is broken.</b> Publish datasets whose service windows meet or overlap and stay inside the {years}-year limit.",
     "sealContinuousProbation": "<b>Coverage is continuous again.</b> This criterion is rebuilding its six-month record after its last recorded failure on {date}.",
     "sealContinuousProbationUndated": "<b>Coverage is continuous again.</b> This criterion is rebuilding its six-month record after a confirmed failure.",
-    "sealContinuousProbationDetail": "This feed was <b>fixed on {fixedDate}</b> and is now continuous. This feed must continue being continuous until {endDate} to pass this criterion.",
+    "sealContinuousProbationDetail": "This feed was <b>fixed on {fixedDate}</b> and is now continuous. This feed must maintain this continuity until {endDate} to pass this criterion.",
     "sealContinuousNotApplicable": "Continuous coverage checks don't apply to this feed.",
     "sealContinuousNoHistory": "No coverage history is available for this feed yet.",
     "sealContinuousNoHistoryDescription": "We couldn't load this feed's dataset coverage history. Please try again later.",
