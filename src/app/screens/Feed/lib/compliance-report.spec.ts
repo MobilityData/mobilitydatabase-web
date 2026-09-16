@@ -35,12 +35,12 @@ const failingReport: ValidationReport = {
 };
 
 describe('getComplianceErrorCount', () => {
-  it('reports every occurrence, not just the distinct notice codes', () => {
-    expect(getComplianceErrorCount(failingReport)).toBe(7);
+  it('reports the distinct notice codes, not every occurrence', () => {
+    expect(getComplianceErrorCount(failingReport)).toBe(2);
   });
 
-  it('falls back to the distinct count when the total is absent', () => {
-    expect(getComplianceErrorCount({ unique_error_count: 2 })).toBe(2);
+  it('falls back to the total when the distinct count is absent', () => {
+    expect(getComplianceErrorCount({ total_error: 7 })).toBe(7);
   });
 
   it('is undefined without a report at all', () => {
@@ -77,8 +77,8 @@ describe('getComplianceSummary', () => {
     ).toEqual({
       subtitleKey: 'sealCompliantHasErrorsSubtitle',
       key: 'sealCompliantAtRisk',
-      values: { count: 7, graceDays: COMPLIANCE_GRACE_DAYS },
-      errorCount: 7,
+      values: { count: 2, graceDays: COMPLIANCE_GRACE_DAYS },
+      errorCount: 2,
       graceDaysLeft: 24,
     });
   });

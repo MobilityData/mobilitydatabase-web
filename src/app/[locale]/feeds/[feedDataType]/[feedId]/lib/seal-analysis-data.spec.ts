@@ -6,10 +6,16 @@ import {
   AVAILABILITY_LIMIT,
   AVAILABILITY_MAX_EXTRA_PAGES,
   SEAL_ANALYSIS_REVALIDATE,
+  VALIDATION_REPORTS_LIMIT,
   fetchGuestSealAnalysisData,
 } from './seal-analysis-data';
 
 jest.mock('server-only', () => ({}));
+
+const mockGetValidatorRules = jest.fn();
+jest.mock('../../../../../screens/Feed/lib/validator-rules', () => ({
+  getValidatorRules: async () => await mockGetValidatorRules(),
+}));
 
 // Pass-throughs so the real fetcher body runs. `cache` is stubbed because
 // React's request-scoped memoization has no scope in a bare node test.
@@ -29,6 +35,7 @@ jest.mock('next/cache', () => ({
 const mockGetGtfsFeedReliability = jest.fn();
 const mockGetGtfsFeedAvailability = jest.fn();
 const mockGetGtfsFeedContinuousCoverage = jest.fn();
+const mockGetGtfsFeedValidationReports = jest.fn();
 
 jest.mock('../../../../../services/feeds', () => ({
   getGtfsFeedReliability: (...args: unknown[]) =>
@@ -37,6 +44,8 @@ jest.mock('../../../../../services/feeds', () => ({
     mockGetGtfsFeedAvailability(...args),
   getGtfsFeedContinuousCoverage: (...args: unknown[]) =>
     mockGetGtfsFeedContinuousCoverage(...args),
+  getGtfsFeedValidationReports: (...args: unknown[]) =>
+    mockGetGtfsFeedValidationReports(...args),
 }));
 
 jest.mock('../../../../../utils/auth-server', () => ({
@@ -58,6 +67,16 @@ const availability = {
 // came back rather than the page size it asked for.
 const flattenedAvailability = { ...availability, offset: 0, limit: 1 };
 const coverage = { feed_id: 'mdb-1', latest_files: [] };
+const validatorRules = {
+  invalid_color: { summary: 'A color is invalid.', files: ['routes.txt'] },
+};
+const validationReports = {
+  feed_id: 'mdb-1',
+  total: 0,
+  offset: 0,
+  limit: VALIDATION_REPORTS_LIMIT,
+  items: [],
+};
 
 describe('fetchGuestSealAnalysisData', () => {
   beforeEach(() => {
@@ -65,17 +84,37 @@ describe('fetchGuestSealAnalysisData', () => {
     mockGetGtfsFeedReliability.mockResolvedValue(report);
     mockGetGtfsFeedAvailability.mockResolvedValue(availability);
     mockGetGtfsFeedContinuousCoverage.mockResolvedValue(coverage);
+    mockGetGtfsFeedValidationReports.mockResolvedValue(validationReports);
+    mockGetValidatorRules.mockResolvedValue(validatorRules);
   });
 
-  it('returns all three payloads on success', async () => {
+  it('fetches the validator rules alongside the endpoints, not after them', async () => {
+    await fetchGuestSealAnalysisData('gtfs', 'mdb-1');
+
+    expect(mockGetValidatorRules).toHaveBeenCalledTimes(1);
+  });
+
+  it('degrades to an empty rule index when that fetch fails', async () => {
+    mockGetValidatorRules.mockRejectedValue(new Error('boom'));
+
+    const result = await fetchGuestSealAnalysisData('gtfs', 'mdb-1');
+
+    expect(result?.validatorRules).toEqual({});
+    expect(result?.reliability).toEqual(report);
+  });
+
+  it('returns all four payloads on success', async () => {
     const result = await fetchGuestSealAnalysisData('gtfs', 'mdb-1');
 
     expect(result).toEqual({
       reliability: report,
       availability: flattenedAvailability,
       continuousCoverage: coverage,
+      validationReports,
+      validatorRules,
       reliabilityError: false,
       availabilityError: false,
+      validationReportsError: false,
     });
   });
 
@@ -84,11 +123,12 @@ describe('fetchGuestSealAnalysisData', () => {
 
     expect(SEAL_ANALYSIS_REVALIDATE).toBe(21600);
     // Keys exclude the caller so guest and authed share the same entries.
-    expect(mockUnstableCache).toHaveBeenCalledTimes(3);
+    expect(mockUnstableCache).toHaveBeenCalledTimes(4);
     for (const key of [
       'seal-analysis-reliability-mdb-1',
       'seal-analysis-availability-mdb-1',
       'seal-analysis-coverage-mdb-1',
+      'seal-analysis-validation-reports-mdb-1',
     ]) {
       expect(mockUnstableCache).toHaveBeenCalledWith(
         [key],

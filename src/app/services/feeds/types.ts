@@ -242,8 +242,28 @@ export interface paths {
       };
       cookie?: never;
     };
-    /** @description Returns the continuous coverage of a GTFS feed: `latest_state` and `latest_failure`, plus the history, one entry per dataset ordered by `downloaded_at` from newest to oldest. Each entry carries the service window the dataset covers, the window declared in its `feed_info.txt`, whether the two agree, and how much that dataset overlaps the previous (older) one. */
+    /** @description Returns the continuous coverage of a GTFS feed: `latest_state` and `latest_failure`, each carrying the two datasets it compares, plus the history, one entry per dataset ordered by `downloaded_at` from newest to oldest. Each entry carries the service window the dataset covers, the window declared in its `feed_info.txt`, whether the two agree, and how much that dataset overlaps the previous (older) one. */
     get: operations['getGtfsFeedContinuousCoverage'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/gtfs_feeds/{id}/validation_reports': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The feed ID of the requested feed. */
+        id: components['parameters']['feed_id_path_param'];
+      };
+      cookie?: never;
+    };
+    /** @description Returns the validation history of a GTFS feed: one entry per dataset, carrying the counts of its most recent validation report and the notice codes behind them, ordered by `validated_at` from newest to oldest. `latest` is the entry for the feed's current dataset. */
+    get: operations['getGtfsFeedValidationReports'];
     put?: never;
     post?: never;
     delete?: never;
@@ -964,15 +984,15 @@ export interface components {
        */
       error_type?: string | null;
     };
-    /** @description `latest_state` is the feed's latest dataset measured against the one before it; `latest_failure` is the same measurement at the criterion's last observed failure. Both have the structure of an `items[]` entry, and either can be null. Together they name at most four datasets, shared when the latest state is itself the failure. */
+    /** @description `latest_state` is the feed's latest dataset measured against the one before it; `latest_failure` is the same at the criterion's last observed failure. Each carries both datasets of the comparison, and either can be null. */
     GtfsFeedContinuousCoverageResponse: {
       /**
        * @description Unique identifier of the GTFS feed.
        * @example mdb-123
        */
       feed_id: string;
-      latest_state?: components['schemas']['GtfsFeedContinuousCoverage'];
-      latest_failure?: components['schemas']['GtfsFeedContinuousCoverage'];
+      latest_state?: components['schemas']['GtfsFeedContinuousCoverageBoundary'];
+      latest_failure?: components['schemas']['GtfsFeedContinuousCoverageBoundary'];
       /**
        * @description Total number of matching datasets regardless of limit and offset.
        * @example 42
@@ -991,10 +1011,15 @@ export interface components {
       /** @description One entry per dataset, ordered by downloaded_at from newest to oldest. The first entry of the unpaged list is the feed's current coverage; it is marked with `is_latest`. */
       items: components['schemas']['GtfsFeedContinuousCoverage'][];
     };
+    /** @description Two successive datasets: `newer` and the one downloaded immediately before it. `older` is null when `newer` is the feed's first dataset. */
+    GtfsFeedContinuousCoverageBoundary: {
+      newer: components['schemas']['GtfsFeedContinuousCoverage'];
+      older?: components['schemas']['GtfsFeedContinuousCoverage'];
+    };
     /**
      * @description The coverage one dataset contributes, and how it lines up with the dataset downloaded just before it.
      *
-     *     Three windows are reported. `service_window` is the service dates the validator derived from `calendar.txt` and `calendar_dates.txt`; `feed_info_window` is what the dataset's `feed_info.txt` declares; `coverage_window` is the one the calculation actually used, with `coverage_window_source` naming which of the two it came from. Any of them may be absent when the dataset did not supply the underlying files.
+     *     Three windows are reported. `service_window` is the service dates the validator derived from `calendar.txt` and `calendar_dates.txt`; `feed_info_window` is what the dataset's `feed_info.txt` declares; `coverage_window` is the one the criterion measures by - the declared window, falling back to the validated one - with `coverage_window_source` naming which of the two it came from. Any of them may be absent when the dataset did not supply the underlying files.
      */
     GtfsFeedContinuousCoverage: {
       /**
@@ -1016,11 +1041,9 @@ export interface components {
       coverage_window?: components['schemas']['ServiceDateWindow'];
       /**
        * @description Which input `coverage_window` was taken from.
-       *     * `service_dates` - the service dates derived by the validator from `calendar.txt` and
-       *       `calendar_dates.txt`.
-       *     * `feed_info` - the dates declared in `feed_info.txt`, used only when the service dates
-       *       are missing.
-       * @example service_dates
+       *     * `feed_info` - the dates declared in `feed_info.txt`. * `service_dates` - the service dates derived by the validator from `calendar.txt` and
+       *       `calendar_dates.txt`, used when the dataset declares no range.
+       * @example feed_info
        * @enum {string|null}
        */
       coverage_window_source?: 'service_dates' | 'feed_info' | null;
@@ -1450,6 +1473,87 @@ export interface components {
       /** @example 8635fdac4fbff025b4eaca6972fcc9504bc1552d */
       commit_hash?: string;
     };
+    /** @description The feed's validation history, one entry per dataset. `latest` is the entry for the feed's current dataset, whatever page or filter was requested, and is null when the feed has no validated dataset. */
+    GtfsFeedValidationReportsResponse: {
+      /**
+       * @description Unique identifier of the GTFS feed.
+       * @example mdb-123
+       */
+      feed_id: string;
+      latest?: components['schemas']['GtfsFeedValidationReport'];
+      /**
+       * @description Total number of matching datasets regardless of limit and offset.
+       * @example 42
+       */
+      total: number;
+      /**
+       * @description Offset of the first returned item.
+       * @example 0
+       */
+      offset: number;
+      /**
+       * @description Maximum number of items returned.
+       * @example 20
+       */
+      limit: number;
+      /** @description One entry per dataset, ordered by validated_at from newest to oldest. */
+      items: components['schemas']['GtfsFeedValidationReport'][];
+    };
+    /** @description The most recent validation report of one dataset. `total_*` counts every notice raised; `unique_*` counts the distinct codes behind them. */
+    GtfsFeedValidationReport: {
+      /**
+       * @description Stable identifier of the validated dataset.
+       * @example mdb-123-202604290029
+       */
+      dataset_id: string;
+      /**
+       * @description Whether this is the feed's latest dataset.
+       * @example true
+       */
+      is_latest: boolean;
+      /**
+       * Format: date-time
+       * @example 2026-06-28T00:29:00Z
+       */
+      validated_at?: string | null;
+      /** @example 4.2.0 */
+      validator_version?: string | null;
+      /** @example 10 */
+      total_error?: number | null;
+      /** @example 20 */
+      total_warning?: number | null;
+      /** @example 30 */
+      total_info?: number | null;
+      /** @example 1 */
+      unique_error_count?: number | null;
+      /** @example 2 */
+      unique_warning_count?: number | null;
+      /** @example 3 */
+      unique_info_count?: number | null;
+      /** @description JSON validation report URL. */
+      url_json?: string | null;
+      /** @description HTML validation report URL. */
+      url_html?: string | null;
+      /** @description The notice codes raised, newest report only, ordered by severity then by count. Filtered by the `severity` query parameter when one is given. */
+      notices: components['schemas']['GtfsFeedValidationNotice'][];
+    };
+    GtfsFeedValidationNotice: {
+      /**
+       * @description Validator notice code.
+       * @example invalid_phone_number
+       */
+      code: string;
+      /**
+       * @example ERROR
+       * @enum {string}
+       */
+      severity: 'ERROR' | 'WARNING' | 'INFO';
+      /**
+       * @description How many times this code was raised.
+       * @example 10
+       */
+      total: number;
+    };
     /** @description Validation report */
     ValidationReport: {
       /**
@@ -1768,6 +1872,23 @@ export interface components {
     continuous_coverage_downloaded_after: string;
     /** @description Only include datasets downloaded at or before this timestamp. Date should be in ISO 8601 date-time format. */
     continuous_coverage_downloaded_before: string;
+    /** @description Only include reports validated at or after this timestamp. Date should be in ISO 8601 date-time format. */
+    validation_validated_after: string;
+    /** @description Only include reports validated at or before this timestamp. Date should be in ISO 8601 date-time format. */
+    validation_validated_before: string;
+    /** @description Only include reports with at least this many errors. Use 1 to list only datasets that failed validation. */
+    validation_min_errors: number;
+    /** @description Only include reports with at least this many warnings. */
+    validation_min_warnings: number;
+    /**
+     * @description Limit the `notices` of each entry to these severities. Repeat the parameter for more than one. The counts are unaffected.
+     * @example [
+     *       "ERROR"
+     *     ]
+     */
+    validation_severity: ('ERROR' | 'WARNING' | 'INFO')[];
+    /** @description The number of items to be returned. Maximum is 100. */
+    limit_query_param_validation_reports_endpoint: number;
     /** @description Sort order of results by checked_at. Use `desc` for newest first (default) or `asc` for oldest first. */
     availability_sort: 'asc' | 'desc';
   };
@@ -2221,6 +2342,70 @@ export interface operations {
       };
       /** @description GTFS feed not found. */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getGtfsFeedValidationReports: {
+    parameters: {
+      query?: {
+        /** @description Only include reports validated at or after this timestamp. Date should be in ISO 8601 date-time format. */
+        validated_after?: components['parameters']['validation_validated_after'];
+        /** @description Only include reports validated at or before this timestamp. Date should be in ISO 8601 date-time format. */
+        validated_before?: components['parameters']['validation_validated_before'];
+        /** @description Only include reports with at least this many errors. Use 1 to list only datasets that failed validation. */
+        min_errors?: components['parameters']['validation_min_errors'];
+        /** @description Only include reports with at least this many warnings. */
+        min_warnings?: components['parameters']['validation_min_warnings'];
+        /**
+         * @description Limit the `notices` of each entry to these severities. Repeat the parameter for more than one. The counts are unaffected.
+         * @example [
+         *       "ERROR"
+         *     ]
+         */
+        severity?: components['parameters']['validation_severity'];
+        /** @description The number of items to be returned. Maximum is 100. */
+        limit?: components['parameters']['limit_query_param_validation_reports_endpoint'];
+        /** @description Offset of the first item to return. */
+        offset?: components['parameters']['offset'];
+      };
+      header?: never;
+      path: {
+        /** @description The feed ID of the requested feed. */
+        id: components['parameters']['feed_id_path_param'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Validation history for the GTFS feed, ordered by validated_at (newest first). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GtfsFeedValidationReportsResponse'];
+        };
+      };
+      /** @description GTFS feed not found. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Invalid request parameters. */
+      422: {
         headers: {
           [name: string]: unknown;
         };

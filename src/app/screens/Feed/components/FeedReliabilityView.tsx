@@ -227,6 +227,12 @@ export default async function FeedReliabilityView({
                   <ComplianceCriterionBody
                     criterion={compliantCriterion}
                     report={latestDataset?.validation_report}
+                    feedId={feed.id}
+                    validationReports={sealAnalysis?.validationReports}
+                    validationReportsError={
+                      sealAnalysis?.validationReportsError
+                    }
+                    validatorRules={sealAnalysis?.validatorRules}
                     now={now}
                   />
                 </CriterionSection>
