@@ -30,7 +30,7 @@ import ProviderTitle from './ProviderTitle';
 
 export interface SearchTableProps {
   feedsData: AllFeedsType | undefined;
-  enableSealOfReliability?: boolean;
+  isSealEnabled?: boolean;
 }
 
 const HeaderTableCell = styled(TableCell)(() => ({
@@ -71,7 +71,7 @@ export const getDataTypeElement = (
 
 export default function SearchTable({
   feedsData,
-  enableSealOfReliability = false,
+  isSealEnabled = false,
 }: SearchTableProps): React.ReactElement {
   const theme = useTheme();
   const router = useRouter();
@@ -227,7 +227,7 @@ export default function SearchTable({
                       gap: 0.5,
                     }}
                   >
-                    {enableSealOfReliability &&
+                    {isSealEnabled &&
                       feed.reliability_seal?.has_seal === true && (
                         <SealOfReliability size='small'></SealOfReliability>
                       )}

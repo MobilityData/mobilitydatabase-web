@@ -30,6 +30,7 @@ const TEST_FEED_URL = '/feeds/gtfs/test-516';
 const ALL_DEFAULTS = {
   isNotificationsEnabled: false,
   isSealFilterEnabled: false,
+  isSealEnabled: false,
 };
 
 interface MockFeature {
@@ -149,10 +150,7 @@ describe('User Feature Flags', () => {
 
       cy.visit('/');
 
-      expectResolvedFlags({
-        isNotificationsEnabled: false,
-        isSealFilterEnabled: true,
-      });
+      expectResolvedFlags({ ...ALL_DEFAULTS, isSealFilterEnabled: true });
     });
 
     it('resolves to defaults when the profile carries no flags', () => {

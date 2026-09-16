@@ -1,12 +1,12 @@
-import FeedReliabilityView from '../../../../../../screens/Feed/components/FeedReliabilityView';
+// import FeedReliabilityView from '../../../../../../screens/Feed/components/FeedReliabilityView';
 import { type ReactElement } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata, ResolvingMetadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { fetchGuestFeedData } from '../../lib/guest-feed-data';
 import { generateSealFeedMetadata } from '../../lib/generate-feed-metadata';
-import { fetchGuestSealAnalysisData } from '../../lib/seal-analysis-data';
-import { getLatestDataset } from '../../../../../../screens/Feed/Feed.functions';
+// import { fetchGuestSealAnalysisData } from '../../lib/seal-analysis-data';
+// import { getLatestDataset } from '../../../../../../screens/Feed/Feed.functions';
 
 interface Props {
   params: Promise<{ feedDataType: string; feedId: string }>;
@@ -52,55 +52,59 @@ export async function generateMetadata(
 export default async function StaticFeedReliabilityPage({
   params,
 }: Props): Promise<ReactElement> {
-  const { feedId, feedDataType } = await params;
+  // Since this page is only accessible through a user feature flag
+  // It will temporarily return a not found immediately for any not
+  // authed users
+  notFound();
+  // const { feedId, feedDataType } = await params;
 
-  // Seal of Reliability only exists for GTFS Schedule feeds (see
-  // isSealAnalysisApplicable in lib/seal-analysis-data.ts).
-  if (feedDataType !== 'gtfs') {
-    throw new Error(
-      `Seal of Reliability is not available for data type ${feedDataType}`,
-    );
-  }
+  // // Seal of Reliability only exists for GTFS Schedule feeds (see
+  // // isSealAnalysisApplicable in lib/seal-analysis-data.ts).
+  // if (feedDataType !== 'gtfs') {
+  //   throw new Error(
+  //     `Seal of Reliability is not available for data type ${feedDataType}`,
+  //   );
+  // }
 
-  // Settled rather than all-or-nothing: the two requests fail for unrelated
-  // reasons and need unrelated responses. A missing feed is a 404; a seal
-  // loader that can't mint a token or reach its cache is a reliability error
-  // on a page that does exist.
-  const [feedResult, sealResult] = await Promise.allSettled([
-    fetchGuestFeedData(feedDataType, feedId),
-    fetchGuestSealAnalysisData(feedDataType, feedId),
-  ]);
+  // // Settled rather than all-or-nothing: the two requests fail for unrelated
+  // // reasons and need unrelated responses. A missing feed is a 404; a seal
+  // // loader that can't mint a token or reach its cache is a reliability error
+  // // on a page that does exist.
+  // const [feedResult, sealResult] = await Promise.allSettled([
+  //   fetchGuestFeedData(feedDataType, feedId),
+  //   fetchGuestSealAnalysisData(feedDataType, feedId),
+  // ]);
 
-  if (feedResult.status === 'rejected') {
-    // Layout should have caught non-existent feeds, but handle edge case
-    console.error(
-      `[StaticFeedReliabilityPage] Failed to fetch feed ${feedId}:`,
-      feedResult.reason,
-    );
-    notFound();
-  }
+  // if (feedResult.status === 'rejected') {
+  //   // Layout should have caught non-existent feeds, but handle edge case
+  //   console.error(
+  //     `[StaticFeedReliabilityPage] Failed to fetch feed ${feedId}:`,
+  //     feedResult.reason,
+  //   );
+  //   notFound();
+  // }
 
-  // Rethrown as-is so this segment's error.tsx renders the full-page
-  // reliability error, and the original cause keeps its stack.
-  if (sealResult.status === 'rejected') {
-    throw sealResult.reason;
-  }
+  // // Rethrown as-is so this segment's error.tsx renders the full-page
+  // // reliability error, and the original cause keeps its stack.
+  // if (sealResult.status === 'rejected') {
+  //   throw sealResult.reason;
+  // }
 
-  const sealAnalysis = sealResult.value;
+  // const sealAnalysis = sealResult.value;
 
-  if (sealAnalysis?.reliabilityError === true) {
-    throw new Error(
-      `Failed to load Seal of Reliability data for feed ${feedId}`,
-    );
-  }
+  // if (sealAnalysis?.reliabilityError === true) {
+  //   throw new Error(
+  //     `Failed to load Seal of Reliability data for feed ${feedId}`,
+  //   );
+  // }
 
-  const { feed, initialDatasets } = feedResult.value;
+  // const { feed, initialDatasets } = feedResult.value;
 
-  return (
-    <FeedReliabilityView
-      feed={feed}
-      latestDataset={getLatestDataset(feed, initialDatasets)}
-      sealAnalysis={sealAnalysis}
-    />
-  );
+  // return (
+  //   <FeedReliabilityView
+  //     feed={feed}
+  //     latestDataset={getLatestDataset(feed, initialDatasets)}
+  //     sealAnalysis={sealAnalysis}
+  //   />
+  // );
 }

@@ -37,7 +37,7 @@ export interface AdvancedSearchTableProps {
   selectedGbfsVersions: string[] | undefined;
   selectedLicenseTags: string[] | undefined;
   isLoadingFeeds: boolean;
-  enableSealOfReliability?: boolean;
+  isSealEnabled?: boolean;
 }
 
 interface DetailsContainerProps {
@@ -223,7 +223,7 @@ export default function AdvancedSearchTable({
   selectedGbfsVersions,
   selectedLicenseTags,
   isLoadingFeeds,
-  enableSealOfReliability = false,
+  isSealEnabled = false,
 }: AdvancedSearchTableProps): React.ReactElement {
   const t = useTranslations('feeds');
   const tCommon = useTranslations('common');
@@ -340,7 +340,7 @@ export default function AdvancedSearchTable({
                     ></ProviderTitle>
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                    {enableSealOfReliability &&
+                    {isSealEnabled &&
                       feed.reliability_seal?.has_seal === true && (
                         <SealOfReliability size='small'></SealOfReliability>
                       )}

@@ -646,9 +646,7 @@ export default function FeedsScreen(): React.ReactElement {
                         {searchView === 'simple' ? (
                           <SearchTable
                             feedsData={feedsData}
-                            enableSealOfReliability={
-                              config.enableSealOfReliability
-                            }
+                            isSealEnabled={isSealOfReliabilityLive}
                           />
                         ) : (
                           <AdvancedSearchTable
@@ -657,9 +655,7 @@ export default function FeedsScreen(): React.ReactElement {
                             selectedGbfsVersions={selectedGbfsVersions}
                             selectedLicenseTags={selectedLicenseTags}
                             isLoadingFeeds={isLoading || isValidating}
-                            enableSealOfReliability={
-                              config.enableSealOfReliability
-                            }
+                            isSealEnabled={isSealOfReliabilityLive}
                           />
                         )}
 
