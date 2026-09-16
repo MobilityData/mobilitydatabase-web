@@ -11,6 +11,8 @@ import {
   generateDescriptionMetaTag,
   generateMapPageTitle,
   generateMapDescriptionMetaTag,
+  generateSealPageTitle,
+  generateSealDescriptionMetaTag,
 } from '../../../../../screens/Feed/Feed.functions';
 
 /**
@@ -391,6 +393,57 @@ export function generateMapFeedMetadata({
     },
     alternates: {
       canonical: `https://mobilitydatabase.org/feeds/${feedDataType}/${feedId}/map`,
+    },
+  };
+}
+
+/**
+ * Shared metadata generation logic for feed Seal of Reliability pages
+ * (authed and static).
+ *
+ * @param feed - The feed data
+ * @param t - Translation function
+ */
+export function generateSealFeedMetadata({
+  feed,
+  t,
+}: GenerateFeedMetadataParams): Metadata {
+  if (feed == null) {
+    return {
+      title: 'Feed Not Found | Mobility Database',
+    };
+  }
+  const feedDataType = feed.data_type;
+  const feedId = feed.id;
+  const sortedProviders = formatProvidersSorted(feed?.provider ?? '');
+  const title = generateSealPageTitle(
+    sortedProviders,
+    (feed as { feed_name?: string })?.feed_name,
+  );
+  const description = generateSealDescriptionMetaTag(
+    t,
+    sortedProviders,
+    (feed as { feed_name?: string })?.feed_name,
+  );
+  const url = `https://mobilitydatabase.org/feeds/${feedDataType}/${feedId}/seal-of-reliability`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: 'Mobility Database',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary',
+      title,
+      description,
+    },
+    alternates: {
+      canonical: url,
     },
   };
 }

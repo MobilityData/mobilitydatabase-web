@@ -141,6 +141,45 @@ export function generateMapDescriptionMetaTag(
   return t('feeds.mapPageDescription', { formattedName, dataTypeVerbose });
 }
 
+/**
+ * The Seal of Reliability only exists for GTFS Schedule feeds - both seal
+ * pages throw for any other data type - so there is no data type to branch on.
+ */
+export function generateSealPageTitle(
+  sortedProviders: string[],
+  feedName?: string,
+): string {
+  let newDocTitle = getFeedFormattedName(sortedProviders, feedName);
+
+  if (newDocTitle !== '') {
+    newDocTitle += ' GTFS Schedule Feed Seal of Reliability - ';
+  }
+
+  newDocTitle += 'Mobility Database';
+  return newDocTitle;
+}
+
+/**
+ * See generateSealPageTitle - GTFS Schedule is the only applicable data type.
+ */
+export function generateSealDescriptionMetaTag(
+  t: (key: string, options?: Record<string, string>) => string,
+  sortedProviders: string[],
+  feedName?: string,
+): string {
+  const formattedName = getFeedFormattedName(sortedProviders, feedName);
+  if (
+    sortedProviders.length === 0 &&
+    (feedName === undefined || feedName === '')
+  ) {
+    return '';
+  }
+  return t('feeds.sealPageDescription', {
+    formattedName,
+    dataTypeVerbose: t('common.gtfsSchedule'),
+  });
+}
+
 export const formatServiceDateRange = (
   dateStart: string,
   dateEnd: string,

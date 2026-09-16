@@ -1,7 +1,10 @@
 import FeedReliabilityView from '../../../../../../screens/Feed/components/FeedReliabilityView';
 import { type ReactElement } from 'react';
 import { notFound } from 'next/navigation';
+import type { Metadata, ResolvingMetadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 import { fetchGuestFeedData } from '../../lib/guest-feed-data';
+import { generateSealFeedMetadata } from '../../lib/generate-feed-metadata';
 import { fetchGuestSealAnalysisData } from '../../lib/seal-analysis-data';
 import { getLatestDataset } from '../../../../../../screens/Feed/Feed.functions';
 
@@ -21,6 +24,23 @@ interface Props {
  *
  */
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  const { feedId, feedDataType } = await params;
+
+  const [t, feedData] = await Promise.all([
+    getTranslations(),
+    fetchGuestFeedData(feedDataType, feedId),
+  ]);
+
+  return generateSealFeedMetadata({
+    feed: feedData.feed,
+    t,
+  });
+}
 
 /**
  * Seal of Reliability breakdown page (GUEST version).

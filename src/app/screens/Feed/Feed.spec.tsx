@@ -10,6 +10,7 @@ import {
   generatePageTitle,
   generateDescriptionMetaTag,
   generateMapPageTitle,
+  generateSealPageTitle,
   generateMapDescriptionMetaTag,
 } from './Feed.functions';
 import FeedTitle from './components/FeedTitle';
@@ -296,6 +297,19 @@ describe('Feed page', () => {
     expect(gbfsTitle).toEqual(
       'Flamingo Porirua GBFS Feed Map - Mobility Database',
     );
+  });
+
+  it('should generate the correct seal of reliability page title', () => {
+    const titleAllInfo = generateSealPageTitle(
+      ['Department of Transport', 'Public Transport'],
+      'Darwin public bus network',
+    );
+    expect(titleAllInfo).toEqual(
+      'Department of Transport, Darwin public bus network GTFS Schedule Feed Seal of Reliability - Mobility Database',
+    );
+
+    const titleAllEmpty = generateSealPageTitle([], '');
+    expect(titleAllEmpty).toEqual('Mobility Database');
   });
 
   it('should generate the correct map page description', () => {
