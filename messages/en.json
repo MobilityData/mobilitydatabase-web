@@ -751,7 +751,7 @@
         "seasonalSubtitle": "Not applicable — this feed is seasonal",
         "seasonalDescription": "Seasonal feeds don't run service year-round, so the rolling 7-day coverage check doesn't apply to them.",
         "subtitle": "At least 7 days of future service coverage, checked daily.",
-        "description": "Following GTFS Best Practices, the feed should provide at least 7 days of rolling future service coverage. The last date in the calendar files must be at least 7 days beyond the download date."
+        "description": "Following GTFS Best Practices, the feed should provide at least 7 days of rolling future service coverage. The last date in the calendar files must be at least 7 days beyond today."
       },
       "freshContinuous": {
         "title": "Fresh: Continuous Coverage",
@@ -814,6 +814,10 @@
       "freshRolling7Days": {
         "question": "Why did you choose 7 days for the Fresh: Rolling Coverage criterion?",
         "answer": "7 days was selected for two reasons: it is in the minimum threshold already specified in GTFS for service coverage, and upon reviewing international data, several high-ridership transit agencies failed higher test thresholds. This indicated that a higher threshold, like 14 or 30 days, may not be feasible with operational timelines for transit agencies."
+      },
+      "crossCheck": {
+        "question": "How do I check my data for the problems flagged in the Seal analysis page?",
+        "answer": "Follow the dataset and validation report links on the Seal analysis page to investigate flagged issues directly. Note that there can be up to a 48-hour delay between when the Mobility Database fetches a dataset and re-evaluates the Seal, so the Seal analysis page dates shown may not match the feed dataset history."
       }
     },
     "howItIsCalculated": {
@@ -889,20 +893,20 @@
       },
       "freshRolling": {
         "title": "Fresh: Rolling 7 days of coverage",
-        "description": "Each day the feed is downloaded, the Mobility Database looks at the last date of service coverage in the feed's `calendar.txt` and `calendar_dates.txt`. That date must be at least 7 days after the download date. This ensures riders and downstream applications always have at least a full week of service data available.",
+        "description": "Each day the feed is downloaded, the Mobility Database looks at the last date of service coverage in the feed's `calendar.txt` and `calendar_dates.txt`. That date must be at least 7 days after today. This ensures riders and downstream applications always have at least a full week of service data available.",
         "examplesTitle": "Examples",
         "minimumLabel": "Aug 13 (7d min)",
         "examples": {
           "pass": {
-            "title": "Fetched Aug 6, 2026",
-            "axisStart": "Fetched: Aug 6",
+            "title": "Checked Aug 6, 2026",
+            "axisStart": "Checked: Aug 6",
             "lastService": "Last service: Aug 20 (14 days ahead)",
             "caption": "Last service date is Aug 20: 14 days ahead. Above the 7-day minimum.",
             "diagramAriaLabel": "Coverage from August 6 to August 20, 2026, extending past the 7 day minimum marked at August 13."
           },
           "fail": {
-            "title": "Fetched Aug 6, 2026",
-            "axisStart": "Fetched: Aug 6",
+            "title": "Checked Aug 6, 2026",
+            "axisStart": "Checked: Aug 6",
             "lastService": "Last service: Aug 10 (4 days ahead)",
             "caption": "Last service date is Aug 10: only 4 days ahead. Below the 7-day minimum. Violation triggered.",
             "diagramAriaLabel": "Coverage from August 6 to August 10, 2026, stopping short of the 7 day minimum marked at August 13."
@@ -991,29 +995,27 @@
         "notice": "Gaps between datasets and service windows over two years violate the Seal immediately. This must be fixed consistently for six months to pass probation and earn back the Seal."
       },
       "earning": {
-        "title": "How the Seal is earned over time",
+        "title": "How the Seal is earned back after a failure",
         "phaseLabel": "Phase {number}",
         "phases": {
           "added": {
-            "title": "Feed added",
-            "description": "Evaluated immediately against all criteria"
+            "title": "Seal lost",
+            "description": "A failed criterion triggers a six-month probation period"
           },
           "window": {
             "title": "Probation",
-            "description": "6 months per criterion (except Official), from the first day each is satisfied"
+            "description": "6 months per criterion (except Official), from the first day each is re-satisfied"
           },
           "earned": {
-            "title": "Seal earned",
-            "description": "Grace periods now apply"
+            "title": "Seal regained",
+            "description": "Grace periods apply again"
           }
         },
         "paragraphs": [
-          "When a feed is added to the Mobility Database, it is evaluated against every criterion. For each criterion (except Official), a six-month probation starts from the first day it is satisfied, not the day the feed was added. All five criteria must each complete their six-month probation before the Seal is awarded.",
-          "Stable requires six months of uninterrupted URL history, so no newly added feed can satisfy Stable until it has been in the database for at least six months.",
-          "MobilityData evaluates feeds over time to help ensure consistent trustworthiness. Some feeds may have met the Seal's criteria before being added to the Mobility Database, but the evaluation focuses on what can be measured from the date of addition."
+          "When a feed fails a criterion, a six-month probation period begins from the first day that criterion is re-satisfied. All failing criteria must each complete their six-month probation before the Seal is restored."
         ],
         "clock": {
-          "title": "When the clock starts",
+          "title": "When the probation clock starts",
           "tableAriaLabel": "When probation starts for each criterion",
           "columns": {
             "criterion": "Criterion",
@@ -1040,8 +1042,8 @@
             "description": "First dataset version with no gap between consecutive datasets and a service window of two years or less, from a mix of `feed_info.txt` and calendar data"
           }
         },
-        "noticeTitle": "Grace periods only apply after the Seal is earned.",
-        "notice": "During the earning window, before the feed has the Seal, a lapse in any criterion resets that criterion's clock from the date it is next satisfied. There is no buffer. Grace periods only become available once the Seal has been awarded."
+        "noticeTitle": "Grace periods do not apply during probation.",
+        "notice": "While a feed is in probation to regain the Seal, a lapse in any criterion resets that criterion's clock from the date it is next re-satisfied. There is no buffer."
       },
       "result": {
         "pass": "Pass",
