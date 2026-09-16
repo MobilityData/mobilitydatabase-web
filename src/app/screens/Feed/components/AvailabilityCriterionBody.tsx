@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Alert, Box, Typography } from '@mui/material';
 import CircleIcon from '@mui/icons-material/Circle';
 import { getTranslations } from 'next-intl/server';
+import { highlight } from './criterionHighlight';
 import AvailabilityHeatmap from './AvailabilityHeatmap';
 import CriterionGraceCountdown from './CriterionGraceCountdown';
 import CriterionProbationProgress from './CriterionProbationProgress';
@@ -56,14 +57,17 @@ export default async function AvailabilityCriterionBody({
   // both occupy the same slot, right under the summary sentence.
   const probationWindow =
     getCriterionDisplayStatus(criterion) === 'probation'
-      ? getProbationWindowFromEnd(criterion.probation_ends_at)
+      ? getProbationWindowFromEnd(
+          criterion.probation_ends_at,
+          criterion.last_failure_at,
+        )
       : undefined;
 
   return (
     <Box data-testid='availability-criterion-body'>
       <Typography variant='body1'>
         {t('sealAvailabilityIntro', { months: AVAILABILITY_HISTORY_MONTHS })}{' '}
-        {t(summary.key, summary.values)}
+        {t.rich(summary.key, { ...summary.values, b: highlight })}
       </Typography>
 
       {summary.graceDaysLeft != undefined && (

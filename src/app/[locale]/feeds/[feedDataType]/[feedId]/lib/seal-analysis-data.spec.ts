@@ -5,6 +5,7 @@
 import {
   AVAILABILITY_LIMIT,
   AVAILABILITY_MAX_EXTRA_PAGES,
+  COVERAGE_LIMIT,
   SEAL_ANALYSIS_REVALIDATE,
   VALIDATION_REPORTS_LIMIT,
   fetchGuestSealAnalysisData,
@@ -140,7 +141,7 @@ describe('fetchGuestSealAnalysisData', () => {
     }
   });
 
-  it('requests six months of availability and the newest coverage page', async () => {
+  it('requests six months of availability and of coverage history', async () => {
     await fetchGuestSealAnalysisData('gtfs', 'mdb-1');
 
     expect(mockGetGtfsFeedAvailability).toHaveBeenCalledWith(
@@ -159,7 +160,12 @@ describe('fetchGuestSealAnalysisData', () => {
     expect(mockGetGtfsFeedContinuousCoverage).toHaveBeenCalledWith(
       'mdb-1',
       'guest-token',
-      { limit: 100 },
+      {
+        downloaded_after: expect.stringMatching(
+          /^\d{4}-\d{2}-\d{2}T00:00:00\.000Z$/,
+        ),
+        limit: COVERAGE_LIMIT,
+      },
       undefined,
     );
   });
@@ -178,6 +184,13 @@ describe('fetchGuestSealAnalysisData', () => {
       'mdb-1',
       'guest-token',
       expect.objectContaining({ from: '2026-02-28T00:00:00.000Z' }),
+      undefined,
+    );
+    // Both windows are measured the same way, so both clamp.
+    expect(mockGetGtfsFeedContinuousCoverage).toHaveBeenCalledWith(
+      'mdb-1',
+      'guest-token',
+      expect.objectContaining({ downloaded_after: '2026-02-28T00:00:00.000Z' }),
       undefined,
     );
   });

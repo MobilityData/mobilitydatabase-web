@@ -38,13 +38,21 @@ type ValidationReportsResponse =
  */
 export const SEAL_ANALYSIS_REVALIDATE = 21600;
 
-const COVERAGE_LIMIT = 100;
+export const COVERAGE_LIMIT = 100;
+
 /**
  * How many past datasets the Compliant criterion shows alongside the latest
  * one. The endpoint caps `limit` at 100; 20 is a couple of months of daily
  * datasets, which is as far back as the history panel reads.
  */
 export const VALIDATION_REPORTS_LIMIT = 20;
+
+/**
+ * How far back the coverage history is read. Kept in step with
+ * COVERAGE_HISTORY_MONTHS in screens/Feed/lib/continuous-coverage.ts, which
+ * drops anything the endpoint returns from outside the same window.
+ */
+const COVERAGE_HISTORY_MONTHS = 6;
 /** Exported so the specs follow it rather than restating the page size. */
 export const AVAILABILITY_LIMIT = 200;
 
@@ -191,6 +199,23 @@ function cachedAvailability(
   );
 }
 
+/**
+ * The start of the coverage history window: `COVERAGE_HISTORY_MONTHS` back
+ * from today, UTC.
+ *
+ * Clamped through `subMonthsUtc` for the same reason the availability window
+ * is - subtracting six months from Aug 31 by hand lands on Feb 31, which
+ * rolls forward into March and shortens the window.
+ */
+export function getCoverageHistoryStart(now: Date): string {
+  return subMonthsUtc(
+    new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+    ),
+    COVERAGE_HISTORY_MONTHS,
+  ).toISOString();
+}
+
 function cachedContinuousCoverage(
   feedId: string,
   accessToken: string,
@@ -201,7 +226,10 @@ function cachedContinuousCoverage(
       await getGtfsFeedContinuousCoverage(
         feedId,
         accessToken,
-        { limit: COVERAGE_LIMIT },
+        {
+          downloaded_after: getCoverageHistoryStart(new Date()),
+          limit: COVERAGE_LIMIT,
+        },
         userContextJwt,
       ),
     [`seal-analysis-coverage-${feedId}`],
