@@ -40,7 +40,6 @@ import DownloadIcon from '@mui/icons-material/Download';
 import CloseIcon from '@mui/icons-material/Close';
 import BusinessIcon from '@mui/icons-material/Business';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { FeedStatusChip } from '../../../components/FeedStatus';
 import { getEmojiFlag, type TCountryCode } from 'countries-list';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -651,7 +650,9 @@ export default function FeedSummary({
               </Box>
             )}
             <CardSectionTitle component='h3'>
-              <WorkspacePremiumIcon fontSize='inherit' aria-hidden />
+              <Box sx={{ opacity: 0.6 }}>
+                <SealOfReliability size='inherit' decorative disableTooltip />
+              </Box>
               {t('sealOfReliabilityAlt')}
               <Tooltip
                 title={t('sealOfReliabilityQualityTooltip')}

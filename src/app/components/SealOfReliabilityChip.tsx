@@ -1,8 +1,8 @@
 'use client';
-import { Chip, Tooltip } from '@mui/material';
+import { Box, Chip, Tooltip } from '@mui/material';
 import { useTranslations } from 'next-intl';
 import { Link } from '../../i18n/navigation';
-import SealOfReliability from './SealOfReliability';
+import SealOfReliability, { SEAL_INK } from './SealOfReliability';
 import { useRemoteConfig } from '../context/RemoteConfigProvider';
 
 export interface SealOfReliabilityChipProps {
@@ -13,7 +13,6 @@ export interface SealOfReliabilityChipProps {
   disableLink?: boolean;
 }
 
-// TODO: revisit once logo is finalized
 export default function SealOfReliabilityChip({
   hasSeal,
   feedId,
@@ -38,18 +37,24 @@ export default function SealOfReliabilityChip({
         <Chip
           data-testid='seal-of-reliability-chip'
           {...linkProps}
-          icon={<SealOfReliability size='small' />}
+          icon={
+            <Box>
+              <SealOfReliability size='small' tone='reverse' disableTooltip />
+            </Box>
+          }
           label={t('sealOfReliabilityAlt')}
-          sx={{
-            background: 'white',
-            color: 'black',
-            '& .MuiChip-icon': {
-              borderRadius: '50%',
-              boxShadow: '0 0 0 1.5px rgba(255,255,255,0.7)',
-              marginLeft: '5px',
-              marginRight: '-6px',
-            },
-          }}
+          sx={(theme) => ({
+            background: `linear-gradient(25deg, ${SEAL_INK}, ${theme.vars.palette.secondary.dark})`,
+            color: '#FFFFFF',
+            fontWeight: 600,
+            letterSpacing: '0.01em',
+            '& .MuiChip-label': { paddingLeft: '8px' },
+            '& .MuiChip-icon': { marginLeft: '6px', marginRight: '-2px' },
+            ...theme.applyStyles('dark', {
+              background: `linear-gradient(25deg, #FFFFFF, ${theme.vars.palette.secondary.light})`,
+              color: SEAL_INK,
+            }),
+          })}
         />
       </Tooltip>
     );

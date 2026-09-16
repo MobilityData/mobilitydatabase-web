@@ -684,7 +684,7 @@
         "Il est difficile de mesurer la fiabilité des données. Les agences de transport ont du mal à savoir si leurs données GTFS répondent aux besoins des usagers ; les fournisseurs de données manquent d'un niveau de qualité de référence à atteindre, et les applications de planification de trajets passent du temps à prétraiter les flux plutôt que de les consommer directement.",
         "C'est là qu'intervient le Sceau de fiabilité de MobilityData. En tant que mesure claire de la qualité de référence, le Sceau de fiabilité est attribué aux flux qui répondent à cinq critères clés : ils sont officiels, stables, disponibles, conformes et récents."
       ],
-      "ctaButton": "Voir un flux évalué selon la norme (à venir)",
+      "ctaButton": "Voir un flux évalué selon la norme",
       "calculationButton": "Voir comment il est calculé",
       "imageAlt": "espace réservé actuel",
       "feedsMeetingStandard": "Flux respectant la norme",
