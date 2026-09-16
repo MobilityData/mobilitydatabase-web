@@ -371,6 +371,7 @@
     "sealComplianceNewBadge": "Nouveau",
     "sealComplianceCarriedSummary": "{count, plural, one {# erreur est reprise} other {# erreurs sont reprises}} de jeux de données antérieurs.",
     "sealComplianceNewSummary": "{count, plural, one {# erreur est nouvelle} other {# erreurs sont nouvelles}} dans ce jeu de données.",
+    "sealComplianceTruncated": "Affichage des {shown} erreurs les plus fréquentes sur {total}. Le rapport de validation les répertorie toutes.",
     "sealComplianceViewReportLink": "Rapport de validation",
     "sealComplianceOccurrences": "{count, plural, one {# fois} other {# fois}}",
     "sealComplianceHistoryError": "Les jeux de données antérieurs n'ont pas pu être chargés; les nouvelles erreurs ne sont donc pas signalées.",

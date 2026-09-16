@@ -39,7 +39,7 @@ export default async function ValidationErrorsPanel({
   // worth reaching, and the section would otherwise be empty.
   if (model.datasetId == undefined) return null;
 
-  const hasErrors = model.rows.length > 0;
+  const hasErrors = model.totalCount > 0;
   const headingKey =
     model.validatedAt == undefined
       ? hasErrors
@@ -111,6 +111,20 @@ export default async function ValidationErrorsPanel({
               </React.Fragment>
             ))}
           </Box>
+          {model.totalCount > model.rows.length && (
+            <Typography
+              variant='caption'
+              component='p'
+              color='text.secondary'
+              sx={{ mt: 1.5 }}
+              data-testid='validation-errors-truncated'
+            >
+              {t('sealComplianceTruncated', {
+                shown: model.rows.length,
+                total: model.totalCount,
+              })}
+            </Typography>
+          )}
         </>
       )}
     </Box>

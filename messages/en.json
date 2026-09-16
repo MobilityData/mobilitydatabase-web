@@ -371,6 +371,7 @@
     "sealComplianceNewBadge": "New",
     "sealComplianceCarriedSummary": "{count, plural, one {# error is} other {# errors are}} carried from earlier datasets.",
     "sealComplianceNewSummary": "{count, plural, one {# error is} other {# errors are}} new in this dataset.",
+    "sealComplianceTruncated": "Showing the {shown} most frequent of {total} errors. The validation report lists them all.",
     "sealComplianceViewReportLink": "Validation report",
     "sealComplianceOccurrences": "{count, plural, one {# time} other {# times}}",
     "sealComplianceHistoryError": "Earlier datasets could not be loaded, so new errors are not marked.",

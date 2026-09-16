@@ -12,6 +12,12 @@ type ValidationReportsResponse =
   components['schemas']['GtfsFeedValidationReportsResponse'];
 type FeedValidationReport = components['schemas']['GtfsFeedValidationReport'];
 
+/**
+ * Error codes listed, most raised first. The rest are left to the full
+ * validation report.
+ */
+export const MAX_ERROR_ROWS = 5;
+
 /** What the validator's rule index says about one notice code. */
 export interface ValidatorRuleInfo {
   summary?: string;
@@ -34,14 +40,18 @@ export interface ValidationErrorsModel {
   validatedAt?: string;
   /** HTML validation report of that dataset. */
   reportUrl?: string;
-  /** Error codes, most raised first. */
+  /** Error codes, most raised first, capped at `MAX_ERROR_ROWS`. */
   rows: ErrorRow[];
+  /** Error codes in the report, including those `rows` leaves out. */
+  totalCount: number;
+  /** Counted over every error code, not just the listed ones. */
   newCount: number;
   carriedCount: number;
 }
 
 const EMPTY: ValidationErrorsModel = {
   rows: [],
+  totalCount: 0,
   newCount: 0,
   carriedCount: 0,
 };
@@ -90,7 +100,7 @@ export function buildValidationErrorsModel(
     }
   }
 
-  const rows: ErrorRow[] = report.notices
+  const errors: ErrorRow[] = report.notices
     .filter((notice) => notice.severity === 'ERROR')
     .map((notice) => ({
       code: notice.code,
@@ -101,15 +111,16 @@ export function buildValidationErrorsModel(
     }))
     .sort((a, b) => b.total - a.total || a.code.localeCompare(b.code));
 
-  const newCount = rows.filter((row) => row.isNew).length;
+  const newCount = errors.filter((row) => row.isNew).length;
 
   return {
     datasetId: report.dataset_id,
     validatedAt: report.validated_at ?? undefined,
     reportUrl: report.url_html ?? undefined,
-    rows,
+    rows: errors.slice(0, MAX_ERROR_ROWS),
+    totalCount: errors.length,
     newCount,
-    carriedCount: rows.length - newCount,
+    carriedCount: errors.length - newCount,
   };
 }
 

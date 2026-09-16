@@ -52,7 +52,7 @@ export default async function ComplianceCriterionBody({
   // The criterion counts distinct codes, not occurrences, so the sentence
   // and the list below it agree.
   const summary = getComplianceSummary(criterion, report, now, {
-    fallbackErrorCount: model.rows.length,
+    fallbackErrorCount: model.totalCount,
   });
 
   const downloadUrl =

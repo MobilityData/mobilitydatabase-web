@@ -1,4 +1,5 @@
 import {
+  MAX_ERROR_ROWS,
   buildValidationErrorsModel,
   humanizeNoticeCode,
 } from './validation-notices';
@@ -233,5 +234,75 @@ describe('humanizeNoticeCode', () => {
 
   it('returns an empty code untouched', () => {
     expect(humanizeNoticeCode('')).toBe('');
+  });
+});
+
+describe('the top-errors cap', () => {
+  const many = (count: number) =>
+    reportOf({
+      dataset_id: 'mdb-1-010',
+      is_latest: true,
+      notices: Array.from({ length: count }, (_, index) =>
+        notice(`code_${index}`, 'ERROR', count - index),
+      ),
+    });
+
+  it('lists at most the five most raised errors', () => {
+    const report = many(12);
+    const model = buildValidationErrorsModel({
+      ...response,
+      latest: report,
+      items: [report],
+    });
+
+    expect(model.rows).toHaveLength(MAX_ERROR_ROWS);
+    expect(model.rows.map((row) => row.code)).toEqual([
+      'code_0',
+      'code_1',
+      'code_2',
+      'code_3',
+      'code_4',
+    ]);
+  });
+
+  it('reports the full count so the sentence above the list stays right', () => {
+    const report = many(12);
+    const model = buildValidationErrorsModel({
+      ...response,
+      latest: report,
+      items: [report],
+    });
+
+    expect(model.totalCount).toBe(12);
+  });
+
+  it('counts new and carried over every error, not just the listed ones', () => {
+    const report = many(12);
+    const earlier = reportOf({
+      dataset_id: 'mdb-1-009',
+      notices: [notice('code_11', 'ERROR', 1)],
+    });
+    const model = buildValidationErrorsModel({
+      ...response,
+      latest: report,
+      items: [report, earlier],
+    });
+
+    // code_11 is the least raised, so it falls outside the five shown, but
+    // it is still the one carried error.
+    expect(model.carriedCount).toBe(1);
+    expect(model.newCount).toBe(11);
+  });
+
+  it('leaves a short list untouched', () => {
+    const report = many(3);
+    const model = buildValidationErrorsModel({
+      ...response,
+      latest: report,
+      items: [report],
+    });
+
+    expect(model.rows).toHaveLength(3);
+    expect(model.totalCount).toBe(3);
   });
 });
