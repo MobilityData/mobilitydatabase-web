@@ -38,7 +38,8 @@ type ValidationReportsResponse =
  */
 export const SEAL_ANALYSIS_REVALIDATE = 21600;
 
-const COVERAGE_LIMIT = 100;
+export const COVERAGE_LIMIT = 100;
+
 /**
  * How many past datasets the Compliant criterion shows alongside the latest
  * one. The endpoint caps `limit` at 100; 20 is a couple of months of daily
