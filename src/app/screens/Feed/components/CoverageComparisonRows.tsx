@@ -114,6 +114,8 @@ export interface CoverageComparisonRowsProps {
    * criterion's verdict, so they take its tone.
    */
   tone: TrackTone;
+  /** Heading for each row, in the same order as `comparison.rows`. */
+  rowTitleKeys: string[];
 }
 
 /**
@@ -129,6 +131,7 @@ export interface CoverageComparisonRowsProps {
 export default async function CoverageComparisonRows({
   comparison,
   tone,
+  rowTitleKeys,
 }: CoverageComparisonRowsProps): Promise<React.ReactElement> {
   const t = await getTranslations('feeds');
   const tCommon = await getTranslations('common');
@@ -189,22 +192,13 @@ export default async function CoverageComparisonRows({
                   mb: 0.5,
                 }}
               >
-                <Typography variant='body2' color='text.secondary'>
-                  {row.downloadedAt != undefined
-                    ? t('sealContinuousDownloadedOn', {
-                        date: formatDateShort(row.downloadedAt),
-                      })
-                    : t('sealContinuousDownloadedUnknown')}
+                <Typography
+                  variant='body2'
+                  component='h5'
+                  data-testid='coverage-row-title'
+                >
+                  {t(rowTitleKeys[index])}
                 </Typography>
-                {row.isLatest && (
-                  <Chip
-                    size='small'
-                    color='primary'
-                    variant='outlined'
-                    label={t('sealContinuousLatestBadge')}
-                    data-testid='coverage-latest-badge'
-                  />
-                )}
                 {row.downloadUrl != undefined && (
                   <Button
                     variant='text'

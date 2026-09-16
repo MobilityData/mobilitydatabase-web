@@ -116,7 +116,7 @@ export interface CoverageRow {
   withinMaxCoverageWindow?: boolean | null;
   /** Absent when the comparison was not built with a feed ID to link from. */
   downloadUrl?: string;
-  /** Whether this is the feed's latest dataset, which the row is badged with. */
+  /** Whether this is the feed's latest dataset. */
   isLatest: boolean;
   /**
    * How this dataset joins the one published before it, which is the row
@@ -461,6 +461,43 @@ export function getDistinctFailureBoundary(
   return failure.newer.dataset_id === coverage?.latest_state?.newer.dataset_id
     ? undefined
     : failure;
+}
+
+/** Keys in the `feeds` namespace for a comparison row's heading. */
+const ROW_TITLE_KEYS = {
+  latest: 'sealContinuousLatestDatasetTitle',
+  previous: 'sealContinuousPreviousDatasetTitle',
+  firstError: 'sealContinuousFirstErrorDatasetTitle',
+  previousError: 'sealContinuousPreviousErrorDatasetTitle',
+} as const;
+
+export function getLatestRowTitleKeys(
+  latestState: ContinuousCoverageBoundary | undefined,
+  failure: ContinuousCoverageBoundary | undefined,
+): string[] {
+  if (latestState == undefined) {
+    return [];
+  }
+  if (latestState.older == undefined) {
+    return [ROW_TITLE_KEYS.latest];
+  }
+  const olderKey =
+    failure?.older?.dataset_id === latestState.older.dataset_id
+      ? ROW_TITLE_KEYS.previousError
+      : ROW_TITLE_KEYS.previous;
+  return [ROW_TITLE_KEYS.latest, olderKey];
+}
+
+/** Row titles for the distinct-failure comparison, newest first. */
+export function getFailureRowTitleKeys(
+  failure: ContinuousCoverageBoundary | undefined,
+): string[] {
+  if (failure == undefined) {
+    return [];
+  }
+  return failure.older != undefined
+    ? [ROW_TITLE_KEYS.firstError, ROW_TITLE_KEYS.previousError]
+    : [ROW_TITLE_KEYS.firstError];
 }
 
 export function getContinuousCoverageSummary(

@@ -17,6 +17,8 @@ import {
   getCoverageWindowLength,
   getCoverageWindowTooltip,
   getDistinctFailureBoundary,
+  getFailureRowTitleKeys,
+  getLatestRowTitleKeys,
 } from '../lib/continuous-coverage';
 import {
   getCriterionDisplayStatus,
@@ -67,10 +69,18 @@ export default async function ContinuousCoverageCriterionBody({
   // countdown, probation has its own note below, and pass needs no
   // explanation at all, so the historical failure diagram would only
   // relitigate a state the page has already accounted for elsewhere.
-  const failureComparison =
-    displayStatus === 'fail'
-      ? buildCoverageComparison(getDistinctFailureBoundary(coverage), feedId)
-      : undefined;
+  const distinctFailureBoundary =
+    displayStatus === 'fail' ? getDistinctFailureBoundary(coverage) : undefined;
+  const failureComparison = buildCoverageComparison(
+    distinctFailureBoundary,
+    feedId,
+  );
+
+  const latestRowTitleKeys = getLatestRowTitleKeys(
+    coverage?.latest_state,
+    coverage?.latest_failure,
+  );
+  const failureRowTitleKeys = getFailureRowTitleKeys(distinctFailureBoundary);
 
   const latest = coverage?.latest_state?.newer;
   const coverageWindow = latest?.coverage_window;
@@ -206,7 +216,11 @@ export default async function ContinuousCoverageCriterionBody({
 
         {latestComparison != undefined && (
           <Box sx={{ mt: 2 }}>
-            <CoverageComparisonRows comparison={latestComparison} tone={tone} />
+            <CoverageComparisonRows
+              comparison={latestComparison}
+              tone={tone}
+              rowTitleKeys={latestRowTitleKeys}
+            />
           </Box>
         )}
 
@@ -222,6 +236,7 @@ export default async function ContinuousCoverageCriterionBody({
             <CoverageComparisonRows
               comparison={failureComparison}
               tone='error'
+              rowTitleKeys={failureRowTitleKeys}
             />
           </Box>
         )}

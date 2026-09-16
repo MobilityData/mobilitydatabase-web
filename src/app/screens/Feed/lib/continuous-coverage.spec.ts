@@ -6,6 +6,8 @@ import {
   getCoverageWindowLength,
   getCoverageWindowTooltip,
   getDistinctFailureBoundary,
+  getFailureRowTitleKeys,
+  getLatestRowTitleKeys,
 } from './continuous-coverage';
 import { type components } from '../../../services/feeds/types';
 
@@ -384,6 +386,104 @@ describe('getDistinctFailureBoundary', () => {
     expect(
       getDistinctFailureBoundary(response({ latest_failure: failure })),
     ).toEqual(failure);
+  });
+});
+
+describe('getLatestRowTitleKeys', () => {
+  it('titles the two rows Latest Dataset and Previous Dataset', () => {
+    expect(
+      getLatestRowTitleKeys(boundary(entry(), previousEntry), undefined),
+    ).toEqual([
+      'sealContinuousLatestDatasetTitle',
+      'sealContinuousPreviousDatasetTitle',
+    ]);
+  });
+
+  it('titles the single row Latest Dataset when there is no older one', () => {
+    expect(getLatestRowTitleKeys(boundary(entry()), undefined)).toEqual([
+      'sealContinuousLatestDatasetTitle',
+    ]);
+  });
+
+  it('is empty when there is no latest-state boundary', () => {
+    expect(getLatestRowTitleKeys(undefined, undefined)).toEqual([]);
+  });
+
+  it('keeps Latest Dataset even when that dataset is also the last recorded failure', () => {
+    // "Latest Dataset" outranks "First Error Dataset" - it is never demoted
+    // just because the same dataset is also the criterion's last failure.
+    // The older dataset differs from the failure's, so that row is
+    // unaffected and stays "Previous Dataset".
+    const latestState = boundary(entry(), previousEntry);
+    const failure = boundary(entry(), entry({ dataset_id: 'd-1' }));
+    expect(getLatestRowTitleKeys(latestState, failure)).toEqual([
+      'sealContinuousLatestDatasetTitle',
+      'sealContinuousPreviousDatasetTitle',
+    ]);
+  });
+
+  it('titles the older row Previous Error Dataset when the last recorded failure was measured against it', () => {
+    // Most often because the current failure *is* the latest dataset, so
+    // there is no separate failure comparison on screen to carry the title
+    // instead - the same "previous" dataset still needs to read as the one
+    // the failure was measured against.
+    const latestState = boundary(entry(), previousEntry);
+    const failure = boundary(entry(), previousEntry);
+    expect(getLatestRowTitleKeys(latestState, failure)).toEqual([
+      'sealContinuousLatestDatasetTitle',
+      'sealContinuousPreviousErrorDatasetTitle',
+    ]);
+  });
+
+  it('keeps Previous Dataset when the last recorded failure is against a different dataset', () => {
+    const latestState = boundary(entry(), previousEntry);
+    const failure = boundary(
+      entry({ dataset_id: 'd0', gap_days: 4 }),
+      entry({ dataset_id: 'd-1' }),
+    );
+    expect(getLatestRowTitleKeys(latestState, failure)).toEqual([
+      'sealContinuousLatestDatasetTitle',
+      'sealContinuousPreviousDatasetTitle',
+    ]);
+  });
+});
+
+describe('getFailureRowTitleKeys', () => {
+  it('titles the two rows First Error Dataset and Previous Error Dataset', () => {
+    const failure = boundary(
+      entry({ dataset_id: 'd0', gap_days: 4 }),
+      entry({ dataset_id: 'd-1' }),
+    );
+    expect(getFailureRowTitleKeys(failure)).toEqual([
+      'sealContinuousFirstErrorDatasetTitle',
+      'sealContinuousPreviousErrorDatasetTitle',
+    ]);
+  });
+
+  it('titles the single row First Error Dataset when there is no older one', () => {
+    expect(
+      getFailureRowTitleKeys(
+        boundary(entry({ dataset_id: 'd0', gap_days: 4 })),
+      ),
+    ).toEqual(['sealContinuousFirstErrorDatasetTitle']);
+  });
+
+  it('is empty when there is no distinct failure boundary', () => {
+    expect(getFailureRowTitleKeys(undefined)).toEqual([]);
+  });
+
+  it('keeps Previous Error Dataset even when it is the dataset shown as Previous Dataset above', () => {
+    // "Previous Error Dataset" outranks "Previous Dataset" - it is never
+    // demoted just because the latest-state comparison already shows the
+    // same dataset under that title.
+    const failure = boundary(
+      entry({ dataset_id: 'd0', gap_days: 4 }),
+      previousEntry,
+    );
+    expect(getFailureRowTitleKeys(failure)).toEqual([
+      'sealContinuousFirstErrorDatasetTitle',
+      'sealContinuousPreviousErrorDatasetTitle',
+    ]);
   });
 });
 
