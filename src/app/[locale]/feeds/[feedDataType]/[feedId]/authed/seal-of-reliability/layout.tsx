@@ -22,7 +22,7 @@ interface Props {
  * out of the RSC payload. If that matters, the feed API is the place to
  * enforce it — it already receives `x-mdb-user-context` on these calls, and
  * this segment's `error.tsx` handles the rejection.
- * 
+ *
  * Once the seal feature fully rolls out, this route guard will no longer be needed
  */
 export default function AuthedFeedReliabilityLayout({
