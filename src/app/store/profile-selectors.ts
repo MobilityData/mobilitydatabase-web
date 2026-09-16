@@ -12,6 +12,10 @@ export const selectIsAuthenticated = (state: RootState): boolean =>
 export const selectIsAnonymous = (state: RootState): boolean =>
   state.userProfile.status === 'anonymous_login';
 
+export const selectIsEmailVerified = (state: RootState): boolean =>
+  state.userProfile.user?.isEmailVerified ??
+  state.userProfile.status === 'authenticated';
+
 export const selectUserProfileStatus = (state: RootState): string =>
   state.userProfile.status;
 
