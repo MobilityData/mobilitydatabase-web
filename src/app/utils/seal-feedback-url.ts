@@ -1,8 +1,7 @@
 /**
  * It's a redirect to a google form
  */
-const SEAL_FEEDBACK_FORM_URL =
-  'https://share.mobilitydata.org/sealfeedback';
+const SEAL_FEEDBACK_FORM_URL = 'https://share.mobilitydata.org/sealfeedback';
 
 /**
  * Field ids taken from the form's own "Get pre-filled link" output. They are
