@@ -80,7 +80,7 @@ export default function SealFeedbackButton(): ReactElement {
           marginTop: 'auto',
           marginBottom: 'auto',
           zIndex: (theme) => theme.zIndex.appBar - 1,
-          transform: 'rotate(270deg)'
+          transform: 'rotate(270deg)',
         }}
         startIcon={<FeedbackOutlinedIcon fontSize='small' aria-hidden />}
       >
