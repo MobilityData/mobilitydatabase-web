@@ -239,6 +239,12 @@ export function createPrecomputation(deps: PrecomputeDeps): {
       const stopId = String(f.properties?.stop_id ?? '');
       const stopName = String(f.properties?.stop_name ?? '');
       const locationType = Number(f.properties?.location_type ?? 0);
+      const sequence =
+        f.properties?.stop_sequence != null
+          ? Number(f.properties.stop_sequence)
+          : f.properties?.sequence != null
+            ? Number(f.properties.sequence)
+            : undefined;
 
       const routeIds = extractRouteIds(f.properties?.route_ids);
       if (routeIds.length === 0) continue;
@@ -265,6 +271,7 @@ export function createPrecomputation(deps: PrecomputeDeps): {
             stopId,
             stopLat: lat2,
             stopLon: lon2,
+            sequence,
           });
         }
 
@@ -280,9 +287,12 @@ export function createPrecomputation(deps: PrecomputeDeps): {
     routeIdToBBoxRef.current = idToBBox;
     routeTypeToBBoxRef.current = typeToBBox;
     Object.keys(byRouteId).forEach((rid) => {
-      byRouteId[rid].sort((a, b) =>
-        a.name.localeCompare(b.stopId, undefined, { sensitivity: 'base' }),
-      );
+      byRouteId[rid].sort((a, b) => {
+        if (a.sequence != null && b.sequence != null) {
+          return a.sequence - b.sequence;
+        }
+        return 0;
+      });
     });
     stopsByRouteIdRef.current = byRouteId;
 
