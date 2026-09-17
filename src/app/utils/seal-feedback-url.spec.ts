@@ -4,7 +4,7 @@ describe('buildSealFeedbackUrl', () => {
   it('returns the bare form URL when nothing is known about the user', () => {
     const url = buildSealFeedbackUrl();
 
-    expect(url).toContain('/viewform');
+    expect(url).toBe('https://share.mobilitydata.org/sealfeedback');
     expect(url).not.toContain('usp=pp_url');
     expect(url).not.toContain('entry.');
   });
