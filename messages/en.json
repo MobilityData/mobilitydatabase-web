@@ -1,5 +1,7 @@
 {
   "common": {
+    "sealFeedbackButtonLabel": "Got feedback?",
+    "sealFeedbackButtonAriaLabel": "Share feedback on the Seal of Reliability (opens in a new tab)",
     "copyToClipboard": "Copy to clipboard",
     "copied": "Copied!",
     "name": "Name",
