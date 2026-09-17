@@ -1,12 +1,8 @@
 /**
- * Google Form collecting feedback on the Seal of Reliability.
- *
- * The canonical `viewform` URL rather than its `forms.gle` short link:
- * prefill parameters only survive on the long form, the short link drops the
- * query string when it redirects.
+ * It's a redirect to a google form
  */
 const SEAL_FEEDBACK_FORM_URL =
-  'https://docs.google.com/forms/d/e/1FAIpQLSdKlJEdxA8Jz8g6Z04h3PsWbQ9qPsjp93qONrWvQR60xJT3-Q/viewform';
+  'https://share.mobilitydata.org/sealfeedback';
 
 /**
  * Field ids taken from the form's own "Get pre-filled link" output. They are
