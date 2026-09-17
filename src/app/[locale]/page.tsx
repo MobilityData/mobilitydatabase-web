@@ -18,7 +18,7 @@ interface PageProps {
 
 export const metadata: Metadata = {
   title:
-    'MobilityDatabase | The Global Catalog of GTFS, GTFS-Realtime & GBFS Feeds',
+    'Global Catalog of GTFS, GTFS-Realtime & GBFS Feeds | MobilityDatabase',
   description:
     'Discover open public transit data worldwide. Mobility Database provides GTFS, GTFS-RT, and GBFS feeds to help developers, cities, and agencies build better mobility tools.',
   applicationName: 'Mobility Database',
@@ -32,7 +32,8 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://mobilitydatabase.org',
     siteName: 'Mobility Database',
-    title: 'Mobility Database',
+    title:
+      'Global Catalog of GTFS, GTFS-Realtime & GBFS Feeds | MobilityDatabase',
     description:
       'Discover open public transit data worldwide. Find GTFS, GTFS-RT, and GBFS feeds to build better mobility applications.',
   },

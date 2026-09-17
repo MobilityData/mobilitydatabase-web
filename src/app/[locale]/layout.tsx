@@ -17,7 +17,7 @@ import { getEnvConfig } from '../utils/config';
 
 export const metadata = {
   title:
-    'MobilityDatabase | The Global Catalog of GTFS, GTFS-Realtime & GBFS Feeds',
+    'Global Catalog of GTFS, GTFS-Realtime & GBFS Feeds | MobilityDatabase',
   description:
     "Access GTFS, GTFS Realtime, GBFS transit data with over 6,000 feeds from 99+ countries on the web's leading transit data platform.",
   robots:
