@@ -32,12 +32,8 @@ export default function SealFeedbackButton(): ReactElement {
     isAuthenticated,
   } = useAuthSession();
 
-  const name = isAuthenticated
-    ? user?.fullName?.trim() || displayName
-    : null;
-  const email = isAuthenticated
-    ? user?.email?.trim() || sessionEmail
-    : null;
+  const name = isAuthenticated ? user?.fullName?.trim() || displayName : null;
+  const email = isAuthenticated ? user?.email?.trim() || sessionEmail : null;
 
   /**
    * Who the visitor is exists only on the client, so prefilling during the
