@@ -26,10 +26,18 @@ import {
 export default function SealFeedbackButton(): ReactElement {
   const t = useTranslations('common');
   const user = useAppSelector(selectUserProfile);
-  const { email: sessionEmail, displayName } = useAuthSession();
+  const {
+    email: sessionEmail,
+    displayName,
+    isAuthenticated,
+  } = useAuthSession();
 
-  const name = user?.fullName ?? displayName;
-  const email = user?.email ?? sessionEmail;
+  const name = isAuthenticated
+    ? user?.fullName?.trim() || displayName
+    : null;
+  const email = isAuthenticated
+    ? user?.email?.trim() || sessionEmail
+    : null;
 
   /**
    * Who the visitor is exists only on the client, so prefilling during the
