@@ -118,3 +118,42 @@ export const deleteUserSubscription = async (id: string): Promise<void> => {
     userServiceClient.eject(authMiddleware);
   }
 };
+
+/**
+ * Unsubscribe a notification subscription directly by ID (one-click email unsubscribe).
+ * Calls DELETE /v1/subscriptions/{id}.
+ */
+export const unsubscribeById = async (id: string): Promise<void> => {
+  try {
+    const accessToken = await getUserAccessToken().catch(() => null);
+    if (accessToken) {
+      const authMiddleware = generateAuthMiddlewareWithToken(accessToken);
+      userServiceClient.use(authMiddleware);
+      try {
+        const { error } = await userServiceClient.DELETE(
+          '/v1/subscriptions/{id}',
+          {
+            params: { path: { id } },
+          },
+        );
+        if (error !== undefined) {
+          throw new Error('Failed to unsubscribe');
+        }
+        return;
+      } finally {
+        userServiceClient.eject(authMiddleware);
+      }
+    }
+
+    const { error } = await userServiceClient.DELETE('/v1/subscriptions/{id}', {
+      params: { path: { id } },
+    });
+    if (error !== undefined) {
+      throw new Error('Failed to unsubscribe');
+    }
+  } catch (err: unknown) {
+    if (err instanceof Error) throw err;
+    throw new Error('Network or service error during unsubscribe');
+  }
+};
+
