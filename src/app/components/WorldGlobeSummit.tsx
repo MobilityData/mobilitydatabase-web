@@ -11,6 +11,7 @@ import {
   SUMMIT_COUNTRIES,
 } from './summit-attendees';
 import starSprite from './star.png';
+import SummitGeoData from './SummitGeoData.json';
 
 type FullscreenElement = HTMLElement & {
   webkitRequestFullscreen?: () => Promise<void> | void;
@@ -1366,25 +1367,15 @@ export default function WorldGlobeSummit({
     }
     arcsByMunicipalityRef.current = byMunicipality;
 
-    const COUNTRIES_URL =
-      'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
-
-    fetch(COUNTRIES_URL)
-      .then((r) => {
-        if (!r.ok) throw new Error('Failed to load country data');
-        return r.json();
-      })
-      .then((topo) => {
-        const geo = feature(topo, topo.objects.countries);
-        console.log({ geo, globeGroup, COUNTRY_RADIUS, countryMeshesRef });
-        buildCountries(geo, globeGroup, COUNTRY_RADIUS, countryMeshesRef);
-        setLoading(false);
-      })
-      .catch((e) => {
-        console.error(e);
-        setError(e.message || 'Failed to load');
-        setLoading(false);
-      });
+    try {
+      const geo = feature(SummitGeoData, SummitGeoData.objects.countries);
+      buildCountries(geo, globeGroup, COUNTRY_RADIUS, countryMeshesRef);
+      setLoading(false);
+    } catch (e) {
+      console.error(e);
+      setError(e.message || 'Failed to load');
+      setLoading(false);
+    }
 
     const raycaster = new THREE.Raycaster();
     const ndc = new THREE.Vector2();
