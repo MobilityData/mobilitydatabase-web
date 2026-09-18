@@ -995,8 +995,8 @@ export const SUMMIT_ATTENDEES: SummitAttendee[] = [
   {
     id: 130,
     agency: 'GIZ',
-    iso2: 'DE',
-    municipality: 'Bonn',
+    iso2: 'MX',
+    municipality: 'Mexico City',
     isMember: false,
   },
   {
