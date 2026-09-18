@@ -43,143 +43,119 @@ function exitFullscreenDocument() {
   }
 }
 
-// ---- Feed data (country ISO2 code -> feed count) ----
+// ---- Feed data (country ISO2 code -> feed counts by type) ----
 const FEED_DATA = {
-  US: 2163,
-  FR: 1138,
-  JP: 658,
-  DE: 425,
-  CA: 397,
-  ES: 234,
-  IT: 204,
-  PL: 161,
-  GB: 115,
-  FI: 90,
-  CH: 87,
-  NO: 86,
-  CZ: 85,
-  NL: 78,
-  BE: 72,
-  AU: 62,
-  AT: 52,
-  PT: 46,
-  RO: 44,
-  DK: 40,
-  HU: 39,
-  HR: 36,
-  NZ: 30,
-  IE: 29,
-  SE: 26,
-  SI: 24,
-  LU: 23,
-  SK: 20,
-  BR: 19,
-  LT: 17,
-  UA: 17,
-  MC: 14,
-  BG: 12,
-  RS: 12,
-  MX: 10,
-  MY: 10,
-  GR: 10,
-  IN: 9,
-  TR: 9,
-  AE: 9,
-  CY: 8,
-  LI: 8,
-  DZ: 8,
-  ML: 7,
-  CL: 7,
-  SA: 7,
-  TN: 7,
-  AR: 7,
-  ET: 6,
-  MA: 6,
-  LV: 6,
-  IL: 5,
-  RU: 5,
-  SO: 4,
-  SG: 4,
-  TG: 4,
-  TW: 4,
-  BA: 4,
-  EE: 4,
-  MD: 4,
-  NE: 4,
-  NI: 3,
-  CO: 3,
-  MK: 3,
-  CM: 3,
-  PE: 3,
-  EG: 3,
-  BF: 3,
-  GH: 3,
-  ID: 3,
-  KE: 2,
-  IS: 2,
-  GL: 2,
-  CD: 2,
-  ME: 2,
-  BY: 2,
-  RW: 2,
-  CN: 2,
-  PH: 2,
-  AD: 2,
-  ZW: 1,
-  AL: 1,
-  AM: 1,
-  BJ: 1,
-  BM: 1,
-  BO: 1,
-  CI: 1,
-  CR: 1,
-  CV: 1,
-  DO: 1,
-  GE: 1,
-  GG: 1,
-  JO: 1,
-  KH: 1,
-  LA: 1,
-  MM: 1,
-  SL: 1,
-  SN: 1,
-  TH: 1,
-  UG: 1,
-  ZA: 1,
+  US: { gtfs: 2101, gbfs: 193, gtfsRt: 948 },
+  FR: { gtfs: 633, gbfs: 279, gtfsRt: 405 },
+  JP: { gtfs: 623, gbfs: 5, gtfsRt: 119 },
+  CA: { gtfs: 183, gbfs: 25, gtfsRt: 231 },
+  DE: { gtfs: 89, gbfs: 249, gtfsRt: 21 },
+  ES: { gtfs: 175, gbfs: 68, gtfsRt: 28 },
+  IT: { gtfs: 172, gbfs: 38, gtfsRt: 25 },
+  PL: { gtfs: 91, gbfs: 83, gtfsRt: 29 },
+  NO: { gtfs: 14, gbfs: 162, gtfsRt: 8 },
+  SE: { gtfs: 67, gbfs: 13, gtfsRt: 97 },
+  GB: { gtfs: 64, gbfs: 54, gtfsRt: 5 },
+  CZ: { gtfs: 42, gbfs: 45, gtfsRt: 16 },
+  FI: { gtfs: 31, gbfs: 45, gtfsRt: 23 },
+  AU: { gtfs: 52, gbfs: 0, gtfsRt: 42 },
+  NL: { gtfs: 28, gbfs: 58, gtfsRt: 5 },
+  BE: { gtfs: 43, gbfs: 37, gtfsRt: 10 },
+  CH: { gtfs: 32, gbfs: 46, gtfsRt: 8 },
+  AT: { gtfs: 34, gbfs: 30, gtfsRt: 4 },
+  DK: { gtfs: 19, gbfs: 20, gtfsRt: 18 },
+  PT: { gtfs: 41, gbfs: 7, gtfsRt: 9 },
+  RO: { gtfs: 26, gbfs: 13, gtfsRt: 10 },
+  HU: { gtfs: 31, gbfs: 10, gtfsRt: 7 },
+  HR: { gtfs: 18, gbfs: 23, gtfsRt: 2 },
+  NZ: { gtfs: 12, gbfs: 11, gtfsRt: 11 },
+  IE: { gtfs: 28, gbfs: 3, gtfsRt: 0 },
+  EE: { gtfs: 28, gbfs: 0, gtfsRt: 2 },
+  SI: { gtfs: 22, gbfs: 7, gtfsRt: 1 },
+  TR: { gtfs: 27, gbfs: 2, gtfsRt: 0 },
+  SK: { gtfs: 23, gbfs: 4, gtfsRt: 1 },
+  BR: { gtfs: 15, gbfs: 10, gtfsRt: 1 },
+  LT: { gtfs: 18, gbfs: 1, gtfsRt: 6 },
+  LU: { gtfs: 21, gbfs: 1, gtfsRt: 2 },
+  MY: { gtfs: 20, gbfs: 1, gtfsRt: 2 },
+  UA: { gtfs: 15, gbfs: 2, gtfsRt: 4 },
+  IN: { gtfs: 20, gbfs: 0, gtfsRt: 0 },
+  RS: { gtfs: 19, gbfs: 0, gtfsRt: 0 },
+  MC: { gtfs: 9, gbfs: 1, gtfsRt: 7 },
+  BG: { gtfs: 10, gbfs: 0, gtfsRt: 6 },
+  GR: { gtfs: 8, gbfs: 6, gtfsRt: 0 },
+  LV: { gtfs: 13, gbfs: 1, gtfsRt: 0 },
+  MX: { gtfs: 11, gbfs: 3, gtfsRt: 0 },
+  DZ: { gtfs: 8, gbfs: 0, gtfsRt: 4 },
+  AE: { gtfs: 3, gbfs: 7, gtfsRt: 0 },
+  AR: { gtfs: 6, gbfs: 3, gtfsRt: 0 },
+  LI: { gtfs: 4, gbfs: 5, gtfsRt: 0 },
+  CL: { gtfs: 7, gbfs: 1, gtfsRt: 0 },
+  CY: { gtfs: 7, gbfs: 1, gtfsRt: 0 },
+  ML: { gtfs: 4, gbfs: 1, gtfsRt: 3 },
+  MA: { gtfs: 8, gbfs: 0, gtfsRt: 0 },
+  BA: { gtfs: 4, gbfs: 3, gtfsRt: 0 },
+  MD: { gtfs: 4, gbfs: 0, gtfsRt: 3 },
+  SA: { gtfs: 1, gbfs: 6, gtfsRt: 0 },
+  TN: { gtfs: 7, gbfs: 0, gtfsRt: 0 },
+  ET: { gtfs: 5, gbfs: 1, gtfsRt: 0 },
+  CO: { gtfs: 4, gbfs: 1, gtfsRt: 0 },
+  IL: { gtfs: 1, gbfs: 4, gtfsRt: 0 },
+  MK: { gtfs: 3, gbfs: 0, gtfsRt: 2 },
+  PH: { gtfs: 5, gbfs: 0, gtfsRt: 0 },
+  SG: { gtfs: 5, gbfs: 0, gtfsRt: 0 },
+  AL: { gtfs: 4, gbfs: 0, gtfsRt: 0 },
+  CG: { gtfs: 1, gbfs: 0, gtfsRt: 3 },
+  EG: { gtfs: 4, gbfs: 0, gtfsRt: 0 },
+  ID: { gtfs: 3, gbfs: 1, gtfsRt: 0 },
+  NE: { gtfs: 1, gbfs: 0, gtfsRt: 3 },
+  PE: { gtfs: 2, gbfs: 2, gtfsRt: 0 },
+  RU: { gtfs: 3, gbfs: 1, gtfsRt: 0 },
+  SO: { gtfs: 0, gbfs: 2, gtfsRt: 2 },
+  LK: { gtfs: 1, gbfs: 0, gtfsRt: 3 },
+  TW: { gtfs: 3, gbfs: 0, gtfsRt: 1 },
+  TG: { gtfs: 1, gbfs: 0, gtfsRt: 3 },
+  BO: { gtfs: 3, gbfs: 0, gtfsRt: 0 },
+  CM: { gtfs: 3, gbfs: 0, gtfsRt: 0 },
+  CN: { gtfs: 2, gbfs: 1, gtfsRt: 0 },
+  CD: { gtfs: 3, gbfs: 0, gtfsRt: 0 },
+  GH: { gtfs: 3, gbfs: 0, gtfsRt: 0 },
+  GL: { gtfs: 3, gbfs: 0, gtfsRt: 0 },
+  KE: { gtfs: 3, gbfs: 0, gtfsRt: 0 },
+  ME: { gtfs: 3, gbfs: 0, gtfsRt: 0 },
+  NI: { gtfs: 3, gbfs: 0, gtfsRt: 0 },
+  OM: { gtfs: 1, gbfs: 0, gtfsRt: 2 },
+  TH: { gtfs: 3, gbfs: 0, gtfsRt: 0 },
+  AD: { gtfs: 2, gbfs: 0, gtfsRt: 0 },
+  BJ: { gtfs: 1, gbfs: 1, gtfsRt: 0 },
+  CR: { gtfs: 2, gbfs: 0, gtfsRt: 0 },
+  CI: { gtfs: 2, gbfs: 0, gtfsRt: 0 },
+  IS: { gtfs: 1, gbfs: 1, gtfsRt: 0 },
+  KZ: { gtfs: 2, gbfs: 0, gtfsRt: 0 },
+  RW: { gtfs: 2, gbfs: 0, gtfsRt: 0 },
+  ZA: { gtfs: 2, gbfs: 0, gtfsRt: 0 },
+  AM: { gtfs: 1, gbfs: 0, gtfsRt: 0 },
+  AZ: { gtfs: 1, gbfs: 0, gtfsRt: 0 },
+  BY: { gtfs: 1, gbfs: 0, gtfsRt: 0 },
+  BM: { gtfs: 1, gbfs: 0, gtfsRt: 0 },
+  BF: { gtfs: 0, gbfs: 1, gtfsRt: 0 },
+  KH: { gtfs: 1, gbfs: 0, gtfsRt: 0 },
+  DO: { gtfs: 1, gbfs: 0, gtfsRt: 0 },
+  GE: { gtfs: 1, gbfs: 0, gtfsRt: 0 },
+  GG: { gtfs: 1, gbfs: 0, gtfsRt: 0 },
+  HN: { gtfs: 1, gbfs: 0, gtfsRt: 0 },
+  JO: { gtfs: 0, gbfs: 1, gtfsRt: 0 },
+  LA: { gtfs: 1, gbfs: 0, gtfsRt: 0 },
+  MT: { gtfs: 1, gbfs: 0, gtfsRt: 0 },
+  MM: { gtfs: 1, gbfs: 0, gtfsRt: 0 },
+  NC: { gtfs: 1, gbfs: 0, gtfsRt: 0 },
+  NG: { gtfs: 1, gbfs: 0, gtfsRt: 0 },
+  SL: { gtfs: 1, gbfs: 0, gtfsRt: 0 },
+  SY: { gtfs: 0, gbfs: 1, gtfsRt: 0 },
+  UG: { gtfs: 1, gbfs: 0, gtfsRt: 0 },
+  UY: { gtfs: 1, gbfs: 0, gtfsRt: 0 },
+  ZW: { gtfs: 1, gbfs: 0, gtfsRt: 0 },
 };
-
-// FEED_DATA only has one combined total per country — there's no
-// per-feed-type breakdown anywhere in the app to draw from for this
-// decorative globe, so the country popup's GTFS / GTFS-RT / GBFS numbers
-// are a fixed, illustrative split of that same total (GTFS Schedule feeds
-// dominate real-world feed counts, GTFS-RT is typically a subset of
-// agencies that also publish GTFS, and GBFS — bike/scooter share — is its
-// own smaller ecosystem). Largest-remainder rounding keeps the three
-// numbers always summing back to the original total.
-const FEED_TYPE_SHARE = { gtfs: 0.62, gtfsRt: 0.23, gbfs: 0.15 };
-
-function splitFeedCounts(total) {
-  const raw = {
-    gtfs: total * FEED_TYPE_SHARE.gtfs,
-    gtfsRt: total * FEED_TYPE_SHARE.gtfsRt,
-    gbfs: total * FEED_TYPE_SHARE.gbfs,
-  };
-  const floored = {
-    gtfs: Math.floor(raw.gtfs),
-    gtfsRt: Math.floor(raw.gtfsRt),
-    gbfs: Math.floor(raw.gbfs),
-  };
-  let remainder = total - (floored.gtfs + floored.gtfsRt + floored.gbfs);
-  const byFraction = ['gtfs', 'gtfsRt', 'gbfs'].sort(
-    (a, b) => raw[b] - Math.floor(raw[b]) - (raw[a] - Math.floor(raw[a])),
-  );
-  for (const key of byFraction) {
-    if (remainder <= 0) break;
-    floored[key] += 1;
-    remainder -= 1;
-  }
-  return floored;
-}
 
 // world-atlas 110m uses numeric ISO country codes (ISO 3166-1 numeric).
 const NUM_TO_ISO2 = {
@@ -512,6 +488,11 @@ const SUMMIT_COLOR = MD_PERIWINKLE; // even summit-attendee shade
 const SUMMIT_INACTIVE = '#c7cdff'; // light periwinkle, no attendees
 const SUMMIT_SELECTED = MD_INK; // click highlight (inverted surface)
 const OCEAN_COLOR = '#fafbff'; // near-white — the old no-attendee tint
+
+// MobilityData staff working the summit — not in SUMMIT_ATTENDEES (no
+// country/city recorded for them in summit-attendees.csv), but they still
+// count toward the headline attendee total.
+const STAFF_ATTENDEES = 28;
 
 const STAR_PURPLE = '#a78bfa'; // background starfield tint, distinct from periwinkle line-work
 
@@ -2074,8 +2055,8 @@ export default function WorldGlobeSummit({
             }}
           />
           <span>
-            {SUMMIT_ATTENDEES.length} attendees · {SUMMIT_COUNTRIES.size}{' '}
-            countries
+            {SUMMIT_ATTENDEES.length + STAFF_ATTENDEES} attendees ·{' '}
+            {SUMMIT_COUNTRIES.size} countries
           </span>
         </div>
       </div>
@@ -2172,7 +2153,7 @@ export default function WorldGlobeSummit({
               <div
                 style={{
                   position: 'absolute',
-                  top: -13,
+                  top: -20,
                   right: -13,
                   padding: '4px 13px',
                   borderRadius: 999,
@@ -2183,7 +2164,7 @@ export default function WorldGlobeSummit({
                   letterSpacing: '0.04em',
                   fontFamily: MD_FONT_MONO,
                   boxShadow: '0 3px 8px rgba(23, 10, 46, 0.25)',
-                  border: '1px solid white',
+                  border: '2px solid white',
                 }}
               >
                 MobilityData Member
@@ -2195,9 +2176,10 @@ export default function WorldGlobeSummit({
                 letterSpacing: '0.08em',
                 fontFamily: MD_FONT_MONO,
                 color: MD_PERIWINKLE,
+                marginLeft: '12%'
               }}
             >
-              {iso2ToFlagEmoji(selected.iso2)} {selected.name}
+              <span style={{position: 'absolute', 'top': '2px', 'left': '12px', fontSize: '30px'}}>{iso2ToFlagEmoji(selected.iso2)}</span> {selected.name}
             </div>
 
             {selected.attendee ? (
@@ -2274,7 +2256,7 @@ export default function WorldGlobeSummit({
                       lineHeight: 1,
                     }}
                   >
-                    {count.toLocaleString()}
+                    {count}
                   </div>
                   <div
                     style={{
@@ -2493,8 +2475,11 @@ function buildCountries(geo, globeGroup, radius, meshesRef) {
       ISO2_TO_NAME_FALLBACK[iso2] ||
       iso2 ||
       'Unknown';
-    const feeds = iso2 && FEED_DATA[iso2] ? FEED_DATA[iso2] : 0;
-    const feedsByType = splitFeedCounts(feeds);
+    const feedsByType = (iso2 && FEED_DATA[iso2]) || {
+      gtfs: 0,
+      gbfs: 0,
+      gtfsRt: 0,
+    };
     const hasAttendees = iso2 && SUMMIT_COUNTRIES.has(iso2);
 
     // Equal flat shade for every summit country; faded otherwise.
