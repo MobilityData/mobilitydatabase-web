@@ -6,7 +6,6 @@ import * as THREE from 'three';
 import earcut from 'earcut';
 import {
   ATTENDEES_BY_COUNTRY,
-  SUMMIT_ATTENDEES,
   SUMMIT_CITIES,
   SUMMIT_COUNTRIES,
 } from './summit-attendees';
@@ -489,11 +488,6 @@ const SUMMIT_COLOR = MD_PERIWINKLE; // even summit-attendee shade
 const SUMMIT_INACTIVE = '#c7cdff'; // light periwinkle, no attendees
 const SUMMIT_SELECTED = MD_INK; // click highlight (inverted surface)
 const OCEAN_COLOR = '#fafbff'; // near-white — the old no-attendee tint
-
-// MobilityData staff working the summit — not in SUMMIT_ATTENDEES (no
-// country/city recorded for them in summit-attendees.csv), but they still
-// count toward the headline attendee total.
-const STAFF_ATTENDEES = 28;
 
 const STAR_PURPLE = '#a78bfa'; // background starfield tint, distinct from periwinkle line-work
 
@@ -2002,56 +1996,6 @@ export default function WorldGlobeSummit({
         </div>
       )}
 
-      {/* Summit legend */}
-      <div
-        style={{
-          position: 'absolute',
-          left: 16,
-          bottom: 16,
-          zIndex: 3,
-          background: MD_WHITE,
-          border: `2px solid ${MD_PERIWINKLE}`,
-          borderRadius: 6,
-          padding: '14px 20px',
-          fontFamily: MD_FONT_PROSE,
-          color: MD_INK,
-        }}
-      >
-        <div
-          style={{
-            fontSize: 14,
-            letterSpacing: '0.08em',
-            fontFamily: MD_FONT_MONO,
-            color: MD_PERIWINKLE,
-          }}
-        >
-          Summit attendees
-        </div>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            marginTop: 8,
-            fontSize: 16,
-          }}
-        >
-          <span
-            style={{
-              width: 16,
-              height: 16,
-              borderRadius: 3,
-              background: SUMMIT_COLOR,
-              display: 'inline-block',
-            }}
-          />
-          <span>
-            {SUMMIT_ATTENDEES.length + STAFF_ATTENDEES} attendees ·{' '}
-            {SUMMIT_COUNTRIES.size} countries
-          </span>
-        </div>
-      </div>
-
       {/* Permanent Montreal marker — MobilityData's HQ and the summit's
           host city. Always mounted; updateMontrealMarker() (in animate())
           moves it every frame and fades/hides it via opacity + visibility
@@ -2128,29 +2072,29 @@ export default function WorldGlobeSummit({
           <div
             style={{
               position: 'relative',
-              transform: 'translate(-50%, calc(-100% - 20px))',
+              transform: 'translate(-50%, calc(-100% - 30px))',
               transformOrigin: 'bottom center',
               animation: 'summitPopIn 300ms cubic-bezier(0.34, 1.56, 0.64, 1)',
               background: MD_WHITE,
               border: `2px solid ${MD_PERIWINKLE}`,
-              borderRadius: 4,
-              padding: '15px 18px',
+              borderRadius: 6,
+              padding: '22px 27px',
               fontFamily: MD_FONT_PROSE,
               color: MD_INK,
-              width: 325,
+              width: 488,
             }}
           >
             {selected.attendee?.isMember && (
               <div
                 style={{
                   position: 'absolute',
-                  top: -20,
-                  right: -13,
-                  padding: '4px 13px',
+                  top: -30,
+                  right: -20,
+                  padding: '6px 20px',
                   borderRadius: 999,
                   background: MD_PERIWINKLE,
                   color: MD_WHITE,
-                  fontSize: 15,
+                  fontSize: 22,
                   fontWeight: 700,
                   letterSpacing: '0.04em',
                   fontFamily: MD_FONT_MONO,
@@ -2163,21 +2107,31 @@ export default function WorldGlobeSummit({
             )}
             <div
               style={{
-                fontSize: 14,
+                fontSize: 21,
                 letterSpacing: '0.08em',
                 fontFamily: MD_FONT_MONO,
-                color: MD_PERIWINKLE,
-                marginLeft: '12%'
+                color: MD_INK,
+                marginLeft: '12%',
               }}
             >
-              <span style={{position: 'absolute', 'top': '2px', 'left': '12px', fontSize: '30px'}}>{iso2ToFlagEmoji(selected.iso2)}</span> {selected.name}
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '3px',
+                  left: '18px',
+                  fontSize: '45px',
+                }}
+              >
+                {iso2ToFlagEmoji(selected.iso2)}
+              </span>{' '}
+              {selected.name}
             </div>
 
             {selected.attendee ? (
-              <div style={{ marginTop: 10 }}>
+              <div style={{ marginTop: 15 }}>
                 <div
                   style={{
-                    fontSize: 20,
+                    fontSize: 30,
                     fontWeight: 700,
                     color: MD_PERIWINKLE,
                     overflowWrap: 'break-word',
@@ -2187,9 +2141,9 @@ export default function WorldGlobeSummit({
                 </div>
                 <div
                   style={{
-                    fontSize: 15,
+                    fontSize: 22,
                     color: MD_INK_MUTED,
-                    marginTop: 1,
+                    marginTop: 2,
                     fontFamily: MD_FONT_MONO,
                   }}
                 >
@@ -2199,9 +2153,9 @@ export default function WorldGlobeSummit({
             ) : (
               <div
                 style={{
-                  fontSize: 18,
+                  fontSize: 27,
                   fontWeight: 700,
-                  marginTop: 8,
+                  marginTop: 12,
                   color: MD_INK,
                 }}
               >
@@ -2214,9 +2168,9 @@ export default function WorldGlobeSummit({
                 display: 'flex',
                 alignItems: 'flex-start',
                 justifyContent: 'space-between',
-                gap: 10,
-                marginTop: 15,
-                paddingTop: 13,
+                gap: 15,
+                marginTop: 22,
+                paddingTop: 20,
                 borderTop: `1px solid ${MD_PERIWINKLE_SOFT}`,
                 fontFamily: MD_FONT_MONO,
                 color: MD_INK_MUTED,
@@ -2224,10 +2178,10 @@ export default function WorldGlobeSummit({
             >
               <div
                 style={{
-                  fontSize: 14,
+                  fontSize: 21,
                   letterSpacing: '0.08em',
-                  color: MD_PERIWINKLE,
-                  maxWidth: '60px'
+                  color: MD_INK,
+                  maxWidth: '90px',
                 }}
               >
                 Country Feeds
@@ -2243,7 +2197,7 @@ export default function WorldGlobeSummit({
                       fontVariantNumeric: 'tabular-nums',
                       fontWeight: 800,
                       color: MD_PERIWINKLE,
-                      fontSize: 24,
+                      fontSize: 36,
                       lineHeight: 1,
                     }}
                   >
@@ -2251,9 +2205,10 @@ export default function WorldGlobeSummit({
                   </div>
                   <div
                     style={{
-                      fontSize: 11,
+                      fontSize: 16,
+                      fontWeight: 700,
                       letterSpacing: '0.06em',
-                      marginTop: 4,
+                      marginTop: 6,
                     }}
                   >
                     {label}
@@ -2266,10 +2221,10 @@ export default function WorldGlobeSummit({
               style={{
                 position: 'absolute',
                 left: '50%',
-                bottom: -8,
+                bottom: -12,
                 transform: 'translateX(-50%) rotate(45deg)',
-                width: 13,
-                height: 13,
+                width: 20,
+                height: 20,
                 background: MD_WHITE,
                 borderRight: `2px solid ${MD_PERIWINKLE}`,
                 borderBottom: `2px solid ${MD_PERIWINKLE}`,
@@ -2338,11 +2293,11 @@ export default function WorldGlobeSummit({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 10,
+            gap: 15,
             background: MD_WHITE,
             border: `2px solid ${MD_PERIWINKLE}`,
-            borderRadius: 4,
-            padding: '8px 14px',
+            borderRadius: 6,
+            padding: '12px 21px',
             fontFamily: MD_FONT_PROSE,
             color: MD_INK,
           }}
@@ -2351,12 +2306,12 @@ export default function WorldGlobeSummit({
           <img
             src='/assets/MOBILTYDATA_logo_purple_M.png'
             alt='MobilityData logo'
-            style={{ width: 50, height: 48, flexShrink: 0 }}
+            style={{ width: 75, height: 72, flexShrink: 0 }}
           />
           <div>
             <div
               style={{
-                fontSize: 11,
+                fontSize: 17,
                 letterSpacing: '0.08em',
                 fontFamily: MD_FONT_MONO,
                 color: MD_PERIWINKLE,
@@ -2366,11 +2321,11 @@ export default function WorldGlobeSummit({
             </div>
             <div
               style={{
-                fontSize: 22,
+                fontSize: 33,
                 fontWeight: 700,
                 lineHeight: 1.2,
                 color: MD_PERIWINKLE,
-                marginTop: 2,
+                marginTop: 3,
               }}
             >
               International Mobility Data Summit
