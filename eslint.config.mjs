@@ -43,28 +43,31 @@ export default tseslint.config(
       ],
       // TODO: hooks called inside render callbacks, incorrect hook usage patterns,
       // and missing/extra effect dependencies — to be fixed in a separate ticket.
-      'react-hooks/rules-of-hooks': 'off',
+      'react-hooks/rules-of-hooks': 'error',
       'react-hooks/refs': 'off',
       'react-hooks/set-state-in-render': 'off',
       'react-hooks/set-state-in-effect': 'off',
-      'react-hooks/immutability': 'off',
-      'react-hooks/exhaustive-deps': 'off',
+      'react-hooks/immutability': 'warn',
+      'react-hooks/exhaustive-deps': 'warn',
       // TypeScript handles these; disable the core JS versions.
       'no-undef': 'off',
       'no-unused-vars': 'off',
-      // Type-checked rules from recommendedTypeChecked that are too noisy
-      // for the current codebase — kept off to preserve parity with the
-      // previous eslint-config-standard-with-typescript baseline.
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
-      '@typescript-eslint/no-unsafe-argument': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/no-unsafe-return': 'off',
-      '@typescript-eslint/no-unsafe-enum-comparison': 'off',
-      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
-      '@typescript-eslint/no-redundant-type-constituents': 'off',
+      // Type-checked rules from recommendedTypeChecked that are progressively enabled
+      '@typescript-eslint/no-unsafe-assignment': 'warn',
+      '@typescript-eslint/no-unsafe-member-access': 'warn',
+      '@typescript-eslint/no-unsafe-argument': 'warn',
+      '@typescript-eslint/no-unsafe-call': 'warn',
+      '@typescript-eslint/no-unsafe-return': 'warn',
+      '@typescript-eslint/no-unsafe-enum-comparison': 'warn',
+    },
+  },
+  {
+    // Test files: `async` test callbacks and `act(async () => {})` wrappers are
+    // idiomatic even when they contain no `await` (async `act` flushes the
+    // microtask queue). Relaxing require-await here avoids churn in test infra.
+    files: ['**/*.spec.{ts,tsx}', '**/*.test.{ts,tsx}'],
+    rules: {
       '@typescript-eslint/require-await': 'off',
-      '@typescript-eslint/no-misused-promises': 'off',
     },
   },
   prettierRecommended,
