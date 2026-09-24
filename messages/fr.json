@@ -247,7 +247,7 @@
     "relatedGtfsScheduleFeed": "Link to related GTFS Schedule feed",
     "isAuthRequired": "Is authentication required for the feed?",
     "isAuthRequiredDetails": " Select \"Yes\" if a user has to login or provide credentials to download the feed",
-    "detailPageDescription": "Explore the {formattedName} {dataTypeVerbose} feed details with access to a quality data insights",
+    "detailPageDescription": "Explorez les détails du flux {dataTypeVerbose} de {formattedName} avec rapports de qualité, liens de téléchargement et validations.",
     "mapPageDescription": "Explore the {formattedName} {dataTypeVerbose} feed on an interactive map showing routes, stops, and transit coverage.",
     "sealPageDescription": "Découvrez comment le flux {dataTypeVerbose} de {formattedName} se comporte face à chaque critère du Sceau de fiabilité.",
     "officialFeed": "Official Feed",
