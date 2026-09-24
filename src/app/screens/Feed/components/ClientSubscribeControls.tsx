@@ -93,7 +93,7 @@ export default function ClientSubscribeControls({
   feedId,
 }: ClientSubscribeControlsProps): React.ReactElement | null {
   const { config } = useRemoteConfig();
-  const { isAuthenticated } = useAuthSession();
+  const { isAuthenticated, isEmailVerified } = useAuthSession();
   const {
     flags: { isNotificationsEnabled },
     isResolved: areFlagsResolved,
@@ -105,7 +105,8 @@ export default function ClientSubscribeControls({
   // Showing the lock in that window would be a wrong answer the user can click.
   const isAccessPending = isAuthenticated && !areFlagsResolved;
   const hasNoAccess =
-    !isAccessPending && (!isAuthenticated || !isNotificationsEnabled);
+    !isAccessPending &&
+    (!isAuthenticated || !isEmailVerified || !isNotificationsEnabled);
 
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<
