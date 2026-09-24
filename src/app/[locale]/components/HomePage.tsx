@@ -1,5 +1,5 @@
 import { type ReactElement } from 'react';
-import { Box, Typography, Button, Container, Divider } from '@mui/material';
+import { Box, Typography, Button, Container, Divider, Paper } from '@mui/material';
 import {
   Search,
   CheckCircleOutlineOutlined,
@@ -25,23 +25,37 @@ const ActionBox = ({
   buttonHref,
   buttonText,
 }: ActionBoxProps): React.ReactElement => (
-  <Box
+  <Paper
+    elevation={0}
+    variant='outlined'
     sx={{
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
+      justifyContent: 'space-between',
       flexGrow: 1,
       flexBasis: 0,
       minWidth: 0,
+      p: 3,
+      m: 1,
+      borderRadius: 2,
+      backgroundColor: 'background.paper',
+      transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+      '&:hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: (theme) => theme.shadows[2],
+      },
     }}
   >
-    <IconComponent sx={{ width: '100%', height: iconHeight }} />
-    <Link href={buttonHref}>
-      <Button variant='contained' sx={{ m: 2, px: 2 }}>
+    <IconComponent
+      sx={{ width: '100%', height: iconHeight, color: 'primary.main', mb: 2 }}
+    />
+    <Link href={buttonHref} style={{ width: '100%', textDecoration: 'none' }}>
+      <Button variant='contained' fullWidth sx={{ px: 2, fontWeight: 600 }}>
         {buttonText}
       </Button>
     </Link>
-  </Box>
+  </Paper>
 );
 
 /**
@@ -172,18 +186,19 @@ export default async function HomePage(): Promise<ReactElement> {
             buttonText={t('signUpApi')}
           />
         </Box>
-        <Box
+        <Paper
           component='section'
+          elevation={0}
+          variant='outlined'
           sx={{
             backgroundColor: 'background.paper',
-            borderRadius: '6px 0px 0px 6px',
+            borderRadius: 2,
             p: {
-              xs: 2,
+              xs: 3,
               sm: 4,
             },
             fontWeight: 700,
-            mr: 0,
-            mt: 5,
+            mt: 6,
           }}
           role='contentinfo'
           aria-label='About Mobility Database'
@@ -219,7 +234,7 @@ export default async function HomePage(): Promise<ReactElement> {
             </Button>
             {t('validatorOutro')}
           </Typography>
-        </Box>
+        </Paper>
       </Box>
     </Container>
   );
