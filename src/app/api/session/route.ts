@@ -62,7 +62,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 }
 
-export async function GET(req: NextRequest): Promise<NextResponse> {
+export function GET(req: NextRequest): NextResponse {
   try {
     const cookie = req.cookies.get(COOKIE_NAME)?.value;
     if (cookie == null) {
@@ -89,6 +89,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function DELETE(req: NextRequest): Promise<NextResponse> {
+  // Clear the session cookie so that subsequent requests have no session.
   const response = NextResponse.json({ status: 'logged_out' });
   response.cookies.delete(COOKIE_NAME);
   return response;

@@ -149,6 +149,7 @@ export default function NotificationSettingsDialog({
           </Alert>
         )}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+
           {/* Type of changes */}
           <FormControl component='fieldset'>
             <FormLabel component='legend' sx={{ fontWeight: 500, mb: 0.5 }}>

@@ -61,10 +61,15 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unsafe-enum-comparison': 'off',
-      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
-      '@typescript-eslint/no-redundant-type-constituents': 'off',
+    },
+  },
+  {
+    // Test files: `async` test callbacks and `act(async () => {})` wrappers are
+    // idiomatic even when they contain no `await` (async `act` flushes the
+    // microtask queue). Relaxing require-await here avoids churn in test infra.
+    files: ['**/*.spec.{ts,tsx}', '**/*.test.{ts,tsx}'],
+    rules: {
       '@typescript-eslint/require-await': 'off',
-      '@typescript-eslint/no-misused-promises': 'off',
     },
   },
   prettierRecommended,
