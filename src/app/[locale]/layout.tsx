@@ -12,18 +12,48 @@ import { Mulish, IBM_Plex_Mono } from 'next/font/google';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 import { Container } from '@mui/material';
+import RootJsonLd from '../components/RootJsonLd';
 import { type Locale, routing } from '../../i18n/routing';
 import { getEnvConfig } from '../utils/config';
 
 export const metadata = {
-  title:
-    'MobilityDatabase | The Global Catalog of GTFS, GTFS-Realtime & GBFS Feeds',
+  metadataBase: new URL('https://mobilitydatabase.org'),
+  title: {
+    default:
+      'MobilityDatabase | The Global Catalog of GTFS, GTFS-Realtime & GBFS Feeds',
+    template: '%s | MobilityDatabase',
+  },
   description:
-    "Access GTFS, GTFS Realtime, GBFS transit data with over 6,000 feeds from 99+ countries on the web's leading transit data platform.",
+    "Access GTFS, GTFS Realtime, and GBFS transit data with over 6,000 feeds from 100+ countries on the web's leading transit data platform.",
   robots:
     process.env.VERCEL_ENV === 'production'
       ? 'index, follow'
       : 'noindex, nofollow',
+  alternates: {
+    canonical: 'https://mobilitydatabase.org',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en',
+    url: 'https://mobilitydatabase.org',
+    siteName: 'MobilityDatabase',
+    title: 'MobilityDatabase | The Global Catalog of Transit Data',
+    description:
+      'Access GTFS, GTFS Realtime, and GBFS transit data with over 6,000 feeds from 100+ countries.',
+    images: [
+      {
+        url: '/opengraph-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'MobilityDatabase - Global Transit Data',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@MobilityDataIO',
+    creator: '@MobilityDataIO',
+  },
   icons: {
     icon: [
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
@@ -99,6 +129,7 @@ export default async function LocaleLayout({
       <head>
         <link rel='preconnect' href='https://firebaseapp.com' />
         <link rel='dns-prefetch' href='https://firebaseapp.com' />
+        <RootJsonLd />
       </head>
       <body
         className={`${mulish.className} ${mulish.variable} ${ibmPlexMono.variable}`}
