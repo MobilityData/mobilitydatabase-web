@@ -59,7 +59,11 @@ export default function FormSecondStep({
   return (
     <>
       <Typography gutterBottom>{t('gtfsScheduleFeed')}</Typography>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form
+        onSubmit={(e) => {
+          void handleSubmit(onSubmit)(e);
+        }}
+      >
         <Grid container direction={'column'} rowSpacing={2}>
           <Grid>
             <FormControl

@@ -42,13 +42,7 @@ export interface PrecomputeDeps {
 
 /** Small helper: wait once for a map event */
 async function once(map: maplibregl.Map, ev: string): Promise<void> {
-  await new Promise<void>(
-    // eslint-disable-next-line no-async-promise-executor
-    async (resolve) =>
-      await map.once(ev, () => {
-        resolve();
-      }),
-  );
+  await map.once(ev);
 }
 
 // Extend helpers for [minLng,minLat,maxLng,maxLat]
@@ -306,7 +300,7 @@ export function createPrecomputation(deps: PrecomputeDeps): {
         .then(() => {})
         .catch((e) => {
           if (e.name === 'CancellationError') {
-            console.error('Precomputation cancelled by user.');
+            console.log('Precomputation cancelled by user.');
           }
         });
     });

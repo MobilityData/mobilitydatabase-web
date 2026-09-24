@@ -32,6 +32,7 @@ export default function GBFSNoticeAnalytics(): React.ReactElement {
   const router = useRouter();
   const searchParams = useSearchParams();
   const noticeCode = searchParams.get('noticeCode');
+  const theme = useTheme();
   const [data, setData] = useState<GBFSNoticeMetrics[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -133,7 +134,6 @@ export default function GBFSNoticeAnalytics(): React.ReactElement {
     enableStickyFooter: true,
     muiTableContainerProps: { sx: { maxHeight: '70vh' } },
     renderDetailPanel: ({ row }) => {
-      const theme = useTheme();
       const metrics = row.original;
 
       const chartData = metrics.computed_on.map((date, index) => ({

@@ -41,12 +41,6 @@ export default tseslint.config(
           ignoreRestSiblings: true,
         },
       ],
-      // TODO: hooks called inside render callbacks, incorrect hook usage patterns,
-      // and missing/extra effect dependencies — to be fixed in a separate ticket.
-      'react-hooks/rules-of-hooks': 'off',
-      'react-hooks/refs': 'off',
-      'react-hooks/set-state-in-render': 'off',
-      'react-hooks/set-state-in-effect': 'off',
       'react-hooks/immutability': 'off',
       'react-hooks/exhaustive-deps': 'off',
       // TypeScript handles these; disable the core JS versions.
@@ -61,10 +55,15 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unsafe-enum-comparison': 'off',
-      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
-      '@typescript-eslint/no-redundant-type-constituents': 'off',
+    },
+  },
+  {
+    // Test files: `async` test callbacks and `act(async () => {})` wrappers are
+    // idiomatic even when they contain no `await` (async `act` flushes the
+    // microtask queue). Relaxing require-await here avoids churn in test infra.
+    files: ['**/*.spec.{ts,tsx}', '**/*.test.{ts,tsx}'],
+    rules: {
       '@typescript-eslint/require-await': 'off',
-      '@typescript-eslint/no-misused-promises': 'off',
     },
   },
   prettierRecommended,
