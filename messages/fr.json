@@ -137,6 +137,46 @@
     "invalidLink": "Le lien de vérification ne contient pas les informations requises.",
     "verificationFailed": "Nous n'avons pas pu vérifier votre e-mail avec ce lien."
   },
+  "authAction": {
+    "errorTitle": "Lien non pris en charge",
+    "errorDescription": "Ce lien de compte ne peut pas être ouvert ici.",
+    "unsupportedMode": "Ce lien correspond à une action que Mobility Database ne prend pas en charge.",
+    "missingCode": "Il manque à ce lien le code de sécurité nécessaire.",
+    "backToSignIn": "Aller à la connexion"
+  },
+  "resetPassword": {
+    "verifyingTitle": "Vérification de votre lien",
+    "verifyingDescription": "Veuillez patienter pendant que nous vérifions votre lien de réinitialisation.",
+    "title": "Choisissez un nouveau mot de passe",
+    "description": "Saisissez un nouveau mot de passe pour votre compte Mobility Database.",
+    "descriptionForEmail": "Saisissez un nouveau mot de passe pour {email}.",
+    "newPasswordLabel": "Nouveau mot de passe",
+    "confirmPasswordLabel": "Confirmez le nouveau mot de passe",
+    "togglePasswordVisibility": "Afficher ou masquer le mot de passe",
+    "submit": "Réinitialiser le mot de passe",
+    "submitting": "Réinitialisation…",
+    "successTitle": "Mot de passe mis à jour",
+    "successDescription": "Votre mot de passe a été modifié. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+    "goToSignIn": "Aller à la connexion",
+    "errorTitle": "Impossible de réinitialiser votre mot de passe",
+    "requestNewLink": "Demander un nouveau lien",
+    "validation": {
+      "newPasswordRequired": "Le nouveau mot de passe est obligatoire.",
+      "confirmPasswordRequired": "Veuillez confirmer votre nouveau mot de passe.",
+      "complexity": "Le mot de passe doit comporter au moins 12 caractères et inclure une majuscule, une minuscule, un chiffre et un caractère spécial.",
+      "mismatch": "Les mots de passe doivent correspondre."
+    },
+    "errors": {
+      "expiredCode": "Ce lien de réinitialisation a expiré. Demandez-en un nouveau pour continuer.",
+      "invalidCode": "Ce lien de réinitialisation est invalide ou a déjà été utilisé. Demandez-en un nouveau pour continuer.",
+      "userDisabled": "Ce compte a été désactivé. Contactez-nous pour obtenir de l’aide.",
+      "userNotFound": "Nous n’avons trouvé aucun compte correspondant à ce lien de réinitialisation.",
+      "weakPassword": "Ce mot de passe est trop faible. Veuillez en choisir un plus robuste.",
+      "tooManyRequests": "Trop de tentatives. Veuillez réessayer dans quelques minutes.",
+      "networkError": "Nous n’avons pas pu joindre nos serveurs. Vérifiez votre connexion et réessayez.",
+      "generic": "Nous n’avons pas pu réinitialiser votre mot de passe. Veuillez réessayer."
+    }
+  },
   "feeds": {
     "feeds": "Feeds",
     "dataType": "Data Format",
