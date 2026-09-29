@@ -2,6 +2,8 @@ import { type ReactElement } from 'react';
 import { setRequestLocale } from 'next-intl/server';
 import { type Metadata } from 'next';
 import { type Locale, routing } from '../../../i18n/routing';
+import { redirect } from '../../../i18n/navigation';
+import { resolveAuthAction, toLocale } from '../auth/action/lib/auth-actions';
 import EmailVerificationContent from './EmailVerificationContent';
 
 export const metadata: Metadata = {
@@ -32,6 +34,7 @@ interface PageProps {
   searchParams: Promise<{
     mode?: string;
     oobCode?: string;
+    lang?: string;
   }>;
 }
 
@@ -40,9 +43,25 @@ export default async function EmailVerificationPage({
   searchParams,
 }: PageProps): Promise<ReactElement> {
   const { locale } = await params;
-  const { mode, oobCode } = await searchParams;
+  const { mode, oobCode, lang } = await searchParams;
 
   setRequestLocale(locale);
+
+  // Back-compat: this route used to be the Firebase console's action URL for
+  // every template, so emails already in inboxes point other actions here.
+  // Forward those to the page that handles them; /auth/action covers new mail.
+  if (mode !== undefined && mode !== 'verifyEmail') {
+    const resolution = resolveAuthAction(
+      { mode, oobCode, lang },
+      toLocale(locale),
+    );
+    if (resolution.status === 'redirect') {
+      redirect({
+        href: { pathname: resolution.pathname, query: resolution.query },
+        locale: resolution.locale,
+      });
+    }
+  }
 
   return <EmailVerificationContent mode={mode} oobCode={oobCode} />;
 }

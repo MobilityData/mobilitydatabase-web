@@ -137,6 +137,46 @@
     "invalidLink": "The verification link is missing required information.",
     "verificationFailed": "We could not verify your email with this link."
   },
+  "authAction": {
+    "errorTitle": "Link not supported",
+    "errorDescription": "This account link can't be opened here.",
+    "unsupportedMode": "This link is for an action Mobility Database doesn't support.",
+    "missingCode": "This link is missing the security code it needs.",
+    "backToSignIn": "Go to sign in"
+  },
+  "resetPassword": {
+    "verifyingTitle": "Checking your link",
+    "verifyingDescription": "Please wait while we confirm your password reset link.",
+    "title": "Choose a new password",
+    "description": "Enter a new password for your Mobility Database account.",
+    "descriptionForEmail": "Enter a new password for {email}.",
+    "newPasswordLabel": "New password",
+    "confirmPasswordLabel": "Confirm new password",
+    "togglePasswordVisibility": "Toggle password visibility",
+    "submit": "Reset password",
+    "submitting": "Resetting…",
+    "successTitle": "Password updated",
+    "successDescription": "Your password has been changed. You can now sign in with your new password.",
+    "goToSignIn": "Go to sign in",
+    "errorTitle": "Unable to reset your password",
+    "requestNewLink": "Request a new link",
+    "validation": {
+      "newPasswordRequired": "A new password is required.",
+      "confirmPasswordRequired": "Please confirm your new password.",
+      "complexity": "Password must be at least 12 characters and include an uppercase letter, a lowercase letter, a number and a special character.",
+      "mismatch": "Passwords must match."
+    },
+    "errors": {
+      "expiredCode": "This reset link has expired. Request a new one to continue.",
+      "invalidCode": "This reset link is invalid or has already been used. Request a new one to continue.",
+      "userDisabled": "This account has been disabled. Contact us for help.",
+      "userNotFound": "We couldn't find an account for this reset link.",
+      "weakPassword": "That password is too weak. Please choose a stronger one.",
+      "tooManyRequests": "Too many attempts. Please try again in a few minutes.",
+      "networkError": "We couldn't reach our servers. Check your connection and try again.",
+      "generic": "We couldn't reset your password. Please try again."
+    }
+  },
   "feeds": {
     "feeds": "Feeds",
     "dataType": "Data Format",
