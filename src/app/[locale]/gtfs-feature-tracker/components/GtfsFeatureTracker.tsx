@@ -63,8 +63,8 @@ const CONSUMER_LOGOS: Record<string, string> = {
   transsee: '/assets/tripPlannerLogos/transsee.svg',
   catenary: '/assets/tripPlannerLogos/catenary.svg',
   rome2rio: '/assets/tripPlannerLogos/rome2rio.png',
-  axonvibe: '/assets/tripPlannerLogos/axonvibe.png',
-  pantograph: '/assets/tripPlannerLogos/pantograph.png',
+  axonvibe: '/assets/tripPlannerLogos/axonvibe.svg',
+  pantograph: '/assets/tripPlannerLogos/pantograph.jpeg',
 };
 
 // ── FeatureDetail ─────────────────────────────────────────────────────────────
