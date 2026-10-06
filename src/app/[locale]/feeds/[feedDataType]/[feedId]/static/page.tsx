@@ -18,10 +18,20 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { feedId, feedDataType } = await params;
 
-  const [t, feedData] = await Promise.all([
-    getTranslations(),
-    fetchGuestFeedData(feedDataType, feedId),
-  ]);
+  let t: Awaited<ReturnType<typeof getTranslations>>;
+  let feedData: FeedDataResult;
+  try {
+    [t, feedData] = await Promise.all([
+      getTranslations(),
+      fetchGuestFeedData(feedDataType, feedId),
+    ]);
+  } catch (e) {
+    console.error(
+      `[StaticFeedPage] generateMetadata failed to fetch feed ${feedId}:`,
+      e,
+    );
+    notFound();
+  }
 
   return generateFeedMetadata({
     feed: feedData.feed,

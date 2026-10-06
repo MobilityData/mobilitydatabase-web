@@ -16,15 +16,23 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { feedId, feedDataType } = await params;
 
-  const [t, feedData] = await Promise.all([
-    getTranslations(),
-    fetchGuestFeedData(feedDataType, feedId),
-  ]);
+  try {
+    const [t, feedData] = await Promise.all([
+      getTranslations(),
+      fetchGuestFeedData(feedDataType, feedId),
+    ]);
 
-  return generateMapFeedMetadata({
-    feed: feedData.feed,
-    t,
-  });
+    return generateMapFeedMetadata({
+      feed: feedData.feed,
+      t,
+    });
+  } catch (e) {
+    console.error(
+      `[StaticFullMapViewPage] generateMetadata failed to fetch feed ${feedId}:`,
+      e,
+    );
+    return {};
+  }
 }
 
 /**
