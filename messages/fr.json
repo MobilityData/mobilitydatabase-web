@@ -731,12 +731,52 @@
     "unableToDetectVersions": "Unable to detect versions within this feed."
   },
   "home": {
-    "title": "Explorez et accédez aux données de transport mondiales",
-    "servingOver": "Actuellement plus de",
-    "feeds": "flux de données de transport de plus de",
-    "fromOver": "de plus de",
-    "countries": "pays.",
-    "or": "ou",
+    "heroChips": {
+      "gbfs": "Parcourir les flux GBFS",
+      "gtfsRt": "Parcourir les flux GTFS-Realtime",
+      "gtfs": "Parcourir les flux GTFS Schedule"
+    },
+    "globe": {
+      "eyebrow": "Couverture",
+      "title": "Des données de transport aux quatre coins du monde",
+      "description": "Faites tourner le globe ou passez à la vue carte, puis sélectionnez un pays pour voir combien de flux il compte.",
+      "caveat": "Nombre de flux au {date, date, long}.",
+      "viewToggleLabel": "Vue de la couverture",
+      "viewGlobe": "Globe",
+      "viewMap": "Carte"
+    },
+    "features": {
+      "eyebrow": "Fonctionnalités",
+      "title": "Tout ce qu'il faut pour trouver, explorer et utiliser les données de transport ouvertes",
+      "items": {
+        "discover": {
+          "title": "Découvrez les données de transport mondiales",
+          "description": "Recherchez plus de 6000 flux GTFS, GTFS Realtime et GBFS de plus de 100 pays dans un catalogue ouvert.",
+          "cta": "Explorer les flux de transport"
+        },
+        "visualization": {
+          "title": "Visualisation GTFS",
+          "description": "Prévisualisez les lignes et les arrêts sur une carte interactive avant de télécharger le moindre fichier.",
+          "cta": "Explorer un exemple"
+        },
+        "api": {
+          "title": "Accès à l'API",
+          "description": "Interrogez l'ensemble du catalogue grâce à notre API REST.",
+          "cta": "Voir la documentation de l'API"
+        },
+        "tracker": {
+          "title": "Suivi des fonctionnalités GTFS",
+          "description": "Découvrez quelles fonctionnalités GTFS les agences adoptent à travers le monde.",
+          "cta": "Explorer"
+        }
+      },
+      "previews": {
+        "everyFeed": "Tous les flux",
+        "someFieldsIgnored": "Certains champs ignorés"
+      }
+    },
+    "title": "Explorez et accédez aux <emphasis>données de transport ouvertes mondiales</emphasis>",
+    "subtitle": "<stat><b>6000+</b> flux de transport</stat><stat>plus de <b>100</b> pays</stat>",
     "browseFeeds": "Parcourir les flux",
     "addFeed": "Ajouter un flux",
     "signUpApi": "S'inscrire à l'API",
@@ -1152,12 +1192,12 @@
   "footer": {
     "tagline": "Le plus grand catalogue ouvert de flux de données de transit et de mobilité, au service de la communauté mondiale des transports.",
     "maintainedBy": "Maintenu avec 💙 par MobilityData",
-    "copyright": "© {year} MobilityDatabase. Tous droits réservés.",
+    "copyright": "© {year} Mobility Database. Tous droits réservés.",
     "columns": {
       "platform": "Plateforme",
       "tools": "Outils",
       "resources": "Ressources",
-      "company": "Entreprise",
+      "company": "Organisation",
       "legal": "Légal"
     },
     "links": {
@@ -1180,7 +1220,7 @@
       "github": "GitHub",
       "slack": "Slack",
       "linkedin": "LinkedIn",
-      "logo": "Logo MobilityDatabase"
+      "logo": "Logo Mobility Database"
     }
   }
 }
