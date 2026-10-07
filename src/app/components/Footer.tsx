@@ -53,88 +53,20 @@ const Footer: React.FC = () => {
           flexDirection: { xs: 'column', md: 'row' },
           gap: { xs: 4, md: 2 },
           px: { xs: 3, md: 8 },
-          py: 5,
+          pt: 5,
+          pb: 2,
           maxWidth: '1400px',
           mx: 'auto',
           flexWrap: 'wrap',
         }}
       >
-        {/* Brand column */}
-        <Box sx={{ flex: 2, minWidth: '200px', pr: { md: 4 } }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            <Image
-              src={
-                colorScheme !== 'dark'
-                  ? '/assets/MOBILTYDATA_logo_light_blue_M.png'
-                  : '/assets/MOBILTYDATA_logo_purple_M.png'
-              }
-              alt={t('aria.logo')}
-              width={32}
-              height={32}
-            />
-            <Typography
-              variant='h6'
-              sx={{
-                fontWeight: 700,
-              }}
-            >
-              MobilityDatabase
-            </Typography>
-          </Box>
-
-          <Typography
-            sx={{
-              color: theme.vars.palette.text.secondary,
-              fontSize: theme.typography.body2.fontSize,
-              lineHeight: 1.6,
-              mb: 3,
-              fontFamily: fontFamily.primary,
-            }}
-          >
-            {t('tagline')}
-          </Typography>
-
-          <Box sx={{ display: 'flex', gap: 0.5 }}>
-            <IconButton
-              aria-label={t('aria.github')}
-              component='a'
-              href={MOBILITY_DATA_LINKS.github}
-              target='_blank'
-              rel='noopener noreferrer'
-              size='small'
-            >
-              <GitHub />
-            </IconButton>
-            <IconButton
-              aria-label={t('aria.slack')}
-              component='a'
-              href={MOBILITY_DATA_LINKS.slack}
-              target='_blank'
-              rel='noopenernoreferrer'
-              size='small'
-            >
-              {SlackSvg}
-            </IconButton>
-            <IconButton
-              aria-label={t('aria.linkedin')}
-              component='a'
-              href={MOBILITY_DATA_LINKS.linkedin}
-              target='_blank'
-              rel='noopener noreferrer'
-              size='small'
-            >
-              <LinkedIn />
-            </IconButton>
-          </Box>
-        </Box>
-
         <Box
           sx={{
             width: '100%',
             display: 'flex',
             gap: 1,
             flexWrap: 'wrap',
-            maxWidth: '800px',
+            justifyContent: { xs: 'flex-start', lg: 'center' },
           }}
         >
           {/* Platform column */}
@@ -222,6 +154,40 @@ const Footer: React.FC = () => {
             </FooterLink>
           </Box>
         </Box>
+      </Box>
+
+      {/* Socials */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5, pb: 3 }}>
+        <IconButton
+          aria-label={t('aria.github')}
+          component='a'
+          href={MOBILITY_DATA_LINKS.github}
+          target='_blank'
+          rel='noopener noreferrer'
+          size='small'
+        >
+          <GitHub />
+        </IconButton>
+        <IconButton
+          aria-label={t('aria.slack')}
+          component='a'
+          href={MOBILITY_DATA_LINKS.slack}
+          target='_blank'
+          rel='noopener noreferrer'
+          size='small'
+        >
+          {SlackSvg}
+        </IconButton>
+        <IconButton
+          aria-label={t('aria.linkedin')}
+          component='a'
+          href={MOBILITY_DATA_LINKS.linkedin}
+          target='_blank'
+          rel='noopener noreferrer'
+          size='small'
+        >
+          <LinkedIn />
+        </IconButton>
       </Box>
 
       {/* Bottom bar */}
