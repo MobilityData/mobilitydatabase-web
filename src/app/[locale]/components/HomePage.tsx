@@ -65,7 +65,11 @@ export default async function HomePage(): Promise<ReactElement> {
         `crossOrigin='anonymous'` is credentials mode `same-origin`, which is
         what a plain `fetch()` uses; without it the two modes differ and the
         browser makes the request twice. */}
-      <link rel='preconnect' href='https://a.basemaps.cartocdn.com' />
+      <link
+        rel='preconnect'
+        href='https://a.basemaps.cartocdn.com'
+        crossOrigin='anonymous'
+      />
       {/* Runs during HTML parse, well before any bundle, so the hero's thirty
         tiles are in flight about a second earlier. See `tilePreloadScript`. */}
       <script dangerouslySetInnerHTML={{ __html: tilePreloadScript() }} />
