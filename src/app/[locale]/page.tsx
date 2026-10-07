@@ -18,7 +18,7 @@ interface PageProps {
 
 export const metadata: Metadata = {
   title:
-    'MobilityDatabase | The Global Catalog of GTFS, GTFS-Realtime & GBFS Feeds',
+    'Mobility Database | The Global Catalog of GTFS, GTFS-Realtime & GBFS Feeds',
   description:
     'Discover open public transit data worldwide. Mobility Database provides GTFS, GTFS-RT, and GBFS feeds to help developers, cities, and agencies build better mobility tools.',
   applicationName: 'Mobility Database',

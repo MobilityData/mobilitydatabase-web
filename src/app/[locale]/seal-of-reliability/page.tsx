@@ -7,15 +7,15 @@ import { type Metadata } from 'next';
 export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
-  title: 'Seal of Reliability | MobilityDatabase',
+  title: 'Seal of Reliability | Mobility Database',
   description:
-    'Learn about the Seal of Reliability, MobilityDatabase’s indicator of feed quality and consistency for GTFS feeds.',
+    'Learn about the Seal of Reliability, Mobility Database’s indicator of feed quality and consistency for GTFS feeds.',
   openGraph: {
-    title: 'Seal of Reliability | MobilityDatabase',
+    title: 'Seal of Reliability | Mobility Database',
     description:
-      'Learn about the Seal of Reliability, MobilityDatabase’s indicator of feed quality and consistency for GTFS feeds.',
+      'Learn about the Seal of Reliability, Mobility Database’s indicator of feed quality and consistency for GTFS feeds.',
     url: 'https://mobilitydatabase.org/seal-of-reliability',
-    siteName: 'MobilityDatabase',
+    siteName: 'Mobility Database',
     type: 'website',
   },
 };

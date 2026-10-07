@@ -9,15 +9,15 @@ export const dynamic = 'force-static';
 export const revalidate = 86400; // Revalidate every day
 
 export const metadata: Metadata = {
-  title: 'GTFS Features Adoption Tracker | MobilityDatabase',
+  title: 'GTFS Features Adoption Tracker | Mobility Database',
   description:
     'Track the adoption of GTFS features across major journey planners including Google, Transit, Motis, OpenTripPlanner, and more.',
   openGraph: {
-    title: 'GTFS Features Adoption Tracker | MobilityDatabase',
+    title: 'GTFS Features Adoption Tracker | Mobility Database',
     description:
       'Track the adoption of GTFS features across major journey planners including Google, Transit, Motis, OpenTripPlanner, and more.',
     url: 'https://mobilitydatabase.org/gtfs-feature-tracker',
-    siteName: 'MobilityDatabase',
+    siteName: 'Mobility Database',
     type: 'website',
   },
 };

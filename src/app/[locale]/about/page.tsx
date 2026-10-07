@@ -7,15 +7,15 @@ import { type Metadata } from 'next';
 export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
-  title: 'About | MobilityDatabase',
+  title: 'About | Mobility Database',
   description:
-    'Learn about MobilityDatabase, the open-source catalog of public transit feeds. Discover our mission to make GTFS, GTFS-RT, and GBFS data accessible to everyone.',
+    'Learn about Mobility Database, the open-source catalog of public transit feeds. Discover our mission to make GTFS, GTFS-RT, and GBFS data accessible to everyone.',
   openGraph: {
-    title: 'About | MobilityDatabase',
+    title: 'About | Mobility Database',
     description:
-      'Learn about MobilityDatabase, the open-source catalog of public transit feeds. Discover our mission to make GTFS, GTFS-RT, and GBFS data accessible to everyone.',
+      'Learn about Mobility Database, the open-source catalog of public transit feeds. Discover our mission to make GTFS, GTFS-RT, and GBFS data accessible to everyone.',
     url: 'https://mobilitydatabase.org/about',
-    siteName: 'MobilityDatabase',
+    siteName: 'Mobility Database',
     type: 'website',
   },
 };

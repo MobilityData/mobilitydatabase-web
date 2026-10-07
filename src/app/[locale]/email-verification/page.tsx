@@ -5,7 +5,7 @@ import { type Locale, routing } from '../../../i18n/routing';
 import EmailVerificationContent from './EmailVerificationContent';
 
 export const metadata: Metadata = {
-  title: 'Email Verification | MobilityDatabase',
+  title: 'Email Verification | Mobility Database',
   description:
     'Verify your Mobility Database account email address through Firebase authentication.',
   robots: {
