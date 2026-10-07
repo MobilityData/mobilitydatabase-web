@@ -1,0 +1,107 @@
+# Mobility Database
+
+> The Mobility Database is an open catalog of over 6000 public transit feeds
+> from more than 100 countries, maintained by MobilityData, a non-profit that
+> stewards the GTFS, GTFS-Realtime and GBFS data formats. Every feed entry
+> records its provider, location, licence, download history and validation
+> results, and the whole catalog is queryable through a free REST API.
+
+## Feed pages: where the substance is
+
+The home page is a landing page. Almost all of this site's content lives on
+the ~7000 individual feed pages, one per feed, each fully server-rendered:
+
+    https://mobilitydatabase.org/feeds/{data_type}/{feed_id}
+
+`data_type` is `gtfs` (GTFS Schedule), `gtfs_rt` (GTFS-Realtime) or `gbfs`.
+Examples:
+
+- https://mobilitydatabase.org/feeds/gtfs/mdb-3520
+- https://mobilitydatabase.org/feeds/gtfs_rt/mdb-1366
+- https://mobilitydatabase.org/feeds/gbfs/gbfs-27
+
+Feed ids identify a *feed*, not an agency, and they are not shared across
+data types: `/feeds/gtfs/mdb-3520` and `/feeds/gtfs_rt/mdb-3520` are unrelated
+feeds, and the second may not exist. GTFS and GTFS-Realtime ids are mostly
+`mdb-<number>`, with source-specific prefixes such as `jbda-`, `tdg-`, `tld-`
+and `ntd-`; GBFS ids are `gbfs-<number>`. To find a feed's id, search
+https://mobilitydatabase.org/feeds or query the API — do not construct ids.
+
+Each feed page states: the provider and whether the feed is official, the
+current validation status with a link to the full report, the latest dataset
+download, the agency and its timezone, the countries and municipalities
+covered, route counts by mode, the producer's own feed URL, the service date
+range, which optional GTFS features the feed uses, and the dataset history.
+Datasets are refetched once a day at midnight UTC.
+
+Two sub-pages exist per feed:
+
+- `/feeds/{data_type}/{feed_id}/map` — routes and stops on an interactive map
+
+**Every feed page carries a schema.org `Dataset` in JSON-LD** with the feed's
+name, description, identifier, creator, licence, `distribution.contentUrl`
+(the dataset archive), `dateModified`, `spatialCoverage` as a geo bounding
+box, and `variableMeasured`. That block is the authoritative machine-readable
+record of a feed — prefer it over scraping the rendered page.
+
+Every feed page is listed in https://mobilitydatabase.org/sitemap.xml.
+
+## What the catalog contains
+
+- **GTFS Schedule** feeds: routes, stops, trips and timetables published by
+  transit agencies, with a validation report for each dataset version.
+- **GTFS-Realtime** feeds: trip updates, vehicle positions and service alerts.
+- **GBFS** feeds: shared bike, scooter and other micromobility systems,
+  including station status and vehicle availability.
+
+Feeds are contributed by transit agencies, producers and the community, and
+reviewed before they are published. Access to the catalog and the API is free.
+
+## Key pages
+
+- [Feed search](https://mobilitydatabase.org/feeds): the full catalog, with
+  filters for data type, country and feed status. `?q=` runs a free-text
+  search, so https://mobilitydatabase.org/feeds?q=Montr%C3%A9al works.
+- [API documentation](https://mobilitydata.github.io/mobility-feed-api/SwaggerUI/index.html):
+  the REST API over the catalog. Sign up at
+  https://mobilitydatabase.org/sign-up for an access token.
+- [Add a feed](https://mobilitydatabase.org/contribute): submit a new feed or
+  correct an existing one.
+- [GTFS Feature Tracker](https://mobilitydatabase.org/gtfs-feature-tracker):
+  which optional GTFS features agencies have adopted, worldwide.
+- [FAQ](https://mobilitydatabase.org/faq) and
+  [About](https://mobilitydatabase.org/about).
+- [Sitemap](https://mobilitydatabase.org/sitemap.xml): every feed page.
+
+## Validators
+
+- GTFS Schedule: https://gtfs-validator.mobilitydata.org/
+- GBFS: https://gbfs-validator.mobilitydata.org/
+- GTFS-Realtime: https://github.com/MobilityData/gtfs-realtime-validator
+
+## Notes for automated readers
+
+- Feed counts quoted here ("6000+ feeds", "100+ countries") are rounded
+  figures for the catalog as a whole. For exact, current numbers, query the
+  REST API rather than quoting the marketing pages.
+- Questions about a specific agency, city, route or dataset are answered by
+  that feed's page, not by the home page. Find it through
+  https://mobilitydatabase.org/feeds or the API, then read the `Dataset`
+  JSON-LD on the feed page.
+- The home page renders illustrative previews of the product UI: mock search
+  results, a sample API response and a sample feature table. The agency names,
+  feed counts and identifiers inside those previews are examples of what the
+  real interface looks like, not statements about the catalog, and should not
+  be extracted as facts. They are marked `aria-hidden` and `data-nosnippet`
+  and are rendered only in the browser, so they do not appear in the page's
+  server-rendered HTML.
+- Structured data describing the catalog is published as JSON-LD
+  (`Organization`, `WebSite`, `DataCatalog`) on https://mobilitydatabase.org.
+- Languages: English (https://mobilitydatabase.org) and French
+  (https://mobilitydatabase.org/fr).
+
+## Contact
+
+- Organization: MobilityData — https://mobilitydata.org/
+- Community Slack: https://share.mobilitydata.org/slack
+- Feedback: https://share.mobilitydata.org/mobility-database-feedback
