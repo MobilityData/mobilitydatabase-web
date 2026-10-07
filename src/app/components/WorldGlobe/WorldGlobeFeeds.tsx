@@ -533,6 +533,17 @@ export default function WorldGlobeFeeds({
     // The globe can be mounted well before it is scrolled to, so that it is
     // ready on arrival. Rendering it while it is off screen would spin the
     // GPU and drain battery for a picture nobody is looking at.
+    // Reduced motion drops everything that moves on its own: the ambient
+    // spin, the camera's breathing, the star twinkle and the tour's swing
+    // (it snaps to each stop instead). Dragging, zooming and clicking still
+    // work. Read live so toggling the OS setting applies without a reload.
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let reduceMotion = motionQuery.matches;
+    function onMotionPreferenceChange(event: MediaQueryListEvent): void {
+      reduceMotion = event.matches;
+    }
+    motionQuery.addEventListener('change', onMotionPreferenceChange);
+
     let onScreen = true;
     const visibility = new IntersectionObserver(([entry]) => {
       onScreen = entry.isIntersecting;
@@ -566,10 +577,9 @@ export default function WorldGlobeFeeds({
       elapsed += dt;
 
       if (tourTweening && tourTarget) {
-        const progress = Math.min(
-          1,
-          (elapsed - tourStartTime) / TOUR_TWEEN_SECONDS,
-        );
+        const progress = reduceMotion
+          ? 1
+          : Math.min(1, (elapsed - tourStartTime) / TOUR_TWEEN_SECONDS);
         const e = easeInOutCubic(progress);
         globeGroup.rotation.x = tourFromX + (tourToX - tourFromX) * e;
         globeGroup.rotation.y = tourFromY + (tourToY - tourFromY) * e;
@@ -578,7 +588,7 @@ export default function WorldGlobeFeeds({
           selectCountry(tourTarget, { freezeRotation: false });
           scheduleTourTick(TOUR_DWELL_SECONDS);
         }
-      } else if (rotating) {
+      } else if (rotating && !reduceMotion) {
         // Ease off while a tour stop's popup is showing so it can be read.
         globeGroup.rotation.y +=
           dt *
@@ -590,10 +600,11 @@ export default function WorldGlobeFeeds({
       globeGroup.updateMatrixWorld();
       if (selectedCountry) updatePopupPosition(selectedCountry);
 
-      camera.position.z =
-        baseZoom + Math.sin(elapsed * BREATHE_SPEED) * BREATHE_AMPLITUDE;
+      camera.position.z = reduceMotion
+        ? baseZoom
+        : baseZoom + Math.sin(elapsed * BREATHE_SPEED) * BREATHE_AMPLITUDE;
       for (const { points, parallax } of starLayers) {
-        points.material.uniforms.uTime.value = elapsed;
+        points.material.uniforms.uTime.value = reduceMotion ? 0 : elapsed;
         points.rotation.y = globeGroup.rotation.y * parallax;
         points.rotation.x = globeGroup.rotation.x * parallax;
       }
@@ -607,6 +618,7 @@ export default function WorldGlobeFeeds({
       cancelAnimationFrame(raf);
       clearTimeout(tourTimeoutId);
       visibility.disconnect();
+      motionQuery.removeEventListener('change', onMotionPreferenceChange);
       ro.disconnect();
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);
       renderer.domElement.removeEventListener('pointermove', onPointerMove);
