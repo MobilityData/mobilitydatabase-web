@@ -47,7 +47,7 @@ export const fontFamily = {
   secondary: 'var(--font-ibm-plex-mono)',
 };
 
-const lightPalette = {
+export const lightPalette = {
   primary: {
     main: '#3959fa',
     dark: '#002eea',
@@ -80,7 +80,7 @@ const lightPalette = {
   boxShadow: '0px 1px 4px 2px rgba(0,0,0,0.2)',
 };
 
-const darkPalette = {
+export const darkPalette = {
   primary: {
     main: '#96a1ff',
     dark: '#4a5dff',

@@ -771,12 +771,52 @@
     "unableToDetectVersions": "Unable to detect versions within this feed."
   },
   "home": {
-    "title": "Explore and Access Global Transit Data",
-    "servingOver": "Currently serving over",
-    "feeds": "transportation data feeds from over",
-    "fromOver": "from over",
-    "countries": "countries.",
-    "or": "or",
+    "heroChips": {
+      "gbfs": "Browse GBFS feeds",
+      "gtfsRt": "Browse GTFS-Realtime feeds",
+      "gtfs": "Browse GTFS Schedule feeds"
+    },
+    "globe": {
+      "eyebrow": "Coverage",
+      "title": "Transit data from every corner of the world",
+      "description": "Drag to spin the globe, or switch to the map view, then select a country to see how many feeds it has.",
+      "caveat": "Feed counts as of {date, date, long}.",
+      "viewToggleLabel": "Coverage view",
+      "viewGlobe": "Globe",
+      "viewMap": "Map"
+    },
+    "features": {
+      "eyebrow": "Features",
+      "title": "Everything you need to find, explore and use open transit data",
+      "items": {
+        "discover": {
+          "title": "Discover Global Transit Data",
+          "description": "Search 6000+ GTFS, GTFS Realtime and GBFS feeds from over 100 countries in one open catalog.",
+          "cta": "Explore Transit Feeds"
+        },
+        "visualization": {
+          "title": "GTFS Visualization",
+          "description": "Preview routes and stops on an interactive map before downloading a single file.",
+          "cta": "Explore example"
+        },
+        "api": {
+          "title": "API Access",
+          "description": "Query the whole catalog programmatically through our REST API.",
+          "cta": "View API Docs"
+        },
+        "tracker": {
+          "title": "GTFS Feature Tracker",
+          "description": "See which GTFS features agencies are adopting around the world.",
+          "cta": "Explore"
+        }
+      },
+      "previews": {
+        "everyFeed": "Every feed",
+        "someFieldsIgnored": "Some fields ignored"
+      }
+    },
+    "title": "Explore and Access <emphasis>Global Open Transit Data</emphasis>",
+    "subtitle": "<stat><b>6000+</b> transit feeds</stat><stat><b>100+</b> countries</stat>",
     "browseFeeds": "Browse Feeds",
     "addFeed": "Add a feed",
     "signUpApi": "Sign up for the API",
@@ -1192,12 +1232,12 @@
   "footer": {
     "tagline": "An open catalog of transit and mobility data feeds, serving the global transportation community.",
     "maintainedBy": "Maintained with 💙 by MobilityData",
-    "copyright": "© {year} MobilityDatabase. All rights reserved.",
+    "copyright": "© {year} Mobility Database. All rights reserved.",
     "columns": {
       "platform": "Platform",
       "tools": "Tools",
       "resources": "Resources",
-      "company": "Company",
+      "company": "Organization",
       "legal": "Legal"
     },
     "links": {
@@ -1220,7 +1260,7 @@
       "github": "GitHub",
       "slack": "Slack",
       "linkedin": "LinkedIn",
-      "logo": "MobilityDatabase logo"
+      "logo": "Mobility Database logo"
     }
   }
 }

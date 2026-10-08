@@ -25,7 +25,7 @@ export const FooterLink: React.FC<FooterLinkProps> = ({
       sx={{
         color: theme.vars.palette.text.secondary,
         textDecoration: 'none',
-        fontSize: theme.typography.body2.fontSize,
+        fontSize: '0.8125rem',
         fontFamily: fontFamily.secondary,
         display: 'block',
         marginBottom: 1.5,

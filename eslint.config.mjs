@@ -14,6 +14,8 @@ export default tseslint.config(
       'coverage/',
       '**/*.config.js',
       '**/*.config.mjs',
+      // Node build-time scripts that live next to the code they feed.
+      'src/**/preprocess-*.mjs',
       'next-env.d.ts',
     ],
   },

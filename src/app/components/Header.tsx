@@ -19,6 +19,7 @@ import {
   Select,
   Alert,
   AlertTitle,
+  useScrollTrigger,
 } from '@mui/material';
 import { useColorScheme } from '@mui/material/styles';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -180,6 +181,10 @@ export default function DrawerAppBar(): React.ReactElement {
   }, []);
 
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+  const isScrolled = useScrollTrigger({
+    disableHysteresis: true,
+    threshold: 0,
+  });
 
   const metricsOptionsEnabled =
     config.enableMetrics || userEmail?.endsWith('mobilitydata.org') === true;
@@ -197,8 +202,11 @@ export default function DrawerAppBar(): React.ReactElement {
         color='inherit'
         elevation={0}
         sx={(theme) => ({
-          backgroundColor: theme.vars.palette.background.paper,
+          backgroundColor: theme.vars.palette.background.default,
           fontFamily: fontFamily.secondary,
+          borderBottom: '1px solid',
+          borderColor: isScrolled ? theme.vars.palette.divider : 'transparent',
+          transition: 'border-color 0.2s ease',
         })}
       >
         <Box
@@ -265,7 +273,7 @@ export default function DrawerAppBar(): React.ReactElement {
                   display: { xs: 'none', md: 'block' },
                 }}
               >
-                MobilityDatabase
+                Mobility Database
               </Typography>
             </Link>
           </Box>

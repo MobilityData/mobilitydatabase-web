@@ -1,11 +1,12 @@
 'use client';
 
 import * as React from 'react';
-import { Box, Button, TextField, InputAdornment } from '@mui/material';
-import { Search } from '@mui/icons-material';
+import { Box, IconButton, TextField, InputAdornment } from '@mui/material';
+import { ArrowUpward, Search } from '@mui/icons-material';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
+import './SearchBorderShine.css';
 
 export default function SearchBox(): React.ReactElement {
   const [searchInputValue, setSearchInputValue] = useState('');
@@ -40,9 +41,19 @@ export default function SearchBox(): React.ReactElement {
       <TextField
         sx={{
           width: '80%',
-          mt: 6,
-          fieldset: {
-            borderColor: 'primary.main',
+          // A primary border and a soft primary-tinted shadow, so the field
+          // stands out over the hero map behind it. The paired selector
+          // beats the theme's divider-colored fieldset override, which would
+          // otherwise win over a plain `fieldset` rule.
+          '.MuiOutlinedInput-root fieldset, .MuiOutlinedInput-root:hover fieldset':
+            {
+              borderColor: 'primary.main',
+              borderWidth: 2,
+            },
+          '.MuiOutlinedInput-root': {
+            backgroundColor: 'background.default',
+            boxShadow:
+              '0 4px 14px color-mix(in srgb, var(--mui-palette-primary-main) 16%, transparent)',
           },
         }}
         value={searchInputValue}
@@ -53,28 +64,35 @@ export default function SearchBox(): React.ReactElement {
         placeholder='e.g. "New York" or "Carris Metropolitana"'
         slotProps={{
           input: {
+            className: 'search-border-shine',
             startAdornment: (
               <InputAdornment position={'start'}>
                 <Search />
               </InputAdornment>
             ),
+            endAdornment:
+              searchInputValue.length > 0 ? (
+                <InputAdornment position={'end'}>
+                  <IconButton
+                    aria-label={tCommon('search')}
+                    onClick={handleSearch}
+                    edge='end'
+                    sx={{
+                      // edge='end' pulls the button 12px right; keep 4px of
+                      // that back so it doesn't hug the field's border.
+                      mr: '-8px',
+                      bgcolor: 'primary.main',
+                      color: 'primary.contrastText',
+                      '&:hover': { bgcolor: 'primary.dark' },
+                    }}
+                  >
+                    <ArrowUpward />
+                  </IconButton>
+                </InputAdornment>
+              ) : undefined,
           },
         }}
       />
-      <Button
-        sx={{
-          mt: 6,
-          py: 1.5,
-          ml: 1,
-          height: 55,
-          boxShadow: 0,
-        }}
-        variant='contained'
-        color='primary'
-        onClick={handleSearch}
-      >
-        {tCommon('search')}
-      </Button>
     </Box>
   );
 }
