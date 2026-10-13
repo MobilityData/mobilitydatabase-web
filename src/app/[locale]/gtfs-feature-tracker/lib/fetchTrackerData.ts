@@ -120,6 +120,11 @@ function formatConsumerName(id: string): string {
     motis: 'Motis',
     opentripplanner: 'OpenTripPlanner',
     aubin: 'Aubin',
+    transee: 'TransSee',
+    catenary: 'Catenary',
+    rome2rio: 'Rome2Rio',
+    axonvibe: 'AxonVibe',
+    pantograph: 'Pantograph',
   };
   return names[id.toLowerCase()] ?? id;
 }
