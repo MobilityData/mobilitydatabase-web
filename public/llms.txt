@@ -2,7 +2,7 @@
 
 > The Mobility Database is an open catalog of over 6000 public transit feeds
 > from more than 100 countries, maintained by MobilityData, a non-profit that
-> stewards the GTFS, GTFS-Realtime and GBFS data formats. Every feed entry
+> maintains and develops the GTFS, GTFS-Realtime and GBFS data formats. Every feed entry
 > records its provider, location, licence, download history and validation
 > results, and the whole catalog is queryable through a free REST API.
 
