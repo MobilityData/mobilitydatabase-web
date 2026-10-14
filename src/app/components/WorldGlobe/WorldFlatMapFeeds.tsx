@@ -487,7 +487,7 @@ export default function WorldFlatMapFeeds({
               <path
                 d={selectedCountry.d}
                 fill={colors.selected}
-                stroke={colors.high}
+                stroke={colors.accent}
                 strokeWidth={1.2}
                 pointerEvents='none'
               />

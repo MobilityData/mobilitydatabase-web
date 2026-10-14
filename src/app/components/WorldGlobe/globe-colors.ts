@@ -11,6 +11,12 @@ export interface GlobeColors {
   /** Shade for the smallest feed count; `high` is the largest. */
   low: string;
   high: string;
+  /**
+   * The brand shade for things that aren't on the density scale -- the
+   * globe's rim and the selected country's outline. Kept separate so the
+   * scale can run in either direction without dimming them.
+   */
+  accent: string;
   selected: string;
   border: string;
   star: string;
@@ -41,8 +47,12 @@ export function resolveGlobeColors(isDark: boolean): GlobeColors {
       background: p.background.default,
       ocean: mixHex(p.background.default, p.primary.dark, 0.22),
       inactive: mixHex(p.background.paper, p.primary.main, 0.12),
-      low: p.primary.dark,
-      high: p.primary.main,
+      // Densest countries are the deepest shade, as in light mode. On a dark
+      // page that puts the lightest shade at the bottom of the scale rather
+      // than the top, so it runs the opposite way to light mode's values.
+      low: p.primary.main,
+      high: p.primary.dark,
+      accent: p.primary.main,
       selected: p.text.primary,
       border: mixHex(p.background.default, p.primary.main, 0.55),
       star: p.primary.main,
@@ -56,6 +66,7 @@ export function resolveGlobeColors(isDark: boolean): GlobeColors {
     inactive: mixHex(p.background.default, p.primary.light, 0.12),
     low: p.primary.light,
     high: p.primary.dark,
+    accent: p.primary.dark,
     selected: p.text.lightContrast,
     border: p.primary.light,
     star: p.secondary.main,

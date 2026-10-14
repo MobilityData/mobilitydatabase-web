@@ -295,7 +295,7 @@ export default function WorldGlobeFeeds({
       oceanMat.color.set(c.ocean);
       (atmosMat.uniforms.uGlow.value as THREE.Color).set(c.glow);
       (atmosMat.uniforms.uFade.value as THREE.Color).set(c.background);
-      (innerAtmosMat.uniforms.uEdge.value as THREE.Color).set(c.high);
+      (innerAtmosMat.uniforms.uEdge.value as THREE.Color).set(c.accent);
       borderMat.color.set(c.border);
       for (const { points } of starLayers) {
         (points.material.uniforms.uColor.value as THREE.Color).set(c.star);
