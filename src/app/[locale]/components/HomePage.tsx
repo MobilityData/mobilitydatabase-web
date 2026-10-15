@@ -79,122 +79,136 @@ export default async function HomePage(): Promise<ReactElement> {
         href={JOURNEY_DATA_URL}
         crossOrigin='anonymous'
       />
-      <Container sx={{ px: { xs: 0, md: 3 } }}>
+      {/* The hero's two background layers are `inset: 0`, so this wrapper is
+        what they resolve against: full page width, and exactly as tall as the
+        hero inside it. Without it they fall back to the initial containing
+        block, a viewport-tall box at the top of the document -- on a short
+        window the hero outgrows that and the scene stops short of the next
+        section, leaving a band of empty page. */}
+      <Box sx={{ position: 'relative' }}>
         {/* Server-rendered stand-in for the scene's first frame, so the hero
           area is never blank. The scene fades it out once it paints. */}
         <HeroGridPlaceholder />
         <HeroBackground />
 
-        <Box
-          component='section'
-          sx={{
-            minHeight: '80vh',
-            // Flexible rows around the search bar; the bottom one is a bit
-            // larger so the search sits slightly above the section's centre.
-            // The heading hugs the top of the first row and the actions the
-            // top of the last. A tall heading grows its row instead of
-            // overlapping the search.
-            display: 'grid',
-            gridTemplateRows:
-              'minmax(min-content, 1fr) auto minmax(min-content, 1.4fr)',
-            // An implicit `auto` column would grow to the nav's fixed 700px
-            // width on narrow screens, overflowing the viewport.
-            gridTemplateColumns: 'minmax(0, 1fr)',
-          }}
-          mx={{ xs: '20px', m: 'auto' }}
-          maxWidth={{ xs: '100%', md: '1600px' }}
-          role='main'
-          aria-label='Mobility Database Home'
-        >
-          <Box sx={{ alignSelf: 'start', pt: { xs: 4, md: 5 }, pb: 4 }}>
-            <Typography
-              component='h1'
-              sx={{
-                fontSize: {
-                  xs: '36px',
-                  sm: '48px',
-                  md: '60px',
-                },
-                fontWeight: 700,
-                lineHeight: 1.1,
-                textAlign: 'center',
-              }}
-              data-testid='home-title'
+        <Container sx={{ px: { xs: 0, md: 3 } }}>
+          <Box
+            component='section'
+            sx={{
+              minHeight: '80vh',
+              // Flexible rows around the search bar; the bottom one is a bit
+              // larger so the search sits slightly above the section's centre.
+              // The heading hugs the top of the first row and the actions the
+              // top of the last. A tall heading grows its row instead of
+              // overlapping the search.
+              display: 'grid',
+              gridTemplateRows:
+                'minmax(min-content, 1fr) auto minmax(min-content, 1.4fr)',
+              // An implicit `auto` column would grow to the nav's fixed 700px
+              // width on narrow screens, overflowing the viewport.
+              gridTemplateColumns: 'minmax(0, 1fr)',
+            }}
+            mx={{ xs: '20px', m: 'auto' }}
+            maxWidth={{ xs: '100%', md: '1600px' }}
+            role='main'
+            aria-label='Mobility Database Home'
+          >
+            {/* `data-hero-keepout` marks page content the scene's chips must
+            not cover; the scene hides any chip whose box lands on one. */}
+            <Box
+              data-hero-keepout
+              sx={{ alignSelf: 'start', pt: { xs: 4, md: 5 }, pb: 4 }}
             >
-              {t.rich('title', {
-                emphasis: (chunks) => (
-                  <Box component='span' sx={{ color: 'primary.main' }}>
-                    {chunks}
-                  </Box>
-                ),
-              })}
-            </Typography>
+              <Typography
+                component='h1'
+                sx={{
+                  fontSize: {
+                    xs: '36px',
+                    sm: '48px',
+                    md: '60px',
+                  },
+                  fontWeight: 700,
+                  lineHeight: 1.1,
+                  textAlign: 'center',
+                }}
+                data-testid='home-title'
+              >
+                {t.rich('title', {
+                  emphasis: (chunks) => (
+                    <Box component='span' sx={{ color: 'primary.main' }}>
+                      {chunks}
+                    </Box>
+                  ),
+                })}
+              </Typography>
 
-            <Typography
-              component='p'
-              variant='h6'
+              <Typography
+                component='p'
+                variant='h6'
+                sx={{
+                  // Hugs the text so the translucent backdrop sits just behind
+                  // it, lifting it off the animated hero without a full band.
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  justifyContent: 'center',
+                  columnGap: 3,
+                  width: 'fit-content',
+                  maxWidth: '100%',
+                  mx: 'auto',
+                  px: 1.5,
+                  py: 0.25,
+                  borderRadius: 2,
+                  bgcolor:
+                    'color-mix(in srgb, var(--mui-palette-background-default) 75%, transparent)',
+                  textAlign: 'center',
+                  color: 'text.secondary',
+                  mt: 3,
+                }}
+              >
+                {t.rich('subtitle', {
+                  stat: (chunks) => <span>{chunks}</span>,
+                  b: (chunks) => (
+                    <Box
+                      component='strong'
+                      sx={{ fontWeight: 700, color: 'text.primary' }}
+                    >
+                      {chunks}
+                    </Box>
+                  ),
+                })}
+              </Typography>
+            </Box>
+            <SearchBox />
+            <Box
+              component='nav'
+              data-hero-keepout
               sx={{
-                // Hugs the text so the translucent backdrop sits just behind
-                // it, lifting it off the animated hero without a full band.
                 display: 'flex',
-                flexWrap: 'wrap',
                 justifyContent: 'center',
-                columnGap: 3,
-                width: 'fit-content',
+                gap: 4,
+                flexDirection: { xs: 'column', sm: 'row' },
+                width: '700px',
                 maxWidth: '100%',
                 mx: 'auto',
-                px: 1.5,
-                py: 0.25,
-                borderRadius: 2,
-                bgcolor:
-                  'color-mix(in srgb, var(--mui-palette-background-default) 75%, transparent)',
-                textAlign: 'center',
-                color: 'text.secondary',
-                mt: 3,
+                // Replaces the buttons' old 16px margin so the row sits where
+                // it did relative to the search bar.
+                mt: 4,
+                alignSelf: 'start',
               }}
+              role='navigation'
+              aria-label='Main actions'
             >
-              {t.rich('subtitle', {
-                stat: (chunks) => <span>{chunks}</span>,
-                b: (chunks) => (
-                  <Box
-                    component='strong'
-                    sx={{ fontWeight: 700, color: 'text.primary' }}
-                  >
-                    {chunks}
-                  </Box>
-                ),
-              })}
-            </Typography>
+              <ActionBox
+                buttonHref='/feeds'
+                buttonText={t('browseFeeds')}
+                primary
+              />
+              <ActionBox buttonHref='/contribute' buttonText={t('addFeed')} />
+              <ActionBox buttonHref='/sign-up' buttonText={t('signUpApi')} />
+            </Box>
           </Box>
-          <SearchBox />
-          <Box
-            component='nav'
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: 4,
-              flexDirection: { xs: 'column', sm: 'row' },
-              width: '700px',
-              maxWidth: '100%',
-              mx: 'auto',
-              // Replaces the buttons' old 16px margin so the row sits where
-              // it did relative to the search bar.
-              mt: 4,
-              alignSelf: 'start',
-            }}
-            role='navigation'
-            aria-label='Main actions'
-          >
-            <ActionBox
-              buttonHref='/feeds'
-              buttonText={t('browseFeeds')}
-              primary
-            />
-            <ActionBox buttonHref='/contribute' buttonText={t('addFeed')} />
-            <ActionBox buttonHref='/sign-up' buttonText={t('signUpApi')} />
-          </Box>
-        </Box>
-      </Container>
+        </Container>
+      </Box>
       <FeaturePromo />
       <Box component='section' aria-labelledby='globe-title'>
         <CoverageMap

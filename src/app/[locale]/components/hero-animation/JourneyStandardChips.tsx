@@ -115,6 +115,9 @@ export default function JourneyStandardChips({
           <Box
             component='span'
             aria-hidden='true'
+            // Read by the scene, which folds the label into the chip's box
+            // when testing whether the pair covers the hero's own content.
+            data-chip-file
             sx={{
               position: 'absolute',
               left: { xs: 0, md: 'calc(100% + 6px)' },

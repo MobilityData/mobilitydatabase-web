@@ -11,14 +11,16 @@ import { type ReactElement } from 'react';
 //
 // Server-rendered, unlike the scene itself: `HeroBackground` is
 // `ssr: false`, so anything inside it appears only once its chunk has loaded.
-// Positioned exactly as the scene's own host is — `inset: 0` with no
-// positioned ancestor, so both resolve against the initial containing block.
+// Positioned exactly as the scene's own host is — `inset: 0` inside the
+// hero's relative wrapper in HomePage, so both fill the same box.
 
 /** Marks the element for the scene to fade out on its first painted frame. */
 export const HERO_PLACEHOLDER_ATTR = 'data-hero-placeholder';
 
 // Derived from the scene's camera so the two line up. CAMERA_FOV 30deg over
-// the viewport height h gives a perspective of (h / 2) / tan(15deg);
+// the scene's height h gives a perspective of (h / 2) / tan(15deg); `vh` is
+// the stand-in for h, exact while the hero is a viewport tall and slightly
+// off when its content makes it taller, as CELL_PX and FADE_PX already are.
 // CAMERA_ELEVATION 0.68 rad above the horizontal is a 51.04deg tilt off
 // head-on, and CAMERA_YAW 0.64 rad spins the plane about its own normal.
 const PERSPECTIVE_VH = 186.6;

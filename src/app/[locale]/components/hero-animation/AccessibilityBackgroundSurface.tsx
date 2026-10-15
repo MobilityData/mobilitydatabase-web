@@ -551,6 +551,136 @@ function mountScene(
   const projected = new THREE.Vector3();
   let viewWidth = width;
   let viewHeight = height;
+
+  // A chip sits wherever its pin is, which on a short window is on top of the
+  // heading, the search field or the buttons. Rather than guess a breakpoint
+  // at which that starts, the scene measures the hero's own content and drops
+  // any chip that would land on it. Both sets of boxes are in the scene host's
+  // coordinates, and neither moves between resizes, so they're measured once
+  // per resize rather than per frame.
+  interface Box {
+    left: number;
+    top: number;
+    right: number;
+    bottom: number;
+  }
+  let keepOut: Box[] = [];
+  /**
+   * Each chip's boxes relative to its wrapper: the pill on its own, the file
+   * label on its own, and the two together.
+   */
+  interface ChipGeometry {
+    pill: Box;
+    label: Box | null;
+    labelElement: HTMLElement | null;
+    full: Box;
+  }
+  const chipBoxes = new Map<ChipId, ChipGeometry>();
+  /** Chips placed this frame, in the order they were placed. */
+  const staged: Array<{
+    id: ChipId;
+    element: HTMLDivElement;
+    originX: number;
+    originY: number;
+    shown: number;
+  }> = [];
+  /** The scene box's offset down the page, for the fold test below. */
+  let hostDocTop = 0;
+  let scrollTop = window.scrollY;
+
+  const measureOverlapBoxes = (): void => {
+    const hostRect = host.getBoundingClientRect();
+    hostDocTop = hostRect.top + window.scrollY;
+    keepOut = [...document.querySelectorAll('[data-hero-keepout]')]
+      .map((element) => element.getBoundingClientRect())
+      .filter((rect) => rect.width > 0 && rect.height > 0)
+      .map((rect) => ({
+        left: rect.left - hostRect.left,
+        top: rect.top - hostRect.top,
+        right: rect.right - hostRect.left,
+        bottom: rect.bottom - hostRect.top,
+      }));
+
+    chipBoxes.clear();
+    (Object.keys(chips) as ChipId[]).forEach((id) => {
+      const element = chips[id];
+      if (element == null) return;
+      // The wrapper is the chip's own size; the label hangs outside it, so
+      // its offset is taken from the rendered boxes -- `getBoundingClientRect`
+      // rather than `offsetTop`, which would miss the label's own transform.
+      const wrapper = element.getBoundingClientRect();
+      if (wrapper.width === 0) return;
+      const pill: Box = {
+        left: 0,
+        top: 0,
+        right: wrapper.width,
+        bottom: wrapper.height,
+      };
+      const full: Box = { ...pill };
+      let labelBox: Box | null = null;
+      const label = element.querySelector<HTMLElement>('[data-chip-file]');
+      if (label != null) {
+        const labelRect = label.getBoundingClientRect();
+        labelBox = {
+          left: labelRect.left - wrapper.left,
+          top: labelRect.top - wrapper.top,
+          right: labelRect.right - wrapper.left,
+          bottom: labelRect.bottom - wrapper.top,
+        };
+        full.left = Math.min(full.left, labelBox.left);
+        full.top = Math.min(full.top, labelBox.top);
+        full.right = Math.max(full.right, labelBox.right);
+        full.bottom = Math.max(full.bottom, labelBox.bottom);
+      }
+      chipBoxes.set(id, { pill, label: labelBox, labelElement: label, full });
+    });
+  };
+
+  /**
+   * A chip is dropped when it would cover the hero's own content, and when
+   * the scene's clipped edges or the fold would cut it: half a chip reads as
+   * a glitch, so it's all of it or none. Passing under the fixed header is
+   * left alone -- that's ordinary scrolling, and the header is opaque, so
+   * hiding the chip early only draws the eye to it vanishing.
+   */
+  const chipObstructed = (
+    id: ChipId,
+    element: HTMLDivElement,
+    x: number,
+    y: number,
+    placement: 'above' | 'below',
+  ): boolean => {
+    const box = chipBoxes.get(id)?.full;
+    if (box === undefined) return false;
+    // Where the wrapper's own top-left lands, after the transform below.
+    const originX = x - element.offsetWidth / 2;
+    const originY =
+      placement === 'above'
+        ? y - element.offsetHeight - CHIP_GAP_PX
+        : y + CHIP_BELOW_GAP_PX;
+    const left = originX + box.left;
+    const top = originY + box.top;
+    const right = originX + box.right;
+    const bottom = originY + box.bottom;
+
+    // The overlay clips to the scene, so a chip past either side is cut.
+    if (left < 0 || right > viewWidth) return true;
+
+    // Same test against the bottom of the window, in its coordinates rather
+    // than the scene's. `innerHeight` is read here rather than cached because
+    // a window resized only in height leaves the scene's own box untouched,
+    // so the observer that refreshes everything else never fires.
+    if (hostDocTop - scrollTop + bottom > window.innerHeight) return true;
+
+    return keepOut.some(
+      (area) =>
+        left < area.right &&
+        right > area.left &&
+        top < area.bottom &&
+        bottom > area.top,
+    );
+  };
+
   const placeChip = (
     id: ChipId,
     anchor: THREE.Vector3,
@@ -569,9 +699,60 @@ function mountScene(
         ? `calc(-100% - ${CHIP_GAP_PX}px)`
         : `${CHIP_BELOW_GAP_PX}px`;
     element.style.transform = `translate(${x}px, ${y}px) translate(-50%, ${offsetY})`;
-    element.style.opacity = String(opacity);
+    const shown = chipObstructed(id, element, x, y, placement) ? 0 : opacity;
+    element.style.opacity = String(shown);
     // Hidden chips must not take clicks or focus.
-    element.style.visibility = opacity > 0.01 ? 'visible' : 'hidden';
+    element.style.visibility = shown > 0.01 ? 'visible' : 'hidden';
+    staged.push({
+      id,
+      element,
+      originX: x - element.offsetWidth / 2,
+      originY:
+        placement === 'above'
+          ? y - element.offsetHeight - CHIP_GAP_PX
+          : y + CHIP_BELOW_GAP_PX,
+      shown,
+    });
+  };
+
+  const translate = (box: Box, dx: number, dy: number): Box => ({
+    left: box.left + dx,
+    top: box.top + dy,
+    right: box.right + dx,
+    bottom: box.bottom + dy,
+  });
+
+  const overlaps = (a: Box, b: Box): boolean =>
+    a.left < b.right &&
+    a.right > b.left &&
+    a.top < b.bottom &&
+    a.bottom > b.top;
+
+  /**
+   * Below `md` each file label sits above its own chip rather than beside it,
+   * and the pins can be close enough that one label runs through the next
+   * one. The pills themselves stay clear, so rather than drop a whole chip,
+   * the later label gives way: chips keep their names wherever there's room
+   * for them. Run once the frame's chips are all placed, since it compares
+   * them against each other.
+   */
+  const resolveChipLabels = (): void => {
+    const kept: Box[] = [];
+    for (const { id, originX, originY, shown } of staged) {
+      const geometry = chipBoxes.get(id);
+      if (geometry?.labelElement == null) continue;
+      if (shown <= 0.01 || geometry.label === null) {
+        // Hidden with its chip; reset so it returns when the chip does.
+        geometry.labelElement.style.visibility = '';
+        continue;
+      }
+      const labelBox = translate(geometry.label, originX, originY);
+      const clash = kept.some((box) => overlaps(labelBox, box));
+      geometry.labelElement.style.visibility = clash ? 'hidden' : '';
+      kept.push(translate(geometry.pill, originX, originY));
+      if (!clash) kept.push(labelBox);
+    }
+    staged.length = 0;
   };
 
   // --- Colors ---
@@ -754,6 +935,7 @@ function mountScene(
       pinIn(1),
     );
     placeChip('gtfs', gtfsChipAnchor, 0, 'below', pinIn(2));
+    resolveChipLabels();
 
     renderer.render(scene, camera);
     if (host.style.opacity !== String(OPACITY)) {
@@ -799,11 +981,25 @@ function mountScene(
     camera.aspect = aspect;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
+    measureOverlapBoxes();
     dirty = true;
   };
   onResize();
   const resizeObserver = new ResizeObserver(onResize);
   resizeObserver.observe(host);
+
+  // Whether a chip is cut by the fold depends on where the page is scrolled,
+  // which the scene box's own size never reflects.
+  const onScroll = (): void => {
+    scrollTop = window.scrollY;
+    dirty = true;
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  const onWindowResize = (): void => {
+    measureOverlapBoxes();
+    dirty = true;
+  };
+  window.addEventListener('resize', onWindowResize, { passive: true });
 
   return {
     setPalette: (next, nextMode) => {
@@ -813,6 +1009,8 @@ function mountScene(
     dispose: () => {
       cancelAnimationFrame(raf);
       resizeObserver.disconnect();
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onWindowResize);
       visibility.disconnect();
       pins.dispose();
       basemap.dispose();

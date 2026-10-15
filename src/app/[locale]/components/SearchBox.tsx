@@ -39,6 +39,8 @@ export default function SearchBox(): React.ReactElement {
       }}
     >
       <TextField
+        // The scene hides any hero chip that would land on this field.
+        data-hero-keepout
         sx={{
           width: '80%',
           // A primary border and a soft primary-tinted shadow, so the field
