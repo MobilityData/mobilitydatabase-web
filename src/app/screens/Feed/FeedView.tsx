@@ -385,7 +385,7 @@ export default async function FeedView({
       </Box>
       {isMobilityDatabaseAdmin && (
         <ContentBox
-          title={'MobilityDatabase Admin Tools'}
+          title={'Mobility Database Admin Tools'}
           subtitle={
             <>
               This section is only visible to Mobility Data employees with an{' '}

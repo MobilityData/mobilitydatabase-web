@@ -17,9 +17,9 @@ import { getEnvConfig } from '../utils/config';
 
 export const metadata = {
   title:
-    'MobilityDatabase | The Global Catalog of GTFS, GTFS-Realtime & GBFS Feeds',
+    'Mobility Database | The Global Catalog of GTFS, GTFS-Realtime & GBFS Feeds',
   description:
-    "Access GTFS, GTFS Realtime, GBFS transit data with over 6,000 feeds from 99+ countries on the web's leading transit data platform.",
+    'Browse the Mobility Database: 6000+ GTFS, GTFS-Realtime and GBFS feeds from 100+ countries, with validation reports and a free REST API.',
   robots:
     process.env.VERCEL_ENV === 'production'
       ? 'index, follow'
@@ -94,11 +94,20 @@ export default async function LocaleLayout({
     getRemoteConfigValues(),
   ]);
 
+  const authDomain = getEnvConfig('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN');
+  const authOrigin = authDomain === '' ? undefined : `https://${authDomain}`;
+
   return (
     <html lang={validLocale} suppressHydrationWarning>
       <head>
-        <link rel='preconnect' href='https://firebaseapp.com' />
-        <link rel='dns-prefetch' href='https://firebaseapp.com' />
+        {/* Firebase auth runs against the project's own subdomain, so a hint
+          for bare firebaseapp.com warmed a connection nothing ever used. */}
+        {authOrigin !== undefined && (
+          <>
+            <link rel='preconnect' href={authOrigin} />
+            <link rel='dns-prefetch' href={authOrigin} />
+          </>
+        )}
       </head>
       <body
         className={`${mulish.className} ${mulish.variable} ${ibmPlexMono.variable}`}

@@ -16,6 +16,12 @@ module.exports = {
         formFactor: 'desktop',
         throttlingMethod: 'provided',
         skipAudits: ['robots-txt', 'is-crawlable'],
+        // CI Chrome renders WebGL in software, so the landing page's hero
+        // loop keeps the main thread busy and Lighthouse never finds a quiet
+        // window (NO_TTI_CPU_IDLE_PERIOD -> null performance score, shown as
+        // 0). Reduced motion makes the hero draw only on change, as it does
+        // for users who ask for it.
+        chromeFlags: '--no-sandbox --force-prefers-reduced-motion',
         screenEmulation: {
           mobile: false,
           width: 1350,

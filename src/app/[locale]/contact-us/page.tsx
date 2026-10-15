@@ -7,15 +7,15 @@ import { type Metadata } from 'next';
 export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
-  title: 'Contact Us | MobilityDatabase',
+  title: 'Contact Us | Mobility Database',
   description:
-    'Get in touch with the MobilityDatabase team. Reach out for support, data questions, or to report issues with GTFS, GTFS-RT, and GBFS transit feeds.',
+    'Get in touch with the Mobility Database team. Reach out for support, data questions, or to report issues with GTFS, GTFS-RT, and GBFS transit feeds.',
   openGraph: {
-    title: 'Contact Us | MobilityDatabase',
+    title: 'Contact Us | Mobility Database',
     description:
-      'Get in touch with the MobilityDatabase team. Reach out for support, data questions, or to report issues with GTFS, GTFS-RT, and GBFS transit feeds.',
+      'Get in touch with the Mobility Database team. Reach out for support, data questions, or to report issues with GTFS, GTFS-RT, and GBFS transit feeds.',
     url: 'https://mobilitydatabase.org/contact-us',
-    siteName: 'MobilityDatabase',
+    siteName: 'Mobility Database',
     type: 'website',
   },
 };
