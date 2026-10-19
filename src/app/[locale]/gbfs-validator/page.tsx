@@ -8,15 +8,15 @@ import { type Metadata } from 'next';
 export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
-  title: 'GBFS Validator | MobilityDatabase',
+  title: 'GBFS Validator | Mobility Database',
   description:
-    'Validate your GBFS (General Bikeshare Feed Specification) feeds with the MobilityDatabase GBFS Validator. Check compliance and identify errors in your bikeshare or micromobility data.',
+    'Validate your GBFS (General Bikeshare Feed Specification) feeds with the Mobility Database GBFS Validator. Check compliance and identify errors in your bikeshare or micromobility data.',
   openGraph: {
-    title: 'GBFS Validator | MobilityDatabase',
+    title: 'GBFS Validator | Mobility Database',
     description:
-      'Validate your GBFS (General Bikeshare Feed Specification) feeds with the MobilityDatabase GBFS Validator. Check compliance and identify errors in your bikeshare or micromobility data.',
+      'Validate your GBFS (General Bikeshare Feed Specification) feeds with the Mobility Database GBFS Validator. Check compliance and identify errors in your bikeshare or micromobility data.',
     url: 'https://mobilitydatabase.org/gbfs-validator',
-    siteName: 'MobilityDatabase',
+    siteName: 'Mobility Database',
     type: 'website',
   },
 };

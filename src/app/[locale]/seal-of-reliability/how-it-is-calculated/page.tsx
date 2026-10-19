@@ -10,13 +10,13 @@ const description =
   'How the Seal of Reliability is calculated: the six criteria, the exact rules behind each one, what triggers a violation, and how grace periods work.';
 
 export const metadata: Metadata = {
-  title: 'How the Seal of Reliability is calculated | MobilityDatabase',
+  title: 'How the Seal of Reliability is calculated | Mobility Database',
   description,
   openGraph: {
-    title: 'How the Seal of Reliability is calculated | MobilityDatabase',
+    title: 'How the Seal of Reliability is calculated | Mobility Database',
     description,
     url: 'https://mobilitydatabase.org/seal-of-reliability/how-it-is-calculated',
-    siteName: 'MobilityDatabase',
+    siteName: 'Mobility Database',
     type: 'website',
   },
 };

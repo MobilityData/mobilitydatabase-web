@@ -1,0 +1,72 @@
+/* One-time light sweep travelling 360deg around the search input border */
+@property --search-shine-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.search-border-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 2px;
+  border-radius: inherit;
+  pointer-events: none;
+  /* The border underneath is already primary, so a primary-colored sweep
+     would barely register: the highlight runs up to white through
+     primary.light, which reads as light moving along a solid edge. Long,
+     symmetric falloff on both sides so it glides instead of arriving as a
+     hard leading edge. */
+  background: conic-gradient(
+    from var(--search-shine-angle),
+    transparent 0deg,
+    transparent 190deg,
+    color-mix(in srgb, var(--mui-palette-primary-light) 30%, transparent) 245deg,
+    var(--mui-palette-primary-light) 295deg,
+    #fff 312deg,
+    #fff 322deg,
+    var(--mui-palette-primary-light) 338deg,
+    color-mix(in srgb, var(--mui-palette-primary-light) 30%, transparent) 352deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  /* The shadow follows the masked ring's alpha, so the bright core blooms
+     onto the field and the faded tail barely glows. */
+  filter: drop-shadow(
+    0 0 6px
+      color-mix(in srgb, var(--mui-palette-primary-light) 70%, transparent)
+  );
+  opacity: 0;
+  /* Constant angular speed (linear) avoids the lurch of ease-in-out; the
+     fade in/out is eased separately via the opacity keyframes. */
+  animation: search-border-shine 2.6s linear 0.4s 1 both;
+}
+
+@keyframes search-border-shine {
+  0% {
+    --search-shine-angle: 0deg;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    --search-shine-angle: 360deg;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-border-shine::after {
+    animation: none;
+  }
+}

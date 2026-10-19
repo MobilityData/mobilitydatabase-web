@@ -35,7 +35,7 @@ import Image from 'next/image';
 import ThemeToggle from './ThemeToggle';
 import { Link as LocaleLink } from '../../i18n/navigation';
 
-const websiteTile = 'MobilityDatabase';
+const websiteTile = 'Mobility Database';
 
 interface DrawerContentProps {
   isAuthenticated: boolean;

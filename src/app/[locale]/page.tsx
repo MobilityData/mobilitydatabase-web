@@ -2,6 +2,7 @@ import { type ReactElement } from 'react';
 import { setRequestLocale } from 'next-intl/server';
 import { type AVAILABLE_LOCALES, routing } from '../../i18n/routing';
 import HomePage from './components/HomePage';
+import HomeStructuredData from './components/HomeStructuredData';
 import { type Metadata } from 'next';
 
 export const dynamic = 'force-static';
@@ -16,11 +17,21 @@ interface PageProps {
   params: Promise<{ locale: (typeof AVAILABLE_LOCALES)[number] }>;
 }
 
+/** 1200x630 card: the mark, the wordmark and the three formats. */
+const OG_IMAGE = {
+  url: '/assets/og-image.png',
+  width: 1200,
+  height: 630,
+  alt: 'Mobility Database — the global catalog of open transit data',
+};
+
+const DESCRIPTION =
+  'Search 6000+ GTFS, GTFS-Realtime and GBFS feeds from 100+ countries in one open catalog of public transit data for developers, cities and agencies.';
+
 export const metadata: Metadata = {
   title:
-    'MobilityDatabase | The Global Catalog of GTFS, GTFS-Realtime & GBFS Feeds',
-  description:
-    'Discover open public transit data worldwide. Mobility Database provides GTFS, GTFS-RT, and GBFS feeds to help developers, cities, and agencies build better mobility tools.',
+    'Mobility Database | The Global Catalog of GTFS, GTFS-Realtime & GBFS Feeds',
+  description: DESCRIPTION,
   applicationName: 'Mobility Database',
 
   metadataBase: new URL('https://mobilitydatabase.org'),
@@ -33,8 +44,16 @@ export const metadata: Metadata = {
     url: 'https://mobilitydatabase.org',
     siteName: 'Mobility Database',
     title: 'Mobility Database',
-    description:
-      'Discover open public transit data worldwide. Find GTFS, GTFS-RT, and GBFS feeds to build better mobility applications.',
+    description: DESCRIPTION,
+    images: [OG_IMAGE],
+  },
+  twitter: {
+    // Without this the card falls back to `summary`, which crops the image
+    // to a small square thumbnail.
+    card: 'summary_large_image',
+    title: 'Mobility Database',
+    description: DESCRIPTION,
+    images: [OG_IMAGE],
   },
   robots: {
     index: true,
@@ -56,5 +75,10 @@ export default async function Home({
 
   setRequestLocale(locale);
 
-  return <HomePage />;
+  return (
+    <>
+      <HomeStructuredData />
+      <HomePage />
+    </>
+  );
 }
