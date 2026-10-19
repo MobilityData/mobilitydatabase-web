@@ -22,10 +22,9 @@ Examples:
 
 Feed ids identify a *feed*, not an agency, and they are not shared across
 data types: `/feeds/gtfs/mdb-3520` and `/feeds/gtfs_rt/mdb-3520` are unrelated
-feeds, and the second may not exist. GTFS and GTFS-Realtime ids are mostly
-`mdb-<number>`, with source-specific prefixes such as `jbda-`, `tdg-`, `tld-`
-and `ntd-`; GBFS ids are `gbfs-<number>`. To find a feed's id, search
-https://mobilitydatabase.org/feeds or query the API — do not construct ids.
+feeds, and the second may not exist. Treat ids as opaque strings. To find a
+feed's id, search https://mobilitydatabase.org/feeds or query the API — do not
+construct ids.
 
 Each feed page states: the provider and whether the feed is official, the
 current validation status with a link to the full report, the latest dataset
