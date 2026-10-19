@@ -20,8 +20,8 @@ import FormLabel from '@mui/material/FormLabel';
 import Tooltip from '@mui/material/Tooltip';
 import {
   createUserSubscription,
-  deleteUserSubscription,
   type NotificationSubscription,
+  removeFeedsFromUserSubscription,
   USER_SUBSCRIPTIONS_SWR_KEY,
 } from '../../../services/notification-service';
 import {
@@ -80,12 +80,16 @@ export default function NotificationSettingsDialog({
             feed_ids: [feedId as string],
           }),
         ),
+        // The type's subscription is shared with the user's other feeds, so
+        // remove only this feed from it rather than deleting it.
         ...arg.removedTypes.map((notificationId) => {
           const subscription = existingSubscriptions.find(
             (s) => s.notification_id === notificationId,
           );
           return subscription !== undefined
-            ? deleteUserSubscription(subscription.id)
+            ? removeFeedsFromUserSubscription(subscription.id, [
+                feedId as string,
+              ])
             : Promise.resolve();
         }),
       ]);

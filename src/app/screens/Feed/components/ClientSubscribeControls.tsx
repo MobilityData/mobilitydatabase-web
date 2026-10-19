@@ -22,11 +22,15 @@ import AccessRequiredPopover, {
 } from '../../../components/AccessRequiredPopover';
 import {
   createUserSubscription,
-  deleteUserSubscription,
   getUserSubscriptions,
   type NotificationSubscription,
+  removeFeedsFromUserSubscription,
   USER_SUBSCRIPTIONS_SWR_KEY,
 } from '../../../services/notification-service';
+import {
+  upsertSubscriptions,
+  withoutFeed,
+} from '../../../utils/subscriptionCache';
 import { FEED_NOTIFICATION_TYPE_IDS } from '../../../utils/notificationTypes';
 import NotificationSettingsDialog, {
   type NotificationSettings,
@@ -164,10 +168,10 @@ export default function ClientSubscribeControls({
         ...optimisticSubscriptions,
       ],
       rollbackOnError: true,
-      populateCache: (created, current) => [
-        ...withoutIds(current, optimisticIds),
-        ...created,
-      ],
+      // `created` can include an existing subscription (same ID) that the
+      // feed was merged into, so replace rather than append.
+      populateCache: (created, current) =>
+        upsertSubscriptions(withoutIds(current, optimisticIds), created),
       revalidate: false,
     })
       .then((created) => {
@@ -186,20 +190,24 @@ export default function ClientSubscribeControls({
   const handleUnsubscribe = (): void => {
     setMenuAnchor(null);
 
-    const idsToRemove = feedSubscriptions.map(
+    // These subscriptions are shared with the user's other feeds of the same
+    // type, so remove only this feed rather than deleting them.
+    const subscriptionIds = feedSubscriptions.map(
       (subscription) => subscription.id,
     );
 
     mutateSubscriptions(
       Promise.all(
-        feedSubscriptions.map((subscription) =>
-          deleteUserSubscription(subscription.id),
+        subscriptionIds.map((id) =>
+          removeFeedsFromUserSubscription(id, [feedId]),
         ),
       ).then(() => undefined),
       {
-        optimisticData: (current) => withoutIds(current, idsToRemove),
+        optimisticData: (current) =>
+          withoutFeed(current ?? [], subscriptionIds, feedId),
         rollbackOnError: true,
-        populateCache: (_, current) => withoutIds(current, idsToRemove),
+        populateCache: (_, current) =>
+          withoutFeed(current ?? [], subscriptionIds, feedId),
         revalidate: false,
       },
     )

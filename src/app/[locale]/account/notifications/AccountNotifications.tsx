@@ -30,9 +30,11 @@ import {
   deleteUserSubscription,
   getUserSubscriptions,
   type NotificationSubscription,
+  removeFeedsFromUserSubscription,
   updateUserSubscription,
   USER_SUBSCRIPTIONS_SWR_KEY,
 } from '../../../services/notification-service';
+import { withoutFeed } from '../../../utils/subscriptionCache';
 import {
   FEED_NOTIFICATION_TYPE_IDS,
   NOTIFICATION_TYPES,
@@ -124,10 +126,9 @@ export default function AccountNotifications(): React.ReactElement {
   );
 
   const [actionError, setActionError] = React.useState<string | null>(null);
-  const [menuState, setMenuState] = React.useState<{
-    anchor: HTMLElement;
-    key: string;
-  } | null>(null);
+  const [menuAnchor, setMenuAnchor] = React.useState<HTMLElement | null>(null);
+  // Kept after the menu closes so its items don't change while it fades out.
+  const [menuRowKey, setMenuRowKey] = React.useState<string | null>(null);
   const [settingsRowKey, setSettingsRowKey] = React.useState<string | null>(
     null,
   );
@@ -142,8 +143,8 @@ export default function AccountNotifications(): React.ReactElement {
           return order === 'asc' ? comparison : -comparison;
         });
   const selectedRow =
-    menuState !== null
-      ? rows.find((row) => row.key === menuState.key)
+    menuRowKey !== null
+      ? rows.find((row) => row.key === menuRowKey)
       : undefined;
   const isPaused = selectedRow?.active === false;
 
@@ -167,11 +168,12 @@ export default function AccountNotifications(): React.ReactElement {
     event: React.MouseEvent<HTMLElement>,
     key: string,
   ): void => {
-    setMenuState({ anchor: event.currentTarget, key });
+    setMenuAnchor(event.currentTarget);
+    setMenuRowKey(key);
   };
 
   const handleMenuClose = (): void => {
-    setMenuState(null);
+    setMenuAnchor(null);
   };
 
   const handleOpenSettings = (): void => {
@@ -181,9 +183,11 @@ export default function AccountNotifications(): React.ReactElement {
     handleMenuClose();
   };
 
+  // Only offered for global rows: `active` is per notification type and is
+  // shared by every feed in it, so a single feed can't be paused.
   const handleTogglePause = (): void => {
     handleMenuClose();
-    if (selectedRow === undefined) {
+    if (selectedRow === undefined || selectedRow.feed != null) {
       return;
     }
     const nextActive = !selectedRow.active;
@@ -218,14 +222,37 @@ export default function AccountNotifications(): React.ReactElement {
     if (selectedRow === undefined) {
       return;
     }
-    Promise.all(
-      selectedRow.subscriptions.map((s) => deleteUserSubscription(s.id)),
-    )
-      .then(() => mutate())
-      .catch(() => {
-        setActionError('Failed to unsubscribe');
-        void mutate();
-      });
+    const { feed, subscriptions } = selectedRow;
+    if (feed == null) {
+      Promise.all(subscriptions.map((s) => deleteUserSubscription(s.id)))
+        .then(() => mutate())
+        .catch(() => {
+          setActionError('Failed to unsubscribe');
+          void mutate();
+        });
+      return;
+    }
+
+    // A feed's subscriptions are shared with the user's other feeds of the
+    // same type, so remove just this feed rather than deleting them.
+    const ids = subscriptions.map((s) => s.id);
+    mutate(
+      Promise.all(
+        ids.map((id) => removeFeedsFromUserSubscription(id, [feed.feed_id])),
+      ).then(() => undefined),
+      {
+        optimisticData: (current) =>
+          withoutFeed(current ?? [], ids, feed.feed_id),
+        rollbackOnError: true,
+        populateCache: (_, current) =>
+          withoutFeed(current ?? [], ids, feed.feed_id),
+        revalidate: false,
+      },
+    ).catch(() => {
+      setActionError('Failed to unsubscribe');
+      // Some removals may have succeeded before the failure; resync.
+      void mutate();
+    });
   };
 
   return (
@@ -361,20 +388,21 @@ export default function AccountNotifications(): React.ReactElement {
         </TableContainer>
 
         <Menu
-          anchorEl={menuState?.anchor}
-          open={menuState !== null}
+          anchorEl={menuAnchor}
+          open={menuAnchor !== null}
           onClose={handleMenuClose}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         >
-          {selectedRow?.feed != null && (
+          {selectedRow?.feed != null ? (
             <MenuItem onClick={handleOpenSettings}>
               Notification Settings
             </MenuItem>
+          ) : (
+            <MenuItem onClick={handleTogglePause}>
+              {isPaused ? 'Resume Notifications' : 'Pause Notifications'}
+            </MenuItem>
           )}
-          <MenuItem onClick={handleTogglePause}>
-            {isPaused ? 'Resume Notifications' : 'Pause Notifications'}
-          </MenuItem>
           <MenuItem onClick={handleUnsubscribe} sx={{ color: 'error.main' }}>
             Unsubscribe
           </MenuItem>
