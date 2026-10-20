@@ -92,23 +92,6 @@ describe('groupSubscriptionsByFeed', () => {
     expect(mixed.active).toBe(true);
     expect(paused.active).toBe(false);
   });
-
-  it('uses the earliest subscription date', () => {
-    const [row] = groupSubscriptionsByFeed([
-      makeSubscription({
-        id: '1',
-        created_at: '2026-03-01T00:00:00Z',
-        feeds: [feedA],
-      }),
-      makeSubscription({
-        id: '2',
-        created_at: '2026-02-01T00:00:00+00:00',
-        feeds: [feedA],
-      }),
-    ]);
-
-    expect(row.createdAt).toBe('2026-02-01T00:00:00+00:00');
-  });
 });
 
 describe('getFeedTitle', () => {

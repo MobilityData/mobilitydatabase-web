@@ -19,8 +19,6 @@ export interface NotificationRow {
   notificationIds: string[];
   /** True when at least one of the row's subscriptions is active. */
   active: boolean;
-  /** Earliest `created_at` among the row's subscriptions. */
-  createdAt: string;
 }
 
 const nonEmpty = (value?: string | null): string | undefined =>
@@ -54,20 +52,12 @@ const toRow = (
   const notificationIds = [
     ...new Set(subscriptions.map((s) => s.notification_id)),
   ].sort((a, b) => getTypeOrder(a) - getTypeOrder(b));
-  const createdAt = subscriptions.reduce(
-    (earliest, s) =>
-      new Date(s.created_at).getTime() < new Date(earliest).getTime()
-        ? s.created_at
-        : earliest,
-    subscriptions[0].created_at,
-  );
   return {
     key,
     feed,
     subscriptions,
     notificationIds,
     active: subscriptions.some((s) => s.active),
-    createdAt,
   };
 };
 

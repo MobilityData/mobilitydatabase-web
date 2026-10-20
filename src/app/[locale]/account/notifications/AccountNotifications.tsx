@@ -45,7 +45,7 @@ import {
   type NotificationRow,
 } from './lib/groupSubscriptions';
 
-type SortKey = 'title' | 'type' | 'status' | 'subscribed';
+type SortKey = 'title' | 'type' | 'status';
 
 export default function AccountNotifications(): React.ReactElement {
   const t = useTranslations('feeds');
@@ -92,10 +92,7 @@ export default function AccountNotifications(): React.ReactElement {
     }
   };
 
-  const getSortValue = (
-    row: NotificationRow,
-    key: SortKey,
-  ): string | number => {
+  const getSortValue = (row: NotificationRow, key: SortKey): string => {
     switch (key) {
       case 'title':
         return getRowTitle(row).toLowerCase();
@@ -103,8 +100,6 @@ export default function AccountNotifications(): React.ReactElement {
         return getNotificationTypesLabel(row).toLowerCase();
       case 'status':
         return row.active ? 'active' : 'paused';
-      case 'subscribed':
-        return new Date(row.createdAt).getTime();
     }
   };
 
@@ -345,17 +340,6 @@ export default function AccountNotifications(): React.ReactElement {
                     <Typography fontWeight={600}>Status</Typography>
                   </TableSortLabel>
                 </TableCell>
-                <TableCell sx={{ width: 140 }}>
-                  <TableSortLabel
-                    active={orderBy === 'subscribed'}
-                    direction={orderBy === 'subscribed' ? order : 'asc'}
-                    onClick={() => {
-                      handleSortClick('subscribed');
-                    }}
-                  >
-                    <Typography fontWeight={600}>Subscribed</Typography>
-                  </TableSortLabel>
-                </TableCell>
                 <TableCell sx={{ width: 56 }}>
                   <Typography fontWeight={600}></Typography>
                 </TableCell>
@@ -374,13 +358,6 @@ export default function AccountNotifications(): React.ReactElement {
                       variant='outlined'
                     />
                   </TableCell>
-                  <TableCell>
-                    {new Date(row.createdAt).toLocaleDateString(undefined, {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    })}
-                  </TableCell>
                   <TableCell sx={{ textAlign: 'right' }}>
                     <IconButton
                       size='small'
@@ -397,7 +374,7 @@ export default function AccountNotifications(): React.ReactElement {
               ))}
               {rows.length === 0 && loadError === undefined && (
                 <TableRow>
-                  <TableCell colSpan={5} align='center'>
+                  <TableCell colSpan={4} align='center'>
                     <Typography color='text.secondary' sx={{ py: 4 }}>
                       No active subscriptions
                     </Typography>
