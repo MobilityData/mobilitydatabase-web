@@ -34,7 +34,7 @@ import {
   updateUserSubscription,
   USER_SUBSCRIPTIONS_SWR_KEY,
 } from '../../../services/notification-service';
-import { withoutFeed } from '../../../utils/subscriptionCache';
+import { settleAll, withoutFeed } from '../../../utils/subscriptionCache';
 import {
   FEED_NOTIFICATION_TYPE_IDS,
   NOTIFICATION_TYPES,
@@ -152,17 +152,31 @@ export default function AccountNotifications(): React.ReactElement {
     settingsRowKey !== null
       ? rows.find((row) => row.key === settingsRowKey)
       : undefined;
+  // Checked means the feed belongs to the type's subscription, paused or not,
+  // so unchecking a paused type still removes the feed from it.
   const settingsInitial = React.useMemo<NotificationSettings>(
     () => ({
       changeTypes: (settingsRow?.subscriptions ?? [])
-        .filter(
-          (s) =>
-            s.active && FEED_NOTIFICATION_TYPE_IDS.includes(s.notification_id),
-        )
+        .filter((s) => FEED_NOTIFICATION_TYPE_IDS.includes(s.notification_id))
         .map((s) => s.notification_id),
     }),
     [settingsRow],
   );
+
+  // Row actions are disabled while one is in flight: feeds share
+  // subscriptions, and SWR drops the cache result of an earlier mutation on
+  // the same key, so overlapping changes could restore a removed row.
+  const [isUpdating, setIsUpdating] = React.useState(false);
+  const runUpdate = (update: Promise<unknown>): void => {
+    setIsUpdating(true);
+    update
+      .catch(() => {
+        // Callers already report failures; this only covers the resync.
+      })
+      .finally(() => {
+        setIsUpdating(false);
+      });
+  };
 
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
@@ -198,23 +212,25 @@ export default function AccountNotifications(): React.ReactElement {
       return;
     }
 
-    mutate(
-      Promise.all(ids.map((id) => updateUserSubscription(id, nextActive))),
-      {
-        optimisticData: (current) =>
-          (current ?? []).map((n) =>
-            ids.includes(n.id) ? { ...n, active: nextActive } : n,
-          ),
-        rollbackOnError: true,
-        populateCache: (updated, current) =>
-          (current ?? []).map((n) => updated.find((u) => u.id === n.id) ?? n),
-        revalidate: false,
-      },
-    ).catch(() => {
-      setActionError('Failed to update the subscription');
-      // Some updates may have succeeded before the failure; resync.
-      void mutate();
-    });
+    runUpdate(
+      mutate(
+        settleAll(ids.map((id) => updateUserSubscription(id, nextActive))),
+        {
+          optimisticData: (current) =>
+            (current ?? []).map((n) =>
+              ids.includes(n.id) ? { ...n, active: nextActive } : n,
+            ),
+          rollbackOnError: true,
+          populateCache: (updated, current) =>
+            (current ?? []).map((n) => updated.find((u) => u.id === n.id) ?? n),
+          revalidate: false,
+        },
+      ).catch(async () => {
+        setActionError('Failed to update the subscription');
+        // Some updates may have succeeded before the failure; resync.
+        await mutate();
+      }),
+    );
   };
 
   const handleUnsubscribe = (): void => {
@@ -224,35 +240,39 @@ export default function AccountNotifications(): React.ReactElement {
     }
     const { feed, subscriptions } = selectedRow;
     if (feed == null) {
-      Promise.all(subscriptions.map((s) => deleteUserSubscription(s.id)))
-        .then(() => mutate())
-        .catch(() => {
-          setActionError('Failed to unsubscribe');
-          void mutate();
-        });
+      runUpdate(
+        settleAll(subscriptions.map((s) => deleteUserSubscription(s.id)))
+          .then(async () => await mutate())
+          .catch(async () => {
+            setActionError('Failed to unsubscribe');
+            await mutate();
+          }),
+      );
       return;
     }
 
     // A feed's subscriptions are shared with the user's other feeds of the
     // same type, so remove just this feed rather than deleting them.
     const ids = subscriptions.map((s) => s.id);
-    mutate(
-      Promise.all(
-        ids.map((id) => removeFeedsFromUserSubscription(id, [feed.feed_id])),
-      ).then(() => undefined),
-      {
-        optimisticData: (current) =>
-          withoutFeed(current ?? [], ids, feed.feed_id),
-        rollbackOnError: true,
-        populateCache: (_, current) =>
-          withoutFeed(current ?? [], ids, feed.feed_id),
-        revalidate: false,
-      },
-    ).catch(() => {
-      setActionError('Failed to unsubscribe');
-      // Some removals may have succeeded before the failure; resync.
-      void mutate();
-    });
+    runUpdate(
+      mutate(
+        settleAll(
+          ids.map((id) => removeFeedsFromUserSubscription(id, [feed.feed_id])),
+        ).then(() => undefined),
+        {
+          optimisticData: (current) =>
+            withoutFeed(current ?? [], ids, feed.feed_id),
+          rollbackOnError: true,
+          populateCache: (_, current) =>
+            withoutFeed(current ?? [], ids, feed.feed_id),
+          revalidate: false,
+        },
+      ).catch(async () => {
+        setActionError('Failed to unsubscribe');
+        // Some removals may have succeeded before the failure; resync.
+        await mutate();
+      }),
+    );
   };
 
   return (
@@ -364,6 +384,7 @@ export default function AccountNotifications(): React.ReactElement {
                   <TableCell sx={{ textAlign: 'right' }}>
                     <IconButton
                       size='small'
+                      disabled={isUpdating}
                       aria-label={`Actions for ${getRowTitle(row)}`}
                       onClick={(e) => {
                         handleMenuOpen(e, row.key);

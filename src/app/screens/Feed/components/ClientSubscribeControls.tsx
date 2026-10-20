@@ -28,6 +28,7 @@ import {
   USER_SUBSCRIPTIONS_SWR_KEY,
 } from '../../../services/notification-service';
 import {
+  settleAll,
   upsertSubscriptions,
   withoutFeed,
 } from '../../../utils/subscriptionCache';
@@ -141,10 +142,12 @@ export default function ClientSubscribeControls({
     (subscription) => subscription.active,
   );
 
+  // Checked means the feed belongs to the type's subscription, paused or not,
+  // so unchecking a paused type still removes the feed from it.
   const dialogInitialSettings: NotificationSettings = {
-    changeTypes: feedSubscriptions
-      .filter((subscription) => subscription.active)
-      .map((subscription) => subscription.notification_id),
+    changeTypes: feedSubscriptions.map(
+      (subscription) => subscription.notification_id,
+    ),
   };
 
   if (!config.isNotificationsEnabled) {
@@ -197,7 +200,7 @@ export default function ClientSubscribeControls({
     );
 
     mutateSubscriptions(
-      Promise.all(
+      settleAll(
         subscriptionIds.map((id) =>
           removeFeedsFromUserSubscription(id, [feedId]),
         ),
@@ -216,6 +219,8 @@ export default function ClientSubscribeControls({
       })
       .catch(() => {
         notify('error', 'unsubscribeFailed');
+        // Some removals may have succeeded before the failure; resync.
+        void mutateSubscriptions();
       });
   };
 

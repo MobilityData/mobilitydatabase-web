@@ -19,6 +19,23 @@ export const upsertSubscriptions = (
 };
 
 /**
+ * Like `Promise.all`, but waits for every promise to settle before rejecting,
+ * so a resync after a partial failure sees all the requests that succeeded.
+ */
+export const settleAll = async <T>(
+  promises: Array<Promise<T>>,
+): Promise<T[]> => {
+  const results = await Promise.allSettled(promises);
+  const rejected = results.find(
+    (result): result is PromiseRejectedResult => result.status === 'rejected',
+  );
+  if (rejected !== undefined) {
+    throw rejected.reason;
+  }
+  return results.map((result) => (result as PromiseFulfilledResult<T>).value);
+};
+
+/**
  * Removes a feed from the given subscriptions, mirroring
  * `remove_feed_ids`: a subscription left with no feeds is dropped, since the
  * backend deletes it.

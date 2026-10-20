@@ -1,5 +1,33 @@
 import type { NotificationSubscription } from '../services/notification-service';
-import { upsertSubscriptions, withoutFeed } from './subscriptionCache';
+import {
+  settleAll,
+  upsertSubscriptions,
+  withoutFeed,
+} from './subscriptionCache';
+
+describe('settleAll', () => {
+  it('resolves with every value in order', async () => {
+    await expect(
+      settleAll([Promise.resolve(1), Promise.resolve(2)]),
+    ).resolves.toEqual([1, 2]);
+  });
+
+  it('rejects only after every promise has settled', async () => {
+    let slowSettled = false;
+    const slow = new Promise<number>((resolve) => {
+      setTimeout(() => {
+        slowSettled = true;
+        resolve(2);
+      }, 10);
+    });
+    const failure = new Error('boom');
+
+    await expect(settleAll([Promise.reject(failure), slow])).rejects.toBe(
+      failure,
+    );
+    expect(slowSettled).toBe(true);
+  });
+});
 
 const makeSubscription = (
   overrides: Partial<NotificationSubscription>,

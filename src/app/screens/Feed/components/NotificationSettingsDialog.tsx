@@ -24,6 +24,7 @@ import {
   removeFeedsFromUserSubscription,
   USER_SUBSCRIPTIONS_SWR_KEY,
 } from '../../../services/notification-service';
+import { settleAll } from '../../../utils/subscriptionCache';
 import {
   FEED_NOTIFICATION_TYPE_IDS,
   FEED_NOTIFICATION_TYPES,
@@ -73,27 +74,33 @@ export default function NotificationSettingsDialog({
   } = useSWRMutation(
     ['notification-settings', feedId ?? ''],
     async (_key, { arg }: { arg: SettingsChange }): Promise<void> => {
-      await Promise.all([
-        ...arg.addedTypes.map((notificationId) =>
-          createUserSubscription({
-            notification_id: notificationId,
-            feed_ids: [feedId as string],
-          }),
-        ),
-        // The type's subscription is shared with the user's other feeds, so
-        // remove only this feed from it rather than deleting it.
-        ...arg.removedTypes.map((notificationId) => {
-          const subscription = existingSubscriptions.find(
-            (s) => s.notification_id === notificationId,
-          );
-          return subscription !== undefined
-            ? removeFeedsFromUserSubscription(subscription.id, [
+      try {
+        await settleAll<unknown>([
+          ...arg.addedTypes.map(
+            async (notificationId) =>
+              await createUserSubscription({
+                notification_id: notificationId,
+                feed_ids: [feedId as string],
+              }),
+          ),
+          // The type's subscription is shared with the user's other feeds, so
+          // remove only this feed from it rather than deleting it.
+          ...arg.removedTypes.map(async (notificationId) => {
+            const subscription = existingSubscriptions.find(
+              (s) => s.notification_id === notificationId,
+            );
+            if (subscription !== undefined) {
+              await removeFeedsFromUserSubscription(subscription.id, [
                 feedId as string,
-              ])
-            : Promise.resolve();
-        }),
-      ]);
-      void mutate(USER_SUBSCRIPTIONS_SWR_KEY); // This is the global notification key
+              ]);
+            }
+          }),
+        ]);
+      } finally {
+        // Resync even after a partial failure, so the cache reflects the
+        // requests that did succeed. This is the global notification key.
+        void mutate(USER_SUBSCRIPTIONS_SWR_KEY);
+      }
     },
   );
 
