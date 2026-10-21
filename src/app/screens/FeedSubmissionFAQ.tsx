@@ -404,6 +404,7 @@ export default function FeedSubmissionFAQ(): React.ReactElement {
               <li>Passio Technologies</li>
               <li>Pinpoint AVL</li>
               <li>Port Phillip Ferries</li>
+              <li>Public Tech Studio</li>
               <li>Redmon Group</li>
               <li>Rhode Island Public Transit Authority (RIPTA)</li>
               <li>Rio de Janeiro City Hall</li>
