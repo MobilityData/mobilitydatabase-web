@@ -144,6 +144,26 @@
     "missingCode": "This link is missing the security code it needs.",
     "backToSignIn": "Go to sign in"
   },
+  "unsubscribe": {
+    "loadingTitle": "Loading your subscription",
+    "loadingDescription": "Please wait while we look up this notification.",
+    "title": "Unsubscribe from emails",
+    "description": "This link is for your <strong>{type}</strong> notifications only. Unsubscribing from them won't change any of your other Mobility Database notifications.",
+    "alreadyUnsubscribedTitle": "Already unsubscribed",
+    "alreadyUnsubscribedDescription": "You no longer receive <strong>{type}</strong> notifications. You can still unsubscribe from all your other notifications below.",
+    "unsubscribeOne": "Unsubscribe from {type} only",
+    "unsubscribeAll": "Unsubscribe from all notifications",
+    "manageNotifications": "Manage notifications",
+    "manageHint": "To choose which feeds or notification types you hear about, use Manage notifications.",
+    "successTitle": "You've been unsubscribed",
+    "successOneDescription": "You'll no longer receive <strong>{type}</strong> notifications. Your other notifications are unchanged.",
+    "successAllDescription": "You'll no longer receive any Mobility Database notification emails.",
+    "errorTitle": "Unable to unsubscribe",
+    "notFoundDescription": "This unsubscribe link is invalid, or you've already unsubscribed.",
+    "loadFailedDescription": "We couldn't load this subscription. Please try again in a moment.",
+    "unsubscribeFailed": "Something went wrong and you're still subscribed. Please try again.",
+    "tryAgain": "Try again"
+  },
   "resetPassword": {
     "verifyingTitle": "Checking your link",
     "verifyingDescription": "Please wait while we confirm your password reset link.",

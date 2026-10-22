@@ -118,3 +118,64 @@ export const deleteUserSubscription = async (id: string): Promise<void> => {
     userServiceClient.eject(authMiddleware);
   }
 };
+
+export type UnsubscribeScope = NonNullable<
+  paths['/v1/subscriptions/{id}']['delete']['parameters']['query']
+>['scope'];
+
+/**
+ * Retrieve a subscription by ID, as linked from notification emails. The ID
+ * is the access capability, so any Firebase user (anonymous included) can
+ * call this. Resolves to null when the subscription doesn't exist.
+ */
+export const getSubscriptionById = async (
+  id: string,
+): Promise<NotificationSubscription | null> => {
+  const accessToken = await getUserAccessToken();
+  const authMiddleware = generateAuthMiddlewareWithToken(accessToken);
+  userServiceClient.use(authMiddleware);
+  try {
+    const { data, error, response } = await userServiceClient.GET(
+      '/v1/subscriptions/{id}',
+      {
+        params: { path: { id } },
+      },
+    );
+    if (response.status === 404) {
+      return null;
+    }
+    if (error !== undefined || data === undefined) {
+      throw new Error('Failed to retrieve subscription');
+    }
+    return data;
+  } finally {
+    userServiceClient.eject(authMiddleware);
+  }
+};
+
+/**
+ * Unsubscribe via a subscription ID, as linked from notification emails. With
+ * `scope=all` the backend uses the ID only to find the owner and unsubscribes
+ * them from everything. Resolves to the HTTP status so callers can tell a
+ * missing subscription (404) apart from other failures; throws only when the
+ * request itself fails.
+ */
+export const unsubscribeBySubscriptionId = async (
+  id: string,
+  scope: UnsubscribeScope,
+): Promise<number> => {
+  const accessToken = await getUserAccessToken();
+  const authMiddleware = generateAuthMiddlewareWithToken(accessToken);
+  userServiceClient.use(authMiddleware);
+  try {
+    const { response } = await userServiceClient.DELETE(
+      '/v1/subscriptions/{id}',
+      {
+        params: { path: { id }, query: { scope } },
+      },
+    );
+    return response.status;
+  } finally {
+    userServiceClient.eject(authMiddleware);
+  }
+};

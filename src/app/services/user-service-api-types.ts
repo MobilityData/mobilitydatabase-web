@@ -65,9 +65,49 @@ export interface paths {
     put?: never;
     /**
      * Create a notification subscription
-     * @description Subscribes the authenticated user to a notification type. This feature is available to selected users. To request access or learn more, contact us at api@mobilitydata.org.
+     * @description Subscribes the authenticated user to a notification type. For feed-scoped types, the supplied `feed_ids` are merged into the subscription's existing feed set rather than replacing it, so callers do not need to know which feeds the user is already subscribed to. This feature is available to selected users. To request access or learn more, contact us at api@mobilitydata.org.
      */
     post: operations['createUserSubscription'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/user/subscriptions/feeds': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List the feeds the current user has subscriptions for
+     * @description Returns the feeds the authenticated user has at least one notification subscription targeting, each with the subscriptions that target it. Subscriptions of any `active` state are included (same as `GET /v1/user/subscriptions`). Feed metadata is resolved from the feeds database at read time; a feed that no longer exists there still appears, with its metadata fields null. Returns an empty array when the user has no feed-scoped subscriptions. This feature is available to selected users. To request access or learn more, contact us at api@mobilitydata.org.
+     */
+    get: operations['getUserSubscriptionFeeds'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/user/subscriptions/feeds/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get the current user's subscriptions for a specific feed
+     * @description Returns the feed identified by its stable ID, with the authenticated user's notification subscriptions that target it. Subscriptions of any `active` state are included (same as `GET /v1/user/subscriptions`). Returns `404` if the user has no subscription targeting the feed. If the feed no longer exists in the feeds database, the group is still returned with its metadata fields null. users. To request access or learn more, contact us at api@mobilitydata.org.
+     */
+    get: operations['getUserSubscriptionFeedById'];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -92,8 +132,8 @@ export interface paths {
     options?: never;
     head?: never;
     /**
-     * Toggle a notification subscription
-     * @description Activates or deactivates a notification subscription by ID. This feature is available to selected users. To request access or learn more, contact us at api@mobilitydata.org.
+     * Toggle a notification subscription, or remove specific feeds from it
+     * @description Activates or deactivates a notification subscription by ID, and/or removes specific feed stable IDs from a feed-scoped subscription's feed set via `remove_feed_ids`. To add feeds instead, use `POST /v1/user/subscriptions`, which merges into the existing feed set. A feed-scoped subscription cannot exist with no feeds, so removing the last remaining feed deletes the subscription entirely; the response reflects its final state. This feature is available to selected users. To request access or learn more, contact us at api@mobilitydata.org.
      */
     patch: operations['updateUserSubscription'];
     trace?: never;
@@ -108,16 +148,50 @@ export interface paths {
     /**
      * Get a subscription by ID
      * @description Returns a single notification subscription identified by its ID.
+     *
+     *     **No end-user authentication** — the subscription UUID (`id`) is the
+     *     access capability. The call itself must still be made by an authorized IAP
+     *     principal (typically the website backend server-side) to render the
+     *     unsubscribe page, so the recipient can see which notification they are
+     *     about to unsubscribe from before confirming. Returns `404` for an
+     *     unknown/invalid ID.
      */
     get: operations['getSubscription'];
     put?: never;
     post?: never;
     /**
-     * Delete or disable a subscription by ID
-     * @description Removes a notification subscription identified by its ID. The
-     *     announcements subscription (`api.announcements`) cannot be deleted;
-     *     calling this endpoint for it disables the subscription (sets it inactive)
-     *     instead of removing it. This feature is available to selected users. To request access or learn more, contact us at api@mobilitydata.org.
+     * Unsubscribe by subscription ID
+     * @description Unsubscribes using the subscription UUID (`id`). This backs the email
+     *     "unsubscribe" link — **no end-user authentication**, the UUID is the
+     *     capability. The call must still be made by an authorized IAP principal
+     *     (the website backend server-side); the anonymous recipient never calls
+     *     the API directly.
+     *
+     *     Behaviour depends on the notification type:
+     *     - **`api.announcements`** — never deleted; the subscription is *disabled*
+     *       (`active=false`), the contact is removed from the Brevo announcements
+     *       list, and `app_user.is_registered_to_receive_api_announcements` is
+     *       cleared. Kept idempotent so a repeated click still succeeds.
+     *     - **all other types** (e.g. `feed.url_updated`) — the subscription row is
+     *       hard-deleted; a second call therefore returns `404`.
+     *
+     *     Returns `404` for an unknown/invalid ID, and `502` if the email provider
+     *     (Brevo) cannot be reached while updating an announcements subscription.
+     *
+     *     The `id` embedded in an email is the subscription's own UUID
+     *     (`notification_subscription.id`) — mirrored onto the Brevo contact as the
+     *     `MDB_SUBSCRIPTION_ID` attribute — **not** the notification-type string
+     *     (`api.announcements`), which is shared by all recipients and is not a
+     *     valid subscription ID.
+     *
+     *     With `scope=all`, the subscription ID is used only to resolve the owning
+     *     user, and every subscription that user holds is unsubscribed (normal types
+     *     deleted; `api.announcements` disabled and removed from Brevo). With
+     *     `scope=one` (the default) only the single subscription identified by `id`
+     *     is affected.
+     *
+     *     This feature is available to selected users. To request access or learn
+     *     more, contact us at api@mobilitydata.org.
      */
     delete: operations['deleteSubscription'];
     options?: never;
@@ -196,24 +270,24 @@ export interface components {
     };
     NotificationType: {
       /**
-       * @description Unique identifier for the notification type (e.g. 'feed.published').
-       * @example feed.published
+       * @description Unique identifier for the notification type (e.g. 'feed.url_updated', 'api.announcements').
+       * @example feed.url_updated
        */
       id: string;
       /**
        * @description Human-readable description of the notification type.
-       * @example Notifies when a new feed is published.
+       * @example Fired when a feed URL changes in-place or a feed is deprecated and redirected.
        */
       description?: string | null;
     };
     NotificationSubscription: {
-      /** @description Unique subscription ID (UUID v4). */
+      /** @description Unique subscription ID (UUID v4). This is the **capability token** used by the public `/v1/subscriptions/{id}` endpoints and by email unsubscribe links; for `api.announcements` it is mirrored onto the Brevo contact as the `MDB_SUBSCRIPTION_ID` attribute. */
       id: string;
       /** @description The ID of the subscribed user. */
       user_id: string;
       /**
        * @description The notification type this subscription is for.
-       * @example feed.published
+       * @example feed.url_updated
        */
       notification_id: string;
       /**
@@ -249,14 +323,56 @@ export interface components {
       /** @description The feed's display name. */
       feed_name?: string | null;
     };
-    CreateNotificationSubscriptionRequest: {
+    /** @description A trimmed view of a notification subscription, for use nested inside a `SubscriptionFeedGroup`. Omits `user_id` (the caller's own ID) and `feeds` (the enclosing group already identifies the feed). */
+    FeedSubscriptionSummary: {
+      /** @description Unique subscription ID (UUID v4). */
+      id: string;
       /**
-       * @description The notification type to subscribe to.
-       * @example feed.published
+       * @description The notification type this subscription is for.
+       * @example feed.url_updated
        */
       notification_id: string;
       /**
-       * @description Feed stable IDs to subscribe to. Required (non-empty) for the feed-scoped notification types feed.url_updated, feed.url_availability and feed.coverage; must be omitted or empty for other types. Validation is enforced in code, not the schema.
+       * @description Whether the subscription is currently active.
+       * @default true
+       */
+      active: boolean;
+      /**
+       * Format: date-time
+       * @description Timestamp when the subscription was created.
+       */
+      created_at: string;
+    };
+    /** @description A feed the authenticated user has at least one notification subscription targeting, with those subscriptions. Feed metadata is resolved from the feed's stable ID at read time (not persisted). */
+    SubscriptionFeedGroup: {
+      /**
+       * @description The feed's stable ID.
+       * @example mdb-1
+       */
+      feed_id: string;
+      /**
+       * @description The feed's data type.
+       * @example gtfs
+       */
+      data_type?: string | null;
+      /**
+       * @description The transit/mobility data provider name.
+       * @example Metropolitan Transit Authority
+       */
+      provider?: string | null;
+      /** @description The feed's display name. */
+      feed_name?: string | null;
+      /** @description The authenticated user's subscriptions that target this feed. */
+      subscriptions: components['schemas']['FeedSubscriptionSummary'][];
+    };
+    CreateNotificationSubscriptionRequest: {
+      /**
+       * @description The notification type to subscribe to.
+       * @example feed.url_updated
+       */
+      notification_id: string;
+      /**
+       * @description Feed stable IDs to subscribe to. Required (non-empty) for the feed-scoped notification types feed.url_updated, feed.url_availability and feed.coverage; must be omitted or empty for other types. Merged into the subscription's existing feed set (union), not a replacement. Validation is enforced in code, not the schema.
        * @example [
        *       "mdb-1",
        *       "mdb-42"
@@ -266,7 +382,14 @@ export interface components {
     };
     UpdateNotificationSubscriptionRequest: {
       /** @description Whether the subscription should be active. */
-      active: boolean;
+      active?: boolean;
+      /**
+       * @description Feed stable IDs to remove from a feed-scoped subscription's feed set. Only valid for feed-scoped notification types; removing a feed ID that is not currently present is a no-op. Removing every remaining feed ID deletes the subscription entirely (a feed-scoped subscription cannot exist with no feeds). Validation is enforced in code, not the schema.
+       * @example [
+       *       "mdb-1"
+       *     ]
+       */
+      remove_feed_ids?: string[];
     };
     FeatureFlag: {
       /**
@@ -481,12 +604,86 @@ export interface operations {
       };
     };
   };
+  getUserSubscriptionFeeds: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description List of feeds with the subscriptions targeting them. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SubscriptionFeedGroup'][];
+        };
+      };
+      /** @description Unauthorized. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden — guest users cannot perform this action. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getUserSubscriptionFeedById: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /**
+         * @description The feed's stable ID.
+         * @example mdb-1
+         */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The feed with the subscriptions targeting it. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SubscriptionFeedGroup'];
+        };
+      };
+      /** @description Unauthorized. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Feed not found, or the user has no subscription targeting it. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   deleteUserSubscription: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description Subscription ID. */
+        /** @description The subscription ID (notification_subscription.id) — a UUID that is the subscription row's own identifier, not the user ID and not the notification-type ID. */
         id: string;
       };
       cookie?: never;
@@ -521,7 +718,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        /** @description Subscription ID. */
+        /** @description The subscription ID (notification_subscription.id) — a UUID that is the subscription row's own identifier, not the user ID and not the notification-type ID. */
         id: string;
       };
       cookie?: never;
@@ -562,7 +759,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        /** @description Subscription ID. */
+        /** @description The subscription ID (notification_subscription.id) — a UUID that is the subscription row's own identifier, not the user ID and not the notification-type ID. */
         id: string;
       };
       cookie?: never;
@@ -589,10 +786,13 @@ export interface operations {
   };
   deleteSubscription: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description 'one' (default) unsubscribes only the subscription identified by the path `id`. 'all' unsubscribes the owning user from every notification type, using the path `id` solely to identify that user. */
+        scope?: 'one' | 'all';
+      };
       header?: never;
       path: {
-        /** @description Subscription ID. */
+        /** @description The subscription ID (notification_subscription.id) — a UUID that is the subscription row's own identifier, not the user ID and not the notification-type ID. */
         id: string;
       };
       cookie?: never;
@@ -601,6 +801,13 @@ export interface operations {
     responses: {
       /** @description Subscription deleted, or disabled for the announcements type. */
       204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Invalid `scope` value (must be `one` or `all`). */
+      400: {
         headers: {
           [name: string]: unknown;
         };
