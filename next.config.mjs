@@ -11,6 +11,12 @@ const GTFS_DIFF_FILES = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // DuckDB-WASM only runs in the browser (lib/duckdb-client.ts imports it
+  // dynamically), but its Node build still lands in the server bundles of
+  // the pages that use it, and Turbopack panics packaging it ("entered
+  // unreachable code" in chunk_group). Left to Node's require on the server,
+  // it is never bundled there; the browser bundle is unchanged.
+  serverExternalPackages: ['@duckdb/duckdb-wasm'],
   // Serverless functions only bundle files they import; the diff files are
   // read by path, so list them for the routes that read them: the file API
   // (Parquet range reads) and the diff pages rendered on demand.
