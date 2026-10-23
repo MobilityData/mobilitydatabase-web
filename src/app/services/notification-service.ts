@@ -71,8 +71,40 @@ export const updateUserSubscription = async (
 };
 
 /**
+ * Remove feeds from a feed-scoped subscription, leaving its other feeds
+ * subscribed. The backend keeps a single subscription per notification type,
+ * so this (not delete) is how to unsubscribe from one feed. Removing the last
+ * remaining feed deletes the subscription.
+ */
+export const removeFeedsFromUserSubscription = async (
+  id: string,
+  feedIds: string[],
+): Promise<NotificationSubscription> => {
+  const accessToken = await getUserAccessToken();
+  const authMiddleware = generateAuthMiddlewareWithToken(accessToken);
+  userServiceClient.use(authMiddleware);
+  try {
+    const { data, error } = await userServiceClient.PATCH(
+      '/v1/user/subscriptions/{id}',
+      {
+        params: { path: { id } },
+        body: { remove_feed_ids: feedIds },
+      },
+    );
+    if (error !== undefined || data === undefined) {
+      throw new Error('Failed to remove feeds from user subscription');
+    }
+    return data;
+  } finally {
+    userServiceClient.eject(authMiddleware);
+  }
+};
+
+/**
  * Subscribe the current user to a notification type, optionally scoped to
- * specific feeds.
+ * specific feeds. For feed-scoped types the feeds are merged into the user's
+ * existing subscription for that type, so the response may be an existing
+ * subscription (same ID) with more feeds.
  */
 export const createUserSubscription = async (
   request: CreateNotificationSubscriptionRequest,

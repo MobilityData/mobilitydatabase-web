@@ -23,7 +23,6 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Link as LocaleLink } from '../../../../i18n/navigation';
 import { useAuthSession } from '../../../components/AuthSessionProvider';
 import NotificationSettingsDialog, {
-  defaultNotificationSettings,
   type NotificationSettings,
 } from '../../../screens/Feed/components/NotificationSettingsDialog';
 import { AccountSectionContainer } from '../AccountSectionContainer';
@@ -31,29 +30,22 @@ import {
   deleteUserSubscription,
   getUserSubscriptions,
   type NotificationSubscription,
-  type SubscriptionFeed,
+  removeFeedsFromUserSubscription,
   updateUserSubscription,
   USER_SUBSCRIPTIONS_SWR_KEY,
 } from '../../../services/notification-service';
-import { NOTIFICATION_TYPES } from '../../../utils/notificationTypes';
+import { settleAll, withoutFeed } from '../../../utils/subscriptionCache';
+import {
+  FEED_NOTIFICATION_TYPE_IDS,
+  NOTIFICATION_TYPES,
+} from '../../../utils/notificationTypes';
+import {
+  getFeedTitle,
+  groupSubscriptionsByFeed,
+  type NotificationRow,
+} from './lib/groupSubscriptions';
 
-const nonEmpty = (value?: string | null): string | undefined =>
-  value != null && value.trim() !== '' ? value : undefined;
-
-const getFeedTitle = (feed: SubscriptionFeed): string => {
-  const titlePrefix =
-    feed.data_type != null && feed.data_type.trim() !== ''
-      ? `[${feed.data_type.toLocaleUpperCase()}]`
-      : '';
-  const provider = nonEmpty(feed.provider);
-  const feedName = nonEmpty(feed.feed_name);
-  if (provider != null && feedName != null) {
-    return `${titlePrefix} ${provider} - ${feedName}`;
-  }
-  return `${titlePrefix} ${provider ?? feedName ?? feed.feed_id}`;
-};
-
-type SortKey = 'title' | 'type' | 'status' | 'subscribed';
+type SortKey = 'title' | 'type' | 'status';
 
 export default function AccountNotifications(): React.ReactElement {
   const t = useTranslations('feeds');
@@ -68,36 +60,27 @@ export default function AccountNotifications(): React.ReactElement {
     return type != null ? t(type.labelKey) : notificationId;
   };
 
-  const getSubscriptionTitle = (
-    subscription: NotificationSubscription,
-  ): string => {
-    const feeds = subscription.feeds ?? [];
-    if (feeds.length === 0) {
-      return getNotificationTypeLabel(subscription.notification_id);
-    }
-    return feeds.map(getFeedTitle).join(', ');
-  };
+  const getNotificationTypesLabel = (row: NotificationRow): string =>
+    row.notificationIds.map(getNotificationTypeLabel).join(', ');
 
-  const renderSubscriptionTitle = (
-    subscription: NotificationSubscription,
-  ): React.ReactNode => {
-    const feeds = subscription.feeds ?? [];
-    if (feeds.length === 0) {
-      return getNotificationTypeLabel(subscription.notification_id);
+  const getRowTitle = (row: NotificationRow): string =>
+    row.feed != null ? getFeedTitle(row.feed) : getNotificationTypesLabel(row);
+
+  const renderRowTitle = (row: NotificationRow): React.ReactNode => {
+    if (row.feed == null) {
+      return getNotificationTypesLabel(row);
     }
-    return feeds.map((feed, index) => (
-      <React.Fragment key={feed.feed_id}>
-        {index > 0 && ', '}
-        <Link
-          component={LocaleLink}
-          href={`/feeds/${feed.data_type != null && feed.data_type !== '' ? feed.data_type + '/' : ''}${feed.feed_id}`}
-          target='_blank'
-          rel='noreferrer'
-        >
-          {getFeedTitle(feed)}
-        </Link>
-      </React.Fragment>
-    ));
+    const { feed } = row;
+    return (
+      <Link
+        component={LocaleLink}
+        href={`/feeds/${feed.data_type != null && feed.data_type !== '' ? feed.data_type + '/' : ''}${feed.feed_id}`}
+        target='_blank'
+        rel='noreferrer'
+      >
+        {getFeedTitle(feed)}
+      </Link>
+    );
   };
 
   const handleSortClick = (key: SortKey): void => {
@@ -109,26 +92,19 @@ export default function AccountNotifications(): React.ReactElement {
     }
   };
 
-  const getSortValue = (
-    subscription: NotificationSubscription,
-    key: SortKey,
-  ): string | number => {
+  const getSortValue = (row: NotificationRow, key: SortKey): string => {
     switch (key) {
       case 'title':
-        return getSubscriptionTitle(subscription).toLowerCase();
+        return getRowTitle(row).toLowerCase();
       case 'type':
-        return getNotificationTypeLabel(
-          subscription.notification_id,
-        ).toLowerCase();
+        return getNotificationTypesLabel(row).toLowerCase();
       case 'status':
-        return subscription.active ? 'active' : 'paused';
-      case 'subscribed':
-        return new Date(subscription.created_at).getTime();
+        return row.active ? 'active' : 'paused';
     }
   };
 
   const {
-    data: notifications = [],
+    data: notifications,
     error: loadError,
     isLoading,
     mutate,
@@ -137,98 +113,162 @@ export default function AccountNotifications(): React.ReactElement {
     getUserSubscriptions,
   );
 
-  const [actionError, setActionError] = React.useState<string | null>(null);
-  const [menuState, setMenuState] = React.useState<{
-    anchor: HTMLElement;
-    id: string;
-  } | null>(null);
-  const [settingsDialogOpen, setSettingsDialogOpen] = React.useState(false);
-  const [rowSettings, setRowSettings] = React.useState<
-    Record<string, NotificationSettings>
-  >({});
+  // Keyed on the SWR data reference so row objects stay stable across
+  // unrelated re-renders (the settings dialog resets when its props change).
+  const rows = React.useMemo(
+    () => groupSubscriptionsByFeed(notifications ?? []),
+    [notifications],
+  );
 
-  const sortedNotifications =
+  const [actionError, setActionError] = React.useState<string | null>(null);
+  const [menuAnchor, setMenuAnchor] = React.useState<HTMLElement | null>(null);
+  // Kept after the menu closes so its items don't change while it fades out.
+  const [menuRowKey, setMenuRowKey] = React.useState<string | null>(null);
+  const [settingsRowKey, setSettingsRowKey] = React.useState<string | null>(
+    null,
+  );
+
+  const sortedRows =
     orderBy === null
-      ? notifications
-      : [...notifications].sort((a, b) => {
+      ? rows
+      : [...rows].sort((a, b) => {
           const valueA = getSortValue(a, orderBy);
           const valueB = getSortValue(b, orderBy);
           const comparison = valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
           return order === 'asc' ? comparison : -comparison;
         });
-  const selectedSubscription =
-    menuState !== null
-      ? notifications.find((n) => n.id === menuState.id)
+  const selectedRow =
+    menuRowKey !== null
+      ? rows.find((row) => row.key === menuRowKey)
       : undefined;
-  const isPaused = selectedSubscription?.active === false;
+  const isPaused = selectedRow?.active === false;
+
+  const settingsRow =
+    settingsRowKey !== null
+      ? rows.find((row) => row.key === settingsRowKey)
+      : undefined;
+  // Checked means the feed belongs to the type's subscription, paused or not,
+  // so unchecking a paused type still removes the feed from it.
+  const settingsInitial = React.useMemo<NotificationSettings>(
+    () => ({
+      changeTypes: (settingsRow?.subscriptions ?? [])
+        .filter((s) => FEED_NOTIFICATION_TYPE_IDS.includes(s.notification_id))
+        .map((s) => s.notification_id),
+    }),
+    [settingsRow],
+  );
+
+  // Row actions are disabled while one is in flight: feeds share
+  // subscriptions, and SWR drops the cache result of an earlier mutation on
+  // the same key, so overlapping changes could restore a removed row.
+  const [isUpdating, setIsUpdating] = React.useState(false);
+  const runUpdate = (update: Promise<unknown>): void => {
+    setIsUpdating(true);
+    update
+      .catch(() => {
+        // Callers already report failures; this only covers the resync.
+      })
+      .finally(() => {
+        setIsUpdating(false);
+      });
+  };
 
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
-    id: string,
+    key: string,
   ): void => {
-    setMenuState({ anchor: event.currentTarget, id });
+    setMenuAnchor(event.currentTarget);
+    setMenuRowKey(key);
   };
 
   const handleMenuClose = (): void => {
-    setMenuState(null);
+    setMenuAnchor(null);
   };
 
-  const handleTogglePause = (): void => {
-    if (menuState === null) {
-      return;
+  const handleOpenSettings = (): void => {
+    if (selectedRow !== undefined) {
+      setSettingsRowKey(selectedRow.key);
     }
-    const { id } = menuState;
-    const subscription = notifications.find((n) => n.id === id);
     handleMenuClose();
-    if (subscription === undefined) {
+  };
+
+  // Only offered for global rows: `active` is per notification type and is
+  // shared by every feed in it, so a single feed can't be paused.
+  const handleTogglePause = (): void => {
+    handleMenuClose();
+    if (selectedRow === undefined || selectedRow.feed != null) {
       return;
     }
-    const nextActive = !subscription.active;
-    const withToggledActive = (
-      current: NotificationSubscription[] | undefined,
-    ): NotificationSubscription[] =>
-      (current ?? []).map((n) =>
-        n.id === id ? { ...n, active: nextActive } : n,
-      );
+    const nextActive = !selectedRow.active;
+    const ids = selectedRow.subscriptions
+      .filter((s) => s.active !== nextActive)
+      .map((s) => s.id);
+    if (ids.length === 0) {
+      return;
+    }
 
-    mutate(
-      updateUserSubscription(id, nextActive).then((updated) => [updated]),
-      {
-        optimisticData: withToggledActive,
-        rollbackOnError: true,
-        populateCache: ([updated], current) =>
-          (current ?? []).map((n) => (n.id === id ? updated : n)),
-        revalidate: false,
-      },
-    ).catch(() => {
-      setActionError('Failed to update the subscription');
-    });
+    runUpdate(
+      mutate(
+        settleAll(ids.map((id) => updateUserSubscription(id, nextActive))),
+        {
+          optimisticData: (current) =>
+            (current ?? []).map((n) =>
+              ids.includes(n.id) ? { ...n, active: nextActive } : n,
+            ),
+          rollbackOnError: true,
+          populateCache: (updated, current) =>
+            (current ?? []).map((n) => updated.find((u) => u.id === n.id) ?? n),
+          revalidate: false,
+        },
+      ).catch(async () => {
+        setActionError('Failed to update the subscription');
+        // Some updates may have succeeded before the failure; resync.
+        await mutate();
+      }),
+    );
   };
 
   const handleUnsubscribe = (): void => {
-    if (menuState !== null) {
-      const { id } = menuState;
-      handleMenuClose();
-      deleteUserSubscription(id)
-        .then(() => mutate())
-        .catch(() => {
-          setActionError('Failed to unsubscribe');
-        });
+    handleMenuClose();
+    if (selectedRow === undefined) {
+      return;
     }
-  };
-
-  const handleSaveSettings = (settings: NotificationSettings): void => {
-    if (menuState !== null) {
-      setRowSettings((prev) => ({ ...prev, [menuState.id]: settings }));
+    const { feed, subscriptions } = selectedRow;
+    if (feed == null) {
+      runUpdate(
+        settleAll(subscriptions.map((s) => deleteUserSubscription(s.id)))
+          .then(async () => await mutate())
+          .catch(async () => {
+            setActionError('Failed to unsubscribe');
+            await mutate();
+          }),
+      );
+      return;
     }
-    setSettingsDialogOpen(false);
-  };
 
-  const selectedRowId = menuState?.id;
-  const settingsInitial =
-    selectedRowId !== undefined
-      ? (rowSettings[selectedRowId] ?? defaultNotificationSettings)
-      : defaultNotificationSettings;
+    // A feed's subscriptions are shared with the user's other feeds of the
+    // same type, so remove just this feed rather than deleting them.
+    const ids = subscriptions.map((s) => s.id);
+    runUpdate(
+      mutate(
+        settleAll(
+          ids.map((id) => removeFeedsFromUserSubscription(id, [feed.feed_id])),
+        ).then(() => undefined),
+        {
+          optimisticData: (current) =>
+            withoutFeed(current ?? [], ids, feed.feed_id),
+          rollbackOnError: true,
+          populateCache: (_, current) =>
+            withoutFeed(current ?? [], ids, feed.feed_id),
+          revalidate: false,
+        },
+      ).catch(async () => {
+        setActionError('Failed to unsubscribe');
+        // Some removals may have succeeded before the failure; resync.
+        await mutate();
+      }),
+    );
+  };
 
   return (
     <AccountSectionContainer
@@ -300,50 +340,31 @@ export default function AccountNotifications(): React.ReactElement {
                     <Typography fontWeight={600}>Status</Typography>
                   </TableSortLabel>
                 </TableCell>
-                <TableCell sx={{ width: 140 }}>
-                  <TableSortLabel
-                    active={orderBy === 'subscribed'}
-                    direction={orderBy === 'subscribed' ? order : 'asc'}
-                    onClick={() => {
-                      handleSortClick('subscribed');
-                    }}
-                  >
-                    <Typography fontWeight={600}>Subscribed</Typography>
-                  </TableSortLabel>
-                </TableCell>
                 <TableCell sx={{ width: 56 }}>
                   <Typography fontWeight={600}></Typography>
                 </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {sortedNotifications.map((n) => (
-                <TableRow key={n.id} hover>
-                  <TableCell>{renderSubscriptionTitle(n)}</TableCell>
-                  <TableCell>
-                    {getNotificationTypeLabel(n.notification_id)}
-                  </TableCell>
+              {sortedRows.map((row) => (
+                <TableRow key={row.key} hover>
+                  <TableCell>{renderRowTitle(row)}</TableCell>
+                  <TableCell>{getNotificationTypesLabel(row)}</TableCell>
                   <TableCell>
                     <Chip
-                      label={n.active ? 'Active' : 'Paused'}
-                      color={n.active ? 'success' : 'default'}
+                      label={row.active ? 'Active' : 'Paused'}
+                      color={row.active ? 'success' : 'default'}
                       size='small'
                       variant='outlined'
                     />
                   </TableCell>
-                  <TableCell>
-                    {new Date(n.created_at).toLocaleDateString(undefined, {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    })}
-                  </TableCell>
                   <TableCell sx={{ textAlign: 'right' }}>
                     <IconButton
                       size='small'
-                      aria-label={`Actions for ${n.notification_id}`}
+                      disabled={isUpdating}
+                      aria-label={`Actions for ${getRowTitle(row)}`}
                       onClick={(e) => {
-                        handleMenuOpen(e, n.id);
+                        handleMenuOpen(e, row.key);
                       }}
                     >
                       <MoreVertIcon fontSize='small' />
@@ -351,9 +372,9 @@ export default function AccountNotifications(): React.ReactElement {
                   </TableCell>
                 </TableRow>
               ))}
-              {notifications.length === 0 && loadError === undefined && (
+              {rows.length === 0 && loadError === undefined && (
                 <TableRow>
-                  <TableCell colSpan={5} align='center'>
+                  <TableCell colSpan={4} align='center'>
                     <Typography color='text.secondary' sx={{ py: 4 }}>
                       No active subscriptions
                     </Typography>
@@ -365,27 +386,37 @@ export default function AccountNotifications(): React.ReactElement {
         </TableContainer>
 
         <Menu
-          anchorEl={menuState?.anchor}
-          open={menuState !== null}
+          anchorEl={menuAnchor}
+          open={menuAnchor !== null}
           onClose={handleMenuClose}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         >
-          <MenuItem onClick={handleTogglePause}>
-            {isPaused ? 'Resume Notifications' : 'Pause Notifications'}
-          </MenuItem>
+          {selectedRow?.feed != null ? (
+            <MenuItem onClick={handleOpenSettings}>
+              Notification Settings
+            </MenuItem>
+          ) : (
+            <MenuItem onClick={handleTogglePause}>
+              {isPaused ? 'Resume Notifications' : 'Pause Notifications'}
+            </MenuItem>
+          )}
           <MenuItem onClick={handleUnsubscribe} sx={{ color: 'error.main' }}>
             Unsubscribe
           </MenuItem>
         </Menu>
 
         <NotificationSettingsDialog
-          open={settingsDialogOpen}
+          open={settingsRow !== undefined}
           onClose={() => {
-            setSettingsDialogOpen(false);
+            setSettingsRowKey(null);
           }}
-          onSave={handleSaveSettings}
+          onSave={() => {
+            setSettingsRowKey(null);
+          }}
           initialSettings={settingsInitial}
+          feedId={settingsRow?.feed?.feed_id}
+          existingSubscriptions={settingsRow?.subscriptions}
         />
       </Box>
     </AccountSectionContainer>
