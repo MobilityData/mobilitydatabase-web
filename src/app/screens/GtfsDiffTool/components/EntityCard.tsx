@@ -25,7 +25,7 @@ import {
 
 // ── Diff type badge ────────────────────────────────────────────────
 
-function DiffBadge({ type }: { type: DiffType }): React.ReactElement {
+export function DiffBadge({ type }: { type: DiffType }): React.ReactElement {
   const colorMap: Record<DiffType, string> = {
     added: '#2e7d32',
     deleted: '#d32f2f',

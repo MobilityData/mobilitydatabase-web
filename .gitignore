@@ -37,3 +37,13 @@ next-env.d.ts
 
 .vscode/
 tsconfig.tsbuildinfo
+
+# GTFS diff v2 datasets: only small datasets' generated files are committed.
+# Large ones (stm, idfm) exceed GitHub's 100 MB file limit; feed zips are
+# build inputs only. Rebuild with scripts/build-gtfs-diff-dataset.mjs.
+/src/app/screens/GtfsDiffTool/data/v2/*
+!/src/app/screens/GtfsDiffTool/data/v2/README.md
+!/src/app/screens/GtfsDiffTool/data/v2/direxis/
+!/src/app/screens/GtfsDiffTool/data/v2/mbta/
+!/src/app/screens/GtfsDiffTool/data/v2/mbta-pathways-demo/
+/src/app/screens/GtfsDiffTool/data/v2/**/*.zip

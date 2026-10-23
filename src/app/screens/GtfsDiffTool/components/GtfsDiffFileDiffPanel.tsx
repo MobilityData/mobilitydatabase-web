@@ -7,10 +7,12 @@ import {
   Collapse,
   FormControl,
   IconButton,
+  InputAdornment,
   InputLabel,
   MenuItem,
   Select,
   Tab,
+  TextField,
   Table,
   TableBody,
   TableCell,
@@ -21,8 +23,17 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { ExpandLess, ExpandMore } from '@mui/icons-material';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Clear, ExpandLess, ExpandMore, Search } from '@mui/icons-material';
+import React, {
+  createContext,
+  useContext,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { searchFileDiff } from '../lib/file-diff-search';
 import type { CSSProperties } from 'react';
 import type {
   FileDiff,
@@ -89,6 +100,109 @@ function identifierLabel(identifier: Record<string, string>): string {
   return Object.values(identifier).join(' / ');
 }
 
+// ── Linked values ──────────────────────────────────────────────────
+
+/**
+ * Turns some values into links, e.g. foreign keys to other report pages
+ * (route_id -> the Routes page with that route selected). Provided by the
+ * v2 report; without a provider values are plain text.
+ */
+export interface ValueLinker {
+  isLinked: (column: string, value: string) => boolean;
+  /** Tooltip, e.g. "Open route 1 in Routes". */
+  describe: (column: string, value: string) => string;
+  open: (column: string, value: string) => void;
+}
+
+export const ValueLinkContext = createContext<ValueLinker | null>(null);
+
+/** A cell value, as a link when the context says its column links somewhere. */
+export function LinkedValue({
+  column,
+  value,
+  children,
+}: {
+  column: string;
+  value: string;
+  children?: React.ReactNode;
+}): React.ReactElement {
+  const linker = useContext(ValueLinkContext);
+  const text = children ?? value;
+  if (linker == null || !linker.isLinked(column, value)) return <>{text}</>;
+  return (
+    <Tooltip title={linker.describe(column, value)}>
+      <Box
+        component='button'
+        type='button'
+        onClick={(e: React.MouseEvent) => {
+          e.stopPropagation();
+          linker.open(column, value);
+        }}
+        sx={{
+          all: 'unset',
+          cursor: 'pointer',
+          textDecoration: 'underline',
+          textDecorationStyle: 'dotted',
+          textUnderlineOffset: '2px',
+          '&:hover': { textDecorationStyle: 'solid' },
+          '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main' },
+        }}
+      >
+        {text}
+      </Box>
+    </Tooltip>
+  );
+}
+
+/** An action on a changed row, shown on hover in a first column (e.g. "See on map"). */
+export interface RowAction {
+  /** Files whose rows get the action. */
+  files: string[];
+  /** Tooltip / accessible label. */
+  label: string;
+  icon: React.ReactNode;
+  onClick: (identifier: Record<string, string>, fileName: string) => void;
+}
+
+const ACTION_COL_W = 36; // px — row action column width
+
+/** Reveals `.row-action` on hover or keyboard focus of the row. */
+const rowActionHoverSx = {
+  '&:hover .row-action, &:focus-within .row-action': { opacity: 1 },
+} as const;
+
+function RowActionButton({
+  action,
+  identifier,
+  fileName,
+}: {
+  action: RowAction;
+  identifier: Record<string, string>;
+  fileName: string;
+}): React.ReactElement {
+  return (
+    <Tooltip title={action.label}>
+      <IconButton
+        className='row-action'
+        size='small'
+        aria-label={`${action.label}: ${identifierLabel(identifier)}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          action.onClick(identifier, fileName);
+        }}
+        sx={{
+          p: 0.25,
+          opacity: 0,
+          transition: 'opacity 120ms',
+          color: 'primary.main',
+        }}
+      >
+        {action.icon}
+      </IconButton>
+    </Tooltip>
+  );
+}
+
 // Inline style for virtual row cells (avoids MUI sx overhead per cell).
 const cellStyle: CSSProperties = {
   fontFamily: MONO_FONT,
@@ -115,6 +229,8 @@ interface VirtualRowTableProps {
   rows: RowAdded[] | RowDeleted[];
   columns: string[];
   primaryKey: string[];
+  fileName: string;
+  rowAction?: RowAction;
 }
 
 function VirtualRowTable({
@@ -122,11 +238,15 @@ function VirtualRowTable({
   rows,
   columns,
   primaryKey,
+  fileName,
+  rowAction,
 }: VirtualRowTableProps): React.ReactElement {
+  const actionW = rowAction ? ACTION_COL_W : 0;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const pkSet = useMemo(() => new Set(primaryKey), [primaryKey]);
   const colWidths = useMemo(() => columns.map(colWidth), [columns]);
-  const totalWidth = LINE_COL_W + colWidths.reduce((s, w) => s + w, 0);
+  const totalWidth =
+    actionW + LINE_COL_W + colWidths.reduce((s, w) => s + w, 0);
   const color = rowType === 'added' ? COLORS.added : COLORS.deleted;
   const bg = rowType === 'added' ? COLORS.addedBg : COLORS.deletedBg;
   const emptyLabel = rowType === 'added' ? 'No added rows.' : 'No deleted rows.';
@@ -159,6 +279,7 @@ function VirtualRowTable({
       {/* Sticky header */}
       <Box sx={{ overflowX: 'auto', bgcolor: 'background.paper' }}>
         <Box sx={{ display: 'flex', minWidth: totalWidth, height: HDR_H }}>
+        {rowAction ? <Box sx={{ width: actionW, flexShrink: 0 }} /> : null}
         <Box
           sx={{
             fontFamily: MONO_FONT,
@@ -217,8 +338,14 @@ function VirtualRowTable({
                 height: ROW_H,
                 bgcolor: bg,
                 borderBottom: '1px solid rgba(0,0,0,0.04)',
+                ...rowActionHoverSx,
               }}
             >
+              {rowAction ? (
+                <Box sx={{ width: actionW, flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+                  <RowActionButton action={rowAction} identifier={row.identifier} fileName={fileName} />
+                </Box>
+              ) : null}
               <span style={{ ...cellStyle, width: LINE_COL_W, color: '#777' }}>{lineNum}</span>
               {columns.map((col, ci) => (
                 <span
@@ -230,7 +357,7 @@ function VirtualRowTable({
                     fontWeight: pkSet.has(col) ? 700 : 400,
                   }}
                 >
-                  {vals[ci] ?? ''}
+                  <LinkedValue column={col} value={vals[ci] ?? ''} />
                 </span>
               ))}
             </Box>
@@ -274,13 +401,21 @@ function FieldChangeBadge({ change }: { change: FieldChange }): React.ReactEleme
           color: COLORS.deleted,
         }}
       >
-        {change.base_value || '(empty)'}
+        {change.base_value ? (
+          <LinkedValue column={change.field} value={change.base_value} />
+        ) : (
+          '(empty)'
+        )}
       </Typography>
       <Typography
         variant='caption'
         sx={{ fontFamily: MONO_FONT, fontSize: '0.65rem', color: COLORS.added, fontWeight: 500 }}
       >
-        {change.new_value || '(empty)'}
+        {change.new_value ? (
+          <LinkedValue column={change.field} value={change.new_value} />
+        ) : (
+          '(empty)'
+        )}
       </Typography>
     </Box>
   );
@@ -291,9 +426,26 @@ interface ModifiedRowsTableProps {
   columns: string[];
   primaryKey: string[];
   viewMode: 'summary' | 'inline';
+  fileName: string;
+  rowAction?: RowAction;
 }
 
-function ModifiedRowsTable({ rows, columns, viewMode }: ModifiedRowsTableProps): React.ReactElement {
+function ModifiedRowsTable({
+  rows,
+  columns,
+  viewMode,
+  fileName,
+  rowAction,
+}: ModifiedRowsTableProps): React.ReactElement {
+  const actionHeader = rowAction ? (
+    <TableCell sx={{ width: ACTION_COL_W, px: 0.5, bgcolor: 'background.paper' }} />
+  ) : null;
+  const actionCell = (row: RowModified): React.ReactNode =>
+    rowAction ? (
+      <TableCell sx={{ width: ACTION_COL_W, px: 0.5, py: 0.5 }}>
+        <RowActionButton action={rowAction} identifier={row.identifier} fileName={fileName} />
+      </TableCell>
+    ) : null;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
 
@@ -340,6 +492,7 @@ function ModifiedRowsTable({ rows, columns, viewMode }: ModifiedRowsTableProps):
           <Table size='small' stickyHeader>
             <TableHead>
               <TableRow>
+                {actionHeader}
                 <TableCell sx={{ width: 36, px: 0.5, bgcolor: 'background.paper' }} />
                 <TableCell sx={{ fontFamily: MONO_FONT, fontWeight: 700, fontSize: '0.7rem', bgcolor: 'background.paper' }}>
                   Identifier
@@ -364,7 +517,8 @@ function ModifiedRowsTable({ rows, columns, viewMode }: ModifiedRowsTableProps):
                 return (
                   <React.Fragment key={i}>
                     {/* Summary row */}
-                    <TableRow sx={{ bgcolor: COLORS.modifiedBg, verticalAlign: 'top' }}>
+                    <TableRow sx={{ bgcolor: COLORS.modifiedBg, verticalAlign: 'top', ...rowActionHoverSx }}>
+                      {actionCell(row)}
                       <TableCell sx={{ px: 0.5, py: 0.5 }}>
                         <Tooltip title={isExpanded ? 'Collapse full row' : 'Expand full row'}>
                           <IconButton size='small' onClick={() => toggleRow(i)} sx={{ p: 0.25 }}>
@@ -396,7 +550,7 @@ function ModifiedRowsTable({ rows, columns, viewMode }: ModifiedRowsTableProps):
                     {/* Expanded: full row view showing base → new for every column */}
                     {isExpanded && (
                       <TableRow>
-                        <TableCell colSpan={5} sx={{ p: 0, bgcolor: 'background.default' }}>
+                        <TableCell colSpan={rowAction ? 6 : 5} sx={{ p: 0, bgcolor: 'background.default' }}>
                           <Box sx={{ overflowX: 'auto', borderTop: '1px solid', borderColor: 'divider' }}>
                             <Table size='small'>
                               <TableHead>
@@ -449,7 +603,11 @@ function ModifiedRowsTable({ rows, columns, viewMode }: ModifiedRowsTableProps):
                                           textDecoration: fc ? 'line-through' : 'none',
                                         }}
                                       >
-                                        {fc ? fc.base_value || '(empty)' : (baseVals[ci] ?? '')}
+                                        {fc && !fc.base_value ? (
+                                          '(empty)'
+                                        ) : (
+                                          <LinkedValue column={col} value={fc ? fc.base_value : (baseVals[ci] ?? '')} />
+                                        )}
                                       </TableCell>
                                     );
                                   })}
@@ -475,7 +633,11 @@ function ModifiedRowsTable({ rows, columns, viewMode }: ModifiedRowsTableProps):
                                           fontWeight: fc ? 600 : 400,
                                         }}
                                       >
-                                        {fc ? fc.new_value || '(empty)' : (baseVals[ci] ?? '')}
+                                        {fc && !fc.new_value ? (
+                                          '(empty)'
+                                        ) : (
+                                          <LinkedValue column={col} value={fc ? fc.new_value : (baseVals[ci] ?? '')} />
+                                        )}
                                       </TableCell>
                                     );
                                   })}
@@ -496,6 +658,7 @@ function ModifiedRowsTable({ rows, columns, viewMode }: ModifiedRowsTableProps):
           <Table size='small' stickyHeader>
             <TableHead>
               <TableRow>
+                {actionHeader}
                 <TableCell sx={{ fontFamily: MONO_FONT, fontWeight: 700, fontSize: '0.7rem', bgcolor: 'background.paper', whiteSpace: 'nowrap' }}>
                   Identifier
                 </TableCell>
@@ -511,7 +674,8 @@ function ModifiedRowsTable({ rows, columns, viewMode }: ModifiedRowsTableProps):
                 const fcMap = new Map(row.field_changes.map((f) => [f.field, f]));
                 const baseVals = parseCSVRow(row.raw_value);
                 return (
-                  <TableRow key={i} sx={{ bgcolor: COLORS.modifiedBg, verticalAlign: 'top' }}>
+                  <TableRow key={i} sx={{ bgcolor: COLORS.modifiedBg, verticalAlign: 'top', ...rowActionHoverSx }}>
+                    {actionCell(row)}
                     <TableCell sx={{ fontFamily: MONO_FONT, fontSize: '0.7rem', py: 0.5, color: 'text.secondary', whiteSpace: 'nowrap' }}>
                       {identifierLabel(row.identifier)}
                     </TableCell>
@@ -520,7 +684,7 @@ function ModifiedRowsTable({ rows, columns, viewMode }: ModifiedRowsTableProps):
                       if (!fc) {
                         return (
                           <TableCell key={col} sx={{ fontFamily: MONO_FONT, fontSize: '0.65rem', py: 0.5, whiteSpace: 'nowrap', color: 'text.secondary' }}>
-                            {baseVals[ci] ?? ''}
+                            <LinkedValue column={col} value={baseVals[ci] ?? ''} />
                           </TableCell>
                         );
                       }
@@ -537,7 +701,7 @@ function ModifiedRowsTable({ rows, columns, viewMode }: ModifiedRowsTableProps):
                                 mr: 0.5,
                               }}
                             >
-                              {fc.base_value}
+                              <LinkedValue column={col} value={fc.base_value} />
                             </Box>
                           )}
                           <Box
@@ -549,7 +713,11 @@ function ModifiedRowsTable({ rows, columns, viewMode }: ModifiedRowsTableProps):
                               fontWeight: 600,
                             }}
                           >
-                            {fc.new_value || '(empty)'}
+                            {fc.new_value ? (
+                              <LinkedValue column={col} value={fc.new_value} />
+                            ) : (
+                              '(empty)'
+                            )}
                           </Box>
                         </TableCell>
                       );
@@ -614,13 +782,35 @@ function ColumnChanges({ diff }: { diff: FileDiff }): React.ReactElement | null 
 
 interface FileDiffPanelProps {
   diff: FileDiff;
+  /** Expanded, with no collapse toggle. */
+  alwaysOpen?: boolean;
+  /** Search bar right above the row table. */
+  searchable?: boolean;
+  rowAction?: RowAction;
 }
 
-function FileDiffPanel({ diff }: FileDiffPanelProps): React.ReactElement {
+function FileDiffPanel({
+  diff,
+  alwaysOpen = false,
+  searchable = false,
+  rowAction,
+}: FileDiffPanelProps): React.ReactElement {
   const rc = diff.row_changes;
-  const addedCount = rc?.added.length ?? 0;
-  const deletedCount = rc?.deleted.length ?? 0;
-  const modifiedCount = rc?.modified.length ?? 0;
+  const [query, setQuery] = useState('');
+  // Searching large files can take a moment; keep typing responsive.
+  const deferredQuery = useDeferredValue(query);
+  const searching = searchable && deferredQuery.trim() !== '';
+  // Rows shown in the tables: all of them, or the search matches.
+  const shown = useMemo(
+    () => (searching ? searchFileDiff(diff, deferredQuery).row_changes : rc),
+    [searching, diff, deferredQuery, rc],
+  );
+  const addedCount = shown?.added.length ?? 0;
+  const deletedCount = shown?.deleted.length ?? 0;
+  const modifiedCount = shown?.modified.length ?? 0;
+  const totalRows = rc
+    ? rc.added.length + rc.deleted.length + rc.modified.length
+    : 0;
   const omitted = diff.truncated?.omitted_count ?? 0;
   const columnsAdded = diff.columns_added ?? [];
   const columnsDeleted = diff.columns_deleted ?? [];
@@ -632,7 +822,8 @@ function FileDiffPanel({ diff }: FileDiffPanelProps): React.ReactElement {
     if (addedCount > 0) return 'added';
     return 'deleted';
   });
-  const [open, setOpen] = useState(false);
+  const [openState, setOpen] = useState(false);
+  const open = alwaysOpen || openState;
   const [modifiedViewMode, setModifiedViewMode] = useState<'summary' | 'inline'>('inline');
 
   const statusColor =
@@ -644,9 +835,7 @@ function FileDiffPanel({ diff }: FileDiffPanelProps): React.ReactElement {
           ? COLORS.not_compared
           : COLORS.modified;
 
-  const hasRowChanges = rc
-    ? addedCount + deletedCount + modifiedCount > 0 || omitted > 0
-    : false;
+  const hasRowChanges = rc ? totalRows > 0 || omitted > 0 : false;
 
   return (
     <Box
@@ -667,10 +856,10 @@ function FileDiffPanel({ diff }: FileDiffPanelProps): React.ReactElement {
           py: 1.5,
           flexWrap: 'wrap',
           bgcolor: 'background.paper',
-          cursor: 'pointer',
+          cursor: alwaysOpen ? 'default' : 'pointer',
           userSelect: 'none',
         }}
-        onClick={() => setOpen((o) => !o)}
+        onClick={alwaysOpen ? undefined : () => setOpen((o) => !o)}
       >
         <Typography variant='body1' fontWeight={700} sx={{ fontFamily: MONO_FONT }}>
           {diff.file_name}
@@ -735,11 +924,13 @@ function FileDiffPanel({ diff }: FileDiffPanelProps): React.ReactElement {
               sx={{ fontSize: '0.65rem' }}
             />
           )}
+        {alwaysOpen ? null : (
         <Tooltip title={open ? 'Collapse' : 'Expand'}>
           <IconButton size='small' sx={{ p: 0.25, ml: 'auto' }} onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}>
             {open ? <ExpandLess sx={{ fontSize: '1rem' }} /> : <ExpandMore sx={{ fontSize: '1rem' }} />}
           </IconButton>
         </Tooltip>
+        )}
       </Box>
 
       {/* ── Body ── */}
@@ -838,28 +1029,70 @@ function FileDiffPanel({ diff }: FileDiffPanelProps): React.ReactElement {
               )}
             </Box>
 
+            {searchable ? (
+              <TextField
+                fullWidth
+                size='small'
+                placeholder={`Search ${diff.file_name} rows: ids, names, values…`}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                helperText={
+                  searching
+                    ? `${(addedCount + deletedCount + modifiedCount).toLocaleString()} of ${totalRows.toLocaleString()} rows match`
+                    : undefined
+                }
+                sx={{ mb: 1.5 }}
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position='start'>
+                        <Search fontSize='small' />
+                      </InputAdornment>
+                    ),
+                    endAdornment: query ? (
+                      <InputAdornment position='end'>
+                        <IconButton
+                          size='small'
+                          aria-label='Clear search'
+                          onClick={() => setQuery('')}
+                        >
+                          <Clear fontSize='small' />
+                        </IconButton>
+                      </InputAdornment>
+                    ) : undefined,
+                  },
+                }}
+              />
+            ) : null}
+
             {tab === 'added' && (
               <VirtualRowTable
                 rowType='added'
-                rows={rc.added}
+                rows={shown?.added ?? []}
                 columns={rc.columns}
                 primaryKey={rc.primary_key}
+                fileName={diff.file_name}
+                rowAction={rowAction}
               />
             )}
             {tab === 'deleted' && (
               <VirtualRowTable
                 rowType='deleted'
-                rows={rc.deleted}
+                rows={shown?.deleted ?? []}
                 columns={rc.columns}
                 primaryKey={rc.primary_key}
+                fileName={diff.file_name}
+                rowAction={rowAction}
               />
             )}
             {tab === 'modified' && (
               <ModifiedRowsTable
-                rows={rc.modified}
+                rows={shown?.modified ?? []}
                 columns={rc.columns}
                 primaryKey={rc.primary_key}
                 viewMode={modifiedViewMode}
+                fileName={diff.file_name}
+                rowAction={rowAction}
               />
             )}
           </>
@@ -878,17 +1111,32 @@ function FileDiffPanel({ diff }: FileDiffPanelProps): React.ReactElement {
 
 interface GtfsDiffFileDiffPanelProps {
   fileDiffs: FileDiff[];
+  /** The "Filter by action" toolbar (default shown). */
+  showActionFilter?: boolean;
+  /** A search bar above each file's row table (default hidden). */
+  searchable?: boolean;
+  /** Files shown expanded with no collapse toggle. */
+  alwaysOpenFiles?: string[];
+  /** Hover action on the rows of some files (e.g. "See on map"). */
+  rowAction?: RowAction;
 }
 
 type FilterAction = 'all' | 'added' | 'deleted' | 'modified' | 'not_compared';
 
 export default function GtfsDiffFileDiffPanel({
   fileDiffs,
+  showActionFilter = true,
+  searchable = false,
+  alwaysOpenFiles = [],
+  rowAction,
 }: GtfsDiffFileDiffPanelProps): React.ReactElement {
   const [filter, setFilter] = useState<FilterAction>('all');
 
   const filtered = useMemo(
-    () => (filter === 'all' ? fileDiffs : fileDiffs.filter((d) => d.file_action === filter)),
+    () =>
+      filter === 'all'
+        ? fileDiffs
+        : fileDiffs.filter((d) => d.file_action === filter),
     [fileDiffs, filter],
   );
 
@@ -903,6 +1151,7 @@ export default function GtfsDiffFileDiffPanel({
   return (
     <Box>
       {/* Filter toolbar */}
+      {showActionFilter ? (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
         <FormControl size='small' sx={{ minWidth: 180 }}>
           <InputLabel>Filter by action</InputLabel>
@@ -933,9 +1182,18 @@ export default function GtfsDiffFileDiffPanel({
           Showing {filtered.length} of {fileDiffs.length} file(s)
         </Typography>
       </Box>
+      ) : null}
 
       {filtered.map((diff) => (
-        <FileDiffPanel key={diff.file_name} diff={diff} />
+        <FileDiffPanel
+          key={diff.file_name}
+          diff={diff}
+          alwaysOpen={alwaysOpenFiles.includes(diff.file_name)}
+          searchable={searchable}
+          rowAction={
+            rowAction?.files.includes(diff.file_name) ? rowAction : undefined
+          }
+        />
       ))}
     </Box>
   );

@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "dataset": "mbta-pathways-demo",
+  "generated_at": "2026-10-22T19:56:57.699Z",
+  "feeds": {
+    "base": {
+      "file": "base.zip",
+      "publisher": "MBTA",
+      "version": "Summer 2026, 2026-07-15T15:16:59+00:00, version G",
+      "start": "20260715",
+      "end": "20260905"
+    },
+    "new": {
+      "file": "new.zip",
+      "publisher": "MBTA",
+      "version": "Summer 2026, 2026-07-15T15:16:59+00:00, version G",
+      "start": "20260715",
+      "end": "20260905"
+    }
+  },
+  "sections": [
+    {
+      "id": "pathways",
+      "slug": "pathways",
+      "label": "Pathways and levels",
+      "count": 4,
+      "counts": {
+        "added": 0,
+        "deleted": 0,
+        "modified": 4,
+        "unchanged": 2
+      },
+      "files": [
+        "levels.txt",
+        "pathways.txt"
+      ],
+      "present": true
+    }
+  ],
+  "highlights": {
+    "counts": {
+      "error": 0,
+      "warning": 0,
+      "success": 0,
+      "info": 0
+    },
+    "top": []
+  }
+}

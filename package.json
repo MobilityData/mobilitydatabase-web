@@ -3,6 +3,7 @@
   "version": "1.0.4",
   "private": true,
   "dependencies": {
+    "@duckdb/duckdb-wasm": "1.33.1-dev57.0",
     "@emotion/cache": "11.14.0",
     "@emotion/react": "11.13.0",
     "@emotion/styled": "11.13.0",
@@ -83,6 +84,7 @@
     "tar": "^7.5.7"
   },
   "devDependencies": {
+    "@duckdb/node-api": "1.5.6-r.1",
     "@react-firebase/auth": "^0.2.10",
     "@swc/core": "^1.15.8",
     "@swc/jest": "^0.2.39",

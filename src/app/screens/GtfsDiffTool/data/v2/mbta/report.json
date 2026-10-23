@@ -1,0 +1,253 @@
+{
+  "schema": 1,
+  "dataset": "mbta",
+  "generated_at": "2026-10-23T13:43:25.632Z",
+  "feeds": {
+    "base": {
+      "file": "base-mdb-437-202608010022.zip",
+      "publisher": "MBTA",
+      "version": "Summer 2026, 2026-07-31T16:40:17+00:00, version D",
+      "start": "20260724",
+      "end": "20260905"
+    },
+    "new": {
+      "file": "new-mdb-437-202610200127.zip",
+      "publisher": "MBTA",
+      "version": "Fall 2026, 2026-10-19T19:39:21+00:00, version D",
+      "start": "20261012",
+      "end": "20261212"
+    }
+  },
+  "sections": [
+    {
+      "id": "agency",
+      "slug": "agency",
+      "label": "Agency",
+      "count": 0,
+      "counts": {
+        "added": 0,
+        "deleted": 0,
+        "modified": 0,
+        "unchanged": 2
+      },
+      "files": [
+        "agency.txt",
+        "attributions.txt"
+      ],
+      "present": true
+    },
+    {
+      "id": "stops",
+      "slug": "stops",
+      "label": "Stops",
+      "count": 765,
+      "counts": {
+        "added": 100,
+        "deleted": 92,
+        "modified": 573,
+        "unchanged": 19024
+      },
+      "files": [
+        "stops.txt",
+        "levels.txt",
+        "pathways.txt"
+      ],
+      "present": true
+    },
+    {
+      "id": "routes",
+      "slug": "routes",
+      "label": "Routes",
+      "count": 281,
+      "counts": {
+        "added": 10,
+        "deleted": 6,
+        "modified": 265,
+        "unchanged": 129
+      },
+      "files": [
+        "shapes.txt",
+        "routes.txt",
+        "networks.txt",
+        "route_networks.txt",
+        "areas.txt",
+        "stop_areas.txt"
+      ],
+      "present": true
+    },
+    {
+      "id": "trips",
+      "slug": "trips",
+      "label": "Trips",
+      "count": 83490,
+      "counts": {
+        "added": 35153,
+        "deleted": 9457,
+        "modified": 38880,
+        "unchanged": 43435
+      },
+      "files": [
+        "trips.txt",
+        "stop_times.txt",
+        "frequencies.txt"
+      ],
+      "present": true
+    },
+    {
+      "id": "calendar",
+      "slug": "calendar",
+      "label": "Service calendar",
+      "count": 316,
+      "counts": {
+        "added": 135,
+        "deleted": 166,
+        "modified": 15,
+        "unchanged": 0
+      },
+      "files": [
+        "calendar.txt",
+        "calendar_dates.txt"
+      ],
+      "present": true
+    },
+    {
+      "id": "fares_v1",
+      "slug": "fares-v1",
+      "label": "Fares v1",
+      "count": 0,
+      "counts": {
+        "added": 0,
+        "deleted": 0,
+        "modified": 0,
+        "unchanged": 0
+      },
+      "files": [
+        "fare_attributes.txt",
+        "fare_rules.txt"
+      ],
+      "present": false
+    },
+    {
+      "id": "fares_v2",
+      "slug": "fares-v2",
+      "label": "Fares v2",
+      "count": 126,
+      "counts": {
+        "added": 7,
+        "deleted": 119,
+        "modified": 0,
+        "unchanged": 810
+      },
+      "files": [
+        "fare_products.txt",
+        "fare_media.txt",
+        "fare_leg_rules.txt",
+        "fare_leg_join_rules.txt",
+        "fare_transfer_rules.txt",
+        "rider_categories.txt",
+        "timeframes.txt"
+      ],
+      "present": true
+    },
+    {
+      "id": "flex",
+      "slug": "flex",
+      "label": "Flex",
+      "count": 0,
+      "counts": {
+        "added": 0,
+        "deleted": 0,
+        "modified": 0,
+        "unchanged": 0
+      },
+      "files": [
+        "booking_rules.txt",
+        "location_groups.txt",
+        "location_group_stops.txt",
+        "locations.geojson"
+      ],
+      "present": false
+    },
+    {
+      "id": "meta",
+      "slug": "meta",
+      "label": "Meta",
+      "count": 12106,
+      "counts": {
+        "added": 7156,
+        "deleted": 4945,
+        "modified": 5,
+        "unchanged": 2430
+      },
+      "files": [
+        "feed_info.txt",
+        "translations.txt",
+        "transfers.txt"
+      ],
+      "present": true
+    },
+    {
+      "id": "pathways",
+      "slug": "pathways",
+      "label": "Pathways and levels",
+      "count": 10,
+      "counts": {
+        "added": 0,
+        "deleted": 0,
+        "modified": 10,
+        "unchanged": 87
+      },
+      "files": [
+        "levels.txt",
+        "pathways.txt"
+      ],
+      "present": true
+    }
+  ],
+  "highlights": {
+    "counts": {
+      "error": 26,
+      "warning": 14,
+      "success": 36,
+      "info": 19
+    },
+    "top": [
+      {
+        "section": "calendar",
+        "severity": "error",
+        "title": "166 services removed",
+        "detail": "Too many to list one by one (the feeds may name their services differently). The 25 largest follow."
+      },
+      {
+        "section": "calendar",
+        "severity": "error",
+        "title": "Service BUS20263-hbb36fr1-Weekday-02 removed",
+        "detail": "Had 1 service day and 1820 trips. Used by routes 14, 21, 24 and 19 more."
+      },
+      {
+        "section": "calendar",
+        "severity": "error",
+        "title": "Service BUS20263-hbb36sf1-Weekday-02 removed",
+        "detail": "Had 6 service days and 1776 trips. Used by routes 14, 21, 24 and 19 more."
+      },
+      {
+        "section": "calendar",
+        "severity": "error",
+        "title": "Service BUS20263-hbb36sn1-Weekday-02 removed",
+        "detail": "Had 20 service days and 1776 trips. Used by routes 14, 21, 24 and 19 more."
+      },
+      {
+        "section": "calendar",
+        "severity": "error",
+        "title": "Service BUS20263-hbb36wk1-Weekday-02 removed",
+        "detail": "Had 4 service days and 1820 trips. Used by routes 14, 21, 24 and 19 more."
+      },
+      {
+        "section": "calendar",
+        "severity": "error",
+        "title": "Service BUS20263-hbc36016-Saturday-02 removed",
+        "detail": "Had 7 service days and 2240 trips. Used by routes 1, 10, 11 and 23 more."
+      }
+    ]
+  }
+}

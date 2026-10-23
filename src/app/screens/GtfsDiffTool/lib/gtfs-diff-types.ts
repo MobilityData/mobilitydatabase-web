@@ -139,6 +139,8 @@ export interface FileStats {
   rows_added_count?: number;
   rows_deleted_count?: number;
   rows_modified_count?: number;
+  /** v2 only: rows whose only differences are identifiers (not counted as changes). */
+  rows_id_only_count?: number;
   /** Percentage of rows changed relative to the larger of the two versions. */
   rows_changed_percentage?: number;
   column_stats?: ColumnStat[];

@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "id": "mbta-pathways-demo",
+  "label": "mbta-pathways-demo",
+  "generated_at": "2026-10-22T19:56:57.700Z",
+  "feeds": {
+    "base": {
+      "file": "base.zip",
+      "publisher": "MBTA",
+      "version": "Summer 2026, 2026-07-15T15:16:59+00:00, version G",
+      "start": "20260715",
+      "end": "20260905"
+    },
+    "new": {
+      "file": "new.zip",
+      "publisher": "MBTA",
+      "version": "Summer 2026, 2026-07-15T15:16:59+00:00, version G",
+      "start": "20260715",
+      "end": "20260905"
+    }
+  },
+  "files": {
+    "pathways-diff.json": {
+      "bytes": 229951
+    },
+    "report.json": {
+      "bytes": 984
+    }
+  }
+}

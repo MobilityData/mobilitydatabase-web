@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "id": "direxis",
+  "label": "direxis · mdb-2775",
+  "generated_at": "2026-10-23T13:43:25.477Z",
+  "feeds": {
+    "base": {
+      "file": "base-mdb-2775-202608070145.zip"
+    },
+    "new": {
+      "file": "new-mdb-2775-202609020046.zip"
+    }
+  },
+  "files": {
+    "calendar/days.parquet": {
+      "bytes": 4159
+    },
+    "calendar/services.parquet": {
+      "bytes": 4266
+    },
+    "calendar/services_detail.parquet": {
+      "bytes": 4639
+    },
+    "categories/calendar.json": {
+      "bytes": 25115
+    },
+    "categories/routes.json": {
+      "bytes": 7231
+    },
+    "categories/stops.json": {
+      "bytes": 172790
+    },
+    "entity-diff.json": {
+      "bytes": 97789
+    },
+    "maps/routes.parquet": {
+      "bytes": 25752
+    },
+    "maps/routes_detail.parquet": {
+      "bytes": 57879
+    },
+    "maps/stops.parquet": {
+      "bytes": 27914
+    },
+    "maps/stops_detail.parquet": {
+      "bytes": 38003
+    },
+    "raw/shapes.parquet": {
+      "bytes": 851527
+    },
+    "raw/stop_times.parquet": {
+      "bytes": 184793
+    },
+    "raw/trips.parquet": {
+      "bytes": 22322
+    },
+    "report.json": {
+      "bytes": 4747
+    },
+    "trips-diff.json": {
+      "bytes": 30937
+    },
+    "trips/base.parquet": {
+      "bytes": 37551
+    },
+    "trips/new.parquet": {
+      "bytes": 38819
+    }
+  }
+}
