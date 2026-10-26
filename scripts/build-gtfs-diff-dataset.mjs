@@ -22,7 +22,10 @@
  *   trips/*.parquet       each feed's trips, sorted by service
  *   pathways-diff.json    generate-gtfs-pathways-diff.mjs, only when a feed
  *                         has pathways.txt
- *   report.json           feeds and per-section change counts for the header
+ *   highlights.json       generate-gtfs-highlights.mjs: every entity's notable
+ *                         highlights in one ranking
+ *   report.json           feeds, per-section change counts and the top
+ *                         highlights for the summary page
  *   manifest.json         every file above, written last; the app only lists
  *                         diffs that have one
  * Each step first removes what it wrote before.
@@ -34,7 +37,7 @@
  * --keep-names forces them (e.g. idfm: an agency feed vs its Google export).
  *
  * Options:
- *   --only entity,trips,pathways,report   build a subset
+ *   --only entity,trips,pathways,highlights,report   build a subset
  *   --keep-names                   trust the base/new file name prefixes over dates
  */
 
@@ -49,7 +52,7 @@ import { decodeDeep } from '../src/app/screens/GtfsDiffToolV2/lib/entity-diff-co
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DATA_DIR = join(ROOT, 'src/app/screens/GtfsDiffTool/data/v2');
-const ALL_STEPS = ['entity', 'trips', 'pathways', 'report'];
+const ALL_STEPS = ['entity', 'trips', 'pathways', 'highlights', 'report'];
 const MANIFEST_FILE = 'manifest.json';
 
 /** What each step writes; cleared before the step runs, so nothing stale survives. */
@@ -57,6 +60,7 @@ const STEP_OUTPUTS = {
   entity: ['entity-diff.json', 'categories', 'maps', 'calendar', 'raw', 'entities'],
   trips: ['trips-diff.json', 'trips', 'trips-diff'],
   pathways: ['pathways-diff.json'],
+  highlights: ['highlights.json'],
   report: [REPORT_FILE],
 };
 
@@ -131,7 +135,9 @@ function writeReport(dir, feeds) {
     generated_at: new Date().toISOString(),
     feeds: { base: feeds.base.feed, new: feeds.new.feed },
     sections: reportSections(entity, pathways),
-    highlights: reportHighlights(entity),
+    // The global ranking's top few (scripts/generate-gtfs-highlights.mjs);
+    // older diffs without it fall back to the calendar's highlights.
+    highlights: read('highlights.json')?.report ?? reportHighlights(entity),
   };
   writeFileSync(join(dir, REPORT_FILE), JSON.stringify(report, null, 2));
   const shown = report.sections.filter((s) => s.present).map((s) => `${s.slug} ${s.count ?? '?'}`);
@@ -225,7 +231,7 @@ function run(script, args) {
 function main() {
   const opts = parseArgs(process.argv.slice(2));
   if (!opts.target) {
-    console.error('Usage: node scripts/build-gtfs-diff-dataset.mjs <folder | path> [--only entity,trips,pathways] [--keep-names]');
+    console.error('Usage: node scripts/build-gtfs-diff-dataset.mjs <folder | path> [--only entity,trips,pathways,highlights,report] [--keep-names]');
     process.exit(1);
   }
   const dir = existsSync(opts.target) && statSync(opts.target).isDirectory() ? resolve(opts.target) : join(DATA_DIR, opts.target);
@@ -244,6 +250,7 @@ function main() {
     for (const f of STEP_OUTPUTS[step]) rmSync(out(f), { recursive: true, force: true });
     if (step === 'entity') run('generate-gtfs-entity-diff.mjs', [feeds.base.path, feeds.new.path, out('entity-diff.json')]);
     if (step === 'trips') run('generate-gtfs-trips-diff.mjs', [feeds.base.path, feeds.new.path, out('trips-diff.json')]);
+    if (step === 'highlights') run('generate-gtfs-highlights.mjs', [dir]);
     if (step === 'report') {
       writeReport(dir, feeds);
       continue;

@@ -6,7 +6,6 @@ import type {
 } from './entity-diff-types';
 import { stopsHighlights } from './stops-highlights';
 import { routesHighlights } from './routes-highlights';
-import { categoryFileRows } from './file-stats';
 
 function stop(over: Partial<StopChange>): StopChange {
   return {
@@ -217,85 +216,5 @@ describe('routes highlights', () => {
     });
     expect(h[2].entities?.[0].note).toBe('−5 stops (20 → 15)');
     expect(h[3].entities?.[0].note).toBe('up to 1.2 km');
-  });
-});
-
-describe('overview file rows', () => {
-  it('uses raw row counts when a file has a raw table', () => {
-    const rows = categoryFileRows(
-      [
-        {
-          file: 'routes.txt',
-          primary_key: [],
-          child_files: [],
-          present: { base: true, new: true },
-          total: { base: 5, new: 4 },
-          counts: { added: 0, deleted: 1, modified: 2, unchanged: 2 },
-          changes: [],
-        },
-        {
-          file: 'shapes.txt',
-          primary_key: [],
-          child_files: [],
-          present: { base: true, new: true },
-          total: { base: 9, new: 9 },
-          counts: { added: 0, deleted: 0, modified: 9, unchanged: 0 },
-          changes: [],
-        },
-      ],
-      [
-        {
-          file: 'shapes.txt',
-          path: 'raw/shapes.parquet',
-          rows: 0,
-          bytes: 0,
-          columns: [],
-          counts: {
-            added: 10,
-            deleted: 5,
-            modified: 20,
-            id_only: 3,
-            unchanged: 100,
-          },
-        },
-      ],
-    );
-    expect(rows).toEqual([
-      {
-        file: 'routes.txt',
-        before: 5,
-        after: 4,
-        added: 0,
-        removed: 1,
-        modified: 2,
-      },
-      {
-        file: 'shapes.txt',
-        before: 128,
-        after: 133,
-        added: 10,
-        removed: 5,
-        modified: 20,
-      },
-    ]);
-  });
-
-  it('puts the primary file first', () => {
-    const et = (file: string) => ({
-      file,
-      primary_key: [],
-      child_files: [],
-      present: { base: true, new: true },
-      total: { base: 1, new: 1 },
-      counts: { added: 0, deleted: 0, modified: 0, unchanged: 1 },
-      changes: [],
-    });
-    expect(
-      categoryFileRows(
-        [et('shapes.txt'), et('routes.txt')],
-        [],
-        'routes.txt',
-      ).map((r) => r.file),
-    ).toEqual(['routes.txt', 'shapes.txt']);
   });
 });

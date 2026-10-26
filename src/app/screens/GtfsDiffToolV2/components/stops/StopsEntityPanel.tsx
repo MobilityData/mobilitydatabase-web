@@ -53,7 +53,6 @@ import GtfsDiffFileDiffPanel, {
   type RowAction,
 } from '../../../GtfsDiffTool/components/GtfsDiffFileDiffPanel';
 import EntityOverviewCard from '../overview/EntityOverviewCard';
-import { categoryFileRows } from '../../lib/file-stats';
 import StopsDiffMap, { type MapSelection } from './StopsDiffMap';
 import {
   DiffMapControlPanel,
@@ -496,8 +495,6 @@ export default function StopsEntityPanel({
   return (
     <Box>
       <EntityOverviewCard
-        title='Overview of stop changes'
-        files={categoryFileRows(entityTypes, [], 'stops.txt')}
         highlights={highlights}
         noun={() => 'stops'}
         onOpen={() =>

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "dataset": "direxis",
-  "generated_at": "2026-10-23T13:43:25.475Z",
+  "generated_at": "2026-10-26T12:57:12.591Z",
   "feeds": {
     "base": {
       "file": "base-mdb-2775-202608070145.zip"
@@ -181,41 +181,52 @@
   ],
   "highlights": {
     "counts": {
-      "error": 0,
-      "warning": 5,
-      "success": 7,
-      "info": 9
+      "error": 3,
+      "warning": 6,
+      "success": 0,
+      "info": 0
     },
+    "total": 9,
     "top": [
       {
-        "section": "calendar",
-        "severity": "warning",
-        "title": "LMXJV-J now starts Fri 9 Jul 2027",
-        "detail": "Was Thu 1 Jul 2027 (shortened by 8 days). Used by route M1."
+        "key": "stops:served_removed",
+        "rank": 1,
+        "section": "stops",
+        "severity": "error",
+        "title": "11 stops removed that routes served",
+        "detail": "In the original feed at least one trip stopped there."
       },
       {
-        "section": "calendar",
-        "severity": "warning",
-        "title": "LMXJV-NL-Set now ends Sun 6 Sep 2026",
-        "detail": "Was Mon 7 Sep 2026 (shortened by 1 day). Used by route M6A."
+        "key": "routes:routes_removed",
+        "rank": 2,
+        "section": "routes",
+        "severity": "error",
+        "title": "1 route removed",
+        "detail": "In routes.txt or served by trips in the original feed only."
       },
       {
-        "section": "calendar",
-        "severity": "warning",
-        "title": "M1-LMXJV-ENU-Set now ends Sun 6 Sep 2026",
-        "detail": "Was Mon 7 Sep 2026 (shortened by 1 day). Used by route M1."
+        "key": "routes:rerouted",
+        "rank": 3,
+        "section": "routes",
+        "severity": "error",
+        "title": "15 routes re-routed",
+        "detail": "Paths moved by up to 7.9 km."
       },
       {
-        "section": "calendar",
+        "key": "trips:boarding_restricted",
+        "rank": 4,
+        "section": "trips",
         "severity": "warning",
-        "title": "M1-LMXJV-EU: 3 no-service exceptions added",
-        "detail": "No service on Thu 24 Sep 2026, Mon 7 Dec 2026, Mon 17 May 2027."
+        "title": "630 stop times stop allowing boarding or alighting",
+        "detail": "345 pickups and 285 drop-offs changed from regular to 1 (not available)."
       },
       {
-        "section": "calendar",
+        "key": "routes:stops_dropped",
+        "rank": 5,
+        "section": "routes",
         "severity": "warning",
-        "title": "M2-LMXJV: 2 no-service exceptions added",
-        "detail": "No service on Thu 10 Jun 2027, Fri 25 Jun 2027."
+        "title": "6 routes stop serving some of their stops",
+        "detail": "Up to 9 stops on one route."
       }
     ]
   }

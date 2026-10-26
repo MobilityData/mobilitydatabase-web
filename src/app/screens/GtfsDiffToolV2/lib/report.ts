@@ -55,6 +55,10 @@ export interface ReportHighlight {
   severity: 'error' | 'warning' | 'success' | 'info';
   title: string;
   detail?: string;
+  /** Global highlights (lib/global-highlights): "<section>:<rule id>". */
+  key?: string;
+  /** Global highlights: 1 = most concerning. */
+  rank?: number;
 }
 
 export interface ReportSummary {
@@ -66,6 +70,8 @@ export interface ReportSummary {
   /** Highlight counts per severity, and the most severe few. */
   highlights?: {
     counts: Record<ReportHighlight['severity'], number>;
+    /** Every highlight of highlights.json (global highlights only). */
+    total?: number;
     top: ReportHighlight[];
   };
 }

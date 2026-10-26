@@ -2,7 +2,7 @@
   "schema": 1,
   "id": "direxis",
   "label": "direxis · mdb-2775",
-  "generated_at": "2026-10-23T13:43:25.477Z",
+  "generated_at": "2026-10-26T12:57:12.593Z",
   "feeds": {
     "base": {
       "file": "base-mdb-2775-202608070145.zip"
@@ -33,6 +33,9 @@
     "entity-diff.json": {
       "bytes": 97789
     },
+    "highlights.json": {
+      "bytes": 13251
+    },
     "maps/routes.parquet": {
       "bytes": 25752
     },
@@ -55,7 +58,7 @@
       "bytes": 22322
     },
     "report.json": {
-      "bytes": 4747
+      "bytes": 4959
     },
     "trips-diff.json": {
       "bytes": 30937

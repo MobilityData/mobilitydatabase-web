@@ -4,13 +4,9 @@ import React from 'react';
 import type { EntityRow, Highlight } from '../../lib/highlights';
 import { V2Card } from '../trips-v2/shared';
 import EntityList from './EntityList';
-import FileStatsTable, { type FileStatRow } from './FileStatsTable';
 import NotableHighlights from './NotableHighlights';
 
 interface EntityOverviewCardProps {
-  /** "Overview of stop changes" */
-  title: string;
-  files: FileStatRow[];
   /** Most concerning first; null while loading. */
   highlights: Array<Highlight<EntityRow[]>> | null;
   /** Noun for the list caption: "stops", "routes". */
@@ -25,12 +21,10 @@ interface EntityOverviewCardProps {
 }
 
 /**
- * The overview at the top of an entity page: row counts per file, then the
- * notable highlights, each expanding to the entities behind it.
+ * The overview at the top of an entity page: the notable highlights, each
+ * expanding to the entities behind it.
  */
 export default function EntityOverviewCard({
-  title,
-  files,
   highlights,
   noun,
   onOpen,
@@ -38,9 +32,9 @@ export default function EntityOverviewCard({
   emptyText,
 }: EntityOverviewCardProps): React.ReactElement {
   return (
-    <V2Card title={title}>
-      {files.length > 0 ? <FileStatsTable rows={files} /> : null}
+    <V2Card title='Notable highlights'>
       <NotableHighlights
+        heading={false}
         highlights={highlights}
         emptyText={emptyText}
         renderDetails={(h) =>

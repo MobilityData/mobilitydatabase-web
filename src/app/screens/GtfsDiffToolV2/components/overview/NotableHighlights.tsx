@@ -37,6 +37,8 @@ interface NotableHighlightsProps<H extends HighlightLike> {
   renderDetails: (highlight: H) => React.ReactNode | null;
   /** Shown when no rule fires. */
   emptyText: string;
+  /** Own "Notable highlights" heading; off when the card is titled so. */
+  heading?: boolean;
 }
 
 /**
@@ -48,6 +50,7 @@ export default function NotableHighlights<H extends HighlightLike>({
   error,
   renderDetails,
   emptyText,
+  heading = true,
 }: NotableHighlightsProps<H>): React.ReactElement {
   const [showAll, setShowAll] = useState(false);
   const shown =
@@ -60,9 +63,11 @@ export default function NotableHighlights<H extends HighlightLike>({
 
   return (
     <Box>
-      <Typography variant='subtitle2' fontWeight={700} sx={{ mb: 1 }}>
-        Notable highlights
-      </Typography>
+      {heading ? (
+        <Typography variant='subtitle2' fontWeight={700} sx={{ mb: 1 }}>
+          Notable highlights
+        </Typography>
+      ) : null}
       {highlights == null ? (
         error ? (
           <Typography variant='caption' color='text.secondary'>

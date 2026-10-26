@@ -22,9 +22,7 @@ import {
 } from '../../lib/trips-v2-highlights';
 import { tripsRouteHref } from '../../lib/trips-v2-routes';
 import RawDiffTable from '../raw/RawDiffTable';
-import FileStatsTable from '../overview/FileStatsTable';
 import NotableHighlights from '../overview/NotableHighlights';
-import { rawTableRow } from '../../lib/file-stats';
 import { formatGtfsDate } from '../../lib/calendar-utils';
 import { useRawOverview } from '../../lib/useRawOverview';
 import { MONO_FONT } from '../trips/shared';
@@ -51,9 +49,9 @@ function n(v: number): string {
 }
 
 /**
- * What changed in trips.txt and stop_times.txt across the whole feed, before
- * any day is picked: row counts from the raw diff, the columns they touch
- * (DuckDB over the Parquet tables) and the most concerning changes.
+ * The most concerning changes to trips.txt and stop_times.txt across the
+ * whole feed, before any day is picked (rules over the raw diff, queried
+ * with DuckDB from the Parquet tables).
  */
 export default function OverviewCard({
   datasetId,
@@ -71,10 +69,6 @@ export default function OverviewCard({
   );
   const trips = rawTables.find((t) => t.file === 'trips.txt');
   const stopTimes = rawTables.find((t) => t.file === 'stop_times.txt');
-  const frequencies = rawTables.find((t) => t.file === 'frequencies.txt');
-  const tables = [trips, stopTimes, frequencies].filter(
-    (t): t is RawTable => t != null,
-  );
   // Cheap rules over loaded numbers; the React Compiler memoizes this.
   const highlights = !wholeFeedQueries
     ? []
@@ -92,18 +86,17 @@ export default function OverviewCard({
       : null;
 
   return (
-    <V2Card title='Overview of trip changes' scope={ALL_DATES}>
+    <V2Card title='Notable highlights' scope={ALL_DATES}>
       {rawTables.length === 0 ? (
         <Typography variant='body2' color='text.secondary'>
           This dataset was built without the raw tables: rebuild it to see the
-          whole-feed counts.
+          highlights.
         </Typography>
-      ) : (
-        <FileStatsTable rows={tables.map(rawTableRow)} />
-      )}
+      ) : null}
 
       {files.length > 0 ? (
         <NotableHighlights
+          heading={false}
           highlights={highlights}
           error={overview.error?.message}
           emptyText={

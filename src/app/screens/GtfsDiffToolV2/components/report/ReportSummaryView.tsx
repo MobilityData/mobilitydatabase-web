@@ -2,6 +2,7 @@
 
 import {
   Box,
+  Button,
   Chip,
   Table,
   TableBody,
@@ -11,7 +12,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { ChevronRight, ErrorOutline, WarningAmber } from '@mui/icons-material';
+import { ChevronRight } from '@mui/icons-material';
 import React, { useEffect } from 'react';
 import { Link, useRouter } from '../../../../../i18n/navigation';
 import type { DiffDataset } from '../../lib/datasets';
@@ -21,6 +22,8 @@ import {
   type ReportSection,
   type ReportSummary,
 } from '../../lib/report';
+import { highlightsHref, sectionPageHref } from '../../lib/highlight-links';
+import { SeverityIcon } from '../highlights/HighlightRow';
 import ReportLayout from './ReportLayout';
 import { SUMMARY_SECTION, sectionHref } from './ReportHeader';
 
@@ -31,13 +34,6 @@ function summaryHref(dataset: DiffDataset, section: ReportSection): string {
   const href = sectionHref(dataset.id, section);
   return section.id === 'trips' && dataset.files.trips ? `${href}-v2` : href;
 }
-
-/**
- * Breaking & suspicious changes will come from rules that are still to be
- * defined. Until then the panel stays hidden; it currently lists the entity
- * generator's calendar highlights (report.highlights) as a placeholder.
- */
-const SHOW_BREAKING_CHANGES = false;
 
 const COLORS = {
   added: '#2e7d32',
@@ -89,23 +85,36 @@ function OutlinedCount({
   );
 }
 
-function BreakingChanges({
+/**
+ * The most concerning changes across every file, from the diff's global
+ * ranking (lib/global-highlights): the top few, then the highlights page.
+ */
+function NotableHighlightsSummary({
   dataset,
   report,
 }: {
   dataset: DiffDataset;
   report: ReportSummary;
 }): React.ReactElement | null {
+  const router = useRouter();
   const h = report.highlights;
-  if (h == null || h.top.length === 0) return null;
-  const sectionOf = (id: string): ReportSection | undefined =>
-    report.sections.find((s) => s.id === id);
-  const more = h.counts.error + h.counts.warning - h.top.length;
+  // Only the global ranking carries a total; older reports had none.
+  if (h?.total == null) return null;
+  const label = (id: string): string =>
+    report.sections.find((s) => s.id === id)?.label ?? id;
   return (
     <Box sx={cardSx}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          flexWrap: 'wrap',
+          mb: 0.5,
+        }}
+      >
         <Typography variant='subtitle1' fontWeight={700}>
-          Breaking &amp; Suspicious Changes
+          Notable highlights
         </Typography>
         {h.counts.error > 0 ? (
           <OutlinedCount
@@ -115,61 +124,83 @@ function BreakingChanges({
         ) : null}
         {h.counts.warning > 0 ? (
           <OutlinedCount
-            label={`${h.counts.warning} warnings`}
+            label={`${h.counts.warning} warning${h.counts.warning === 1 ? '' : 's'}`}
             color={COLORS.modified}
           />
         ) : null}
       </Box>
-      <Box component='ul' sx={{ listStyle: 'none', m: 0, p: 0 }}>
-        {h.top.map((item: ReportHighlight, i) => {
-          const s = sectionOf(item.section);
-          const error = item.severity === 'error';
-          return (
+      {h.top.length === 0 ? (
+        <Typography variant='body2' color='text.secondary'>
+          Nothing concerning stood out.
+        </Typography>
+      ) : (
+        <Box component='ol' sx={{ listStyle: 'none', m: 0, p: 0 }}>
+          {h.top.map((item: ReportHighlight) => (
+            // Whole row opens the entity, like the Diff Summary's rows; the
+            // link stays for keyboard users.
             <Box
               component='li'
-              key={i}
-              sx={{ display: 'flex', gap: 1.25, py: 1, alignItems: 'start' }}
+              key={item.key ?? item.title}
+              onClick={() =>
+                router.push(sectionPageHref(dataset.id, item.section))
+              }
+              sx={{
+                display: 'flex',
+                gap: 1.25,
+                py: 1,
+                px: 1,
+                mx: -1,
+                alignItems: 'center',
+                cursor: 'pointer',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                '&:last-of-type': { borderBottom: 0 },
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
             >
-              {error ? (
-                <ErrorOutline sx={{ color: COLORS.deleted, mt: 0.25 }} />
-              ) : (
-                <WarningAmber sx={{ color: COLORS.modified, mt: 0.25 }} />
-              )}
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant='body2' fontWeight={700}>
-                  {item.title}
-                </Typography>
-                {item.detail ? (
-                  <Typography variant='body2' color='text.secondary'>
-                    {item.detail}
-                  </Typography>
-                ) : null}
-              </Box>
-              {s != null ? (
-                <Typography
-                  component={Link}
-                  href={summaryHref(dataset, s)}
-                  variant='body2'
-                  color='primary'
-                  sx={{
-                    ml: 'auto',
-                    whiteSpace: 'nowrap',
-                    fontWeight: 600,
-                    textDecoration: 'none',
-                    '&:hover': { textDecoration: 'underline' },
-                  }}
+              <SeverityIcon
+                severity={item.severity === 'error' ? 'error' : 'warning'}
+              />
+              <Typography variant='body2' sx={{ minWidth: 0, flex: 1 }}>
+                <Box
+                  component='span'
+                  sx={{ color: 'text.secondary', fontWeight: 600, mr: 0.75 }}
                 >
-                  {s.label} →
-                </Typography>
-              ) : null}
+                  [{label(item.section)}]
+                </Box>
+                <Box component='span' sx={{ fontWeight: 700 }}>
+                  {item.title}
+                </Box>
+              </Typography>
+              <Typography
+                component={Link}
+                href={sectionPageHref(dataset.id, item.section)}
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                variant='body2'
+                color='primary'
+                sx={{
+                  whiteSpace: 'nowrap',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  '&:hover': { textDecoration: 'underline' },
+                }}
+              >
+                {label(item.section)} →
+              </Typography>
             </Box>
-          );
-        })}
-      </Box>
-      {more > 0 ? (
-        <Typography variant='caption' color='text.secondary'>
-          {more} more in the Service calendar.
-        </Typography>
+          ))}
+        </Box>
+      )}
+      {h.total > 0 ? (
+        <Button
+          component={Link}
+          href={highlightsHref(dataset.id)}
+          variant='outlined'
+          sx={{ mt: 1.5, textTransform: 'none' }}
+        >
+          View all {h.total.toLocaleString()} highlight
+          {h.total === 1 ? '' : 's'}
+        </Button>
       ) : null}
     </Box>
   );
@@ -381,9 +412,7 @@ export default function ReportSummaryView({
 
   return (
     <ReportLayout dataset={dataset} report={report} section={SUMMARY_SECTION}>
-      {SHOW_BREAKING_CHANGES ? (
-        <BreakingChanges dataset={dataset} report={report} />
-      ) : null}
+      <NotableHighlightsSummary dataset={dataset} report={report} />
       <SummaryTable dataset={dataset} report={report} />
     </ReportLayout>
   );

@@ -11,6 +11,10 @@ import {
   REPORT_FILE,
   type ReportSummary,
 } from '../app/screens/GtfsDiffToolV2/lib/report';
+import {
+  HIGHLIGHTS_FILE,
+  type HighlightsDoc,
+} from '../app/screens/GtfsDiffToolV2/lib/global-highlights';
 
 /**
  * Local stand-in for the diff store: one folder per diff, holding the files
@@ -71,4 +75,10 @@ export function diffFilePath(id: string, file: string): string | null {
 export function getReportSummary(id: string): ReportSummary | null {
   const p = diffFilePath(id, REPORT_FILE);
   return p ? (JSON.parse(readFileSync(p, 'utf8')) as ReportSummary) : null;
+}
+
+/** highlights.json of a diff: every notable highlight, ranked; null if not built. */
+export function getHighlights(id: string): HighlightsDoc | null {
+  const p = diffFilePath(id, HIGHLIGHTS_FILE);
+  return p ? (JSON.parse(readFileSync(p, 'utf8')) as HighlightsDoc) : null;
 }

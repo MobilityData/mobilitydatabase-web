@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "dataset": "mbta",
-  "generated_at": "2026-10-23T13:43:25.632Z",
+  "generated_at": "2026-10-26T12:57:13.120Z",
   "feeds": {
     "base": {
       "file": "base-mdb-437-202608010022.zip",
@@ -206,47 +206,52 @@
   ],
   "highlights": {
     "counts": {
-      "error": 26,
+      "error": 8,
       "warning": 14,
-      "success": 36,
-      "info": 19
+      "success": 0,
+      "info": 0
     },
+    "total": 22,
     "top": [
       {
-        "section": "calendar",
+        "key": "trips:routes_dropped",
+        "rank": 1,
+        "section": "trips",
         "severity": "error",
-        "title": "166 services removed",
-        "detail": "Too many to list one by one (the feeds may name their services differently). The 25 largest follow."
+        "title": "7 routes lose all their trips",
+        "detail": "59, Orange Line Shuttle, Boat-F8 and 4 more: 4,462 trips in the original feed, none in the new one."
       },
       {
-        "section": "calendar",
+        "key": "stops:served_removed",
+        "rank": 2,
+        "section": "stops",
         "severity": "error",
-        "title": "Service BUS20263-hbb36fr1-Weekday-02 removed",
-        "detail": "Had 1 service day and 1820 trips. Used by routes 14, 21, 24 and 19 more."
+        "title": "40 stops removed that routes served",
+        "detail": "In the original feed at least one trip stopped there."
       },
       {
-        "section": "calendar",
+        "key": "routes:stops_dropped",
+        "rank": 3,
+        "section": "routes",
         "severity": "error",
-        "title": "Service BUS20263-hbb36sf1-Weekday-02 removed",
-        "detail": "Had 6 service days and 1776 trips. Used by routes 14, 21, 24 and 19 more."
+        "title": "20 routes stop serving some of their stops",
+        "detail": "Up to 39 stops on one route."
       },
       {
-        "section": "calendar",
+        "key": "routes:routes_removed",
+        "rank": 4,
+        "section": "routes",
         "severity": "error",
-        "title": "Service BUS20263-hbb36sn1-Weekday-02 removed",
-        "detail": "Had 20 service days and 1776 trips. Used by routes 14, 21, 24 and 19 more."
+        "title": "6 routes removed",
+        "detail": "In routes.txt or served by trips in the original feed only."
       },
       {
-        "section": "calendar",
+        "key": "trips:boarding_restricted",
+        "rank": 5,
+        "section": "trips",
         "severity": "error",
-        "title": "Service BUS20263-hbb36wk1-Weekday-02 removed",
-        "detail": "Had 4 service days and 1820 trips. Used by routes 14, 21, 24 and 19 more."
-      },
-      {
-        "section": "calendar",
-        "severity": "error",
-        "title": "Service BUS20263-hbc36016-Saturday-02 removed",
-        "detail": "Had 7 service days and 2240 trips. Used by routes 1, 10, 11 and 23 more."
+        "title": "885 stop times stop allowing boarding or alighting",
+        "detail": "271 pickups and 614 drop-offs changed from regular to 1 (not available)."
       }
     ]
   }

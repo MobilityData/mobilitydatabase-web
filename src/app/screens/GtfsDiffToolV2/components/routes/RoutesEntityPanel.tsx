@@ -75,7 +75,6 @@ import {
   useDiffMapFullscreen,
 } from '../diffmap/DiffMapControls';
 import EntityOverviewCard from '../overview/EntityOverviewCard';
-import { categoryFileRows } from '../../lib/file-stats';
 import RoutesDiffMap from './RoutesDiffMap';
 import RouteDetails from './RouteDetails';
 import UnusedShapes from './UnusedShapes';
@@ -506,8 +505,6 @@ export default function RoutesEntityPanel({
   return (
     <Box>
       <EntityOverviewCard
-        title='Overview of route changes'
-        files={categoryFileRows(entityTypes, rawTables, 'routes.txt')}
         highlights={highlights}
         noun={(h) => (h.id === 'unused_shapes' ? 'shapes' : 'routes')}
         onOpen={(h) =>

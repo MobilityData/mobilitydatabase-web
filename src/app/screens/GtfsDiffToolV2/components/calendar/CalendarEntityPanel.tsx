@@ -50,7 +50,6 @@ import DayDetailsDialog from './DayDetailsDialog';
 import ServiceChangesList from './ServiceChangesList';
 import { type NavFocus, useDiffNav } from '../../lib/diff-nav';
 import EntityOverviewCard from '../overview/EntityOverviewCard';
-import { fileDiffRow } from '../../lib/file-stats';
 import { DATE_HIGHLIGHTS } from '../../lib/calendar-overview-highlights';
 import GtfsDiffFileDiffPanel from '../../../GtfsDiffTool/components/GtfsDiffFileDiffPanel';
 
@@ -311,8 +310,6 @@ export default function CalendarEntityPanel({
   return (
     <Box>
       <EntityOverviewCard
-        title='Overview of service calendar changes'
-        files={fileDiffs.map(fileDiffRow)}
         highlights={calendar.overview_highlights ?? []}
         noun={(h) => (DATE_HIGHLIGHTS.has(h.id) ? 'dates' : 'services')}
         openHint={(h) =>
