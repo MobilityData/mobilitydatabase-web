@@ -18,6 +18,7 @@ import { Link } from '../../../../../i18n/navigation';
 import type { GlobalHighlight } from '../../lib/global-highlights';
 import type { HighlightSeverity } from '../../lib/highlights';
 import {
+  entityHighlightHref,
   entityRowHref,
   sectionPageHref,
   tripsRawDiffHref,
@@ -114,7 +115,7 @@ export default function HighlightRow({
         >
           <Typography
             component={Link}
-            href={sectionPageHref(datasetId, h.section)}
+            href={entityHighlightHref(datasetId, h.section, h.id)}
             variant='body2'
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
             sx={linkSx}
@@ -139,7 +140,8 @@ export default function HighlightRow({
   );
 }
 
-function HighlightDetails({
+/** What a highlight expands to: its entities, each opening its page. */
+export function HighlightDetails({
   highlight: h,
   datasetId,
   sectionLabel,
@@ -237,7 +239,9 @@ function HighlightDetails({
               <TableCell sx={cellSx} align='right'>
                 <Typography
                   component={Link}
-                  href={tripsRouteHref(datasetId, r.route)}
+                  href={tripsRouteHref(datasetId, r.route, {
+                    view: 'trips-v3',
+                  })}
                   variant='caption'
                   sx={linkSx}
                 >

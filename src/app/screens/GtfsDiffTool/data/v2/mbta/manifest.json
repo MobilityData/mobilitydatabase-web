@@ -2,7 +2,7 @@
   "schema": 1,
   "id": "mbta",
   "label": "mbta · mdb-437",
-  "generated_at": "2026-10-26T12:57:13.122Z",
+  "generated_at": "2026-10-27T12:46:33.563Z",
   "feeds": {
     "base": {
       "file": "base-mdb-437-202608010022.zip",
@@ -33,7 +33,7 @@
       "bytes": 167018
     },
     "categories/routes.json": {
-      "bytes": 109570
+      "bytes": 109786
     },
     "categories/stops.json": {
       "bytes": 1434345
@@ -51,16 +51,16 @@
       "bytes": 598694
     },
     "entity-diff.json": {
-      "bytes": 63078
+      "bytes": 63075
     },
     "highlights.json": {
-      "bytes": 31473
+      "bytes": 31524
     },
     "maps/routes.parquet": {
-      "bytes": 164505
+      "bytes": 165605
     },
     "maps/routes_detail.parquet": {
-      "bytes": 472250
+      "bytes": 477516
     },
     "maps/stops.parquet": {
       "bytes": 40147
@@ -81,7 +81,10 @@
       "bytes": 2309025
     },
     "report.json": {
-      "bytes": 5708
+      "bytes": 6600
+    },
+    "trips-calendar.json": {
+      "bytes": 6014
     },
     "trips-diff.json": {
       "bytes": 373435

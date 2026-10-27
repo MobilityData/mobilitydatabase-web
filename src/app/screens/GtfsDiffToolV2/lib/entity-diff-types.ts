@@ -295,9 +295,13 @@ export interface RouteDirectionDiff {
   diverge: { added: LonLat[][]; removed: LonLat[][] };
 }
 
+export type TypicalDay = 'weekday' | 'saturday' | 'sunday';
+
 export interface RouteImpact {
   route_id: string;
   status: DiffType;
+  /** routes.agency_id (or the feed's only agency); absent in older builds. */
+  agency_id?: string;
   short_name: string;
   long_name: string;
   route_type: string;
@@ -309,6 +313,14 @@ export interface RouteImpact {
   flags: Record<RouteFlag, boolean>;
   networks: { base: string | null; new: string | null };
   trips: { base: number; new: number };
+  /**
+   * Trips on a typical weekday, Saturday and Sunday: the most common count
+   * over the dates of that day type in each feed's service window (absent
+   * in older builds).
+   */
+  typical_trips?: Record<TypicalDay, { base: number; new: number }>;
+  /** routes.route_sort_order (new, else base), when numeric. */
+  sort_order?: number | null;
   services: { base: string[]; new: string[] };
   stops: {
     base_count: number;
@@ -406,7 +418,14 @@ export interface RoutesMapDiff {
   highlights: Array<Highlight<EntityRow[]>>;
   /** Names and colours of every route (chips). */
   route_info: Record<string, RouteInfo>;
+  /** Agencies of both feeds, by name (the agency filter); absent in older builds. */
+  agencies?: Array<{ agency_id: string; name: string }>;
   shape_same_m?: number;
+  /** First and last active date of each feed (typical_trips' window). */
+  service_window?: {
+    base: { start: GtfsDate; end: GtfsDate } | null;
+    new: { start: GtfsDate; end: GtfsDate } | null;
+  };
   /** Shapes counted once each, across routes. */
   shape_counts?: Record<ShapeStatus, number>;
   unused_shapes?: UnusedShapeDiff[];

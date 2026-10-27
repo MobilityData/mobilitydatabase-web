@@ -4,18 +4,26 @@
 import { DuckDBInstance, type DuckDBConnection } from '@duckdb/node-api';
 import type { RouteImpact, StopChange } from './entity-diff-types';
 import {
+  type RouteSort,
   type RouteTableFilters,
+  type RouteV2Filters,
   overviewBounds,
   routeOfShapeQuery,
   routesFlagCountsQuery,
   routesKindCountsQuery,
+  routesChangeCountsQuery,
   routesPageQuery,
+  routesV2KindCountsQuery,
+  routesV2OverviewQuery,
+  routesV2PageQuery,
   stopsKindCountsQuery,
   stopsPageQuery,
   stopsPointsQuery,
   toRouteOverview,
+  toRouteV2Overview,
   toStopListRow,
 } from './map-table-query';
+import { DEFAULT_V2_FILTERS } from './routes-v2';
 import { encodePolyline } from './entity-diff-codec';
 import {
   ROUTE_KINDS,
@@ -231,7 +239,7 @@ const ROUTES = sortRoutes([
 
 describe('routes table SQL', () => {
   beforeAll(async () => {
-    await con.run(`CREATE TABLE routes (ord INTEGER, route_id VARCHAR, kind VARCHAR, short_name VARCHAR,
+    await con.run(`CREATE TABLE routes (ord INTEGER, route_id VARCHAR, kind VARCHAR, agency_id VARCHAR, short_name VARCHAR,
       long_name VARCHAR, color VARCHAR, text_color VARCHAR, summary VARCHAR, search VARCHAR,
       f_path BOOLEAN, f_stops BOOLEAN, f_trips BOOLEAN, f_services BOOLEAN, f_attributes BOOLEAN,
       f_network BOOLEAN, shapes_new VARCHAR, shapes_all VARCHAR)`);
@@ -241,6 +249,7 @@ describe('routes table SQL', () => {
       for (const v of [
         r.route_id,
         routeKind(r),
+        ['10', '2'].includes(r.route_id) ? 'A' : 'B',
         r.short_name,
         r.long_name,
         '',
@@ -281,6 +290,18 @@ describe('routes table SQL', () => {
     );
   });
 
+  it("keeps one agency's routes", async () => {
+    const listed = await rows(
+      routesPageQuery(
+        'routes',
+        { kinds: ROUTE_KINDS, flags: [], search: '', agencyId: 'A' },
+        0,
+        100,
+      ),
+    );
+    expect(listed.map((r) => r.route_id)).toEqual(['2', '10']);
+  });
+
   it('counts kinds and flags under the other filters', async () => {
     const f = cases[2];
     const kinds = await rows(routesKindCountsQuery('routes', f));
@@ -296,6 +317,84 @@ describe('routes table SQL', () => {
       '10',
     );
     expect(await rows(routeOfShapeQuery('routes', 'S'))).toEqual([]);
+  });
+
+  describe('v2', () => {
+    beforeAll(async () => {
+      await con.run(`CREATE TABLE routes_v2 AS SELECT *,
+        (CASE route_id WHEN '4' THEN 1 WHEN '10' THEN 2 END)::DOUBLE AS sort_order,
+        '{"l":[],"a":[],"r":[]}' AS geom, NULL::DOUBLE AS min_lon, NULL::DOUBLE AS min_lat,
+        NULL::DOUBLE AS max_lon, NULL::DOUBLE AS max_lat FROM routes`);
+    });
+    const listV2 = async (
+      f: Partial<RouteV2Filters>,
+      sort: RouteSort = 'severity',
+    ): Promise<string[]> =>
+      (
+        await rows(
+          routesV2PageQuery(
+            'routes_v2',
+            { ...DEFAULT_V2_FILTERS, ...f },
+            sort,
+            0,
+            100,
+          ),
+        )
+      ).map((r) => String(r.route_id));
+
+    it('sorts by severity, route_sort_order or name', async () => {
+      expect(await listV2({})).toEqual(['3', '2', '10', '4']);
+      expect(await listV2({}, 'sort_order')).toEqual(['4', '10', '2', '3']);
+      expect(await listV2({}, 'name')).toEqual(['2', '3', '4', '10']);
+    });
+
+    it('ORs the "What changed" chips; flags only match modified routes', async () => {
+      expect(await listV2({ changes: ['path', 'added'] })).toEqual(['2', '10']);
+      expect(await listV2({ changes: ['trips'] })).toEqual(['4']);
+      expect(await listV2({ changes: ['removed'], kinds: ['added'] })).toEqual(
+        [],
+      );
+    });
+
+    it('keeps a preset’s routes, unchanged ones when shown', async () => {
+      expect(await listV2({ routeIds: ['4', 'M1'] })).toEqual(['4']);
+      expect(
+        await listV2({ routeIds: ['4', 'M1'], showUnchanged: true }),
+      ).toEqual(['4', 'M1']);
+    });
+
+    it('counts each change and kind under the other filters', async () => {
+      const f = { ...DEFAULT_V2_FILTERS, changes: ['path' as const] };
+      const [changes] = await rows(routesChangeCountsQuery('routes_v2', f));
+      expect(changes).toMatchObject({
+        added: 1,
+        removed: 1,
+        path: 1,
+        stops: 1,
+        trips: 1,
+        services: 0,
+      });
+      const kinds = await rows(routesV2KindCountsQuery('routes_v2', f));
+      expect(Object.fromEntries(kinds.map((r) => [r.kind, r.n]))).toEqual({
+        modified: 1,
+      });
+    });
+
+    it('reads overview rows with their flags, in list order', async () => {
+      const overview = (
+        await rows(
+          routesV2OverviewQuery('routes_v2', DEFAULT_V2_FILTERS, 'severity'),
+        )
+      ).map(toRouteV2Overview);
+      expect(overview.map((r) => r.route_id)).toEqual(['3', '2', '10', '4']);
+      expect(overview[3]).toMatchObject({
+        route_id: '4',
+        kind: 'modified',
+        flags: { trips: true, stops: true, path: false },
+        lines: [],
+        bounds: null,
+      });
+    });
   });
 });
 

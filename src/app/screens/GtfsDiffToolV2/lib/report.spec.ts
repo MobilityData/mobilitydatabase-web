@@ -1,7 +1,9 @@
-import type { GtfsEntityDiff } from './entity-diff-types';
+import type { EntityCategoryDiff, GtfsEntityDiff } from './entity-diff-types';
 import { parseLocationHash, toFocusHash } from './diff-nav';
 import {
   feedLabel,
+  isRequiredSection,
+  presentFiles,
   reportHighlights,
   reportSections,
   sectionSlug,
@@ -128,5 +130,36 @@ describe('report sections', () => {
     ).toBe('STM · 3 Nov 2025 – 4 Jan 2026');
     expect(feedLabel({ file: 'a.zip' })).toBe('a.zip');
     expect(feedLabel(null)).toBe('unknown feed');
+  });
+});
+
+describe('files in the summary', () => {
+  it('lists only the files a feed has, in the category order', () => {
+    const c = {
+      id: 'stops',
+      files: ['stops.txt', 'levels.txt', 'pathways.txt'],
+      entity_types: [
+        {
+          file: 'stops.txt',
+          present: { base: true, new: true },
+          child_files: [],
+        },
+        {
+          file: 'pathways.txt',
+          present: { base: false, new: true },
+          child_files: [],
+        },
+      ],
+    } as unknown as EntityCategoryDiff;
+    expect(presentFiles(c)).toEqual(['stops.txt', 'pathways.txt']);
+  });
+
+  it('keeps sections GTFS requires, drops optional ones', () => {
+    expect(
+      isRequiredSection({ files: ['calendar.txt', 'calendar_dates.txt'] }),
+    ).toBe(true);
+    expect(
+      isRequiredSection({ files: ['fare_products.txt', 'fare_media.txt'] }),
+    ).toBe(false);
   });
 });

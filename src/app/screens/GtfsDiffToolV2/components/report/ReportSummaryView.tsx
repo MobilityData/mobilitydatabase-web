@@ -21,18 +21,24 @@ import {
   type ReportHighlight,
   type ReportSection,
   type ReportSummary,
+  REQUIRED_FILES,
+  isRequiredSection,
 } from '../../lib/report';
-import { highlightsHref, sectionPageHref } from '../../lib/highlight-links';
+import {
+  entityHighlightHref,
+  highlightsHref,
+  sectionPageHref,
+} from '../../lib/highlight-links';
 import { SeverityIcon } from '../highlights/HighlightRow';
 import ReportLayout from './ReportLayout';
 import { SUMMARY_SECTION, sectionHref } from './ReportHeader';
 
 const MONO_FONT = 'var(--font-ibm-plex-mono)';
 
-/** Where the summary sends a section: trips open in the new (v2) view. */
+/** Where the summary sends a section: trips open in the Trips v3 view. */
 function summaryHref(dataset: DiffDataset, section: ReportSection): string {
   const href = sectionHref(dataset.id, section);
-  return section.id === 'trips' && dataset.files.trips ? `${href}-v2` : href;
+  return section.id === 'trips' && dataset.files.trips ? `${href}-v3` : href;
 }
 
 const COLORS = {
@@ -102,6 +108,15 @@ function NotableHighlightsSummary({
   if (h?.total == null) return null;
   const label = (id: string): string =>
     report.sections.find((s) => s.id === id)?.label ?? id;
+  // The entity page, with this highlight opened ("<section>:<rule id>").
+  const hrefOf = (item: ReportHighlight): string =>
+    item.key?.startsWith(`${item.section}:`)
+      ? entityHighlightHref(
+          dataset.id,
+          item.section,
+          item.key.slice(item.section.length + 1),
+        )
+      : sectionPageHref(dataset.id, item.section);
   return (
     <Box sx={cardSx}>
       <Box
@@ -141,9 +156,7 @@ function NotableHighlightsSummary({
             <Box
               component='li'
               key={item.key ?? item.title}
-              onClick={() =>
-                router.push(sectionPageHref(dataset.id, item.section))
-              }
+              onClick={() => router.push(hrefOf(item))}
               sx={{
                 display: 'flex',
                 gap: 1.25,
@@ -174,7 +187,7 @@ function NotableHighlightsSummary({
               </Typography>
               <Typography
                 component={Link}
-                href={sectionPageHref(dataset.id, item.section)}
+                href={hrefOf(item)}
                 onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 variant='body2'
                 color='primary'
@@ -215,7 +228,11 @@ function SummaryTable({
 }): React.ReactElement {
   const router = useRouter();
   const present = report.sections.filter((s) => s.present);
-  const absent = report.sections.filter((s) => !s.present);
+  // A section neither feed has is left out, unless GTFS requires one of
+  // its files: two feeds both missing it is worth seeing.
+  const absent = report.sections.filter(
+    (s) => !s.present && isRequiredSection(s),
+  );
   const changed = present.filter((s) => (s.count ?? 0) > 0);
   const total = present.reduce((n, s) => n + (s.count ?? 0), 0);
   const num = (color: string): object => ({
@@ -298,7 +315,7 @@ function SummaryTable({
                       component='div'
                       sx={{ fontFamily: MONO_FONT }}
                     >
-                      {s.files.join(', ')}
+                      {(s.present_files ?? s.files).join(', ')}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -356,7 +373,7 @@ function SummaryTable({
                     component='div'
                     sx={{ fontFamily: MONO_FONT }}
                   >
-                    {s.files.join(', ')}
+                    {s.files.filter((f) => REQUIRED_FILES.has(f)).join(', ')}
                   </Typography>
                 </TableCell>
                 <TableCell colSpan={6}>
@@ -368,7 +385,7 @@ function SummaryTable({
                       textTransform: 'uppercase',
                     }}
                   >
-                    Not in either feed
+                    Missing in both feeds
                   </Typography>
                 </TableCell>
               </TableRow>

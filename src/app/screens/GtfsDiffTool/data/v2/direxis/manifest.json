@@ -2,7 +2,7 @@
   "schema": 1,
   "id": "direxis",
   "label": "direxis · mdb-2775",
-  "generated_at": "2026-10-26T12:57:12.593Z",
+  "generated_at": "2026-10-27T12:45:31.211Z",
   "feeds": {
     "base": {
       "file": "base-mdb-2775-202608070145.zip"
@@ -25,22 +25,22 @@
       "bytes": 25115
     },
     "categories/routes.json": {
-      "bytes": 7231
+      "bytes": 7442
     },
     "categories/stops.json": {
       "bytes": 172790
     },
     "entity-diff.json": {
-      "bytes": 97789
+      "bytes": 97786
     },
     "highlights.json": {
-      "bytes": 13251
+      "bytes": 13584
     },
     "maps/routes.parquet": {
-      "bytes": 25752
+      "bytes": 26204
     },
     "maps/routes_detail.parquet": {
-      "bytes": 57879
+      "bytes": 58304
     },
     "maps/stops.parquet": {
       "bytes": 27914
@@ -58,7 +58,10 @@
       "bytes": 22322
     },
     "report.json": {
-      "bytes": 4959
+      "bytes": 5417
+    },
+    "trips-calendar.json": {
+      "bytes": 15329
     },
     "trips-diff.json": {
       "bytes": 30937

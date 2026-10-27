@@ -55,10 +55,43 @@ function range(r: { min: GtfsDate | null; max: GtfsDate | null }): string {
     : 'no service';
 }
 
+/** The two buttons after the typical days, each opening its own panel. */
+type Panel = 'special' | 'date';
+const SPECIAL: Panel = 'special';
+const DATE: Panel = 'date';
+
+const buttonSx = {
+  ...segmentedSx,
+  flexDirection: 'column',
+  alignItems: 'flex-start',
+  lineHeight: 1.25,
+  minWidth: 130,
+} as const;
+
+function ButtonLabel({
+  label,
+  hint,
+}: {
+  label: string;
+  hint: string;
+}): React.ReactElement {
+  return (
+    <>
+      <Box component='span' sx={{ fontWeight: 700 }}>
+        {label}
+      </Box>
+      <Box component='span' sx={{ fontSize: '0.66rem', opacity: 0.8 }}>
+        {hint}
+      </Box>
+    </>
+  );
+}
+
 /**
- * Where the reader picks what to compare: a typical Weekday / Saturday /
- * Sunday, a special day (holidays and other days running their own
- * schedule), or any date on the calendar.
+ * Where the reader picks what to compare, as one row of buttons: a typical
+ * Weekday / Saturday / Sunday, Special days (opens the list of holidays and
+ * other days running their own schedule) or Specific day (opens the
+ * calendar).
  */
 export default function DayPickerCard({
   dayTypes,
@@ -89,6 +122,11 @@ export default function DayPickerCard({
   const selectedGroup = isCrossPeriod(value)
     ? undefined
     : catalog.special.find((g) => g.key === catalog.groupOf[value]);
+  const isTypical = typical.some((t) => t.key === value);
+  // Which panel is open: from the selected day, until a button changes it.
+  const [panel, setPanel] = useState<Panel | null>(() =>
+    isTypical ? null : selectedGroup ? SPECIAL : DATE,
+  );
   const related = useMemo(
     () => new Set(selectedGroup?.dates ?? []),
     [selectedGroup],
@@ -97,72 +135,61 @@ export default function DayPickerCard({
   const shown = showAll
     ? catalog.special
     : catalog.special.slice(0, SPECIAL_PREVIEW);
+  const pickedDate = panel === DATE && !isCrossPeriod(value) ? value : null;
 
   return (
-    <V2Card
-      id={DAY_PICKER_ID}
-      title='Choose the day to compare'
-      caption='Trips run on dates, not in general: the changes below are worked out for one service day at a time.'
-    >
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) 320px' },
-          gap: 3,
+    <V2Card id={DAY_PICKER_ID} title='Choose the day to compare'>
+      <ToggleButtonGroup
+        exclusive
+        size='small'
+        value={panel ?? (isTypical ? value : null)}
+        onChange={(_, v: string | null) => {
+          if (v == null) return;
+          if (v === SPECIAL || v === DATE) {
+            setPanel(v);
+            return;
+          }
+          setPanel(null);
+          onChange(v);
         }}
+        aria-label='Day to compare'
+        sx={{ flexWrap: 'wrap', mb: 1 }}
       >
-        <Box sx={{ minWidth: 0 }}>
-          <Typography variant='subtitle2' fontWeight={700} sx={{ mb: 1 }}>
-            Typical days
-          </Typography>
-          <ToggleButtonGroup
-            exclusive
-            size='small'
-            value={typical.some((t) => t.key === value) ? value : null}
-            onChange={(_, v: AnchorKey | null) => v && onChange(v)}
-            aria-label='Typical day'
-            sx={{ flexWrap: 'wrap', mb: 1 }}
-          >
-            {typical.map((t) => (
-              <ToggleButton
-                key={t.key}
-                value={t.key}
-                sx={{
-                  ...segmentedSx,
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  lineHeight: 1.25,
-                  minWidth: 130,
-                }}
-              >
-                <Box component='span' sx={{ fontWeight: 700 }}>
-                  {t.label}
-                </Box>
-                <Box
-                  component='span'
-                  sx={{ fontSize: '0.66rem', opacity: 0.8 }}
-                >
-                  {t.hint}
-                </Box>
-              </ToggleButton>
-            ))}
-          </ToggleButtonGroup>
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            component='p'
-            sx={{ mb: 2.5 }}
-          >
-            {shared && !catalog.repeats
-              ? 'No day pattern repeats in this feed, so each compares the day of that type with the most trips.'
-              : shared
-                ? 'Each compares the schedule most days of that type run, in both feeds.'
-                : `The feeds share no service dates (before ${range(coverage.base)}, after ${range(coverage.new)}), so each compares a typical day of each feed.`}
-          </Typography>
+        {typical.map((t) => (
+          <ToggleButton key={t.key} value={t.key} sx={buttonSx}>
+            <ButtonLabel label={t.label} hint={t.hint} />
+          </ToggleButton>
+        ))}
+        <ToggleButton value={SPECIAL} sx={buttonSx}>
+          <ButtonLabel
+            label='Special days'
+            hint={
+              selectedGroup
+                ? whenText(selectedGroup.dates)
+                : shared && catalog.repeats
+                  ? `${catalog.special.length} group${catalog.special.length === 1 ? '' : 's'}`
+                  : 'none'
+            }
+          />
+        </ToggleButton>
+        <ToggleButton value={DATE} sx={buttonSx}>
+          <ButtonLabel
+            label='Specific day'
+            hint={pickedDate ? shortDate(pickedDate) : 'pick a date'}
+          />
+        </ToggleButton>
+      </ToggleButtonGroup>
 
-          <Typography variant='subtitle2' fontWeight={700} sx={{ mb: 0.25 }}>
-            Special days
-          </Typography>
+      {panel == null ? (
+        <Typography variant='caption' color='text.secondary' component='p'>
+          {shared && !catalog.repeats
+            ? 'No day pattern repeats in this feed, so each compares the day of that type with the most trips.'
+            : shared
+              ? 'Each compares the schedule most days of that type run, in both feeds.'
+              : `The feeds share no service dates (before ${range(coverage.base)}, after ${range(coverage.new)}), so each compares a typical day of each feed.`}
+        </Typography>
+      ) : panel === SPECIAL ? (
+        <Box sx={{ mt: 1.5 }}>
           {!shared ? (
             <Typography variant='body2' color='text.secondary'>
               Holidays and other special days need dates both feeds cover.
@@ -170,8 +197,8 @@ export default function DayPickerCard({
           ) : !catalog.repeats ? (
             <Typography variant='body2' color='text.secondary'>
               Every date in this feed runs its own set of services, so special
-              days can’t be told apart by their schedule. Pick any date on the
-              calendar to compare it.
+              days can’t be told apart by their schedule. Pick a specific day to
+              compare it.
             </Typography>
           ) : catalog.special.length === 0 ? (
             <Typography variant='body2' color='text.secondary'>
@@ -230,11 +257,8 @@ export default function DayPickerCard({
             </>
           )}
         </Box>
-
-        <Box>
-          <Typography variant='subtitle2' fontWeight={700} sx={{ mb: 1 }}>
-            Any date
-          </Typography>
+      ) : (
+        <Box sx={{ mt: 1.5, maxWidth: 360 }}>
           {shared && catalog.period ? (
             <MiniCalendar
               kindOf={catalog.kindOf}
@@ -250,7 +274,7 @@ export default function DayPickerCard({
             </Typography>
           )}
         </Box>
-      </Box>
+      )}
     </V2Card>
   );
 }

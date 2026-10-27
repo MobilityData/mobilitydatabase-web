@@ -298,3 +298,14 @@ export function toKindCounts(rows: Array<Record<string, unknown>>): DayCounts {
       c[String(r.kind) as ChangeKind] = Number(r.n);
   return c;
 }
+
+/** The calendar status (added / deleted / modified / unchanged) of some services. */
+export function serviceStatusQuery(v: string, ids: string[]): SqlQuery {
+  return {
+    sql:
+      ids.length === 0
+        ? `SELECT service_id, status FROM ${view(v)} WHERE false`
+        : `SELECT service_id, status FROM ${view(v)} WHERE service_id IN (${ids.map(() => '?').join(', ')})`,
+    params: ids,
+  };
+}

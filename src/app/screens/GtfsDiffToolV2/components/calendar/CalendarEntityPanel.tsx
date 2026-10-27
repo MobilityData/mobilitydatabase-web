@@ -349,7 +349,7 @@ export default function CalendarEntityPanel({
           }}
         >
           <Typography variant='subtitle1' fontWeight={700}>
-            Service calendar
+            Service Dates
           </Typography>
           <Typography variant='caption' color='text.secondary'>
             {calendar.total.base} → {calendar.total.new} services ·{' '}

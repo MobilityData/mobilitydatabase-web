@@ -75,6 +75,11 @@ export interface HighlightsDoc {
     sections: Record<string, number>;
   };
   items: GlobalHighlight[];
+  /**
+   * Highlights left out of `items` because another section's explains them
+   * (COVERED_BY): an entity page still shows its own (rank 0).
+   */
+  covered?: GlobalHighlight[];
   /** The block report.json shows on the summary page (top SUMMARY_TOP). */
   report?: NonNullable<ReportSummary['highlights']>;
 }
@@ -186,9 +191,12 @@ function withoutCovered(sources: SectionHighlights[]): SectionHighlights[] {
 /** Every section's highlights in one ranking, most concerning first. */
 export function rankGlobalHighlights(
   sources: SectionHighlights[],
+  opts: { dropCovered?: boolean } = {},
 ): GlobalHighlight[] {
   const all: Array<Omit<GlobalHighlight, 'rank'>> = [];
-  for (const src of withoutCovered(sources)) {
+  for (const src of opts.dropCovered === false
+    ? sources
+    : withoutCovered(sources)) {
     for (const h of src.highlights) {
       const { affected, entities } = entitiesOf(
         h.entities,
@@ -218,6 +226,27 @@ export function rankGlobalHighlights(
       a.key.localeCompare(b.key),
   );
   return all.map((h, i) => ({ ...h, rank: i + 1 }));
+}
+
+/** Highlights `rankGlobalHighlights` drops as covered, with rank 0. */
+export function coveredHighlights(
+  sources: SectionHighlights[],
+  ranked: GlobalHighlight[],
+): GlobalHighlight[] {
+  const kept = new Set(ranked.map((h) => h.key));
+  return rankGlobalHighlights(sources, { dropCovered: false })
+    .filter((h) => !kept.has(h.key))
+    .map((h) => ({ ...h, rank: 0 }));
+}
+
+/** One section's highlights for its own page: covered ones included. */
+export function sectionHighlights(
+  doc: Pick<HighlightsDoc, 'items' | 'covered'>,
+  section: string,
+): GlobalHighlight[] {
+  return [...doc.items, ...(doc.covered ?? [])]
+    .filter((h) => h.section === section)
+    .sort((a, b) => b.score - a.score);
 }
 
 export function highlightsDoc(

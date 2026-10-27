@@ -40,6 +40,7 @@ import type {
   FieldChange,
   RowAdded,
   RowDeleted,
+  RowIdentifier,
   RowModified,
 } from '../lib/gtfs-diff-types';
 import ColumnIntensityBar from './ColumnIntensityBar';
@@ -780,6 +781,17 @@ function ColumnChanges({ diff }: { diff: FileDiff }): React.ReactElement | null 
 
 // ── Single file panel ──────────────────────────────────────────────
 
+/**
+ * Open a file from outside, scrolled into view, with only the rows of one
+ * entity (exact identifier match, e.g. { route_id: '14' }). A new nonce
+ * applies it again.
+ */
+export interface FileDiffFocus {
+  file: string;
+  identifier: RowIdentifier;
+  nonce: number;
+}
+
 interface FileDiffPanelProps {
   diff: FileDiff;
   /** Expanded, with no collapse toggle. */
@@ -787,6 +799,11 @@ interface FileDiffPanelProps {
   /** Search bar right above the row table. */
   searchable?: boolean;
   rowAction?: RowAction;
+  focus?: FileDiffFocus | null;
+}
+
+function identifierMatches(id: RowIdentifier, pin: RowIdentifier): boolean {
+  return Object.entries(pin).every(([k, v]) => id[k] === v);
 }
 
 function FileDiffPanel({
@@ -794,17 +811,28 @@ function FileDiffPanel({
   alwaysOpen = false,
   searchable = false,
   rowAction,
+  focus = null,
 }: FileDiffPanelProps): React.ReactElement {
   const rc = diff.row_changes;
   const [query, setQuery] = useState('');
+  const [pinned, setPinned] = useState<RowIdentifier | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   // Searching large files can take a moment; keep typing responsive.
   const deferredQuery = useDeferredValue(query);
   const searching = searchable && deferredQuery.trim() !== '';
   // Rows shown in the tables: all of them, or the search matches.
-  const shown = useMemo(
-    () => (searching ? searchFileDiff(diff, deferredQuery).row_changes : rc),
-    [searching, diff, deferredQuery, rc],
-  );
+  const shown = useMemo(() => {
+    const found = searching ? searchFileDiff(diff, deferredQuery).row_changes : rc;
+    if (pinned == null || found == null) return found;
+    const hit = (r: { identifier: RowIdentifier }): boolean =>
+      identifierMatches(r.identifier, pinned);
+    return {
+      ...found,
+      added: found.added.filter(hit),
+      deleted: found.deleted.filter(hit),
+      modified: found.modified.filter(hit),
+    };
+  }, [searching, diff, deferredQuery, rc, pinned]);
   const addedCount = shown?.added.length ?? 0;
   const deletedCount = shown?.deleted.length ?? 0;
   const modifiedCount = shown?.modified.length ?? 0;
@@ -824,6 +852,20 @@ function FileDiffPanel({
   });
   const [openState, setOpen] = useState(false);
   const open = alwaysOpen || openState;
+
+  // Focus from outside: open, pin the entity's rows, show its tab, scroll here.
+  useEffect(() => {
+    if (focus == null) return;
+    const hit = (r: { identifier: RowIdentifier }): boolean =>
+      identifierMatches(r.identifier, focus.identifier);
+    setPinned(focus.identifier);
+    setQuery('');
+    setOpen(true);
+    if (rc?.modified.some(hit)) setTab('modified');
+    else if (rc?.added.some(hit)) setTab('added');
+    else if (rc?.deleted.some(hit)) setTab('deleted');
+    rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [focus?.nonce]);
   const [modifiedViewMode, setModifiedViewMode] = useState<'summary' | 'inline'>('inline');
 
   const statusColor =
@@ -839,11 +881,13 @@ function FileDiffPanel({
 
   return (
     <Box
+      ref={rootRef}
       sx={{
         bgcolor: 'background.paper',
         borderRadius: '6px',
         mb: 2,
         overflow: 'hidden',
+        scrollMarginTop: 96,
       }}
     >
       {/* ── Header bar ── */}
@@ -1029,6 +1073,16 @@ function FileDiffPanel({
               )}
             </Box>
 
+            {pinned ? (
+              <Chip
+                size='small'
+                label={`Only ${Object.entries(pinned)
+                  .map(([k, v]) => `${k} ${v}`)
+                  .join(', ')}`}
+                onDelete={() => setPinned(null)}
+                sx={{ mb: 1.5, fontFamily: MONO_FONT }}
+              />
+            ) : null}
             {searchable ? (
               <TextField
                 fullWidth
@@ -1119,6 +1173,7 @@ interface GtfsDiffFileDiffPanelProps {
   alwaysOpenFiles?: string[];
   /** Hover action on the rows of some files (e.g. "See on map"). */
   rowAction?: RowAction;
+  focus?: FileDiffFocus | null;
 }
 
 type FilterAction = 'all' | 'added' | 'deleted' | 'modified' | 'not_compared';
@@ -1129,6 +1184,7 @@ export default function GtfsDiffFileDiffPanel({
   searchable = false,
   alwaysOpenFiles = [],
   rowAction,
+  focus = null,
 }: GtfsDiffFileDiffPanelProps): React.ReactElement {
   const [filter, setFilter] = useState<FilterAction>('all');
 
@@ -1190,6 +1246,7 @@ export default function GtfsDiffFileDiffPanel({
           diff={diff}
           alwaysOpen={alwaysOpenFiles.includes(diff.file_name)}
           searchable={searchable}
+          focus={focus?.file === diff.file_name ? focus : null}
           rowAction={
             rowAction?.files.includes(diff.file_name) ? rowAction : undefined
           }

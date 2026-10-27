@@ -118,6 +118,7 @@ async function main() {
 
   const items = m.rankGlobalHighlights(sources);
   const doc = m.highlightsDoc(basename(dir), items);
+  doc.covered = m.coveredHighlights(sources, items);
   doc.report = m.reportTopHighlights(doc);
   writeFileSync(join(dir, m.HIGHLIGHTS_FILE), JSON.stringify(doc));
 

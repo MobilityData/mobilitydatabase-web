@@ -385,7 +385,7 @@ export default function FullMapView({
             sx={{
               mr: 2,
               borderRadius: '6px',
-              border: `2px solid ${theme.vars.palette.primary.main}`,
+              border: `2px solid ${theme.vars.palette.primary.light}`,
               overflow: 'hidden',
               flex: 1,
               ml: { xs: 2, md: 0 },

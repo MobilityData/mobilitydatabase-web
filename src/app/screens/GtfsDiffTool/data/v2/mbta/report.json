@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "dataset": "mbta",
-  "generated_at": "2026-10-26T12:57:13.120Z",
+  "generated_at": "2026-10-27T12:46:33.561Z",
   "feeds": {
     "base": {
       "file": "base-mdb-437-202608010022.zip",
@@ -34,6 +34,9 @@
         "agency.txt",
         "attributions.txt"
       ],
+      "present_files": [
+        "agency.txt"
+      ],
       "present": true
     },
     {
@@ -48,6 +51,11 @@
         "unchanged": 19024
       },
       "files": [
+        "stops.txt",
+        "levels.txt",
+        "pathways.txt"
+      ],
+      "present_files": [
         "stops.txt",
         "levels.txt",
         "pathways.txt"
@@ -73,6 +81,12 @@
         "areas.txt",
         "stop_areas.txt"
       ],
+      "present_files": [
+        "shapes.txt",
+        "routes.txt",
+        "areas.txt",
+        "stop_areas.txt"
+      ],
       "present": true
     },
     {
@@ -91,12 +105,16 @@
         "stop_times.txt",
         "frequencies.txt"
       ],
+      "present_files": [
+        "trips.txt",
+        "stop_times.txt"
+      ],
       "present": true
     },
     {
       "id": "calendar",
       "slug": "calendar",
-      "label": "Service calendar",
+      "label": "Service Dates",
       "count": 316,
       "counts": {
         "added": 135,
@@ -105,6 +123,10 @@
         "unchanged": 0
       },
       "files": [
+        "calendar.txt",
+        "calendar_dates.txt"
+      ],
+      "present_files": [
         "calendar.txt",
         "calendar_dates.txt"
       ],
@@ -125,6 +147,7 @@
         "fare_attributes.txt",
         "fare_rules.txt"
       ],
+      "present_files": [],
       "present": false
     },
     {
@@ -147,6 +170,14 @@
         "rider_categories.txt",
         "timeframes.txt"
       ],
+      "present_files": [
+        "fare_products.txt",
+        "fare_media.txt",
+        "fare_leg_rules.txt",
+        "fare_leg_join_rules.txt",
+        "fare_transfer_rules.txt",
+        "timeframes.txt"
+      ],
       "present": true
     },
     {
@@ -166,6 +197,7 @@
         "location_group_stops.txt",
         "locations.geojson"
       ],
+      "present_files": [],
       "present": false
     },
     {
@@ -184,6 +216,10 @@
         "translations.txt",
         "transfers.txt"
       ],
+      "present_files": [
+        "feed_info.txt",
+        "transfers.txt"
+      ],
       "present": true
     },
     {
@@ -198,6 +234,10 @@
         "unchanged": 87
       },
       "files": [
+        "levels.txt",
+        "pathways.txt"
+      ],
+      "present_files": [
         "levels.txt",
         "pathways.txt"
       ],
@@ -219,7 +259,7 @@
         "section": "trips",
         "severity": "error",
         "title": "7 routes lose all their trips",
-        "detail": "59, Orange Line Shuttle, Boat-F8 and 4 more: 4,462 trips in the original feed, none in the new one."
+        "detail": "Boat-F8, Green Line B Shuttle, Green Line B Shuttle and 4 more: 4,462 trips in the original feed, none in the new one."
       },
       {
         "key": "stops:served_removed",

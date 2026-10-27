@@ -45,8 +45,33 @@ export interface ReportSection {
   counts: ReportCounts | null;
   /** GTFS files the section covers. */
   files: string[];
+  /**
+   * The section's files at least one feed has (absent from reports built
+   * before it was recorded: fall back to `files`).
+   */
+  present_files?: string[];
   /** False when neither feed has the section's files (no page). */
   present: boolean;
+}
+
+/**
+ * GTFS files a feed needs (some conditionally: calendar.txt or
+ * calendar_dates.txt, stops.txt unless Flex locations stand in). A section
+ * holding one stays in the summary even when neither feed has it; one of
+ * only optional files is left out.
+ */
+export const REQUIRED_FILES: ReadonlySet<string> = new Set([
+  'agency.txt',
+  'stops.txt',
+  'routes.txt',
+  'trips.txt',
+  'stop_times.txt',
+  'calendar.txt',
+  'calendar_dates.txt',
+]);
+
+export function isRequiredSection(s: Pick<ReportSection, 'files'>): boolean {
+  return s.files.some((f) => REQUIRED_FILES.has(f));
 }
 
 /** A rule-based highlight worth surfacing on the summary page. */
@@ -96,6 +121,21 @@ export function changeCount(c: EntityCategoryDiff): number {
   return counts.added + counts.deleted + counts.modified;
 }
 
+/** The category's files at least one feed has, in the category's order. */
+export function presentFiles(c: EntityCategoryDiff): string[] {
+  const has = new Set<string>();
+  if (c.calendar)
+    for (const f of [...c.calendar.present.base, ...c.calendar.present.new])
+      has.add(f);
+  // Tolerates entity types from diffs built before these fields existed.
+  for (const t of c.entity_types ?? []) {
+    if (t.present?.base || t.present?.new) has.add(t.file);
+    for (const child of t.child_files ?? []) has.add(child);
+  }
+  const ordered = c.files.filter((f) => has.has(f));
+  return [...ordered, ...[...has].filter((f) => !c.files.includes(f))];
+}
+
 export function isPresent(c: EntityCategoryDiff): boolean {
   if (c.calendar)
     return c.calendar.present.base.length + c.calendar.present.new.length > 0;
@@ -120,6 +160,7 @@ export function reportSections(
     count: changeCount(c),
     counts: categoryCounts(c),
     files: c.files,
+    present_files: presentFiles(c),
     present: isPresent(c),
   }));
   if (pathways != null) {
@@ -137,6 +178,7 @@ export function reportSections(
       count: pathways.stations.length,
       counts,
       files: ['levels.txt', 'pathways.txt'],
+      present_files: ['levels.txt', 'pathways.txt'],
       present: true,
     });
   }

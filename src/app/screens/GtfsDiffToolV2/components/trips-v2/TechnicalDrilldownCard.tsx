@@ -16,6 +16,8 @@ interface TechnicalDrilldownCardProps {
   scope: string;
   /** What the pairs cover: "Every route", "Route 24". */
   subject: string;
+  /** Without the card and its title, for a popup titled already. */
+  bare?: boolean;
 }
 
 /**
@@ -26,31 +28,27 @@ export default function TechnicalDrilldownCard({
   pairs,
   scope,
   subject,
+  bare = false,
 }: TechnicalDrilldownCardProps): React.ReactElement {
   const [showMapping, setShowMapping] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const t = useMemo(() => technicalSummary(pairs), [pairs]);
   const shown = showAll ? t.mapping : t.mapping.slice(0, PREVIEW);
 
-  return (
-    <V2Card
-      title='Technical drill-down'
-      scope={scope}
-      caption={subject}
-      actions={
-        t.mapping.length > 0 ? (
-          <Button
-            size='small'
-            variant='outlined'
-            color='inherit'
-            onClick={() => setShowMapping((v) => !v)}
-            sx={{ textTransform: 'none', borderColor: 'divider' }}
-          >
-            {showMapping ? 'Hide trip_id mapping' : 'Show trip_id mapping'}
-          </Button>
-        ) : null
-      }
-    >
+  const mappingButton =
+    t.mapping.length > 0 ? (
+      <Button
+        size='small'
+        variant='outlined'
+        color='inherit'
+        onClick={() => setShowMapping((v) => !v)}
+        sx={{ textTransform: 'none', borderColor: 'divider' }}
+      >
+        {showMapping ? 'Hide trip_id mapping' : 'Show trip_id mapping'}
+      </Button>
+    ) : null;
+  const body = (
+    <>
       <Typography variant='body2' sx={{ mb: 0.5 }}>
         {t.idOnly === 0
           ? 'No trip matched with only an ID change.'
@@ -136,6 +134,22 @@ export default function TechnicalDrilldownCard({
             : `${t.frequencyTrips} trip${t.frequencyTrips === 1 ? '' : 's'}`}
         </span>
       </Box>
+    </>
+  );
+
+  return bare ? (
+    <Box sx={{ p: 2.5 }}>
+      {mappingButton ? <Box sx={{ mb: 1.5 }}>{mappingButton}</Box> : null}
+      {body}
+    </Box>
+  ) : (
+    <V2Card
+      title='Technical drill-down'
+      scope={scope}
+      caption={subject}
+      actions={mappingButton}
+    >
+      {body}
     </V2Card>
   );
 }

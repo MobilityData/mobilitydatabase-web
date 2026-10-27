@@ -9,6 +9,7 @@ import {
   InputAdornment,
   ListItemButton,
   ListItemText,
+  MenuItem,
   TextField,
   Typography,
 } from '@mui/material';
@@ -71,7 +72,6 @@ import {
   DiffMapLayout,
   INLINE_CHIPS_SX,
   RAW_DIFF_ID,
-  SeeRawDiffButton,
   useDiffMapFullscreen,
 } from '../diffmap/DiffMapControls';
 import EntityOverviewCard from '../overview/EntityOverviewCard';
@@ -92,6 +92,8 @@ interface Filters {
   flags: RouteFlag[];
   search: string;
   showUnchanged: boolean;
+  /** One agency's routes; null for all agencies. */
+  agencyId: string | null;
 }
 
 const DEFAULT_FILTERS: Filters = {
@@ -99,6 +101,7 @@ const DEFAULT_FILTERS: Filters = {
   flags: [],
   search: '',
   showUnchanged: false,
+  agencyId: null,
 };
 
 function effectiveKinds(f: Filters): RouteKind[] {
@@ -252,11 +255,15 @@ export default function RoutesEntityPanel({
     kinds: effectiveKinds(filters),
     flags: filters.flags,
     search: filters.search,
+    agencyId: filters.agencyId,
   };
+  const agencies = routesMap.agencies ?? [];
+  const agencyName = (id: string): string =>
+    agencies.find((a) => a.agency_id === id)?.name ?? id;
   const filterKey = JSON.stringify(tableFilters);
   const kindCountsQ = useMapTableQuery(
     url,
-    JSON.stringify([filters.flags, filters.search]),
+    JSON.stringify([filters.flags, filters.search, filters.agencyId]),
     (v) => routesKindCountsQuery(v, tableFilters),
     (rows) => {
       const c = { ...NO_KIND_COUNTS };
@@ -268,7 +275,7 @@ export default function RoutesEntityPanel({
   const flagCounts =
     useMapTableQuery(
       url,
-      JSON.stringify([tableFilters.kinds, filters.search]),
+      JSON.stringify([tableFilters.kinds, filters.search, filters.agencyId]),
       (v) => routesFlagCountsQuery(v, tableFilters),
       (rows) =>
         Object.fromEntries(
@@ -464,6 +471,15 @@ export default function RoutesEntityPanel({
   }));
 
   const activeFilters: ActiveFilter[] = [
+    ...(filters.agencyId != null
+      ? [
+          {
+            key: 'agency',
+            label: agencyName(filters.agencyId),
+            clear: () => setFilters((f) => ({ ...f, agencyId: null })),
+          },
+        ]
+      : []),
     ...filters.kinds.map((k) => ({
       key: `kind-${k}`,
       label: ROUTE_KIND_LABELS[k],
@@ -517,7 +533,6 @@ export default function RoutesEntityPanel({
       {/* Row under the header: the CTA, then the active filters beside it,
           so the map below starts level with the filter panel. */}
       <ReportActions>
-        <SeeRawDiffButton />
         <ActiveFilterChips
           filters={activeFilters}
           onClearAll={clearAll}
@@ -545,6 +560,34 @@ export default function RoutesEntityPanel({
             <ActiveFilterChips filters={activeFilters} onClearAll={clearAll} />
           }
         >
+          {agencies.length > 0 ? (
+            <>
+              <SearchHeader variant='h6' className='no-collapse'>
+                Agency
+              </SearchHeader>
+              <TextField
+                select
+                fullWidth
+                size='small'
+                value={filters.agencyId ?? ''}
+                onChange={(e) =>
+                  setFilters((f) => ({
+                    ...f,
+                    agencyId: e.target.value === '' ? null : e.target.value,
+                  }))
+                }
+                slotProps={{ select: { displayEmpty: true } }}
+                sx={{ mb: 1 }}
+              >
+                <MenuItem value=''>All agencies</MenuItem>
+                {agencies.map((a) => (
+                  <MenuItem key={a.agency_id} value={a.agency_id}>
+                    {a.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </>
+          ) : null}
           <SearchHeader variant='h6' className='no-collapse'>
             Change type
           </SearchHeader>
@@ -660,7 +703,7 @@ export default function RoutesEntityPanel({
                   }}
                   sx={{ pl: 0, pr: 1, alignItems: 'flex-start', gap: 1 }}
                 >
-                  <Box sx={{ mt: 0.5 }}>
+                  <Box sx={{ mt: 0.5, display: 'flex', flexShrink: 0 }}>
                     <ColorDot color={ROUTE_KIND_COLORS[r.kind]} />
                   </Box>
                   <ListItemText

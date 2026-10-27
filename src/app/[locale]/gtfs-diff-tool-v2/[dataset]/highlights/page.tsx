@@ -43,7 +43,7 @@ export async function generateMetadata({
   return {
     title: `Notable highlights · ${d?.label ?? dataset} | GTFS diff | MobilityDatabase`,
     description:
-      'Every notable change between two GTFS feeds, ranked across trips, routes, stops and the service calendar.',
+      'Every notable change between two GTFS feeds, ranked across trips, routes, stops and service dates.',
   };
 }
 

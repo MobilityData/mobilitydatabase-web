@@ -12,8 +12,9 @@ import {
   Typography,
 } from '@mui/material';
 import { ExpandMore } from '@mui/icons-material';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { HighlightSeverity } from '../../lib/highlights';
+import { HIGHLIGHT_PARAM, highlightAnchor } from '../../lib/highlight-links';
 
 /** Highlights shown before "Show all". */
 const TOP_HIGHLIGHTS = 3;
@@ -53,6 +54,34 @@ export default function NotableHighlights<H extends HighlightLike>({
   heading = true,
 }: NotableHighlightsProps<H>): React.ReactElement {
   const [showAll, setShowAll] = useState(false);
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
+  // ?highlight=<rule id> (from the summary or highlights page): once the
+  // highlights are in, open that one and bring it into view.
+  const targeted = useRef(false);
+  useEffect(() => {
+    if (targeted.current || highlights == null) return;
+    targeted.current = true;
+    const id = new URLSearchParams(window.location.search).get(HIGHLIGHT_PARAM);
+    const i = id == null ? -1 : highlights.findIndex((h) => h.id === id);
+    if (id == null || i < 0) return;
+    if (i >= TOP_HIGHLIGHTS) setShowAll(true);
+    setExpanded(new Set([id]));
+    // After the rows (and "Show all") have rendered.
+    setTimeout(
+      () =>
+        document
+          .getElementById(highlightAnchor(id))
+          ?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+      100,
+    );
+  }, [highlights]);
+  const toggle = (id: string, open: boolean): void =>
+    setExpanded((s) => {
+      const next = new Set(s);
+      if (open) next.add(id);
+      else next.delete(id);
+      return next;
+    });
   const shown =
     highlights == null
       ? []
@@ -88,12 +117,16 @@ export default function NotableHighlights<H extends HighlightLike>({
               return (
                 <Accordion
                   key={h.id}
+                  id={highlightAnchor(h.id)}
                   disableGutters
                   variant='outlined'
+                  expanded={details != null && expanded.has(h.id)}
+                  onChange={(_, open) => toggle(h.id, open)}
                   slotProps={{ transition: { unmountOnExit: true } }}
                   sx={{
                     borderColor: SEVERITY_COLORS[h.severity],
                     borderRadius: '4px',
+                    scrollMarginTop: 96,
                     '&:before': { display: 'none' },
                   }}
                 >

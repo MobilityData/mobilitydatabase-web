@@ -184,6 +184,8 @@ export function toStopPoint(r: Record<string, unknown>): StopPoint {
 export interface RouteTableFilters {
   /** Kinds to show (unchanged included when shown). */
   kinds: RouteKind[];
+  /** One agency's routes; null for every agency. */
+  agencyId?: string | null;
   /** Routes having any of these changes; empty = no restriction. */
   flags: RouteFlag[];
   search: string;
@@ -212,6 +214,10 @@ export function routesWhere(
   const parts: string[] = [];
   const params: unknown[] = [];
   if (kinds) inList('kind', f.kinds, parts, params);
+  if (f.agencyId != null) {
+    parts.push('agency_id = ?');
+    params.push(f.agencyId);
+  }
   if (flags && f.flags.length > 0)
     parts.push(`(${f.flags.map(flagColumn).join(' OR ')})`);
   searchClause(f.search, parts, params);
@@ -352,4 +358,156 @@ export function overviewBounds(
           ];
   }
   return out;
+}
+
+// ── Routes v2 ──────────────────────────────────────────────────────
+
+/** A "What changed" chip: a flag of a modified route, or an added / removed route. */
+export type RouteChange = RouteFlag | 'added' | 'removed';
+
+export const ROUTE_CHANGES: RouteChange[] = [
+  ...ROUTE_FLAGS,
+  'added',
+  'removed',
+];
+
+export type RouteSort = 'severity' | 'sort_order' | 'name';
+
+export interface RouteV2Filters {
+  /** Routes with any of these changes; empty = no restriction. */
+  changes: RouteChange[];
+  /** Change types (added / removed / modified); empty = every changed route. */
+  kinds: RouteKind[];
+  showUnchanged: boolean;
+  agencyId: string | null;
+  search: string;
+  /** Only these routes (a highlight preset); null = no restriction. */
+  routeIds: string[] | null;
+}
+
+const CHANGED_KINDS: RouteKind[] = ['added', 'removed', 'modified'];
+
+function changeClause(c: RouteChange): string {
+  if (c === 'added' || c === 'removed') return `kind = '${c}'`;
+  return `(kind = 'modified' AND ${flagColumn(c)})`;
+}
+
+export function routesV2Where(
+  f: RouteV2Filters,
+  { kinds = true, changes = true }: { kinds?: boolean; changes?: boolean } = {},
+): { sql: string; params: unknown[] } {
+  const parts: string[] = [];
+  const params: unknown[] = [];
+  if (kinds) {
+    const k = f.kinds.length > 0 ? f.kinds : CHANGED_KINDS;
+    inList('kind', f.showUnchanged ? [...k, 'unchanged'] : k, parts, params);
+  }
+  if (changes && f.changes.length > 0)
+    parts.push(`(${f.changes.map(changeClause).join(' OR ')})`);
+  if (f.agencyId != null) {
+    parts.push('agency_id = ?');
+    params.push(f.agencyId);
+  }
+  if (f.routeIds != null) inList('route_id', f.routeIds, parts, params);
+  searchClause(f.search, parts, params);
+  return { sql: where(parts), params };
+}
+
+/**
+ * Severity: removed, added, then modified routes by their most serious
+ * change (path, stops, trips or services, attributes, network).
+ */
+const SEVERITY_SQL = `CASE WHEN kind = 'removed' THEN 0 WHEN kind = 'added' THEN 1
+  WHEN f_path THEN 2 WHEN f_stops THEN 3 WHEN f_trips OR f_services THEN 4
+  WHEN f_attributes THEN 5 WHEN f_network THEN 6 ELSE 7 END`;
+
+export function routesOrderBy(sort: RouteSort): string {
+  if (sort === 'severity') return `${SEVERITY_SQL}, ord`;
+  if (sort === 'sort_order') return 'sort_order ASC NULLS LAST, ord';
+  return 'ord';
+}
+
+const ROUTE_V2_COLUMNS = `route_id, kind, short_name, long_name, color, text_color, ${ROUTE_FLAGS.map(flagColumn).join(', ')}`;
+
+/** A route as the v2 list shows it. */
+export interface RouteV2Row {
+  route_id: string;
+  kind: RouteKind;
+  short_name: string;
+  long_name: string;
+  color: string;
+  text_color: string;
+  flags: Record<RouteFlag, boolean>;
+}
+
+export function routesV2PageQuery(
+  v: string,
+  f: RouteV2Filters,
+  sort: RouteSort,
+  offset: number,
+  limit: number,
+): SqlQuery {
+  const w = routesV2Where(f);
+  return {
+    sql: `SELECT ${ROUTE_V2_COLUMNS} FROM ${view(v)} ${w.sql} ORDER BY ${routesOrderBy(sort)} ${page(offset, limit)}`,
+    params: w.params,
+  };
+}
+
+/** Every matching route in list order, with its overview lines (the map, prev / next). */
+export function routesV2OverviewQuery(
+  v: string,
+  f: RouteV2Filters,
+  sort: RouteSort,
+): SqlQuery {
+  const w = routesV2Where(f);
+  return {
+    sql: `SELECT ${ROUTE_V2_COLUMNS}, geom, min_lon, min_lat, max_lon, max_lat FROM ${view(v)} ${w.sql} ORDER BY ${routesOrderBy(sort)}`,
+    params: w.params,
+  };
+}
+
+/** Routes having each change, under the other filters. */
+export function routesChangeCountsQuery(
+  v: string,
+  f: RouteV2Filters,
+): SqlQuery {
+  const w = routesV2Where(f, { changes: false });
+  const counts = ROUTE_CHANGES.map(
+    (c) => `count(*) FILTER (WHERE ${changeClause(c)})::INTEGER AS ${c}`,
+  ).join(', ');
+  return { sql: `SELECT ${counts} FROM ${view(v)} ${w.sql}`, params: w.params };
+}
+
+/** Routes per kind under the other filters (every kind). */
+export function routesV2KindCountsQuery(
+  v: string,
+  f: RouteV2Filters,
+): SqlQuery {
+  const w = routesV2Where(f, { kinds: false });
+  return {
+    sql: `SELECT kind, count(*)::INTEGER AS n FROM ${view(v)} ${w.sql} GROUP BY kind`,
+    params: w.params,
+  };
+}
+
+export function toRouteV2Row(r: Record<string, unknown>): RouteV2Row {
+  return {
+    route_id: str(r.route_id),
+    kind: str(r.kind) as RouteKind,
+    short_name: str(r.short_name),
+    long_name: str(r.long_name),
+    color: str(r.color),
+    text_color: str(r.text_color),
+    flags: Object.fromEntries(
+      ROUTE_FLAGS.map((fl) => [fl, r[flagColumn(fl)] === true]),
+    ) as Record<RouteFlag, boolean>,
+  };
+}
+
+/** A route of the v2 overview: its list row and its lines. */
+export type RouteV2Overview = RouteV2Row & RouteOverview;
+
+export function toRouteV2Overview(r: Record<string, unknown>): RouteV2Overview {
+  return { ...toRouteOverview(r), ...toRouteV2Row(r) };
 }

@@ -2,7 +2,7 @@
   "schema": 1,
   "id": "mbta-pathways-demo",
   "label": "mbta-pathways-demo",
-  "generated_at": "2026-10-22T19:56:57.700Z",
+  "generated_at": "2026-10-27T12:46:34.424Z",
   "feeds": {
     "base": {
       "file": "base.zip",
@@ -20,11 +20,41 @@
     }
   },
   "files": {
+    "calendar/days.parquet": {
+      "bytes": 310
+    },
+    "calendar/services.parquet": {
+      "bytes": 340
+    },
+    "calendar/services_detail.parquet": {
+      "bytes": 125
+    },
+    "categories/calendar.json": {
+      "bytes": 574
+    },
+    "categories/routes.json": {
+      "bytes": 35
+    },
+    "categories/stops.json": {
+      "bytes": 43295
+    },
+    "entity-diff.json": {
+      "bytes": 6698
+    },
+    "highlights.json": {
+      "bytes": 879
+    },
+    "maps/stops.parquet": {
+      "bytes": 2284
+    },
+    "maps/stops_detail.parquet": {
+      "bytes": 1949
+    },
     "pathways-diff.json": {
       "bytes": 229951
     },
     "report.json": {
-      "bytes": 984
+      "bytes": 4939
     }
   }
 }

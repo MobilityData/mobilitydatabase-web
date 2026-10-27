@@ -99,6 +99,9 @@ export function writeRouteFilters(
   else params.delete('q');
 }
 
+/** Trips views with route pages: v2, and v3 (the default; same route page). */
+export type TripsView = 'trips-v2' | 'trips-v3';
+
 /**
  * /gtfs-diff-tool-v2/<dataset>/trips-v2/<route_id>?day=…&dir=…, carrying the
  * list's filters so "All routes" restores the list as it was.
@@ -110,6 +113,7 @@ export function tripsRouteHref(
     day?: string | null;
     dir?: string | null;
     filters?: RouteRowFilters;
+    view?: TripsView;
   } = {},
 ): string {
   const params = new URLSearchParams();
@@ -117,7 +121,7 @@ export function tripsRouteHref(
   if (opts.dir != null) params.set('dir', opts.dir);
   if (opts.filters) writeRouteFilters(params, opts.filters);
   const qs = params.toString();
-  return `/gtfs-diff-tool-v2/${datasetId}/trips-v2/${encodeURIComponent(routeId)}${qs ? `?${qs}` : ''}`;
+  return `/gtfs-diff-tool-v2/${datasetId}/${opts.view ?? 'trips-v2'}/${encodeURIComponent(routeId)}${qs ? `?${qs}` : ''}`;
 }
 
 /** The list page, keeping the service day and filters. */
@@ -125,12 +129,13 @@ export function tripsListHref(
   datasetId: string,
   day?: string | null,
   filters?: RouteRowFilters,
+  view: TripsView = 'trips-v2',
 ): string {
   const params = new URLSearchParams();
   if (day) params.set('day', day);
   if (filters) writeRouteFilters(params, filters);
   const qs = params.toString();
-  return `/gtfs-diff-tool-v2/${datasetId}/trips-v2${qs ? `?${qs}` : ''}`;
+  return `/gtfs-diff-tool-v2/${datasetId}/${view}${qs ? `?${qs}` : ''}`;
 }
 
 // ── Route page ─────────────────────────────────────────────────────

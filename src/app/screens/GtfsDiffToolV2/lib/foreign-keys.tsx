@@ -37,7 +37,7 @@ export function foreignKeyTarget(
 const PAGE_NAMES: Record<string, string> = {
   routes: 'Routes',
   stops: 'Stops',
-  calendar: 'Service calendar',
+  calendar: 'Service Dates',
 };
 
 /**

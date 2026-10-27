@@ -5,6 +5,7 @@ import { type Metadata } from 'next';
 import { type Locale, routing } from '../../../../../i18n/routing';
 import { redirect } from '../../../../../i18n/navigation';
 import GtfsDiffToolV2 from '../../../../screens/GtfsDiffToolV2';
+import RoutesV2Screen from '../../../../screens/GtfsDiffToolV2/components/routes-v2/RoutesV2Screen';
 import {
   PATHWAYS_SECTION,
   type ReportSection,
@@ -84,6 +85,9 @@ export default async function GtfsDiffEntityPage({
     }
     notFound();
   }
+  // Routes is the map workspace; the original page is at routes-v1.
+  if (section.id === 'routes')
+    return <RoutesV2Screen dataset={dataset} report={report} />;
   return (
     <GtfsDiffToolV2 dataset={dataset} report={report} section={section.id} />
   );

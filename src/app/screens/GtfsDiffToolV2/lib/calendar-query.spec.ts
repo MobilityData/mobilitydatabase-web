@@ -13,6 +13,7 @@ import {
   dayEntriesQuery,
   kindCountsQuery,
   serviceStatusCountsQuery,
+  serviceStatusQuery,
   servicesPageQuery,
   toDayCounts,
   toDayEntryRow,
@@ -255,5 +256,13 @@ describe('services SQL', () => {
       deleted: 1,
       unchanged: 1,
     });
+  });
+
+  it('reads the status of the given services', async () => {
+    const status = await rows(serviceStatusQuery('services', ['SAT', 'nope']));
+    expect(status.map((r) => [r.service_id, r.status])).toEqual([
+      ['SAT', 'added'],
+    ]);
+    expect(await rows(serviceStatusQuery('services', []))).toEqual([]);
   });
 });

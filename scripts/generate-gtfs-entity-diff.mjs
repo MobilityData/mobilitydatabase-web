@@ -3,8 +3,8 @@
  * Generate an entity-level GTFS diff (v2 POC) from two GTFS zip files.
  *
  * Unlike the v1 diff (one section per file), v2 groups GTFS files into
- * entity categories (Agency, Stops, Routes, Trips, Service calendar, ...)
- * and diffs them by their entity keys. The Service calendar category gets a
+ * entity categories (Agency, Stops, Routes, Trips, Service Dates, ...)
+ * and diffs them by their entity keys. The Service Dates category gets a
  * richer, UI-oriented payload: per-service changes, per-day changes with the
  * reason each day changed, and rule-based (non-AI) scheduling highlights.
  *
@@ -93,7 +93,7 @@ const CATEGORIES = [
   },
   {
     id: 'calendar',
-    label: 'Service calendar',
+    label: 'Service Dates',
     special: 'calendar',
     raw: true,
     files: ['calendar.txt', 'calendar_dates.txt'],
@@ -800,10 +800,13 @@ function routeProfiles(feed, shapes, patterns) {
 
   const profiles = new Map();
   for (const t of feed.files.get('trips.txt')?.rows ?? []) {
-    if (!profiles.has(t.route_id)) profiles.set(t.route_id, { trips: 0, services: new Set(), shapes: new Set(), stops: new Set(), dirs: new Map() });
+    if (!profiles.has(t.route_id)) {
+      profiles.set(t.route_id, { trips: 0, services: new Set(), serviceTrips: new Map(), shapes: new Set(), stops: new Set(), dirs: new Map() });
+    }
     const p = profiles.get(t.route_id);
     p.trips++;
     p.services.add(t.service_id);
+    p.serviceTrips.set(t.service_id, (p.serviceTrips.get(t.service_id) ?? 0) + 1);
     if (t.shape_id) p.shapes.add(t.shape_id);
     const dir = t.direction_id ?? '';
     if (!p.dirs.has(dir)) p.dirs.set(dir, { trips: 0, patterns: patterns.get(t.route_id)?.get(dir) ?? new Map(), headsigns: new Map() });
@@ -828,6 +831,52 @@ function routeProfiles(feed, shapes, patterns) {
     }
   }
   return profiles;
+}
+
+const DAY_TYPES = { weekday: [0, 1, 2, 3, 4], saturday: [5], sunday: [6] };
+
+/**
+ * Trips each route runs on a typical weekday, Saturday and Sunday of one
+ * feed: for every date of that day type in the feed's service window (its
+ * first to last active date), the route's trips whose service runs that day
+ * (calendar.txt + calendar_dates.txt); the most common count wins (ties go to
+ * the larger). `profiles` is routeProfiles().
+ */
+function typicalTrips(feed, profiles) {
+  const services = feedServices(feed);
+  let start = null;
+  let end = null;
+  for (const s of services.values()) {
+    for (const d of s.activeDates) {
+      if (start == null || d < start) start = d;
+      if (end == null || d > end) end = d;
+    }
+  }
+  const byRoute = new Map();
+  if (start == null) return { window: null, byRoute };
+  const dates = [];
+  for (let d = start; d <= end; d = addDays(d, 1)) dates.push([d, weekdayIndex(d)]);
+  for (const [routeId, p] of profiles) {
+    const perDate = new Map();
+    for (const [sid, n] of p.serviceTrips) {
+      for (const d of services.get(sid)?.activeDates ?? []) perDate.set(d, (perDate.get(d) ?? 0) + n);
+    }
+    const typical = {};
+    for (const [type, days] of Object.entries(DAY_TYPES)) {
+      const freq = new Map();
+      for (const [d, wd] of dates) {
+        if (!days.includes(wd)) continue;
+        const c = perDate.get(d) ?? 0;
+        freq.set(c, (freq.get(c) ?? 0) + 1);
+      }
+      let best = 0;
+      let bestN = -1;
+      for (const [c, k] of freq) if (k > bestN || (k === bestN && c > best)) [best, bestN] = [c, k];
+      typical[type] = best;
+    }
+    byRoute.set(routeId, typical);
+  }
+  return { window: { start, end }, byRoute };
 }
 
 function routeNetworks(feed) {
@@ -1296,7 +1345,20 @@ function diffRoutesMap(store, shapeInfo, patterns) {
   const np = routeProfiles(newFeed, shapeInfo.newShapes, patterns.new);
   const bn = routeNetworks(baseFeed);
   const nn = routeNetworks(newFeed);
+  const tb = typicalTrips(baseFeed, bp);
+  const tn = typicalTrips(newFeed, np);
   const referenced = new Set();
+  // Agencies of both feeds (new names win). A feed with one agency may leave
+  // routes.agency_id empty: those routes belong to that agency.
+  const agencyNames = new Map();
+  for (const feed of [baseFeed, newFeed]) {
+    for (const a of feed.files.get('agency.txt')?.rows ?? []) agencyNames.set(a.agency_id ?? '', a.agency_name ?? '');
+  }
+  const soleAgency = (feed) => {
+    const rows = feed.files.get('agency.txt')?.rows ?? [];
+    return rows.length === 1 ? (rows[0].agency_id ?? '') : '';
+  };
+  const [baseSole, newSole] = [soleAgency(baseFeed), soleAgency(newFeed)];
 
   const routes = [];
   const ids = [...new Set([...baseRows.keys(), ...newRows.keys(), ...bp.keys(), ...np.keys()])].sort();
@@ -1359,9 +1421,13 @@ function diffRoutesMap(store, shapeInfo, patterns) {
     const inBase = b != null || pb != null;
     const inNew = n != null || pn != null;
     const status = !inBase ? 'added' : !inNew ? 'deleted' : Object.values(flags).some(Boolean) ? 'modified' : 'unchanged';
+    const sortOrder = Number.parseFloat(row.route_sort_order ?? '');
+    const typB = tb.byRoute.get(id);
+    const typN = tn.byRoute.get(id);
     routes.push({
       route_id: id,
       status,
+      agency_id: n?.agency_id || b?.agency_id || (n ? newSole : baseSole),
       short_name: row.route_short_name ?? '',
       long_name: row.route_long_name ?? '',
       route_type: row.route_type ?? '',
@@ -1373,6 +1439,10 @@ function diffRoutesMap(store, shapeInfo, patterns) {
       flags,
       networks: { base: bn.get(id) ?? null, new: nn.get(id) ?? null },
       trips: { base: pb?.trips ?? 0, new: pn?.trips ?? 0 },
+      typical_trips: Object.fromEntries(
+        Object.keys(DAY_TYPES).map((type) => [type, { base: typB?.[type] ?? 0, new: typN?.[type] ?? 0 }]),
+      ),
+      sort_order: Number.isFinite(sortOrder) ? sortOrder : null,
       services: { base: servicesB, new: servicesN },
       stops: { base_count: stopsB.size, new_count: stopsN.size, added, removed },
       directions,
@@ -1415,7 +1485,11 @@ function diffRoutesMap(store, shapeInfo, patterns) {
     columns,
     path_change_threshold_m: PATH_CHANGE_THRESHOLD_M,
     shape_same_m: SHAPE_SAME_M,
+    service_window: { base: tb.window, new: tn.window },
     counts,
+    agencies: [...agencyNames]
+      .map(([agencyId, name]) => ({ agency_id: agencyId, name: name || agencyId || 'Agency' }))
+      .sort((x, y) => x.name.localeCompare(y.name)),
     routes,
     stops,
     shape_counts: shapeTotals,
@@ -1488,6 +1562,14 @@ function listPreview(items, max = 3) {
 }
 
 // ── Calendar entity diff ───────────────────────────────────────────
+
+const SERVICES_OF = new WeakMap();
+
+/** buildServices(feed), built once per feed (read-only for callers). */
+function feedServices(feed) {
+  if (!SERVICES_OF.has(feed)) SERVICES_OF.set(feed, buildServices(feed));
+  return SERVICES_OF.get(feed);
+}
 
 function buildServices(feed) {
   const services = new Map();
@@ -1611,8 +1693,8 @@ function routeLookup(baseFeed, newFeed) {
 }
 
 function diffCalendar(baseFeed, newFeed) {
-  const baseServices = buildServices(baseFeed);
-  const newServices = buildServices(newFeed);
+  const baseServices = feedServices(baseFeed);
+  const newServices = feedServices(newFeed);
   const baseRoutes = serviceRoutes(baseFeed);
   const newRoutes = serviceRoutes(newFeed);
   const routes = routeLookup(baseFeed, newFeed);

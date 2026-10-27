@@ -20,8 +20,7 @@ import type {
   RawTable,
 } from '../../lib/entity-diff-types';
 import RawTablesSection from '../raw/RawTablesSection';
-import { ReportActions } from '../report/ReportLayout';
-import { RAW_DIFF_ID, SeeRawDiffButton } from '../diffmap/DiffMapControls';
+import { RAW_DIFF_ID } from '../diffmap/DiffMapControls';
 import type {
   RouteVerdict,
   TripPair,
@@ -125,11 +124,6 @@ export default function TripsEntityPanel({
 
   return (
     <Box>
-      {rawTables.length > 0 ? (
-        <ReportActions>
-          <SeeRawDiffButton />
-        </ReportActions>
-      ) : null}
       {content}
       {rawTables.length > 0 ? (
         <>

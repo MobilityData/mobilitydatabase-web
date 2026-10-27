@@ -20,7 +20,6 @@ import {
   FilterAlt,
   Fullscreen,
   FullscreenExit,
-  TableRows,
 } from '@mui/icons-material';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -50,6 +49,8 @@ export function ColorDot({
       component='span'
       className={className}
       sx={{
+        // A span: without inline-block its size collapses outside flex rows.
+        display: 'inline-block',
         width: 12,
         height: 12,
         borderRadius: '50%',
@@ -171,25 +172,6 @@ export const INLINE_CHIPS_SX: SxProps<Theme> = {
   display: { xs: 'none', md: 'flex' },
 };
 
-/** Scrolls to the raw file diff at the bottom of the page. */
-export function SeeRawDiffButton(): React.ReactElement {
-  return (
-    <Button
-      disableElevation
-      variant='contained'
-      endIcon={<TableRows />}
-      sx={{ flexShrink: 0, alignSelf: 'center' }}
-      onClick={() =>
-        document
-          .getElementById(RAW_DIFF_ID)
-          ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }
-    >
-      See Raw Diff
-    </Button>
-  );
-}
-
 /**
  * Left filter panel: 300px beside the map on desktop, a full-screen sheet on
  * mobile (opened from the map's filter button).
@@ -278,7 +260,7 @@ export const DiffMapFrame = React.forwardRef<
         height: fullscreen ? 'auto' : { xs: 480, md: 'auto' },
         borderRadius: '6px',
         border: '2px solid',
-        borderColor: 'primary.main',
+        borderColor: 'primary.light',
         overflow: 'hidden',
         scrollMarginTop: 96,
       }}

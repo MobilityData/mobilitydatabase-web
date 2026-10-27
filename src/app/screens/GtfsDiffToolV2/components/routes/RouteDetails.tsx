@@ -443,7 +443,7 @@ export default function RouteDetails({
                 nav.navigate({ tab: 'calendar', kind: 'route', id: r.route_id })
               }
             >
-              Show on service calendar
+              Show on Service Dates
             </Button>
           )}
           <Tooltip title='Back to all routes'>
@@ -513,7 +513,7 @@ export default function RouteDetails({
           component='div'
           sx={{ mb: 0.5 }}
         >
-          Services used by this route&apos;s trips (open in Service calendar)
+          Services used by this route&apos;s trips (open in Service Dates)
         </Typography>
         <ServiceList route={r} />
       </Box>

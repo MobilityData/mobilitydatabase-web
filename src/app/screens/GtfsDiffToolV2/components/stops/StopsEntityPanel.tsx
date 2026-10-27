@@ -16,7 +16,7 @@ import {
   type Theme,
   Typography,
 } from '@mui/material';
-import { Clear, Search, Place, TableRows } from '@mui/icons-material';
+import { Clear, Search, Place } from '@mui/icons-material';
 import React, { useEffect, useRef, useState } from 'react';
 import type {
   EntityTypeDiff,
@@ -60,6 +60,7 @@ import {
   DiffMapLayout,
   useDiffMapFullscreen,
 } from '../diffmap/DiffMapControls';
+import MapLegend, { LegendDot } from '../diffmap/MapLegend';
 import { type NavFocus, useDiffNav } from '../../lib/diff-nav';
 import NestedCheckboxList, {
   type CheckboxStructure,
@@ -179,55 +180,42 @@ const NO_KIND_COUNTS: Record<StopKind, number> = {
   moved: 0,
 };
 
-function Legend(): React.ReactElement {
-  const dot = (color: string, hollow = false): React.ReactElement => (
-    <Box
-      sx={{
-        width: 10,
-        height: 10,
-        borderRadius: '50%',
-        bgcolor: hollow ? 'transparent' : color,
-        border: `2px solid ${hollow ? color : '#fff'}`,
-        boxShadow: hollow ? undefined : `0 0 0 1px ${color}`,
-      }}
-    />
-  );
+/** Legend over the stops map, as on the Routes v2 map. */
+function StopsMapLegend(): React.ReactElement {
+  const moved = STOP_KIND_COLORS.moved;
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        gap: 2,
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        mt: 1.5,
-      }}
-    >
-      {STOP_KINDS.map((k) => (
-        <Box key={k} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          {dot(STOP_KIND_COLORS[k])}
-          <Typography variant='caption'>{STOP_KIND_LABELS[k]}</Typography>
-        </Box>
-      ))}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-        {dot(STOP_KIND_COLORS.moved, true)}
-        <Box
-          sx={{
-            width: 22,
-            borderTop: `2px dashed ${STOP_KIND_COLORS.moved}`,
-            opacity: 0.6,
-          }}
-        />
-        <Typography variant='caption'>Old position → new position</Typography>
-      </Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-        {dot('#9e9e9e')}
-        <Typography variant='caption'>Original feed</Typography>
-      </Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-        {dot('#64b5f6')}
-        <Typography variant='caption'>New feed</Typography>
-      </Box>
-    </Box>
+    <MapLegend
+      items={[
+        ...STOP_KINDS.map((k) => ({
+          symbol: <LegendDot fill={STOP_KIND_COLORS[k]} stroke='#fff' />,
+          label: STOP_KIND_LABELS[k],
+        })),
+        {
+          symbol: (
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <LegendDot fill='transparent' stroke={moved} />
+              <Box
+                aria-hidden
+                sx={{
+                  width: 16,
+                  borderTop: `2px dashed ${moved}`,
+                  opacity: 0.6,
+                }}
+              />
+            </Box>
+          ),
+          label: 'Old position → new position',
+        },
+        {
+          symbol: <LegendDot fill='#9e9e9e' stroke='#fff' />,
+          label: 'Original feed',
+        },
+        {
+          symbol: <LegendDot fill='#64b5f6' stroke='#fff' />,
+          label: 'New feed',
+        },
+      ]}
+    />
   );
 }
 
@@ -641,22 +629,9 @@ export default function StopsEntityPanel({
             flexDirection: 'column',
           }}
         >
-          {/* Row under the header: the CTA, then the active filters beside it,
-              so the map below starts level with the filter panel. */}
+          {/* Row under the header: the active filters, so the map below
+              starts level with the filter panel. */}
           <ReportActions>
-            <Button
-              disableElevation
-              variant='contained'
-              endIcon={<TableRows />}
-              sx={{ flexShrink: 0, alignSelf: 'center' }}
-              onClick={() =>
-                document
-                  .getElementById(RAW_DIFF_ID)
-                  ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-              }
-            >
-              See Raw Diff
-            </Button>
             {renderFilterChips({
               minHeight: 0,
               py: 0,
@@ -687,8 +662,8 @@ export default function StopsEntityPanel({
               flyRequest={flyRequest}
               refocusRequest={refocusRequest}
             />
+            <StopsMapLegend />
           </DiffMapFrame>
-          <Legend />
         </Box>
       </DiffMapLayout>
 

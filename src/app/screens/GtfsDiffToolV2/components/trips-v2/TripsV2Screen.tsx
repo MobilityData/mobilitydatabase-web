@@ -46,11 +46,11 @@ import {
   defaultDirection,
   parseRouteFilters,
   scopeDayToRoute,
+  type TripsView,
   tripsListHref,
   tripsRouteHref,
   writeRouteFilters,
 } from '../../lib/trips-v2-routes';
-import { SeeRawDiffButton } from '../diffmap/DiffMapControls';
 import ReportLayout, { ReportActions } from '../report/ReportLayout';
 import TransitLoader from '../TransitLoader';
 import TripDrawer from '../trips/TripDrawer';
@@ -63,6 +63,7 @@ import RouteChangesTable from './RouteChangesTable';
 import RouteDayCountsCard from './RouteDayCountsCard';
 import RouteDetailCard from './RouteDetailCard';
 import TechnicalDrilldownCard from './TechnicalDrilldownCard';
+import DrilldownButton from '../trips-v3/DrilldownButton';
 import { ChipRow, V2Card } from './shared';
 
 /** Section id and slug of this page in the report header. */
@@ -74,6 +75,11 @@ interface TripsV2ScreenProps {
   report: ReportSummary;
   /** Route page (/trips-v2/<route_id>); the route list when absent. */
   routeId?: string;
+  /**
+   * Which Trips view the page belongs to: links stay in it, and in v3 the
+   * technical drill-down is a popup behind an info icon.
+   */
+  view?: TripsView;
 }
 
 /**
@@ -128,6 +134,7 @@ export default function TripsV2Screen({
   dataset,
   report,
   routeId,
+  view = 'trips-v2',
 }: TripsV2ScreenProps): React.ReactElement {
   const header = useMemo(() => withTripsV2(report), [report]);
   const entity = useDiffData<GtfsEntityDiff>(dataset.id, 'entity');
@@ -180,6 +187,7 @@ export default function TripsV2Screen({
         initialDay={{ doc: first.doc, date: first.date }}
         rawDatasetId={hasRawStopTimes ? dataset.id : null}
         routeId={routeId ?? null}
+        view={view}
       />
     );
 
@@ -195,13 +203,12 @@ export default function TripsV2Screen({
               title: routeInfo?.long_name
                 ? `${routeLabel} · ${routeInfo.long_name}`
                 : `Route ${routeLabel}`,
-              href: tripsListHref(dataset.id),
+              href: tripsListHref(dataset.id, undefined, undefined, view),
             }
           : undefined
       }
     >
       <ReportActions>
-        <SeeRawDiffButton />
         <Button
           component={Link}
           href={`/gtfs-diff-tool-v2/${dataset.id}/trips`}
@@ -312,6 +319,7 @@ function TripsDay({
   initialDay,
   rawDatasetId,
   routeId,
+  view,
 }: {
   datasetId: string;
   /** Index document: for a sharded dataset its trip lists are empty. */
@@ -321,6 +329,7 @@ function TripsDay({
   rawDatasetId: string | null;
   /** Route page when set, else the route list. */
   routeId: string | null;
+  view: TripsView;
 }): React.ReactElement {
   const router = useRouter();
   // Mounted after the trips data loaded (client only), so the query string
@@ -376,12 +385,17 @@ function TripsDay({
   useEffect(() => {
     const legacy = routeId ? null : routeFromHash();
     if (legacy)
-      router.replace(tripsRouteHref(datasetId, legacy, { day: date }));
+      router.replace(tripsRouteHref(datasetId, legacy, { day: date, view }));
   }, []);
 
   const openRoute = (r: RouteDirDiff): void =>
     router.push(
-      tripsRouteHref(datasetId, r.route, { day: date, dir: r.dir, filters }),
+      tripsRouteHref(datasetId, r.route, {
+        day: date,
+        dir: r.dir,
+        filters,
+        view,
+      }),
     );
 
   const picker = (
@@ -414,7 +428,7 @@ function TripsDay({
             routes={doc.routes}
             scope={described.short}
             onOpen={(route) =>
-              router.push(tripsRouteHref(datasetId, route, { day: date }))
+              router.push(tripsRouteHref(datasetId, route, { day: date, view }))
             }
           />
         </DayScope>
@@ -467,15 +481,23 @@ function TripsDay({
 
   return (
     <Box>
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
         <Button
           component={Link}
-          href={tripsListHref(datasetId, date, filters)}
+          href={tripsListHref(datasetId, date, filters, view)}
           startIcon={<ArrowBack />}
           size='small'
         >
           All routes
         </Button>
+        <Box sx={{ flex: 1 }} />
+        {view === 'trips-v3' ? (
+          <DrilldownButton
+            pairs={allPairs}
+            scope={described.short}
+            subject={`Route ${label}, every direction`}
+          />
+        ) : null}
       </Box>
       {picker}
       <DayScope day={described} loading={loaded.loading} error={loaded.error}>
@@ -535,17 +557,19 @@ function TripsDay({
               dayLabel={described.short}
               onOpenTrip={setDrawer}
               onClose={() =>
-                router.push(tripsListHref(datasetId, date, filters))
+                router.push(tripsListHref(datasetId, date, filters, view))
               }
               rawDatasetId={rawDatasetId}
             />
           </>
         )}
-        <TechnicalDrilldownCard
-          pairs={allPairs}
-          scope={described.short}
-          subject={`Route ${label}, every direction.`}
-        />
+        {view === 'trips-v3' ? null : (
+          <TechnicalDrilldownCard
+            pairs={allPairs}
+            scope={described.short}
+            subject={`Route ${label}, every direction.`}
+          />
+        )}
       </DayScope>
       {drawerEl}
     </Box>

@@ -53,7 +53,7 @@ const ICONS: Array<{ Icon: SvgIconComponent; name: string }> = [
   { Icon: EvStation, name: 'Charging station' },
   { Icon: Train, name: 'Rail' },
   { Icon: Moped, name: 'Moped' },
-  { Icon: CalendarMonth, name: 'Service calendar' },
+  { Icon: CalendarMonth, name: 'Service Dates' },
   { Icon: BatteryChargingFull, name: 'Vehicle range' },
   { Icon: Route, name: 'Route' },
   { Icon: DirectionsBike, name: 'Bike' },

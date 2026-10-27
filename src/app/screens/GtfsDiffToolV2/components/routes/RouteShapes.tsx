@@ -128,6 +128,27 @@ interface RouteShapesProps {
   onSelectShape: (shapeId: string | null) => void;
   /** Open the shape's rows in the raw shapes.txt table. */
   onViewRows?: (shapeId: string) => void;
+  /**
+   * Narrow layout (a side panel): the table only, with every shape (no
+   * title, status filters or minor-changes switch; the caller titles it
+   * with shapesPathSummary), and shape, change and trips columns.
+   */
+  compact?: boolean;
+}
+
+/** One line on how the route's shapes change, e.g. "2 shapes change where 14 runs". */
+export function shapesPathSummary(
+  route: Pick<RouteImpact, 'short_name' | 'route_id'>,
+  shapes: RouteShapeDiff[],
+  thresholdM: number,
+): string {
+  const pathChanging = shapes.filter((sh) =>
+    isPathChangingShape(sh, thresholdM),
+  ).length;
+  const routeName = route.short_name || route.route_id;
+  return pathChanging > 0
+    ? `${pathChanging} ${pathChanging === 1 ? 'shape changes' : 'shapes change'} where ${routeName} runs`
+    : `No shape changes where ${routeName} runs`;
 }
 
 /** Every shape the route's trips use, how it changed, and where it runs. */
@@ -140,6 +161,7 @@ export default function RouteShapes({
   selectedShapeId,
   onSelectShape,
   onViewRows,
+  compact = false,
 }: RouteShapesProps): React.ReactElement {
   const [statusFilter, setStatusFilter] = useState<ShapeStatus | null>(null);
   const [showMinor, setShowMinor] = useState(false);
@@ -153,94 +175,98 @@ export default function RouteShapes({
     return c;
   }, [shapes]);
   const minorCount = MINOR_SHAPE_STATUSES.reduce((n, s) => n + counts[s], 0);
-  const pathChanging = shapes.filter((sh) =>
-    isPathChangingShape(sh, thresholdM),
-  ).length;
+  const pathSummary = shapesPathSummary(route, shapes, thresholdM);
 
   const visible = shapes.filter(
     (sh) =>
-      (statusFilter == null || sh.status === statusFilter) &&
-      (showMinor ||
-        statusFilter != null ||
-        !MINOR_SHAPE_STATUSES.includes(sh.status) ||
-        sh.shape_id === selectedShapeId),
+      compact ||
+      ((statusFilter == null || sh.status === statusFilter) &&
+        (showMinor ||
+          statusFilter != null ||
+          !MINOR_SHAPE_STATUSES.includes(sh.status) ||
+          sh.shape_id === selectedShapeId)),
   );
 
   return (
-    <Box sx={{ mb: 2 }}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'baseline',
-          gap: 1.5,
-          flexWrap: 'wrap',
-          mb: 1,
-        }}
-      >
-        <Typography variant='subtitle2' fontWeight={700}>
-          Shapes ({shapes.length})
-        </Typography>
-        <Typography variant='caption' color='text.secondary'>
-          {pathChanging > 0
-            ? `${pathChanging} ${pathChanging === 1 ? 'shape changes' : 'shapes change'} where ${route.short_name || route.route_id} runs`
-            : `No shape changes where ${route.short_name || route.route_id} runs`}
-          {' · '}select a shape to draw it on the map
-        </Typography>
-      </Box>
+    <Box sx={{ mb: compact ? 0 : 2 }}>
+      {compact ? null : (
+        <>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: 1.5,
+              flexWrap: 'wrap',
+              mb: 1,
+            }}
+          >
+            <Typography variant='subtitle2' fontWeight={700}>
+              Shapes ({shapes.length})
+            </Typography>
+            <Typography variant='caption' color='text.secondary'>
+              {pathSummary} · select a shape to draw it on the map
+            </Typography>
+          </Box>
 
-      <Box
-        sx={{
-          display: 'flex',
-          gap: 0.75,
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          mb: 1,
-        }}
-      >
-        {SHAPE_STATUSES.filter((s) => counts[s] > 0).map((s) => {
-          const active = statusFilter === s;
-          return (
-            <Tooltip key={s} title={shapeStatusHelp(s, sameM, thresholdM)}>
-              <Chip
-                size='small'
-                label={`${SHAPE_STATUS_LABELS[s]} · ${counts[s]}`}
-                onClick={() => setStatusFilter(active ? null : s)}
-                sx={{
-                  height: 22,
-                  fontSize: '0.7rem',
-                  fontWeight: 700,
-                  border: `1px solid ${SHAPE_STATUS_COLORS[s]}`,
-                  bgcolor: active ? SHAPE_STATUS_COLORS[s] : 'transparent',
-                  color: active ? '#fff' : SHAPE_STATUS_COLORS[s],
-                  '&:hover': {
-                    bgcolor: active ? SHAPE_STATUS_COLORS[s] : 'transparent',
-                    opacity: 0.85,
-                  },
-                }}
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 0.75,
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              mb: 1,
+            }}
+          >
+            {SHAPE_STATUSES.filter((s) => counts[s] > 0).map((s) => {
+              const active = statusFilter === s;
+              return (
+                <Tooltip key={s} title={shapeStatusHelp(s, sameM, thresholdM)}>
+                  <Chip
+                    size='small'
+                    label={`${SHAPE_STATUS_LABELS[s]} · ${counts[s]}`}
+                    onClick={() => setStatusFilter(active ? null : s)}
+                    sx={{
+                      height: 22,
+                      fontSize: '0.7rem',
+                      fontWeight: 700,
+                      border: `1px solid ${SHAPE_STATUS_COLORS[s]}`,
+                      bgcolor: active ? SHAPE_STATUS_COLORS[s] : 'transparent',
+                      color: active ? '#fff' : SHAPE_STATUS_COLORS[s],
+                      '&:hover': {
+                        bgcolor: active
+                          ? SHAPE_STATUS_COLORS[s]
+                          : 'transparent',
+                        opacity: 0.85,
+                      },
+                    }}
+                  />
+                </Tooltip>
+              );
+            })}
+            {minorCount > 0 && statusFilter == null && (
+              <FormControlLabel
+                sx={{ ml: 0.5 }}
+                control={
+                  <Switch
+                    size='small'
+                    checked={showMinor}
+                    onChange={(e) => setShowMinor(e.target.checked)}
+                  />
+                }
+                label={
+                  <Typography variant='caption'>
+                    Show minor changes ({minorCount})
+                  </Typography>
+                }
               />
-            </Tooltip>
-          );
-        })}
-        {minorCount > 0 && statusFilter == null && (
-          <FormControlLabel
-            sx={{ ml: 0.5 }}
-            control={
-              <Switch
-                size='small'
-                checked={showMinor}
-                onChange={(e) => setShowMinor(e.target.checked)}
-              />
-            }
-            label={
-              <Typography variant='caption'>
-                Show minor changes ({minorCount})
-              </Typography>
-            }
-          />
-        )}
-      </Box>
+            )}
+          </Box>
+        </>
+      )}
 
-      {visible.length === 0 ? (
+      {visible.length === 0 &&
+      compact &&
+      shapes.length > 0 ? null : visible.length === 0 ? (
         <Typography variant='body2' color='text.secondary'>
           {shapes.length === 0
             ? 'No trip of this route has a shape_id.'
@@ -249,7 +275,7 @@ export default function RouteShapes({
       ) : (
         <Box
           sx={{
-            maxHeight: 360,
+            maxHeight: compact ? 168 : 360,
             overflowY: 'auto',
             border: '1px solid',
             borderColor: 'divider',
@@ -261,15 +287,21 @@ export default function RouteShapes({
               <TableRow>
                 <TableCell sx={{ fontWeight: 700 }}>shape_id</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Change</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Path</TableCell>
+                {compact ? null : (
+                  <TableCell sx={{ fontWeight: 700 }}>Path</TableCell>
+                )}
                 <TableCell sx={{ fontWeight: 700 }} align='right'>
                   Trips
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700 }} align='right'>
-                  Points
-                </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Dir.</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Notes</TableCell>
+                {compact ? null : (
+                  <>
+                    <TableCell sx={{ fontWeight: 700 }} align='right'>
+                      Points
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Dir.</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Notes</TableCell>
+                  </>
+                )}
                 {onViewRows && <TableCell />}
               </TableRow>
             </TableHead>
@@ -286,39 +318,57 @@ export default function RouteShapes({
                     sx={{ cursor: 'pointer' }}
                   >
                     <TableCell
-                      sx={{ ...cellSx, fontFamily: MONO_FONT, fontWeight: 700 }}
+                      sx={{
+                        ...cellSx,
+                        fontFamily: MONO_FONT,
+                        fontWeight: 700,
+                        wordBreak: compact ? 'break-all' : undefined,
+                      }}
                     >
                       {sh.shape_id}
                     </TableCell>
                     <TableCell sx={cellSx}>
                       <ShapeStatusChip
                         status={sh.status}
-                        help={shapeStatusHelp(sh.status, sameM, thresholdM)}
+                        help={
+                          compact
+                            ? `${shapeDeviationText(sh, thresholdM)}. ${shapeStatusHelp(sh.status, sameM, thresholdM)}`
+                            : shapeStatusHelp(sh.status, sameM, thresholdM)
+                        }
                       />
                     </TableCell>
+                    {compact ? null : (
+                      <TableCell
+                        sx={{
+                          ...cellSx,
+                          color: changesPath
+                            ? SHAPE_STATUS_COLORS.rerouted
+                            : 'text.secondary',
+                          fontWeight: changesPath ? 700 : 400,
+                        }}
+                      >
+                        {shapeDeviationText(sh, thresholdM)}
+                      </TableCell>
+                    )}
                     <TableCell
-                      sx={{
-                        ...cellSx,
-                        color: changesPath
-                          ? SHAPE_STATUS_COLORS.rerouted
-                          : 'text.secondary',
-                        fontWeight: changesPath ? 700 : 400,
-                      }}
+                      sx={{ ...cellSx, whiteSpace: 'nowrap' }}
+                      align='right'
                     >
-                      {shapeDeviationText(sh, thresholdM)}
-                    </TableCell>
-                    <TableCell sx={cellSx} align='right'>
                       {countLabel(sh.trips.base, sh.trips.new)}
                     </TableCell>
-                    <TableCell sx={cellSx} align='right'>
-                      {countLabel(sh.points.base, sh.points.new)}
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      {sh.directions.join(', ') || '—'}
-                    </TableCell>
-                    <TableCell sx={{ ...cellSx, color: 'text.secondary' }}>
-                      <ShapeNotes shape={sh} routeInfo={routeInfo} />
-                    </TableCell>
+                    {compact ? null : (
+                      <>
+                        <TableCell sx={cellSx} align='right'>
+                          {countLabel(sh.points.base, sh.points.new)}
+                        </TableCell>
+                        <TableCell sx={cellSx}>
+                          {sh.directions.join(', ') || '—'}
+                        </TableCell>
+                        <TableCell sx={{ ...cellSx, color: 'text.secondary' }}>
+                          <ShapeNotes shape={sh} routeInfo={routeInfo} />
+                        </TableCell>
+                      </>
+                    )}
                     {onViewRows && (
                       <TableCell sx={cellSx} align='right'>
                         <Tooltip title='View rows in the raw shapes.txt diff'>
