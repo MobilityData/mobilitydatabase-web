@@ -33,7 +33,7 @@ interface PageProps {
 
 /**
  * Landing page for the unsubscribe link in notification emails
- * (`/notifications/unsubscribe?id=<subscription UUID>`).
+ * (`/notifications/unsubscribe?id=<subscription ID>`).
  *
  * Statically rendered: the `id` is read and the subscription looked up on
  * the client, with the visitor's Firebase user (anonymous when signed out).

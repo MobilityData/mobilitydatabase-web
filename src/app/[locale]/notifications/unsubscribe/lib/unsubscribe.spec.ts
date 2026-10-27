@@ -7,27 +7,21 @@ import {
 } from './unsubscribe';
 
 describe('isValidSubscriptionId', () => {
-  it('accepts a UUID in either case', () => {
+  it('accepts any non-empty ID, since the service owns the format', () => {
     expect(isValidSubscriptionId('3f2b8c1e-9a4d-4e7b-8c2a-1d5e6f7a8b9c')).toBe(
       true,
     );
-    expect(isValidSubscriptionId('3F2B8C1E-9A4D-4E7B-8C2A-1D5E6F7A8B9C')).toBe(
-      true,
-    );
+    expect(isValidSubscriptionId('sub_01HZX3K9Q7')).toBe(true);
+    expect(isValidSubscriptionId('12345')).toBe(true);
   });
 
-  it('rejects malformed, missing and non-string values', () => {
-    expect(isValidSubscriptionId('not-a-uuid')).toBe(false);
-    expect(isValidSubscriptionId('3f2b8c1e-9a4d-4e7b-8c2a-1d5e6f7a8b9')).toBe(
-      false,
-    );
-    expect(isValidSubscriptionId(' 3f2b8c1e-9a4d-4e7b-8c2a-1d5e6f7a8b9c')).toBe(
-      false,
-    );
-    expect(isValidSubscriptionId('api.announcements')).toBe(false);
+  it('rejects empty, missing and non-string values', () => {
     expect(isValidSubscriptionId('')).toBe(false);
+    expect(isValidSubscriptionId('   ')).toBe(false);
     // searchParams.get() returns null when the param is absent.
     expect(isValidSubscriptionId(null)).toBe(false);
+    expect(isValidSubscriptionId(undefined)).toBe(false);
+    expect(isValidSubscriptionId(12345)).toBe(false);
   });
 });
 

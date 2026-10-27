@@ -8,7 +8,7 @@ import type {
  * Pure helpers for the email unsubscribe page, kept free of React and
  * Firebase so they can be unit tested directly.
  *
- * The `id` in an unsubscribe link is the subscription's own UUID, which acts
+ * The `id` in an unsubscribe link is the subscription's own ID, which acts
  * as the access capability: the recipient doesn't need to sign in.
  */
 
@@ -32,11 +32,12 @@ export interface ViewCopy {
   descriptionKey: string;
 }
 
-const SUBSCRIPTION_ID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
+/**
+ * The user service generates subscription IDs and their format may change, so
+ * this only checks that the link carries one; the API decides if it exists.
+ */
 export function isValidSubscriptionId(id: unknown): id is string {
-  return typeof id === 'string' && SUBSCRIPTION_ID_PATTERN.test(id);
+  return typeof id === 'string' && id.trim() !== '';
 }
 
 /** Maps the DELETE response status onto what the page shows. */
