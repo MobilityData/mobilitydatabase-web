@@ -86,7 +86,7 @@ jobs:
           VERCEL_PROJECT_ID: ${{ env.VERCEL_PROJECT_ID }}
     
       - name: Cypress test
-        uses: cypress-io/github-action@v6
+        uses: cypress-io/github-action@v7
         with:
           start: yarn e2e:setup
           command: yarn e2e:run
