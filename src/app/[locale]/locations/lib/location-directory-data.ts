@@ -28,12 +28,16 @@ const CACHE_TAGS = ['location-directory', 'guest-feeds'];
 
 /**
  * 400 (invalid hierarchy) and 404 (nothing located there) both mean the URL
- * does not exist; they resolve to null so the page can call notFound(). Any
- * other failure is rethrown so an error is never cached.
+ * does not exist. They are thrown as this error inside the cached functions,
+ * because unstable_cache never stores a thrown error: caching the miss would
+ * keep a location missing for a whole day after it starts to exist (e.g. a
+ * 404 served before the API route was deployed).
  */
-async function nullWhenMissing<T>(
+class LocationNotFoundError extends Error {}
+
+async function requireData<T>(
   request: () => Promise<T | undefined>,
-): Promise<T | null> {
+): Promise<T> {
   try {
     const data = await request();
     if (data == undefined) {
@@ -45,8 +49,20 @@ async function nullWhenMissing<T>(
       error instanceof ApiError &&
       (error.status === 400 || error.status === 404)
     ) {
-      return null;
+      throw new LocationNotFoundError(error.message);
     }
+    throw error;
+  }
+}
+
+/** Resolves a missing location to null so the page can call notFound(). */
+async function nullWhenMissing<T>(
+  request: () => Promise<T>,
+): Promise<T | null> {
+  try {
+    return await request();
+  } catch (error) {
+    if (error instanceof LocationNotFoundError) return null;
     throw error;
   }
 }
@@ -73,9 +89,9 @@ const cachedDirectory = unstable_cache(
     countryCode?: string,
     subdivision?: string,
     municipality?: string,
-  ): Promise<LocationDirectoryResponse | null> => {
+  ): Promise<LocationDirectoryResponse> => {
     const accessToken = await getGuestGcipIdToken();
-    return await nullWhenMissing(
+    return await requireData(
       async () =>
         await getLocationDirectory(
           toQuery(continent, countryCode, subdivision, municipality),
@@ -94,9 +110,9 @@ const cachedDirectoryFeeds = unstable_cache(
     countryCode?: string,
     subdivision?: string,
     municipality?: string,
-  ): Promise<LocationDirectoryFeedsResponse | null> => {
+  ): Promise<LocationDirectoryFeedsResponse> => {
     const accessToken = await getGuestGcipIdToken();
-    return await nullWhenMissing(
+    return await requireData(
       async () =>
         await getLocationDirectoryFeeds(
           {
@@ -124,7 +140,15 @@ export const fetchLocationDirectory = cache(
     subdivision?: string,
     municipality?: string,
   ): Promise<LocationDirectoryResponse | null> =>
-    await cachedDirectory(continent, countryCode, subdivision, municipality),
+    await nullWhenMissing(
+      async () =>
+        await cachedDirectory(
+          continent,
+          countryCode,
+          subdivision,
+          municipality,
+        ),
+    ),
 );
 
 /** One page (1-based) of the feeds located in a node, or null if missing. */
@@ -136,11 +160,14 @@ export const fetchLocationDirectoryFeeds = cache(
     subdivision?: string,
     municipality?: string,
   ): Promise<LocationDirectoryFeedsResponse | null> =>
-    await cachedDirectoryFeeds(
-      getPageOffset(page),
-      continent,
-      countryCode,
-      subdivision,
-      municipality,
+    await nullWhenMissing(
+      async () =>
+        await cachedDirectoryFeeds(
+          getPageOffset(page),
+          continent,
+          countryCode,
+          subdivision,
+          municipality,
+        ),
     ),
 );
