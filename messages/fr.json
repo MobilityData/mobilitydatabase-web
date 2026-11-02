@@ -125,7 +125,9 @@
     "metricsAdminOnly": "Métriques - Admin uniquement",
     "languageSelect": "Sélection de la langue",
     "transitFeedsRedirectTitle": "Vous avez été redirigé depuis TransitFeeds",
-    "transitFeedsRedirectBody": "Cette page se trouve désormais sur MobilityDatabase.org, où vous trouverez les données de transit les plus récentes."
+    "transitFeedsRedirectBody": "Cette page se trouve désormais sur MobilityDatabase.org, où vous trouverez les données de transit les plus récentes.",
+    "locations": "Lieux",
+    "feedsMenu": "Menu des flux"
   },
   "emailVerification": {
     "loadingTitle": "Vérification de votre e-mail",
@@ -1254,13 +1256,46 @@
       "contactUs": "Contactez-nous",
       "shareFeedback": "Donner un avis",
       "privacyPolicy": "Politique de confidentialité",
-      "termsAndConditions": "Conditions d'utilisation"
+      "termsAndConditions": "Conditions d'utilisation",
+      "locations": "Lieux"
     },
     "aria": {
       "github": "GitHub",
       "slack": "Slack",
       "linkedin": "LinkedIn",
       "logo": "Logo Mobility Database"
+    }
+  },
+  "locations": {
+    "root": "Lieux",
+    "title": "Flux par lieu",
+    "rootIntro": "Parcourez les flux ouverts GTFS Schedule, GTFS Realtime et GBFS par continent, pays, région et municipalité.",
+    "nodeIntro": "{total, plural, =0 {Aucun flux n’est situé} one {# flux est situé} other {# flux sont situés}} dans : {place}.",
+    "breadcrumbAria": "Fil d’Ariane des lieux",
+    "feedCountsAria": "Nombre de flux par type de données",
+    "shortLabels": {
+      "gtfs": "GTFS",
+      "gtfs_rt": "GTFS-RT",
+      "gbfs": "GBFS"
+    },
+    "childrenHeading": {
+      "continent": "Continents",
+      "country": "Pays",
+      "subdivision": "Régions",
+      "municipality": "Municipalités"
+    },
+    "childFeedTotal": "{count, plural, one {# flux} other {# flux}}",
+    "feedsHeading": "Flux dans : {place}",
+    "allFeedsHeading": "Tous les flux",
+    "resultsRange": "{start}–{end} sur {total} flux",
+    "noFeeds": "Aucun flux n’est encore répertorié pour ce lieu.",
+    "paginationAria": "Pages de la liste des flux",
+    "meta": {
+      "rootTitle": "Flux de transport par lieu | Mobility Database",
+      "rootDescription": "Parcourez les flux ouverts de transport et de mobilité GTFS Schedule, GTFS Realtime et GBFS par continent, pays, région et municipalité.",
+      "nodeTitle": "Flux de transport : {place} | Mobility Database",
+      "nodeTitlePaged": "Flux de transport : {place}, page {page} | Mobility Database",
+      "nodeDescription": "Parcourez {total} flux ouverts de transport et de mobilité situés dans : {place}. {gtfs} GTFS Schedule, {gtfs_rt} GTFS Realtime et {gbfs} GBFS."
     }
   }
 }

@@ -17,6 +17,21 @@ const client = createClient<paths>({
   },
 });
 
+/**
+ * Error thrown for any API response with a status >= 400. Extends `Error`
+ * with the same message as before, adding the HTTP status so callers can
+ * tell a 404 apart from a server failure.
+ */
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
 const throwOnError: Middleware = {
   async onResponse(res) {
     if (res.status >= 400) {
@@ -26,7 +41,7 @@ const throwOnError: Middleware = {
       }
       const errorMessage =
         typeof body === 'string' ? body : JSON.stringify(body);
-      throw new Error(errorMessage);
+      throw new ApiError(errorMessage, res.status);
     }
     return undefined;
   },
@@ -347,6 +362,63 @@ export const searchFeeds = async (
   );
   return await withAuthMiddleware(authMiddleware, async () => {
     const response = await client.GET('/v1/search', { params });
+    return response.data;
+  });
+};
+
+export type LocationDirectoryParams = NonNullable<
+  paths['/v1/locations/directory']['get']['parameters']['query']
+>;
+
+export type LocationDirectoryFeedsParams = NonNullable<
+  paths['/v1/locations/directory/feeds']['get']['parameters']['query']
+>;
+
+export type LocationDirectoryResponse =
+  paths['/v1/locations/directory']['get']['responses'][200]['content']['application/json'];
+
+export type LocationDirectoryFeedsResponse =
+  paths['/v1/locations/directory/feeds']['get']['responses'][200]['content']['application/json'];
+
+/**
+ * One level of the feed location directory: the node's breadcrumb, feed
+ * counts and children. Throws an `ApiError` with status 400 (invalid
+ * hierarchy) or 404 (no feed located there).
+ */
+export const getLocationDirectory = async (
+  params: LocationDirectoryParams,
+  accessToken: string,
+  userContextJwt?: string,
+): Promise<LocationDirectoryResponse | undefined> => {
+  const authMiddleware = generateAuthMiddlewareWithToken(
+    accessToken,
+    userContextJwt,
+  );
+  return await withAuthMiddleware(authMiddleware, async () => {
+    const response = await client.GET('/v1/locations/directory', {
+      params: { query: params },
+    });
+    return response.data;
+  });
+};
+
+/**
+ * A page of the feeds located within a location directory node, already
+ * sorted by relevance to that node.
+ */
+export const getLocationDirectoryFeeds = async (
+  params: LocationDirectoryFeedsParams,
+  accessToken: string,
+  userContextJwt?: string,
+): Promise<LocationDirectoryFeedsResponse | undefined> => {
+  const authMiddleware = generateAuthMiddlewareWithToken(
+    accessToken,
+    userContextJwt,
+  );
+  return await withAuthMiddleware(authMiddleware, async () => {
+    const response = await client.GET('/v1/locations/directory/feeds', {
+      params: { query: params },
+    });
     return response.data;
   });
 };

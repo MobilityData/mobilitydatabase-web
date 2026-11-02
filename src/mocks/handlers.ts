@@ -7,8 +7,31 @@ import datasetsFeedJson from '../../cypress/fixtures/feed_datasets_test-516.json
 import feed2947 from '../../cypress/fixtures/feed_mdb-2947.json';
 import gtfsFeed2947 from '../../cypress/fixtures/gtfs_feed_mdb-2947.json';
 import datasets2947 from '../../cypress/fixtures/feed_datasets_mdb-2947.json';
+import {
+  getMockDirectory,
+  getMockDirectoryFeeds,
+  readDirectoryQuery,
+} from './locationDirectory';
 
 export const handlers = [
+  // Location directory: feeds of a node (paginated, relevance-sorted)
+  http.get(`*/v1/locations/directory/feeds`, ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const limit = Number(params.get('limit') ?? '20');
+    const offset = Number(params.get('offset') ?? '0');
+    const { status, body } = getMockDirectoryFeeds(
+      readDirectoryQuery(params),
+      Number.isFinite(limit) ? limit : 20,
+      Number.isFinite(offset) ? offset : 0,
+    );
+    return HttpResponse.json(body, { status });
+  }),
+  // Location directory: breadcrumb, counts and children of a node
+  http.get(`*/v1/locations/directory`, ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const { status, body } = getMockDirectory(readDirectoryQuery(params));
+    return HttpResponse.json(body, { status });
+  }),
   // Mock search endpoint: return a list including test-516 and mdb-2947
   http.get(`*/v1/search`, () => {
     return HttpResponse.json({
