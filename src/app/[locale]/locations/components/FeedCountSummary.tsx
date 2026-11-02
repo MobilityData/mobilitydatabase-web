@@ -1,6 +1,6 @@
 import { type ReactElement } from 'react';
-import { Box, Typography } from '@mui/material';
 import { getTranslations } from 'next-intl/server';
+import FeedCountChips from './FeedCountChips';
 import {
   formatCount,
   getFeedCountEntries,
@@ -30,56 +30,15 @@ export default async function FeedCountSummary({
   ]);
 
   return (
-    <Box
-      component='dl'
-      aria-label={t('feedCountsAria')}
-      data-testid='location-feed-counts'
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-        gap: { xs: 1, sm: 2 },
-        m: 0,
-        maxWidth: 720,
-      }}
-    >
-      {getFeedCountEntries(counts).map(({ dataType, count }) => (
-        <Box
-          key={dataType}
-          sx={{
-            display: 'flex',
-            flexDirection: 'column-reverse',
-            justifyContent: 'flex-end',
-            gap: 0.5,
-            px: { xs: 1.5, sm: 2 },
-            py: 1.5,
-            borderRadius: '6px',
-            border: '1px solid',
-            borderColor: 'divider',
-            bgcolor: 'background.paper',
-          }}
-        >
-          <Typography
-            component='dt'
-            variant='body2'
-            color='text.secondary'
-            sx={{ fontWeight: 600, lineHeight: 1.3 }}
-          >
-            {tCommon(LABEL_KEYS[dataType])}
-          </Typography>
-          <Typography
-            component='dd'
-            sx={{
-              m: 0,
-              fontSize: { xs: '1.5rem', sm: '2rem' },
-              fontWeight: 700,
-              lineHeight: 1.1,
-              color: count > 0 ? 'primary.main' : 'text.disabled',
-            }}
-          >
-            {formatCount(count, locale)}
-          </Typography>
-        </Box>
-      ))}
-    </Box>
+    <div data-testid='location-feed-counts'>
+      <FeedCountChips
+        ariaLabel={t('feedCountsAria')}
+        chips={getFeedCountEntries(counts).map(({ dataType, count }) => ({
+          dataType,
+          count,
+          label: `${formatCount(count, locale)} ${tCommon(LABEL_KEYS[dataType])}`,
+        }))}
+      />
+    </div>
   );
 }

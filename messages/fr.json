@@ -1271,7 +1271,6 @@
     "title": "Flux par lieu",
     "rootIntro": "Parcourez les flux ouverts GTFS Schedule, GTFS Realtime et GBFS par continent, pays, région et municipalité.",
     "nodeIntro": "{total, plural, =0 {Aucun flux n’est situé} one {# flux est situé} other {# flux sont situés}} dans : {place}.",
-    "breadcrumbAria": "Fil d’Ariane des lieux",
     "feedCountsAria": "Nombre de flux par type de données",
     "shortLabels": {
       "gtfs": "GTFS",
@@ -1285,6 +1284,10 @@
       "municipality": "Municipalités"
     },
     "childFeedTotal": "{count, plural, one {# flux} other {# flux}}",
+    "childrenSearchPlaceholder": "Rechercher un lieu",
+    "childrenSearchAria": "Filtrer les lieux ci-dessous par nom",
+    "childrenSearchResults": "{count, plural, =0 {Aucun lieu correspondant} one {# lieu correspondant} other {# lieux correspondants}}",
+    "childrenSearchEmpty": "Aucun lieu ne correspond à « {query} ».",
     "feedsHeading": "Flux dans : {place}",
     "allFeedsHeading": "Tous les flux",
     "resultsRange": "{start}–{end} sur {total} flux",

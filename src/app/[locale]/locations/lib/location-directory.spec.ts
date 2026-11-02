@@ -1,6 +1,7 @@
 import {
   buildLocationHref,
   buildPlaceName,
+  filterByName,
   formatCount,
   getBreadcrumbSlugs,
   getChildLevel,
@@ -8,9 +9,11 @@ import {
   getPageCount,
   getPageOffset,
   getTotalFeedCount,
+  normalizeLocationName,
   type LocationDirectoryNode,
   parseLocationSegments,
   parsePageParam,
+  sortByFeedCount,
 } from './location-directory';
 
 const breadcrumb: LocationDirectoryNode[] = [
@@ -174,5 +177,58 @@ describe('buildPlaceName', () => {
   it('lists the most specific place first, without the continent', () => {
     expect(buildPlaceName(breadcrumb.slice(0, 2))).toBe('Canada');
     expect(buildPlaceName(breadcrumb)).toBe('Montréal, Québec, Canada');
+  });
+});
+
+describe('normalizeLocationName', () => {
+  it('drops accents and case', () => {
+    expect(normalizeLocationName('  Québec ')).toBe('quebec');
+    expect(normalizeLocationName('São Paulo')).toBe('sao paulo');
+  });
+});
+
+describe('sortByFeedCount', () => {
+  const item = (
+    name: string,
+    total: number,
+  ): { name: string; counts: { total: number } } => ({
+    name,
+    counts: { total },
+  });
+
+  it('puts the most feeds first, then sorts by name', () => {
+    const sorted = sortByFeedCount([
+      item('Laval', 3),
+      item('Montréal', 22),
+      item('Québec', 3),
+      item('Gatineau', 1),
+      item('Lévis', 3),
+    ]);
+    expect(sorted.map(({ name }) => name)).toEqual([
+      'Montréal',
+      'Laval',
+      'Lévis',
+      'Québec',
+      'Gatineau',
+    ]);
+  });
+
+  it('does not mutate its input', () => {
+    const items = [item('B', 1), item('A', 2)];
+    sortByFeedCount(items);
+    expect(items.map(({ name }) => name)).toEqual(['B', 'A']);
+  });
+});
+
+describe('filterByName', () => {
+  const items = [{ name: 'Montréal' }, { name: 'Québec' }, { name: 'Laval' }];
+
+  it('matches anywhere in the name, ignoring accents and case', () => {
+    expect(filterByName(items, 'MONTRE')).toEqual([{ name: 'Montréal' }]);
+    expect(filterByName(items, 'bec')).toEqual([{ name: 'Québec' }]);
+  });
+
+  it('returns every item for a blank query', () => {
+    expect(filterByName(items, '  ')).toEqual(items);
   });
 });

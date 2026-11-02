@@ -3,9 +3,10 @@ import { type Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Box, Container, Typography } from '@mui/material';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import LocationBreadcrumbs, {
-  type LocationCrumb,
-} from '../components/LocationBreadcrumbs';
+import BreadcrumbNavigation, {
+  type Crumb,
+} from '../../../components/BreadcrumbNavigation';
+import SectionContainer from '../../../components/SectionContainer';
 import FeedCountSummary from '../components/FeedCountSummary';
 import LocationChildrenGrid from '../components/LocationChildrenGrid';
 import LocationFeedsList from '../components/LocationFeedsList';
@@ -139,10 +140,11 @@ export default async function LocationsPage(
   setRequestLocale(locale);
 
   // Directory node and feed page are independent: fetch them in parallel.
-  const [directory, feeds, t] = await Promise.all([
+  const [directory, feeds, t, tCommon] = await Promise.all([
     fetchDirectory(query),
     fetchFeedsPage(query, page),
     getTranslations('locations'),
+    getTranslations('common'),
   ]);
   if (directory === null || feeds === null) notFound();
 
@@ -157,7 +159,8 @@ export default async function LocationsPage(
   const children = directory.children ?? [];
   const childLevel = getChildLevel(directory.level);
 
-  const crumbs: LocationCrumb[] = [
+  const crumbs: Crumb[] = [
+    { label: tCommon('feeds'), href: '/feeds' },
     { label: t('root'), href: isRoot ? undefined : buildLocationHref([]) },
     ...breadcrumb.map((node, index) => ({
       label: node.name ?? node.slug ?? '',
@@ -167,75 +170,88 @@ export default async function LocationsPage(
           : buildLocationHref(slugs.slice(0, index + 1)),
     })),
   ];
+  // Without history to pop, back goes one level up the directory.
+  const backFallbackHref = isRoot
+    ? '/feeds'
+    : buildLocationHref(slugs.slice(0, -1));
 
   return (
-    <Container component='main' maxWidth='xl' sx={{ pb: 2 }}>
-      <LocationBreadcrumbs crumbs={crumbs} ariaLabel={t('breadcrumbAria')} />
-      <Typography variant='h1'>
-        {isRoot ? t('title') : breadcrumb[breadcrumb.length - 1]?.name}
-      </Typography>
-      <Typography
-        variant='subtitle1'
-        color='text.secondary'
-        sx={{ mb: 3, maxWidth: 760 }}
-      >
-        {isRoot
-          ? t('rootIntro')
-          : t('nodeIntro', {
-              total: getTotalFeedCount(directory.feed_counts),
-              place,
-            })}
-      </Typography>
+    <Container
+      component='main'
+      maxWidth='xl'
+      sx={{ width: '100%', m: 'auto', px: 0 }}
+    >
+      <SectionContainer maxWidth='xl'>
+        <BreadcrumbNavigation
+          crumbs={crumbs}
+          backFallbackHref={backFallbackHref}
+        />
+        <Typography variant='h1' sx={{ mt: 1 }}>
+          {isRoot ? t('title') : breadcrumb[breadcrumb.length - 1]?.name}
+        </Typography>
+        <Typography
+          variant='subtitle1'
+          color='text.secondary'
+          sx={{ mb: 3, maxWidth: 760 }}
+        >
+          {isRoot
+            ? t('rootIntro')
+            : t('nodeIntro', {
+                total: getTotalFeedCount(directory.feed_counts),
+                place,
+              })}
+        </Typography>
 
-      <FeedCountSummary counts={directory.feed_counts} locale={locale} />
+        <FeedCountSummary counts={directory.feed_counts} locale={locale} />
 
-      {childLevel !== null && children.length > 0 ? (
+        {childLevel !== null && children.length > 0 ? (
+          <Box
+            component='section'
+            aria-labelledby='location-children-heading'
+            sx={{ mt: { xs: 4, md: 5 } }}
+          >
+            <Typography
+              id='location-children-heading'
+              component='h2'
+              variant='h5'
+              sx={{ fontWeight: 700, mb: 2 }}
+            >
+              {t(`childrenHeading.${childLevel}`)}{' '}
+              <Box component='span' sx={{ color: 'text.secondary' }}>
+                ({children.length})
+              </Box>
+            </Typography>
+            <LocationChildrenGrid
+              nodes={children}
+              parentSlugs={slugs}
+              locale={locale}
+            />
+          </Box>
+        ) : null}
+
         <Box
           component='section'
-          aria-labelledby='location-children-heading'
-          sx={{ mt: { xs: 4, md: 5 } }}
+          id={FEEDS_SECTION_ID}
+          aria-labelledby='location-feeds-heading'
+          sx={{ mt: { xs: 4, md: 5 }, scrollMarginTop: '88px' }}
         >
           <Typography
-            id='location-children-heading'
+            id='location-feeds-heading'
             component='h2'
             variant='h5'
             sx={{ fontWeight: 700, mb: 2 }}
           >
-            {t(`childrenHeading.${childLevel}`)}{' '}
-            <Box component='span' sx={{ color: 'text.secondary' }}>
-              ({children.length})
-            </Box>
+            {isRoot ? t('allFeedsHeading') : t('feedsHeading', { place })}
           </Typography>
-          <LocationChildrenGrid
-            nodes={children}
-            parentSlugs={slugs}
-            locale={locale}
+          <LocationFeedsList
+            feeds={feeds.results ?? []}
+            total={total}
+            page={page}
+            pageCount={pageCount}
+            slugs={slugs}
           />
         </Box>
-      ) : null}
-
-      <Box
-        component='section'
-        id={FEEDS_SECTION_ID}
-        aria-labelledby='location-feeds-heading'
-        sx={{ mt: { xs: 4, md: 5 }, scrollMarginTop: '88px' }}
-      >
-        <Typography
-          id='location-feeds-heading'
-          component='h2'
-          variant='h5'
-          sx={{ fontWeight: 700, mb: 2 }}
-        >
-          {isRoot ? t('allFeedsHeading') : t('feedsHeading', { place })}
-        </Typography>
-        <LocationFeedsList
-          feeds={feeds.results ?? []}
-          total={total}
-          page={page}
-          pageCount={pageCount}
-          slugs={slugs}
-        />
-      </Box>
+      </SectionContainer>
     </Container>
   );
 }

@@ -1271,7 +1271,6 @@
     "title": "Feeds by location",
     "rootIntro": "Browse open GTFS Schedule, GTFS Realtime and GBFS feeds by continent, country, region and municipality.",
     "nodeIntro": "{total, plural, =0 {No feeds are} one {# feed is} other {# feeds are}} located in {place}.",
-    "breadcrumbAria": "Location breadcrumb",
     "feedCountsAria": "Feed counts by data type",
     "shortLabels": {
       "gtfs": "GTFS",
@@ -1285,6 +1284,10 @@
       "municipality": "Municipalities"
     },
     "childFeedTotal": "{count, plural, one {# feed} other {# feeds}}",
+    "childrenSearchPlaceholder": "Search locations",
+    "childrenSearchAria": "Filter the locations below by name",
+    "childrenSearchResults": "{count, plural, =0 {No matching locations} one {# matching location} other {# matching locations}}",
+    "childrenSearchEmpty": "No location matches “{query}”.",
     "feedsHeading": "Feeds in {place}",
     "allFeedsHeading": "All feeds",
     "resultsRange": "Showing {start}–{end} of {total} feeds",

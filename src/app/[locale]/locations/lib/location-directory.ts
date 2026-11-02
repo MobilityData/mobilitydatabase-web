@@ -141,6 +141,40 @@ export function getTotalFeedCount(
   );
 }
 
+/** Lowercased and without accents, so "Québec" matches "quebec". */
+export function normalizeLocationName(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .trim();
+}
+
+/** Most feeds first; ties by name, ignoring accents and case. */
+export function sortByFeedCount<
+  T extends { name: string; counts: LocationDirectoryFeedCounts | undefined },
+>(items: readonly T[]): T[] {
+  return [...items].sort(
+    (a, b) =>
+      getTotalFeedCount(b.counts) - getTotalFeedCount(a.counts) ||
+      normalizeLocationName(a.name).localeCompare(
+        normalizeLocationName(b.name),
+      ),
+  );
+}
+
+/** Items whose name contains the query, ignoring accents and case. */
+export function filterByName<T extends { name: string }>(
+  items: readonly T[],
+  query: string,
+): T[] {
+  const normalizedQuery = normalizeLocationName(query);
+  if (normalizedQuery === '') return [...items];
+  return items.filter((item) =>
+    normalizeLocationName(item.name).includes(normalizedQuery),
+  );
+}
+
 /** Locale-aware integer formatting, e.g. 1234 -> "1,234" (en). */
 export function formatCount(value: number | undefined, locale: string): string {
   return new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(
