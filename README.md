@@ -1,7 +1,7 @@
 # Mobility Feeds API UI
 
 This project is built with [Next.js](https://nextjs.org/) using the App Router.
-Using node v24.12.0 (npm v11.6.2) (yarn v1.22.22)
+Using node v24.12.0 (npm v11.6.2) (yarn v1.22.22). trigger build
 
 ## Installing packages
 It is preferred to install the packages using `yarn` over `npm install`
