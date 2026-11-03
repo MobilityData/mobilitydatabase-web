@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, type ReactElement } from 'react';
+import { useMemo, useState, type ReactElement, type ReactNode } from 'react';
 import {
   Box,
   Card,
@@ -12,8 +12,20 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import { useTranslations } from 'next-intl';
 import { Link } from '../../../../i18n/navigation';
-import { type FeedCountChip } from './FeedCountChips';
-import { filterByName } from '../lib/location-directory';
+import LinkPendingIndicator from './LinkPendingIndicator';
+import {
+  filterByName,
+  type FeedCountDataType,
+} from '../lib/location-directory';
+
+export interface LocationChildCount {
+  dataType: FeedCountDataType;
+  count: number;
+  /** Locale-formatted, rendered bold. */
+  formattedCount: string;
+  /** e.g. "GTFS-RT". */
+  typeLabel: string;
+}
 
 export interface LocationChildItem {
   slug: string;
@@ -21,10 +33,16 @@ export interface LocationChildItem {
   /** Emoji flag, countries only. */
   flag?: string;
   href: string;
-  totalLabel: string;
+  /** e.g. "8 feeds", with the number in a <strong>. */
+  totalLabel: ReactNode;
   /** Plain-text counts; chips are kept for the page summary. */
-  counts: FeedCountChip[];
+  counts: LocationChildCount[];
 }
+
+// Bold, primary-colored numbers stand out from their secondary-colored labels.
+const countNumberSx = {
+  '& strong': { fontWeight: 700, color: 'text.primary' },
+} as const;
 
 interface Props {
   /** Already sorted, most feeds first. */
@@ -149,7 +167,7 @@ export default function LocationChildrenList({ items }: Props): ReactElement {
                         component='span'
                         variant='body2'
                         color='text.secondary'
-                        sx={{ whiteSpace: 'nowrap' }}
+                        sx={{ whiteSpace: 'nowrap', ...countNumberSx }}
                       >
                         {item.totalLabel}
                       </Typography>
@@ -162,18 +180,27 @@ export default function LocationChildrenList({ items }: Props): ReactElement {
                         rowGap: 0.5,
                       }}
                     >
-                      {item.counts.map(({ dataType, count, label }) => (
-                        <Typography
-                          key={dataType}
-                          component='span'
-                          variant='body2'
-                          data-testid={`feed-count-${dataType}`}
-                          color={count > 0 ? 'text.secondary' : 'text.disabled'}
-                        >
-                          {label}
-                        </Typography>
-                      ))}
+                      {item.counts.map(
+                        ({ dataType, count, formattedCount, typeLabel }) => (
+                          <Typography
+                            key={dataType}
+                            component='span'
+                            variant='body2'
+                            data-testid={`feed-count-${dataType}`}
+                            color={
+                              count > 0 ? 'text.secondary' : 'text.disabled'
+                            }
+                            // Zero counts stay fully disabled.
+                            sx={count > 0 ? countNumberSx : undefined}
+                          >
+                            <strong>{formattedCount}</strong> {typeLabel}
+                          </Typography>
+                        ),
+                      )}
                     </Box>
+                    <LinkPendingIndicator
+                      ariaLabel={t('childLoadingAria', { name: item.name })}
+                    />
                   </CardActionArea>
                 </Card>
               </li>

@@ -1283,9 +1283,10 @@
       "subdivision": "Régions",
       "municipality": "Municipalités"
     },
-    "childFeedTotal": "{count, plural, one {# flux} other {# flux}}",
+    "childFeedTotal": "{count, plural, one {<b>#</b> flux} other {<b>#</b> flux}}",
     "childrenSearchPlaceholder": "Rechercher un lieu",
     "childrenSearchAria": "Filtrer les lieux ci-dessous par nom",
+    "childLoadingAria": "Chargement de {name}",
     "childrenSearchResults": "{count, plural, =0 {Aucun lieu correspondant} one {# lieu correspondant} other {# lieux correspondants}}",
     "childrenSearchEmpty": "Aucun lieu ne correspond à « {query} ».",
     "feedsHeading": "Flux dans : {place}",

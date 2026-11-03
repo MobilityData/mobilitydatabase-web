@@ -49,11 +49,15 @@ export default async function LocationChildrenGrid({
     name,
     flag: getFlag(node),
     href: buildLocationHref([...parentSlugs, node.slug ?? '']),
-    totalLabel: t('childFeedTotal', { count: getTotalFeedCount(counts) }),
+    totalLabel: t.rich('childFeedTotal', {
+      count: getTotalFeedCount(counts),
+      b: (chunks) => <strong>{chunks}</strong>,
+    }),
     counts: getFeedCountEntries(counts).map(({ dataType, count }) => ({
       dataType,
       count,
-      label: `${formatCount(count, locale)} ${t(`shortLabels.${dataType}`)}`,
+      formattedCount: formatCount(count, locale),
+      typeLabel: t(`shortLabels.${dataType}`),
     })),
   }));
 
