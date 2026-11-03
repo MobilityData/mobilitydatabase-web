@@ -44,6 +44,13 @@ export function slugify(name: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+/** ISO code of a country slug (`united-states` -> `US`), like the API. */
+function countryCodeOf(slug: string): string | undefined {
+  return Object.keys(COUNTRIES).find(
+    (code) => slugify(COUNTRIES[code].name) === slug.toLowerCase(),
+  );
+}
+
 type Place = [countryCode: string, subdivision?: string, municipality?: string];
 type FeedSeed = [
   dataType: Feed['data_type'],
@@ -259,7 +266,8 @@ export const MOCK_FEEDS: Feed[] = FEED_SEEDS.map(toFeed);
 
 export interface DirectoryQuery {
   continent?: string;
-  country_code?: string;
+  /** Country slug, e.g. `canada`. */
+  country?: string;
   subdivision?: string;
   municipality?: string;
 }
@@ -279,8 +287,8 @@ function matches(location: FeedLocation, query: DirectoryQuery): boolean {
   if (query.continent != undefined && country.continent !== query.continent)
     return false;
   if (
-    query.country_code != undefined &&
-    location.country_code?.toLowerCase() !== query.country_code.toLowerCase()
+    query.country != undefined &&
+    slugify(country.name) !== query.country.toLowerCase()
   )
     return false;
   if (
@@ -314,21 +322,20 @@ function countFeeds(feeds: Feed[]): FeedCounts {
 function levelOf(query: DirectoryQuery): DirectoryLevel {
   if (query.municipality != undefined) return 'municipality';
   if (query.subdivision != undefined) return 'subdivision';
-  if (query.country_code != undefined) return 'country';
+  if (query.country != undefined) return 'country';
   if (query.continent != undefined) return 'continent';
   return 'root';
 }
 
 /** 400 when a parameter is missing its parent or the country is elsewhere. */
 function isValidHierarchy(query: DirectoryQuery): boolean {
-  if (query.country_code != undefined && query.continent == undefined)
-    return false;
-  if (query.subdivision != undefined && query.country_code == undefined)
+  if (query.country != undefined && query.continent == undefined) return false;
+  if (query.subdivision != undefined && query.country == undefined)
     return false;
   if (query.municipality != undefined && query.subdivision == undefined)
     return false;
-  if (query.country_code != undefined) {
-    const country = COUNTRIES[query.country_code.toUpperCase()];
+  if (query.country != undefined) {
+    const country = COUNTRIES[countryCodeOf(query.country) ?? ''];
     if (country != undefined && country.continent !== query.continent)
       return false;
   }
@@ -365,11 +372,10 @@ function nodeFor(
         : makeNode(level, slug, continent.code, continent.name, query);
     }
     case 'country': {
-      const code = (query.country_code ?? '').toUpperCase();
+      const code = countryCodeOf(query.country ?? '');
+      if (code == undefined) return undefined;
       const country = COUNTRIES[code];
-      return country == undefined
-        ? undefined
-        : makeNode(level, code.toLowerCase(), code, country.name, query);
+      return makeNode(level, slugify(country.name), code, country.name, query);
     }
     case 'subdivision':
       return makeNode(
@@ -419,7 +425,10 @@ function childrenOf(query: DirectoryQuery): DirectoryNode[] {
       if (level === 'root') {
         childQuery = { continent: COUNTRIES[countryCode].continent };
       } else if (level === 'continent') {
-        childQuery = { ...query, country_code: countryCode.toLowerCase() };
+        childQuery = {
+          ...query,
+          country: slugify(COUNTRIES[countryCode].name),
+        };
       } else if (level === 'country' && location.subdivision_name != null) {
         name = location.subdivision_name;
         childQuery = { ...query, subdivision: slugify(name) };
@@ -444,8 +453,8 @@ function breadcrumbOf(query: DirectoryQuery): DirectoryNode[] {
   const all = feedsIn(query);
   const steps: DirectoryQuery[] = [];
   if (query.continent != undefined) steps.push({ continent: query.continent });
-  if (query.country_code != undefined)
-    steps.push({ ...steps[0], country_code: query.country_code });
+  if (query.country != undefined)
+    steps.push({ ...steps[0], country: query.country });
   if (query.subdivision != undefined)
     steps.push({ ...steps[1], subdivision: query.subdivision });
   if (query.municipality != undefined)
@@ -474,7 +483,7 @@ export function readDirectoryQuery(params: URLSearchParams): DirectoryQuery {
   };
   return {
     continent: read('continent'),
-    country_code: read('country_code'),
+    country: read('country'),
     subdivision: read('subdivision'),
     municipality: read('municipality'),
   };

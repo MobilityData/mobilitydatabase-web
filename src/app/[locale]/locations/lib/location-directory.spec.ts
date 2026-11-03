@@ -23,7 +23,7 @@ const breadcrumb: LocationDirectoryNode[] = [
     code: 'NA',
     name: 'North America',
   },
-  { level: 'country', slug: 'ca', code: 'CA', name: 'Canada' },
+  { level: 'country', slug: 'canada', code: 'CA', name: 'Canada' },
   { level: 'subdivision', slug: 'quebec', code: null, name: 'Québec' },
   { level: 'municipality', slug: 'montreal', code: null, name: 'Montréal' },
 ];
@@ -39,10 +39,10 @@ describe('parseLocationSegments', () => {
       continent: 'north-america',
     });
     expect(
-      parseLocationSegments(['north-america', 'ca', 'quebec', 'montreal']),
+      parseLocationSegments(['north-america', 'canada', 'quebec', 'montreal']),
     ).toEqual({
       continent: 'north-america',
-      country_code: 'ca',
+      country: 'canada',
       subdivision: 'quebec',
       municipality: 'montreal',
     });
@@ -50,7 +50,13 @@ describe('parseLocationSegments', () => {
 
   it('rejects paths deeper than a municipality', () => {
     expect(
-      parseLocationSegments(['north-america', 'ca', 'quebec', 'montreal', 'x']),
+      parseLocationSegments([
+        'north-america',
+        'canada',
+        'quebec',
+        'montreal',
+        'x',
+      ]),
     ).toBeNull();
   });
 
@@ -103,8 +109,8 @@ describe('buildLocationHref', () => {
   it('builds the root and nested paths', () => {
     expect(buildLocationHref([])).toBe('/locations');
     expect(
-      buildLocationHref(['north-america', 'ca', 'quebec', 'montreal']),
-    ).toBe('/locations/north-america/ca/quebec/montreal');
+      buildLocationHref(['north-america', 'canada', 'quebec', 'montreal']),
+    ).toBe('/locations/north-america/canada/quebec/montreal');
   });
 
   it('adds ?page only after the first page', () => {
@@ -119,7 +125,7 @@ describe('buildLocationHref', () => {
 
   it('round-trips with the breadcrumb slugs', () => {
     expect(buildLocationHref(getBreadcrumbSlugs(breadcrumb), 2)).toBe(
-      '/locations/north-america/ca/quebec/montreal?page=2',
+      '/locations/north-america/canada/quebec/montreal?page=2',
     );
     expect(getBreadcrumbSlugs(undefined)).toEqual([]);
   });

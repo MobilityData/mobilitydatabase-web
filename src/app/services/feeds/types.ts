@@ -366,7 +366,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description Browse the feed location directory one level at a time: continent > country > subdivision > municipality. The level is selected by the most specific parameter provided; with no parameters the response lists continents. <br> Feed counts are based on the feeds' declared locations, only include feeds with a status of `active`, `inactive`, `development` or `future`, and roll up to every ancestor level (a feed located in Montréal counts toward Québec, Canada and North America). A feed is counted at most once per node, even when it declares several locations within that node. <br> Each parameter requires its parent: `country_code` requires `continent`, `subdivision` requires `country_code`, and `municipality` requires `subdivision`. */
+    /** @description Browse the feed location directory one level at a time: continent > country > subdivision > municipality. The level is selected by the most specific parameter provided; with no parameters the response lists continents. <br> Feed counts are based on the feeds' declared locations, only include feeds with a status of `active`, `inactive`, `development` or `future`, and roll up to every ancestor level (a feed located in Montréal counts toward Québec, Canada and North America). A feed is counted at most once per node, even when it declares several locations within that node. <br> Each parameter requires its parent: `country` requires `continent`, `subdivision` requires `country`, and `municipality` requires `subdivision`. */
     get: operations['getLocationDirectory'];
     put?: never;
     post?: never;
@@ -1375,7 +1375,7 @@ export interface components {
     LocationDirectoryNode: {
       level?: components['schemas']['LocationDirectoryLevel'];
       /**
-       * @description URL-safe identifier of the node, used as the matching request parameter. Continents use a fixed slug (`africa`, `antarctica`, `asia`, `europe`, `north-america`, `oceania`, `south-america`), countries use their lowercase ISO 3166-1 alpha-2 code, and subdivisions and municipalities use their name lowercased, without accents, with every run of non-alphanumeric characters replaced by a single hyphen (`Québec` -> `quebec`, `Saint-Jean-sur-Richelieu` -> `saint-jean-sur-richelieu`).
+       * @description URL-safe identifier of the node, used as the matching request parameter. Continents use a fixed slug (`africa`, `antarctica`, `asia`, `europe`, `north-america`, `oceania`, `south-america`), countries use a fixed slug of their short English name (`portugal`, `united-states`, `cote-d-ivoire`), and subdivisions and municipalities use their name lowercased, without accents, with every run of non-alphanumeric characters replaced by a single hyphen (`Québec` -> `quebec`, `Saint-Jean-sur-Richelieu` -> `saint-jean-sur-richelieu`).
        * @example quebec
        */
       slug?: string;
@@ -1920,9 +1920,9 @@ export interface components {
     has_seal_query_param: boolean;
     /** @description Continent slug (`africa`, `antarctica`, `asia`, `europe`, `north-america`, `oceania`, `south-america`). */
     location_directory_continent: string;
-    /** @description ISO 3166-1 alpha-2 country code. Case-insensitive. Requires `continent`. */
-    location_directory_country_code: string;
-    /** @description Subdivision slug as returned by `/v1/locations/directory`. Requires `country_code`. */
+    /** @description Country slug as returned by `/v1/locations/directory`, e.g. `portugal`. Case-insensitive. Requires `continent`. */
+    location_directory_country: string;
+    /** @description Subdivision slug as returned by `/v1/locations/directory`. Requires `country`. */
     location_directory_subdivision: string;
     /** @description Municipality slug as returned by `/v1/locations/directory`. Requires `subdivision`. */
     location_directory_municipality: string;
@@ -2670,9 +2670,9 @@ export interface operations {
       query?: {
         /** @description Continent slug (`africa`, `antarctica`, `asia`, `europe`, `north-america`, `oceania`, `south-america`). */
         continent?: components['parameters']['location_directory_continent'];
-        /** @description ISO 3166-1 alpha-2 country code. Case-insensitive. Requires `continent`. */
-        country_code?: components['parameters']['location_directory_country_code'];
-        /** @description Subdivision slug as returned by `/v1/locations/directory`. Requires `country_code`. */
+        /** @description Country slug as returned by `/v1/locations/directory`, e.g. `portugal`. Case-insensitive. Requires `continent`. */
+        country?: components['parameters']['location_directory_country'];
+        /** @description Subdivision slug as returned by `/v1/locations/directory`. Requires `country`. */
         subdivision?: components['parameters']['location_directory_subdivision'];
         /** @description Municipality slug as returned by `/v1/locations/directory`. Requires `subdivision`. */
         municipality?: components['parameters']['location_directory_municipality'];
@@ -2713,9 +2713,9 @@ export interface operations {
       query?: {
         /** @description Continent slug (`africa`, `antarctica`, `asia`, `europe`, `north-america`, `oceania`, `south-america`). */
         continent?: components['parameters']['location_directory_continent'];
-        /** @description ISO 3166-1 alpha-2 country code. Case-insensitive. Requires `continent`. */
-        country_code?: components['parameters']['location_directory_country_code'];
-        /** @description Subdivision slug as returned by `/v1/locations/directory`. Requires `country_code`. */
+        /** @description Country slug as returned by `/v1/locations/directory`, e.g. `portugal`. Case-insensitive. Requires `continent`. */
+        country?: components['parameters']['location_directory_country'];
+        /** @description Subdivision slug as returned by `/v1/locations/directory`. Requires `country`. */
         subdivision?: components['parameters']['location_directory_subdivision'];
         /** @description Municipality slug as returned by `/v1/locations/directory`. Requires `subdivision`. */
         municipality?: components['parameters']['location_directory_municipality'];

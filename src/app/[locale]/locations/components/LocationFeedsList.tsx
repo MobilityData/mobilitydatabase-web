@@ -76,6 +76,7 @@ export default function LocationFeedsList({
                 slugs,
                 Math.min(Math.max(item.page ?? 1, 1), pageCount),
               )}#${FEEDS_SECTION_ID}`}
+              prefetch={false}
               {...item}
             />
           )}

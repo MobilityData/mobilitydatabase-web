@@ -31,7 +31,7 @@ describe('location directory mocks', () => {
   it('resolves the Montréal breadcrumb and rolls counts up', () => {
     const query = readDirectoryQuery(
       new URLSearchParams(
-        'continent=north-america&country_code=ca&subdivision=quebec&municipality=montreal',
+        'continent=north-america&country=canada&subdivision=quebec&municipality=montreal',
       ),
     );
     const result = getMockDirectory(query);
@@ -51,9 +51,9 @@ describe('location directory mocks', () => {
   });
 
   it('returns 400 on a broken hierarchy and 404 when nothing is there', () => {
-    expect(getMockDirectory({ country_code: 'ca' }).status).toBe(400);
+    expect(getMockDirectory({ country: 'canada' }).status).toBe(400);
     expect(
-      getMockDirectory({ continent: 'europe', country_code: 'ca' }).status,
+      getMockDirectory({ continent: 'europe', country: 'canada' }).status,
     ).toBe(400);
     expect(getMockDirectory({ continent: 'antarctica' }).status).toBe(404);
   });
@@ -61,7 +61,7 @@ describe('location directory mocks', () => {
   it('paginates feeds, most relevant to the node first', () => {
     const query = {
       continent: 'north-america',
-      country_code: 'ca',
+      country: 'canada',
       subdivision: 'quebec',
     };
     const first = getMockDirectoryFeeds(query, 20, 0);

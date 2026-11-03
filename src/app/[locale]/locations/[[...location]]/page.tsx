@@ -58,7 +58,7 @@ function fetchDirectory(
 ): ReturnType<typeof fetchLocationDirectory> {
   return fetchLocationDirectory(
     query.continent,
-    query.country_code,
+    query.country,
     query.subdivision,
     query.municipality,
   );
@@ -71,7 +71,7 @@ function fetchFeedsPage(
   return fetchLocationDirectoryFeeds(
     page,
     query.continent,
-    query.country_code,
+    query.country,
     query.subdivision,
     query.municipality,
   );

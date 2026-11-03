@@ -22,15 +22,15 @@ import {
   type LocationQuery,
 } from './location-directory';
 
-/** 1 day; also flushed on demand with the existing `guest-feeds` tag. */
-export const LOCATION_DIRECTORY_REVALIDATE_SECONDS = 86400;
+/** 6 hours; also flushed on demand with the existing `guest-feeds` tag. */
+export const LOCATION_DIRECTORY_REVALIDATE_SECONDS = 21600;
 const CACHE_TAGS = ['location-directory', 'guest-feeds'];
 
 /**
  * 400 (invalid hierarchy) and 404 (nothing located there) both mean the URL
  * does not exist. They are thrown as this error inside the cached functions,
  * because unstable_cache never stores a thrown error: caching the miss would
- * keep a location missing for a whole day after it starts to exist (e.g. a
+ * keep a location missing for hours after it starts to exist (e.g. a
  * 404 served before the API route was deployed).
  */
 class LocationNotFoundError extends Error {}
@@ -69,13 +69,13 @@ async function nullWhenMissing<T>(
 
 function toQuery(
   continent: string | undefined,
-  countryCode: string | undefined,
+  country: string | undefined,
   subdivision: string | undefined,
   municipality: string | undefined,
 ): LocationQuery {
   const query: LocationQuery = {};
   if (continent != undefined) query.continent = continent;
-  if (countryCode != undefined) query.country_code = countryCode;
+  if (country != undefined) query.country = country;
   if (subdivision != undefined) query.subdivision = subdivision;
   if (municipality != undefined) query.municipality = municipality;
   return query;
@@ -86,7 +86,7 @@ function toQuery(
 const cachedDirectory = unstable_cache(
   async (
     continent?: string,
-    countryCode?: string,
+    country?: string,
     subdivision?: string,
     municipality?: string,
   ): Promise<LocationDirectoryResponse> => {
@@ -94,7 +94,7 @@ const cachedDirectory = unstable_cache(
     return await requireData(
       async () =>
         await getLocationDirectory(
-          toQuery(continent, countryCode, subdivision, municipality),
+          toQuery(continent, country, subdivision, municipality),
           accessToken,
         ),
     );
@@ -107,7 +107,7 @@ const cachedDirectoryFeeds = unstable_cache(
   async (
     offset: number,
     continent?: string,
-    countryCode?: string,
+    country?: string,
     subdivision?: string,
     municipality?: string,
   ): Promise<LocationDirectoryFeedsResponse> => {
@@ -116,7 +116,7 @@ const cachedDirectoryFeeds = unstable_cache(
       async () =>
         await getLocationDirectoryFeeds(
           {
-            ...toQuery(continent, countryCode, subdivision, municipality),
+            ...toQuery(continent, country, subdivision, municipality),
             limit: LOCATION_FEEDS_PAGE_SIZE,
             offset,
           },
@@ -136,18 +136,13 @@ const cachedDirectoryFeeds = unstable_cache(
 export const fetchLocationDirectory = cache(
   async (
     continent?: string,
-    countryCode?: string,
+    country?: string,
     subdivision?: string,
     municipality?: string,
   ): Promise<LocationDirectoryResponse | null> =>
     await nullWhenMissing(
       async () =>
-        await cachedDirectory(
-          continent,
-          countryCode,
-          subdivision,
-          municipality,
-        ),
+        await cachedDirectory(continent, country, subdivision, municipality),
     ),
 );
 
@@ -156,7 +151,7 @@ export const fetchLocationDirectoryFeeds = cache(
   async (
     page: number,
     continent?: string,
-    countryCode?: string,
+    country?: string,
     subdivision?: string,
     municipality?: string,
   ): Promise<LocationDirectoryFeedsResponse | null> =>
@@ -165,7 +160,7 @@ export const fetchLocationDirectoryFeeds = cache(
         await cachedDirectoryFeeds(
           getPageOffset(page),
           continent,
-          countryCode,
+          country,
           subdivision,
           municipality,
         ),

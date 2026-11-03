@@ -22,14 +22,15 @@ export const FEEDS_SECTION_ID = 'feeds';
 /** Query parameters shared by both directory endpoints. */
 export interface LocationQuery {
   continent?: string;
-  country_code?: string;
+  /** Country slug, e.g. `canada`. */
+  country?: string;
   subdivision?: string;
   municipality?: string;
 }
 
 const QUERY_KEYS_BY_DEPTH = [
   'continent',
-  'country_code',
+  'country',
   'subdivision',
   'municipality',
 ] as const;
@@ -91,7 +92,7 @@ export function getPageOffset(
 
 /**
  * Locale-less path to a directory node, e.g.
- * `/locations/north-america/ca/quebec?page=2`. Page 1 has no query string so
+ * `/locations/north-america/canada/quebec?page=2`. Page 1 has no query string so
  * that it stays the canonical URL of the node. Pass the result to the
  * next-intl `Link`, which adds the locale prefix.
  */

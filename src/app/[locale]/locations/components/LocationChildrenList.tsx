@@ -12,7 +12,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import { useTranslations } from 'next-intl';
 import { Link } from '../../../../i18n/navigation';
-import FeedCountChips, { type FeedCountChip } from './FeedCountChips';
+import { type FeedCountChip } from './FeedCountChips';
 import { filterByName } from '../lib/location-directory';
 
 export interface LocationChildItem {
@@ -22,7 +22,8 @@ export interface LocationChildItem {
   flag?: string;
   href: string;
   totalLabel: string;
-  chips: FeedCountChip[];
+  /** Plain-text counts; chips are kept for the page summary. */
+  counts: FeedCountChip[];
 }
 
 interface Props {
@@ -64,7 +65,12 @@ export default function LocationChildrenList({ items }: Props): ReactElement {
             ),
           },
         }}
-        sx={{ mb: 1, maxWidth: { md: 480 } }}
+        sx={{
+          mb: 1,
+          maxWidth: { md: 480 },
+          // White in light mode, like the cards below; the section is paper.
+          '& .MuiInputBase-root': { bgcolor: 'background.default' },
+        }}
       />
       <Typography
         variant='body2'
@@ -110,6 +116,9 @@ export default function LocationChildrenList({ items }: Props): ReactElement {
                   <CardActionArea
                     component={Link}
                     href={item.href}
+                    // A node can list hundreds of children: no viewport
+                    // prefetch, same as the feed links in SearchTable.
+                    prefetch={false}
                     sx={{
                       height: '100%',
                       display: 'flex',
@@ -145,7 +154,26 @@ export default function LocationChildrenList({ items }: Props): ReactElement {
                         {item.totalLabel}
                       </Typography>
                     </Box>
-                    <FeedCountChips chips={item.chips} size='small' />
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        columnGap: 1.5,
+                        rowGap: 0.5,
+                      }}
+                    >
+                      {item.counts.map(({ dataType, count, label }) => (
+                        <Typography
+                          key={dataType}
+                          component='span'
+                          variant='body2'
+                          data-testid={`feed-count-${dataType}`}
+                          color={count > 0 ? 'text.secondary' : 'text.disabled'}
+                        >
+                          {label}
+                        </Typography>
+                      ))}
+                    </Box>
                   </CardActionArea>
                 </Card>
               </li>
