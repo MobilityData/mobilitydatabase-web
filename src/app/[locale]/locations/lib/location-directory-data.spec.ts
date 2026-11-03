@@ -33,7 +33,7 @@ jest.mock('next/cache', () => ({
 }));
 
 const mockGetLocationDirectory = jest.fn();
-const mockGetLocationDirectoryFeeds = jest.fn();
+const mockSearchFeeds = jest.fn();
 
 jest.mock('../../../services/feeds', () => ({
   ApiError: class ApiError extends Error {
@@ -45,8 +45,7 @@ jest.mock('../../../services/feeds', () => ({
   },
   getLocationDirectory: (...args: unknown[]) =>
     mockGetLocationDirectory(...args),
-  getLocationDirectoryFeeds: (...args: unknown[]) =>
-    mockGetLocationDirectoryFeeds(...args),
+  searchFeeds: (...args: unknown[]) => mockSearchFeeds(...args),
 }));
 
 jest.mock('../../../utils/auth-server', () => ({
@@ -63,7 +62,7 @@ const directory = {
 describe('location directory data', () => {
   beforeEach(() => {
     mockGetLocationDirectory.mockReset();
-    mockGetLocationDirectoryFeeds.mockReset();
+    mockSearchFeeds.mockReset();
   });
 
   it('resolves a 404 to null without caching it', async () => {
@@ -78,7 +77,7 @@ describe('location directory data', () => {
 
   it('resolves a 400 on the feeds page to null without caching it', async () => {
     const feeds = { total: 0, results: [] };
-    mockGetLocationDirectoryFeeds
+    mockSearchFeeds
       .mockRejectedValueOnce(new ApiError('Bad Request', 400))
       .mockResolvedValueOnce(feeds);
 
@@ -86,6 +85,36 @@ describe('location directory data', () => {
     await expect(fetchLocationDirectoryFeeds(1, 'asia')).resolves.toEqual(
       feeds,
     );
+  });
+
+  it('lists the feeds of a node with search, most relevant first', async () => {
+    mockSearchFeeds.mockResolvedValue({ total: 0, results: [] });
+
+    await fetchLocationDirectoryFeeds(2, 'europe', 'portugal');
+    expect(mockSearchFeeds).toHaveBeenCalledWith(
+      {
+        query: {
+          continent: 'europe',
+          country: 'portugal',
+          status: ['active', 'inactive', 'development', 'future'],
+          sort: 'location',
+          limit: 20,
+          offset: 20,
+        },
+      },
+      'guest-token',
+    );
+  });
+
+  it('lists the newest feeds at the root, which has no location', async () => {
+    mockSearchFeeds.mockResolvedValue({ total: 0, results: [] });
+
+    await fetchLocationDirectoryFeeds(1);
+    const [{ query }] = mockSearchFeeds.mock.calls[0] as [
+      { query: Record<string, unknown> },
+    ];
+    expect(query.sort).toBeUndefined();
+    expect(query.continent).toBeUndefined();
   });
 
   it('caches a found location', async () => {

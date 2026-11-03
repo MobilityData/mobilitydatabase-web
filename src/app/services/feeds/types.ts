@@ -331,6 +331,14 @@ export interface paths {
      *     Query: New York Transit
      *     <br>
      *     Search Executed: 'new' & york & 'transit'
+     *     <br><br>
+     *     Location filters:
+     *     <br>
+     *     - `continent`, `country`, `subdivision` and `municipality` restrict the results to feeds with a declared
+     *     location within that node of `/v1/locations/directory`, using the same slugs, parent requirements and
+     *     validation. Unknown slugs return no feed.
+     *     - To list the same feeds as a directory node's counts, also pass `status=active,inactive,development,future`.
+     *     - `sort=location` orders the results by relevance to the requested location instead of by creation date.
      *     <br>
      */
     get: operations['searchFeeds'];
@@ -366,25 +374,8 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description Browse the feed location directory one level at a time: continent > country > subdivision > municipality. The level is selected by the most specific parameter provided; with no parameters the response lists continents. <br> Feed counts are based on the feeds' declared locations, only include feeds with a status of `active`, `inactive`, `development` or `future`, and roll up to every ancestor level (a feed located in Montréal counts toward Québec, Canada and North America). A feed is counted at most once per node, even when it declares several locations within that node. <br> Each parameter requires its parent: `country` requires `continent`, `subdivision` requires `country`, and `municipality` requires `subdivision`. */
+    /** @description Browse the feed location directory one level at a time: continent > country > subdivision > municipality. The level is selected by the most specific parameter provided; with no parameters the response lists continents. <br> Feed counts are based on the feeds' declared locations, only include feeds with a status of `active`, `inactive`, `development` or `future`, and roll up to every ancestor level (a feed located in Montréal counts toward Québec, Canada and North America). A feed is counted at most once per node, even when it declares several locations within that node. <br> Each parameter requires its parent: `country` requires `continent`, `subdivision` requires `country`, and `municipality` requires `subdivision`. <br> To list the feeds of a node, call `/v1/search` with the same parameters, `status=active,inactive,development,future` and `sort=location`. */
     get: operations['getLocationDirectory'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/locations/directory/feeds': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** @description List the feeds located within a location directory node, using the same location parameters, status rules and validation as `/v1/locations/directory`. <br> Feeds are sorted by relevance to the requested node: feeds whose most specific matching declared location is closest to the requested level come first (in the Québec node, a feed located in "Canada, Québec" ranks above one located in "Canada, Québec, Montréal"). Ties are broken by provider, feed name and feed id. */
-    get: operations['getLocationDirectoryFeeds'];
     put?: never;
     post?: never;
     delete?: never;
@@ -1399,11 +1390,6 @@ export interface components {
       /** @description The nodes one level below the requested node that contain at least one feed, sorted by name. Empty at the `municipality` level. */
       children?: components['schemas']['LocationDirectoryNode'][];
     };
-    LocationDirectoryFeedsResponse: {
-      /** @description The total number of feeds within the node regardless of limit and offset. */
-      total?: number;
-      results?: components['schemas']['SearchFeedItemResult'][];
-    };
     LocationSearchResponse: {
       /** @description The total number of matching locations regardless of limit and offset. */
       total?: number;
@@ -1927,8 +1913,6 @@ export interface components {
     /** @description Municipality slug as returned by `/v1/locations/directory`. Requires `subdivision`. */
     location_directory_municipality: string;
     /** @description The number of items to be returned. */
-    limit_query_param_location_directory_feeds_endpoint: number;
-    /** @description The number of items to be returned. */
     limit_query_param_locations_endpoint: number;
     /** @description The number of items to be returned. */
     limit_query_param_feeds_endpoint: number;
@@ -1948,6 +1932,8 @@ export interface components {
     offset: number;
     /** @description General search query to match against transit provider, location, and feed name. */
     search_text_query_param: string;
+    /** @description Sort order of the results. `created_at` (default): newest feeds first, then by relevance to `search_query` when one is given. `location`: by relevance to the requested location, which requires `continent`. Feeds whose most specific matching declared location is closest to the requested level come first (when filtering on Québec, a feed located in "Canada, Québec" ranks above one located in "Canada, Québec, Montréal"); ties are broken by provider, feed name and feed id. */
+    search_sort: 'created_at' | 'location';
     /** @description Comma separated list of GBFS versions to filter by. */
     version_query_param: string;
     /** @description Comma separated list of data types to filter by. Valid values are gtfs, gtfs_rt and gbfs. */
@@ -2598,6 +2584,16 @@ export interface operations {
         license_is_spdx?: components['parameters']['license_is_spdx'];
         /** @description Comma separated list of tags to filter feeds by their license tags. */
         license_tags?: components['parameters']['license_tags'];
+        /** @description Continent slug (`africa`, `antarctica`, `asia`, `europe`, `north-america`, `oceania`, `south-america`). */
+        continent?: components['parameters']['location_directory_continent'];
+        /** @description Country slug as returned by `/v1/locations/directory`, e.g. `portugal`. Case-insensitive. Requires `continent`. */
+        country?: components['parameters']['location_directory_country'];
+        /** @description Subdivision slug as returned by `/v1/locations/directory`. Requires `country`. */
+        subdivision?: components['parameters']['location_directory_subdivision'];
+        /** @description Municipality slug as returned by `/v1/locations/directory`. Requires `subdivision`. */
+        municipality?: components['parameters']['location_directory_municipality'];
+        /** @description Sort order of the results. `created_at` (default): newest feeds first, then by relevance to `search_query` when one is given. `location`: by relevance to the requested location, which requires `continent`. Feeds whose most specific matching declared location is closest to the requested level come first (when filtering on Québec, a feed located in "Canada, Québec" ranks above one located in "Canada, Québec, Montréal"); ties are broken by provider, feed name and feed id. */
+        sort?: components['parameters']['search_sort'];
       };
       header?: never;
       path?: never;
@@ -2617,6 +2613,13 @@ export interface operations {
             results?: components['schemas']['SearchFeedItemResult'][];
           };
         };
+      };
+      /** @description A location parameter was provided without its parent, the country does not belong to the continent, or `sort=location` was requested without a location. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Filtering by Seal of Reliability status is not available to this caller. */
       403: {
@@ -2701,46 +2704,6 @@ export interface operations {
       };
       /** @description No feed is located at the requested location. */
       404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  getLocationDirectoryFeeds: {
-    parameters: {
-      query?: {
-        /** @description Continent slug (`africa`, `antarctica`, `asia`, `europe`, `north-america`, `oceania`, `south-america`). */
-        continent?: components['parameters']['location_directory_continent'];
-        /** @description Country slug as returned by `/v1/locations/directory`, e.g. `portugal`. Case-insensitive. Requires `continent`. */
-        country?: components['parameters']['location_directory_country'];
-        /** @description Subdivision slug as returned by `/v1/locations/directory`. Requires `country`. */
-        subdivision?: components['parameters']['location_directory_subdivision'];
-        /** @description Municipality slug as returned by `/v1/locations/directory`. Requires `subdivision`. */
-        municipality?: components['parameters']['location_directory_municipality'];
-        /** @description The number of items to be returned. */
-        limit?: components['parameters']['limit_query_param_location_directory_feeds_endpoint'];
-        /** @description Offset of the first item to return. */
-        offset?: components['parameters']['offset'];
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description The page of feeds located within the requested node. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['LocationDirectoryFeedsResponse'];
-        };
-      };
-      /** @description A parameter was provided without its parent, or the country does not belong to the continent. */
-      400: {
         headers: {
           [name: string]: unknown;
         };

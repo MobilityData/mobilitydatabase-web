@@ -1,7 +1,7 @@
 /**
  * Mock data and logic for the location directory endpoints:
  *   GET /v1/locations/directory
- *   GET /v1/locations/directory/feeds
+ *   GET /v1/search with location parameters (the feeds of a node)
  *
  * The directory tree, the rolled-up counts, the breadcrumb and the children
  * are all derived from MOCK_FEEDS' declared locations, so the mock behaves
@@ -16,7 +16,10 @@ type DirectoryNode = components['schemas']['LocationDirectoryNode'];
 type DirectoryLevel = components['schemas']['LocationDirectoryLevel'];
 type FeedCounts = components['schemas']['LocationDirectoryFeedCounts'];
 type DirectoryResponse = components['schemas']['LocationDirectoryResponse'];
-type FeedsResponse = components['schemas']['LocationDirectoryFeedsResponse'];
+interface FeedsResponse {
+  total: number;
+  results: Feed[];
+}
 
 const CONTINENTS: Record<string, { code: string; name: string }> = {
   africa: { code: 'AF', name: 'Africa' },

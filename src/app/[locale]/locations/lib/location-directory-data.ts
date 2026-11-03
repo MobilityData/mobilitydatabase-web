@@ -12,9 +12,9 @@ import { getGuestGcipIdToken } from '../../../utils/auth-server';
 import {
   ApiError,
   getLocationDirectory,
-  getLocationDirectoryFeeds,
-  type LocationDirectoryFeedsResponse,
+  searchFeeds,
   type LocationDirectoryResponse,
+  type SearchFeedsResponse,
 } from '../../../services/feeds';
 import {
   getPageOffset,
@@ -25,6 +25,11 @@ import {
 /** 6 hours; also flushed on demand with the existing `guest-feeds` tag. */
 export const LOCATION_DIRECTORY_REVALIDATE_SECONDS = 21600;
 const CACHE_TAGS = ['location-directory', 'guest-feeds'];
+
+/** The statuses the directory counts, so a node lists as many feeds. */
+const DIRECTORY_FEED_STATUSES: Array<
+  'active' | 'inactive' | 'development' | 'future'
+> = ['active', 'inactive', 'development', 'future'];
 
 /**
  * 400 (invalid hierarchy) and 404 (nothing located there) both mean the URL
@@ -110,15 +115,21 @@ const cachedDirectoryFeeds = unstable_cache(
     country?: string,
     subdivision?: string,
     municipality?: string,
-  ): Promise<LocationDirectoryFeedsResponse> => {
+  ): Promise<SearchFeedsResponse> => {
     const accessToken = await getGuestGcipIdToken();
     return await requireData(
       async () =>
-        await getLocationDirectoryFeeds(
+        await searchFeeds(
           {
-            ...toQuery(continent, country, subdivision, municipality),
-            limit: LOCATION_FEEDS_PAGE_SIZE,
-            offset,
+            query: {
+              ...toQuery(continent, country, subdivision, municipality),
+              status: DIRECTORY_FEED_STATUSES,
+              // Most relevant location first; the API rejects it without a
+              // location, so the root lists the newest feeds first.
+              sort: continent != undefined ? 'location' : undefined,
+              limit: LOCATION_FEEDS_PAGE_SIZE,
+              offset,
+            },
           },
           accessToken,
         ),
@@ -154,7 +165,7 @@ export const fetchLocationDirectoryFeeds = cache(
     country?: string,
     subdivision?: string,
     municipality?: string,
-  ): Promise<LocationDirectoryFeedsResponse | null> =>
+  ): Promise<SearchFeedsResponse | null> =>
     await nullWhenMissing(
       async () =>
         await cachedDirectoryFeeds(

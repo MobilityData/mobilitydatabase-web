@@ -348,14 +348,18 @@ export const getMetadata = async (): Promise<
     });
 };
 
+export type SearchFeedsResponse =
+  paths['/v1/search']['get']['responses'][200]['content']['application/json'];
+
+/**
+ * Also lists the feeds of a location directory node, with its location
+ * parameters and `sort: 'location'`.
+ */
 export const searchFeeds = async (
   params: AllFeedsParams,
   accessToken: string,
   userContextJwt?: string,
-): Promise<
-  | paths['/v1/search']['get']['responses'][200]['content']['application/json']
-  | undefined
-> => {
+): Promise<SearchFeedsResponse | undefined> => {
   const authMiddleware = generateAuthMiddlewareWithToken(
     accessToken,
     userContextJwt,
@@ -370,15 +374,8 @@ export type LocationDirectoryParams = NonNullable<
   paths['/v1/locations/directory']['get']['parameters']['query']
 >;
 
-export type LocationDirectoryFeedsParams = NonNullable<
-  paths['/v1/locations/directory/feeds']['get']['parameters']['query']
->;
-
 export type LocationDirectoryResponse =
   paths['/v1/locations/directory']['get']['responses'][200]['content']['application/json'];
-
-export type LocationDirectoryFeedsResponse =
-  paths['/v1/locations/directory/feeds']['get']['responses'][200]['content']['application/json'];
 
 /**
  * One level of the feed location directory: the node's breadcrumb, feed
@@ -396,27 +393,6 @@ export const getLocationDirectory = async (
   );
   return await withAuthMiddleware(authMiddleware, async () => {
     const response = await client.GET('/v1/locations/directory', {
-      params: { query: params },
-    });
-    return response.data;
-  });
-};
-
-/**
- * A page of the feeds located within a location directory node, already
- * sorted by relevance to that node.
- */
-export const getLocationDirectoryFeeds = async (
-  params: LocationDirectoryFeedsParams,
-  accessToken: string,
-  userContextJwt?: string,
-): Promise<LocationDirectoryFeedsResponse | undefined> => {
-  const authMiddleware = generateAuthMiddlewareWithToken(
-    accessToken,
-    userContextJwt,
-  );
-  return await withAuthMiddleware(authMiddleware, async () => {
-    const response = await client.GET('/v1/locations/directory/feeds', {
       params: { query: params },
     });
     return response.data;

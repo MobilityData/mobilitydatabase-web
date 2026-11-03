@@ -14,26 +14,27 @@ import {
 } from './locationDirectory';
 
 export const handlers = [
-  // Location directory: feeds of a node (paginated, relevance-sorted)
-  http.get(`*/v1/locations/directory/feeds`, ({ request }) => {
-    const params = new URL(request.url).searchParams;
-    const limit = Number(params.get('limit') ?? '20');
-    const offset = Number(params.get('offset') ?? '0');
-    const { status, body } = getMockDirectoryFeeds(
-      readDirectoryQuery(params),
-      Number.isFinite(limit) ? limit : 20,
-      Number.isFinite(offset) ? offset : 0,
-    );
-    return HttpResponse.json(body, { status });
-  }),
   // Location directory: breadcrumb, counts and children of a node
   http.get(`*/v1/locations/directory`, ({ request }) => {
     const params = new URL(request.url).searchParams;
     const { status, body } = getMockDirectory(readDirectoryQuery(params));
     return HttpResponse.json(body, { status });
   }),
-  // Mock search endpoint: return a list including test-516 and mdb-2947
-  http.get(`*/v1/search`, () => {
+  // Mock search endpoint. With location parameters (location directory
+  // pages): the feeds of that node, paginated and relevance-sorted.
+  // Otherwise: a list including test-516 and mdb-2947.
+  http.get(`*/v1/search`, ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    if (params.has('continent') || params.get('sort') === 'location') {
+      const limit = Number(params.get('limit') ?? '20');
+      const offset = Number(params.get('offset') ?? '0');
+      const { status, body } = getMockDirectoryFeeds(
+        readDirectoryQuery(params),
+        Number.isFinite(limit) ? limit : 20,
+        Number.isFinite(offset) ? offset : 0,
+      );
+      return HttpResponse.json(body, { status });
+    }
     return HttpResponse.json({
       total: 2,
       results: [
