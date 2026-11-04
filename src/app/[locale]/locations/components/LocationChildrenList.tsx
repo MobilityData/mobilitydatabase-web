@@ -28,7 +28,8 @@ export interface LocationChildCount {
 }
 
 export interface LocationChildItem {
-  slug: string;
+  /** Unique among siblings (the href). */
+  key: string;
   name: string;
   /** Emoji flag, countries only. */
   flag?: string;
@@ -129,7 +130,7 @@ export default function LocationChildrenList({ items }: Props): ReactElement {
             }}
           >
             {visibleItems.map((item) => (
-              <li key={item.slug}>
+              <li key={item.key}>
                 <Card sx={{ height: '100%', bgcolor: 'background.default' }}>
                   <CardActionArea
                     component={Link}

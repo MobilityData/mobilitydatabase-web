@@ -1269,7 +1269,7 @@
   "locations": {
     "root": "Locations",
     "title": "Feeds by location",
-    "rootIntro": "Browse open GTFS Schedule, GTFS Realtime and GBFS feeds by continent, country, region and municipality.",
+    "rootIntro": "Browse open GTFS Schedule, GTFS Realtime and GBFS feeds by location, from continents down to cities.",
     "nodeIntro": "{total, plural, =0 {No feeds are} one {# feed is} other {# feeds are}} located in {place}.",
     "feedCountsAria": "Feed counts by data type",
     "shortLabels": {
@@ -1278,10 +1278,9 @@
       "gbfs": "GBFS"
     },
     "childrenHeading": {
-      "continent": "Continents",
-      "country": "Countries",
-      "subdivision": "Regions",
-      "municipality": "Municipalities"
+      "continents": "Continents",
+      "countries": "Countries",
+      "places": "Places"
     },
     "childFeedTotal": "{count, plural, one {<b>#</b> feed} other {<b>#</b> feeds}}",
     "childrenSearchPlaceholder": "Search locations",
@@ -1296,7 +1295,7 @@
     "paginationAria": "Feed list pages",
     "meta": {
       "rootTitle": "Transit Feeds by Location | Mobility Database",
-      "rootDescription": "Browse open GTFS Schedule, GTFS Realtime and GBFS transit and mobility feeds by continent, country, region and municipality.",
+      "rootDescription": "Browse open GTFS Schedule, GTFS Realtime and GBFS transit and mobility feeds by location, from continents down to cities.",
       "nodeTitle": "{place} Transit Feeds | Mobility Database",
       "nodeTitlePaged": "{place} Transit Feeds, Page {page} | Mobility Database",
       "nodeDescription": "Browse {total} open transit and mobility feeds located in {place}: {gtfs} GTFS Schedule, {gtfs_rt} GTFS Realtime and {gbfs} GBFS."

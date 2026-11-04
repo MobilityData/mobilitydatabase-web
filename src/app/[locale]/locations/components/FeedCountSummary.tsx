@@ -5,11 +5,11 @@ import {
   formatCount,
   getFeedCountEntries,
   type FeedCountDataType,
-  type LocationDirectoryFeedCounts,
+  type LocationFeedCounts,
 } from '../lib/location-directory';
 
 interface Props {
-  counts: LocationDirectoryFeedCounts | undefined;
+  counts: LocationFeedCounts | undefined;
   locale: string;
 }
 

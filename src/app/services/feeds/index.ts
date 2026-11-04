@@ -352,8 +352,8 @@ export type SearchFeedsResponse =
   paths['/v1/search']['get']['responses'][200]['content']['application/json'];
 
 /**
- * Also lists the feeds of a location directory node, with its location
- * parameters and `sort: 'location'`.
+ * Also lists the feeds of a location directory page, with `continent` or
+ * `location_id` and `sort: 'location'`.
  */
 export const searchFeeds = async (
   params: AllFeedsParams,
@@ -370,29 +370,29 @@ export const searchFeeds = async (
   });
 };
 
-export type LocationDirectoryParams = NonNullable<
-  paths['/v1/locations/directory']['get']['parameters']['query']
+export type LocationsParams = NonNullable<
+  paths['/v1/locations']['get']['parameters']['query']
 >;
 
-export type LocationDirectoryResponse =
-  paths['/v1/locations/directory']['get']['responses'][200]['content']['application/json'];
+export type LocationsResponse =
+  paths['/v1/locations']['get']['responses'][200]['content']['application/json'];
 
 /**
- * One level of the feed location directory: the node's breadcrumb, feed
- * counts and children. Throws an `ApiError` with status 400 (invalid
- * hierarchy) or 404 (no feed located there).
+ * Searches locations (continents, countries, subdivisions, municipalities).
+ * Returns at most 100 results per call: page with `limit` and `offset`.
+ * Throws an `ApiError` with status 400 on an unsupported `sort`.
  */
-export const getLocationDirectory = async (
-  params: LocationDirectoryParams,
+export const getLocations = async (
+  params: LocationsParams,
   accessToken: string,
   userContextJwt?: string,
-): Promise<LocationDirectoryResponse | undefined> => {
+): Promise<LocationsResponse | undefined> => {
   const authMiddleware = generateAuthMiddlewareWithToken(
     accessToken,
     userContextJwt,
   );
   return await withAuthMiddleware(authMiddleware, async () => {
-    const response = await client.GET('/v1/locations/directory', {
+    const response = await client.GET('/v1/locations', {
       params: { query: params },
     });
     return response.data;

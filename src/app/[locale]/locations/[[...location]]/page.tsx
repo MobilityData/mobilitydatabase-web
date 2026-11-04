@@ -11,20 +11,21 @@ import FeedCountSummary from '../components/FeedCountSummary';
 import LocationChildrenGrid from '../components/LocationChildrenGrid';
 import LocationFeedsList from '../components/LocationFeedsList';
 import {
+  buildBreadcrumbSteps,
   buildLocationHref,
   buildPlaceName,
   FEEDS_SECTION_ID,
-  getBreadcrumbSlugs,
-  getChildLevel,
+  getLocationName,
+  getLocationSegments,
   getPageCount,
   getTotalFeedCount,
-  type LocationQuery,
+  type LocationPath,
   parseLocationSegments,
   parsePageParam,
 } from '../lib/location-directory';
 import {
-  fetchLocationDirectory,
-  fetchLocationDirectoryFeeds,
+  fetchLocationPage,
+  type LocationPageData,
 } from '../lib/location-directory-data';
 
 const SITE_URL = 'https://mobilitydatabase.org';
@@ -35,87 +36,79 @@ interface PageProps {
 }
 
 interface ParsedRequest {
-  query: LocationQuery;
+  locale: string;
+  location: LocationPath;
   page: number;
 }
 
+/** The request, or null when the URL or the page number is malformed. */
 async function parseRequest({
   params,
   searchParams,
-}: PageProps): Promise<{ locale: string } & (ParsedRequest | { query: null })> {
-  const [{ locale, location }, { page: rawPage }] = await Promise.all([
-    params,
-    searchParams,
-  ]);
-  const query = parseLocationSegments(location);
+}: PageProps): Promise<ParsedRequest | null> {
+  const [{ locale, location: segments }, { page: rawPage }] = await Promise.all(
+    [params, searchParams],
+  );
+  const location = parseLocationSegments(segments);
   const page = parsePageParam(rawPage);
-  if (query === null || page === null) return { locale, query: null };
-  return { locale, query, page };
+  if (location === null || page === null) return null;
+  return { locale, location, page };
 }
 
-function fetchDirectory(
-  query: LocationQuery,
-): ReturnType<typeof fetchLocationDirectory> {
-  return fetchLocationDirectory(
-    query.continent,
-    query.country,
-    query.subdivision,
-    query.municipality,
-  );
-}
-
-function fetchFeedsPage(
-  query: LocationQuery,
-  page: number,
-): ReturnType<typeof fetchLocationDirectoryFeeds> {
-  return fetchLocationDirectoryFeeds(
+/**
+ * The page data, or null when the location does not exist or the page is
+ * past the last one. Deduped by React cache() between generateMetadata and
+ * the page.
+ */
+async function fetchPageData({
+  location,
+  page,
+}: ParsedRequest): Promise<LocationPageData | null> {
+  const data = await fetchLocationPage(
     page,
-    query.continent,
-    query.country,
-    query.subdivision,
-    query.municipality,
+    location.continent,
+    location.path.join('/'),
   );
+  if (data === null || page > getPageCount(data.feeds.total ?? 0)) {
+    return null;
+  }
+  return data;
 }
 
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const request = await parseRequest(props);
-  if (request.query === null) return {};
-  const { query, page } = request;
-  // Same calls as the page: deduped by React cache() within the request.
-  const [directory, feeds, t] = await Promise.all([
-    fetchDirectory(query),
-    fetchFeedsPage(query, page),
+  if (request === null) return {};
+  const [data, t] = await Promise.all([
+    fetchPageData(request),
     getTranslations({ locale: request.locale, namespace: 'locations.meta' }),
   ]);
-  if (
-    directory === null ||
-    feeds === null ||
-    page > getPageCount(feeds.total ?? 0)
-  ) {
-    return {};
-  }
+  if (data === null) return {};
 
-  const place = buildPlaceName(directory.breadcrumb);
-  const counts = directory.feed_counts;
-  const isRoot = place === '';
-  const title = isRoot
-    ? t('rootTitle')
-    : page > 1
-      ? t('nodeTitlePaged', { place, page })
-      : t('nodeTitle', { place });
-  const description = isRoot
-    ? t('rootDescription')
-    : t('nodeDescription', {
-        place,
-        total: getTotalFeedCount(counts),
-        gtfs: counts?.gtfs ?? 0,
-        gtfs_rt: counts?.gtfs_rt ?? 0,
-        gbfs: counts?.gbfs ?? 0,
-      });
-  const url = `${SITE_URL}${buildLocationHref(
-    getBreadcrumbSlugs(directory.breadcrumb),
-    page,
-  )}`;
+  const { location } = data;
+  const { page } = request;
+  const place = buildPlaceName(location);
+  const counts = location?.feed_counts;
+  const title =
+    location === null
+      ? t('rootTitle')
+      : page > 1
+        ? t('nodeTitlePaged', { place, page })
+        : t('nodeTitle', { place });
+  const description =
+    location === null
+      ? t('rootDescription')
+      : t('nodeDescription', {
+          place,
+          total: getTotalFeedCount(counts),
+          gtfs: counts?.gtfs ?? 0,
+          gtfs_rt: counts?.gtfs_rt ?? 0,
+          gbfs: counts?.gbfs ?? 0,
+        });
+  const segments =
+    location === null || request.location.continent === undefined
+      ? []
+      : getLocationSegments(request.location.continent, location);
+  const url = `${SITE_URL}${buildLocationHref(segments, page)}`;
 
   return {
     title,
@@ -135,45 +128,46 @@ export default async function LocationsPage(
   props: PageProps,
 ): Promise<ReactElement> {
   const request = await parseRequest(props);
-  if (request.query === null) notFound();
-  const { locale, query, page } = request;
+  if (request === null) notFound();
+  const { locale, page } = request;
   setRequestLocale(locale);
 
-  // Directory node and feed page are independent: fetch them in parallel.
-  const [directory, feeds, t, tCommon] = await Promise.all([
-    fetchDirectory(query),
-    fetchFeedsPage(query, page),
+  const [data, t, tCommon] = await Promise.all([
+    fetchPageData(request),
     getTranslations('locations'),
     getTranslations('common'),
   ]);
-  if (directory === null || feeds === null) notFound();
+  if (data === null) notFound();
 
+  const { location, children, feeds } = data;
+  const continent = request.location.continent ?? '';
+  const isRoot = location === null;
   const total = feeds.total ?? 0;
   const pageCount = getPageCount(total);
-  if (page > pageCount) notFound();
-
-  const breadcrumb = directory.breadcrumb ?? [];
-  const slugs = getBreadcrumbSlugs(breadcrumb);
-  const place = buildPlaceName(breadcrumb);
-  const isRoot = breadcrumb.length === 0;
-  const children = directory.children ?? [];
-  const childLevel = getChildLevel(directory.level);
+  const segments = isRoot ? [] : getLocationSegments(continent, location);
+  const place = buildPlaceName(location);
+  const steps = buildBreadcrumbSteps(continent, location);
 
   const crumbs: Crumb[] = [
     { label: tCommon('feeds'), href: '/feeds' },
     { label: t('root'), href: isRoot ? undefined : buildLocationHref([]) },
-    ...breadcrumb.map((node, index) => ({
-      label: node.name ?? node.slug ?? '',
+    ...steps.map((step, index) => ({
+      label: step.label,
       href:
-        index === breadcrumb.length - 1
+        index === steps.length - 1
           ? undefined
-          : buildLocationHref(slugs.slice(0, index + 1)),
+          : buildLocationHref(step.segments),
     })),
   ];
   // Without history to pop, back goes one level up the directory.
   const backFallbackHref = isRoot
     ? '/feeds'
-    : buildLocationHref(slugs.slice(0, -1));
+    : buildLocationHref(segments.slice(0, -1));
+  const childrenHeading = isRoot
+    ? t('childrenHeading.continents')
+    : location.location_type === 'continent'
+      ? t('childrenHeading.countries')
+      : t('childrenHeading.places');
 
   return (
     <Container
@@ -187,7 +181,7 @@ export default async function LocationsPage(
           backFallbackHref={backFallbackHref}
         />
         <Typography variant='h1' sx={{ mt: 1 }}>
-          {isRoot ? t('title') : breadcrumb[breadcrumb.length - 1]?.name}
+          {isRoot ? t('title') : getLocationName(location)}
         </Typography>
         <Typography
           variant='subtitle1'
@@ -197,14 +191,17 @@ export default async function LocationsPage(
           {isRoot
             ? t('rootIntro')
             : t('nodeIntro', {
-                total: getTotalFeedCount(directory.feed_counts),
+                total: getTotalFeedCount(location.feed_counts),
                 place,
               })}
         </Typography>
 
-        <FeedCountSummary counts={directory.feed_counts} locale={locale} />
+        {/* No catalog-wide counts by data type at the root. */}
+        {isRoot ? null : (
+          <FeedCountSummary counts={location.feed_counts} locale={locale} />
+        )}
 
-        {childLevel !== null && children.length > 0 ? (
+        {children.length > 0 ? (
           <Box
             component='section'
             aria-labelledby='location-children-heading'
@@ -216,14 +213,14 @@ export default async function LocationsPage(
               variant='h5'
               sx={{ fontWeight: 700, mb: 2 }}
             >
-              {t(`childrenHeading.${childLevel}`)}{' '}
+              {childrenHeading}{' '}
               <Box component='span' sx={{ color: 'text.secondary' }}>
                 ({children.length})
               </Box>
             </Typography>
             <LocationChildrenGrid
-              nodes={children}
-              parentSlugs={slugs}
+              locations={children}
+              continent={continent}
               locale={locale}
             />
           </Box>
@@ -248,7 +245,7 @@ export default async function LocationsPage(
             total={total}
             page={page}
             pageCount={pageCount}
-            slugs={slugs}
+            segments={segments}
           />
         </Box>
       </SectionContainer>

@@ -334,11 +334,12 @@ export interface paths {
      *     <br><br>
      *     Location filters:
      *     <br>
-     *     - `continent`, `country`, `subdivision` and `municipality` restrict the results to feeds with a declared
-     *     location within that node of `/v1/locations/directory`, using the same slugs, parent requirements and
-     *     validation. Unknown slugs return no feed.
-     *     - To list the same feeds as a directory node's counts, also pass `status=active,inactive,development,future`.
-     *     - `sort=location` orders the results by relevance to the requested location instead of by creation date.
+     *     - `continent` restricts the results to feeds with stops in that continent, and `location_id` to feeds with
+     *     stops in that location of `/v1/locations`, sub-areas included. Feeds are matched through their
+     *     reverse-geolocated stops, so a feed that was never geolocated does not match. Unknown values return no feed.
+     *     - To list the same feeds as a location's `feed_counts`, also pass `status=active,inactive,development,future`.
+     *     - `sort=location` orders the results by the share of each feed's stops inside the requested location instead
+     *     of by creation date.
      *     <br>
      */
     get: operations['searchFeeds'];
@@ -357,25 +358,8 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description Search locations (countries, subdivisions and municipalities). Results can be filtered by a free-text query and narrowed to a specific country, subdivision or location type. Matches are ordered from the broadest area to the most specific, and by relevance within each level. */
+    /** @description Search locations (continents, countries, subdivisions and municipalities). Results can be filtered by a free-text query and narrowed to a specific continent, country, subdivision, parent location, path or location type. Matches are ordered from the broadest area to the most specific, and by relevance within each level, unless `sort=feed_count` is given. <br> Feed counts (`include_feed_counts`, `has_feeds`, `sort=feed_count`) count distinct feeds with a status of `active`, `inactive`, `development` or `future` that have reverse-geolocated stops in the location, sub-areas included. Work-in-progress feeds are counted only for callers allowed to see them, as in `/v1/search`. To list a location's feeds, call `/v1/search` with its `location_id` (or `continent` for a continent), `status=active,inactive,development,future` and `sort=location`. <br> Continents come from a fixed classification and are not geopolygons. They are only returned with `location_type=continent`; their `location_id`, `parent_location_id` and ISO fields are null, `slug` and `continent_slug` both hold the continent slug, and `path_names` and `path_slugs` are empty. */
     get: operations['getLocations'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/locations/directory': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** @description Browse the feed location directory one level at a time: continent > country > subdivision > municipality. The level is selected by the most specific parameter provided; with no parameters the response lists continents. <br> Feed counts are based on the feeds' declared locations, only include feeds with a status of `active`, `inactive`, `development` or `future`, and roll up to every ancestor level (a feed located in Montréal counts toward Québec, Canada and North America). A feed is counted at most once per node, even when it declares several locations within that node. <br> Each parameter requires its parent: `country` requires `continent`, `subdivision` requires `country`, and `municipality` requires `subdivision`. <br> To list the feeds of a node, call `/v1/search` with the same parameters, `status=active,inactive,development,future` and `sort=location`. */
-    get: operations['getLocationDirectory'];
     put?: never;
     post?: never;
     delete?: never;
@@ -1333,24 +1317,8 @@ export interface components {
        */
       municipality?: string;
     };
-    /**
-     * @description A level of the location directory:
-     *       * `root` - the whole world; its children are continents.
-     *       * `continent` - a continent, derived from the ISO 3166-1 country code.
-     *       * `country` - a country, identified by its ISO 3166-1 alpha-2 code.
-     *       * `subdivision` - a first-level subdivision as declared on the feed (e.g. a state or province).
-     *       * `municipality` - a municipality as declared on the feed.
-     * @example subdivision
-     * @enum {string}
-     */
-    LocationDirectoryLevel:
-      | 'root'
-      | 'continent'
-      | 'country'
-      | 'subdivision'
-      | 'municipality';
-    /** @description Number of distinct feeds per data type within a directory node. */
-    LocationDirectoryFeedCounts: {
+    /** @description Number of distinct feeds per data type with stops in a location, sub-areas included. */
+    LocationFeedCounts: {
       /** @example 42 */
       gtfs?: number;
       /** @example 18 */
@@ -1363,33 +1331,6 @@ export interface components {
        */
       total?: number;
     };
-    LocationDirectoryNode: {
-      level?: components['schemas']['LocationDirectoryLevel'];
-      /**
-       * @description URL-safe identifier of the node, used as the matching request parameter. Continents use a fixed slug (`africa`, `antarctica`, `asia`, `europe`, `north-america`, `oceania`, `south-america`), countries use a fixed slug of their short English name (`portugal`, `united-states`, `cote-d-ivoire`), and subdivisions and municipalities use their name lowercased, without accents, with every run of non-alphanumeric characters replaced by a single hyphen (`Québec` -> `quebec`, `Saint-Jean-sur-Richelieu` -> `saint-jean-sur-richelieu`).
-       * @example quebec
-       */
-      slug?: string;
-      /**
-       * @description The continent code (`AF`, `AN`, `AS`, `EU`, `NA`, `OC`, `SA`) or the ISO 3166-1 alpha-2 country code. Null for subdivisions and municipalities.
-       * @example null
-       */
-      code?: string | null;
-      /**
-       * @description Display name of the node in English.
-       * @example Québec
-       */
-      name?: string;
-      feed_counts?: components['schemas']['LocationDirectoryFeedCounts'];
-    };
-    LocationDirectoryResponse: {
-      level?: components['schemas']['LocationDirectoryLevel'];
-      /** @description The path from the continent down to the requested node, inclusive. Empty at the `root` level. */
-      breadcrumb?: components['schemas']['LocationDirectoryNode'][];
-      feed_counts?: components['schemas']['LocationDirectoryFeedCounts'];
-      /** @description The nodes one level below the requested node that contain at least one feed, sorted by name. Empty at the `municipality` level. */
-      children?: components['schemas']['LocationDirectoryNode'][];
-    };
     LocationSearchResponse: {
       /** @description The total number of matching locations regardless of limit and offset. */
       total?: number;
@@ -1398,12 +1339,12 @@ export interface components {
     };
     LocationSearchResult: {
       /**
-       * @description Stable location identifier.
+       * @description Stable location identifier. Null for continents.
        * @example 175905
        */
-      location_id?: number;
+      location_id?: number | null;
       /**
-       * @description Stable identifier of the nearest containing location.
+       * @description Stable identifier of the nearest containing location. Null for continents and countries.
        * @example 161950
        */
       parent_location_id?: number | null;
@@ -1418,11 +1359,42 @@ export interface components {
        */
       alt_name?: string | null;
       /**
-       * @description The type of location: `country` (has an ISO 3166-1 code), `subdivision` (has an ISO 3166-2 code) or `municipality` (a locality below the subdivision level).
+       * @description The type of location: `continent`, `country` (has an ISO 3166-1 code), `subdivision` (has an ISO 3166-2 code) or `municipality` (a locality below the subdivision level).
        * @example municipality
        * @enum {string}
        */
-      location_type?: 'country' | 'subdivision' | 'municipality';
+      location_type?: 'continent' | 'country' | 'subdivision' | 'municipality';
+      /**
+       * @description Code of the continent that contains this location (`AF`, `AN`, `AS`, `EU`, `NA`, `OC`, `SA`). Null when the country has no continent in the classification.
+       * @example NA
+       */
+      continent_code?: string | null;
+      /**
+       * @description URL-safe identifier of the continent, as accepted by the `continent` parameter.
+       * @example north-america
+       */
+      continent_slug?: string | null;
+      /**
+       * @description English name of the continent.
+       * @example North America
+       */
+      continent_name?: string | null;
+      /**
+       * @description URL-safe identifier of the location among its siblings: its name lowercased, without accents, with every run of non-alphanumeric characters replaced by a single hyphen (`Montréal` -> `montreal`). When siblings under the same parent would share a slug, each of them gets `-<location_id>` appended. A name without any ASCII letter or digit uses its `location_id` as the slug.
+       * @example montreal
+       */
+      slug?: string | null;
+      /**
+       * @description The slugs of the locations in `path_names`, in the same order; joined with `/` they form the `path` parameter. Empty for continents.
+       * @example [
+       *       "canada",
+       *       "quebec",
+       *       "montreal-region",
+       *       "montreal"
+       *     ]
+       */
+      path_slugs?: string[];
+      feed_counts?: components['schemas']['LocationFeedCounts'];
       /**
        * @description The name of the country that contains this location.
        * @example Canada
@@ -1904,14 +1876,12 @@ export interface components {
     is_official_query_param: boolean;
     /** @description If true, only return feeds that currently hold the Seal of Reliability; if false, only feeds without it. Viewing a feed's seal is public, but filtering the catalogue by it is granted per user and requires the `isSealFilterEnabled` feature flag - other callers receive a 403. To request access or learn more, contact us at api@mobilitydata.org. */
     has_seal_query_param: boolean;
-    /** @description Continent slug (`africa`, `antarctica`, `asia`, `europe`, `north-america`, `oceania`, `south-america`). */
-    location_directory_continent: string;
-    /** @description Country slug as returned by `/v1/locations/directory`, e.g. `portugal`. Case-insensitive. Requires `continent`. */
-    location_directory_country: string;
-    /** @description Subdivision slug as returned by `/v1/locations/directory`. Requires `country`. */
-    location_directory_subdivision: string;
-    /** @description Municipality slug as returned by `/v1/locations/directory`. Requires `subdivision`. */
-    location_directory_municipality: string;
+    /** @description Continent slug (`africa`, `antarctica`, `asia`, `europe`, `north-america`, `oceania`, `south-america`) or code (`AF`, `AN`, `AS`, `EU`, `NA`, `OC`, `SA`). Case-insensitive. */
+    location_continent: string;
+    /** @description A `location_id` from `/v1/locations`: only feeds with reverse-geolocated stops in that location, sub-areas included. */
+    location_id_query_param: number;
+    /** @description Sort order of the results. `admin_level` (default): from the broadest area to the most specific, then by relevance to `search_query` when one is given, then by display name. `feed_count`: most feeds first, then by display name. */
+    locations_sort: 'admin_level' | 'feed_count';
     /** @description The number of items to be returned. */
     limit_query_param_locations_endpoint: number;
     /** @description The number of items to be returned. */
@@ -1932,7 +1902,7 @@ export interface components {
     offset: number;
     /** @description General search query to match against transit provider, location, and feed name. */
     search_text_query_param: string;
-    /** @description Sort order of the results. `created_at` (default): newest feeds first, then by relevance to `search_query` when one is given. `location`: by relevance to the requested location, which requires `continent`. Feeds whose most specific matching declared location is closest to the requested level come first (when filtering on Québec, a feed located in "Canada, Québec" ranks above one located in "Canada, Québec, Montréal"); ties are broken by provider, feed name and feed id. */
+    /** @description Sort order of the results. `created_at` (default): newest feeds first, then by relevance to `search_query` when one is given. `location`: by relevance to the requested location, which requires `continent` or `location_id`. Feeds with the largest share of their reverse-geolocated stops inside the location come first (on Montréal, a city bus feed with all its stops in Montréal ranks above a regional train with a fifth of them there); ties are broken by provider, feed name and feed id. */
     search_sort: 'created_at' | 'location';
     /** @description Comma separated list of GBFS versions to filter by. */
     version_query_param: string;
@@ -2584,15 +2554,11 @@ export interface operations {
         license_is_spdx?: components['parameters']['license_is_spdx'];
         /** @description Comma separated list of tags to filter feeds by their license tags. */
         license_tags?: components['parameters']['license_tags'];
-        /** @description Continent slug (`africa`, `antarctica`, `asia`, `europe`, `north-america`, `oceania`, `south-america`). */
-        continent?: components['parameters']['location_directory_continent'];
-        /** @description Country slug as returned by `/v1/locations/directory`, e.g. `portugal`. Case-insensitive. Requires `continent`. */
-        country?: components['parameters']['location_directory_country'];
-        /** @description Subdivision slug as returned by `/v1/locations/directory`. Requires `country`. */
-        subdivision?: components['parameters']['location_directory_subdivision'];
-        /** @description Municipality slug as returned by `/v1/locations/directory`. Requires `subdivision`. */
-        municipality?: components['parameters']['location_directory_municipality'];
-        /** @description Sort order of the results. `created_at` (default): newest feeds first, then by relevance to `search_query` when one is given. `location`: by relevance to the requested location, which requires `continent`. Feeds whose most specific matching declared location is closest to the requested level come first (when filtering on Québec, a feed located in "Canada, Québec" ranks above one located in "Canada, Québec, Montréal"); ties are broken by provider, feed name and feed id. */
+        /** @description Continent slug (`africa`, `antarctica`, `asia`, `europe`, `north-america`, `oceania`, `south-america`) or code (`AF`, `AN`, `AS`, `EU`, `NA`, `OC`, `SA`). Case-insensitive. */
+        continent?: components['parameters']['location_continent'];
+        /** @description A `location_id` from `/v1/locations`: only feeds with reverse-geolocated stops in that location, sub-areas included. */
+        location_id?: components['parameters']['location_id_query_param'];
+        /** @description Sort order of the results. `created_at` (default): newest feeds first, then by relevance to `search_query` when one is given. `location`: by relevance to the requested location, which requires `continent` or `location_id`. Feeds with the largest share of their reverse-geolocated stops inside the location come first (on Montréal, a city bus feed with all its stops in Montréal ranks above a regional train with a fifth of them there); ties are broken by provider, feed name and feed id. */
         sort?: components['parameters']['search_sort'];
       };
       header?: never;
@@ -2614,7 +2580,7 @@ export interface operations {
           };
         };
       };
-      /** @description A location parameter was provided without its parent, the country does not belong to the continent, or `sort=location` was requested without a location. */
+      /** @description `sort=location` was requested without `continent` or `location_id`, or `sort` has an unsupported value. */
       400: {
         headers: {
           [name: string]: unknown;
@@ -2645,11 +2611,28 @@ export interface operations {
         subdivision_code?: string;
         /**
          * @description Filter by the type of location:
+         *       * `continent` - a continent, from a fixed country-to-continent classification.
          *       * `country` - a sovereign country, identified by an ISO 3166-1 code.
          *       * `subdivision` - a first-level subdivision (e.g. state or province), identified by an ISO 3166-2 code.
          *       * `municipality` - a locality below the subdivision level (e.g. a city or town).
          */
-        location_type?: 'country' | 'subdivision' | 'municipality';
+        location_type?:
+          | 'continent'
+          | 'country'
+          | 'subdivision'
+          | 'municipality';
+        /** @description Continent slug (`africa`, `antarctica`, `asia`, `europe`, `north-america`, `oceania`, `south-america`) or code (`AF`, `AN`, `AS`, `EU`, `NA`, `OC`, `SA`). Case-insensitive. */
+        continent?: components['parameters']['location_continent'];
+        /** @description Limit results to the direct children of this location (the next level down). */
+        parent_location_id?: number;
+        /** @description Return the location at this path: its `path_slugs` joined with `/`, from the country down, e.g. `canada/quebec/montreal`. Case-insensitive. Returns no result when no location has that path. */
+        path?: string;
+        /** @description When true, only return locations with at least one feed (see the feed count rules above). */
+        has_feeds?: boolean;
+        /** @description When true, include `feed_counts` in each result. */
+        include_feed_counts?: boolean;
+        /** @description Sort order of the results. `admin_level` (default): from the broadest area to the most specific, then by relevance to `search_query` when one is given, then by display name. `feed_count`: most feeds first, then by display name. */
+        sort?: components['parameters']['locations_sort'];
       };
       header?: never;
       path?: never;
@@ -2666,44 +2649,8 @@ export interface operations {
           'application/json': components['schemas']['LocationSearchResponse'];
         };
       };
-    };
-  };
-  getLocationDirectory: {
-    parameters: {
-      query?: {
-        /** @description Continent slug (`africa`, `antarctica`, `asia`, `europe`, `north-america`, `oceania`, `south-america`). */
-        continent?: components['parameters']['location_directory_continent'];
-        /** @description Country slug as returned by `/v1/locations/directory`, e.g. `portugal`. Case-insensitive. Requires `continent`. */
-        country?: components['parameters']['location_directory_country'];
-        /** @description Subdivision slug as returned by `/v1/locations/directory`. Requires `country`. */
-        subdivision?: components['parameters']['location_directory_subdivision'];
-        /** @description Municipality slug as returned by `/v1/locations/directory`. Requires `subdivision`. */
-        municipality?: components['parameters']['location_directory_municipality'];
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description The requested directory node, its breadcrumb and its children. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['LocationDirectoryResponse'];
-        };
-      };
-      /** @description A parameter was provided without its parent, or the country does not belong to the continent. */
+      /** @description `sort` has an unsupported value. */
       400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description No feed is located at the requested location. */
-      404: {
         headers: {
           [name: string]: unknown;
         };

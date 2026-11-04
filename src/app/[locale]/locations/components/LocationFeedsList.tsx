@@ -19,12 +19,12 @@ interface Props {
   total: number;
   page: number;
   pageCount: number;
-  /** Slugs of the current node, used to build the page links. */
-  slugs: string[];
+  /** URL segments of the current location, used to build the page links. */
+  segments: string[];
 }
 
 /**
- * The feeds of a directory node in the same compact table as the /feeds
+ * The feeds of a directory location in the same compact table as the /feeds
  * search (simple view), paginated with real links so every page is
  * crawlable and reflected in the URL.
  */
@@ -33,7 +33,7 @@ export default function LocationFeedsList({
   total,
   page,
   pageCount,
-  slugs,
+  segments,
 }: Props): ReactElement {
   const t = useTranslations('locations');
   // Same flag the /feeds search uses to show the seal badge on rows.
@@ -73,7 +73,7 @@ export default function LocationFeedsList({
             <PaginationItem
               component={Link}
               href={`${buildLocationHref(
-                slugs,
+                segments,
                 Math.min(Math.max(item.page ?? 1, 1), pageCount),
               )}#${FEEDS_SECTION_ID}`}
               prefetch={false}

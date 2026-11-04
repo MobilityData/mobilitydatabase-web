@@ -8,31 +8,25 @@ import feed2947 from '../../cypress/fixtures/feed_mdb-2947.json';
 import gtfsFeed2947 from '../../cypress/fixtures/gtfs_feed_mdb-2947.json';
 import datasets2947 from '../../cypress/fixtures/feed_datasets_mdb-2947.json';
 import {
-  getMockDirectory,
-  getMockDirectoryFeeds,
-  readDirectoryQuery,
+  getMockLocationFeeds,
+  getMockLocations,
+  isLocationSearch,
 } from './locationDirectory';
 
 export const handlers = [
-  // Location directory: breadcrumb, counts and children of a node
-  http.get(`*/v1/locations/directory`, ({ request }) => {
+  // Locations: continents, children by parent, path lookup, feed counts
+  http.get(`*/v1/locations`, ({ request }) => {
     const params = new URL(request.url).searchParams;
-    const { status, body } = getMockDirectory(readDirectoryQuery(params));
+    const { status, body } = getMockLocations(params);
     return HttpResponse.json(body, { status });
   }),
-  // Mock search endpoint. With location parameters (location directory
-  // pages): the feeds of that node, paginated and relevance-sorted.
+  // Mock search endpoint. With `continent` or `location_id` (location
+  // directory pages): the feeds located there, paginated and sorted.
   // Otherwise: a list including test-516 and mdb-2947.
   http.get(`*/v1/search`, ({ request }) => {
     const params = new URL(request.url).searchParams;
-    if (params.has('continent') || params.get('sort') === 'location') {
-      const limit = Number(params.get('limit') ?? '20');
-      const offset = Number(params.get('offset') ?? '0');
-      const { status, body } = getMockDirectoryFeeds(
-        readDirectoryQuery(params),
-        Number.isFinite(limit) ? limit : 20,
-        Number.isFinite(offset) ? offset : 0,
-      );
+    if (isLocationSearch(params)) {
+      const { status, body } = getMockLocationFeeds(params);
       return HttpResponse.json(body, { status });
     }
     return HttpResponse.json({

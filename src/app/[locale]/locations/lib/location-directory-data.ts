@@ -11,32 +11,39 @@ import { unstable_cache } from 'next/cache';
 import { getGuestGcipIdToken } from '../../../utils/auth-server';
 import {
   ApiError,
-  getLocationDirectory,
+  getLocations,
   searchFeeds,
-  type LocationDirectoryResponse,
+  type LocationsParams,
   type SearchFeedsResponse,
 } from '../../../services/feeds';
 import {
+  fetchAllPages,
+  getContinentSlug,
   getPageOffset,
+  getTotalFeedCount,
+  isLocationAtPath,
   LOCATION_FEEDS_PAGE_SIZE,
-  type LocationQuery,
+  type LocationResult,
 } from './location-directory';
 
 /** 6 hours; also flushed on demand with the existing `guest-feeds` tag. */
 export const LOCATION_DIRECTORY_REVALIDATE_SECONDS = 21600;
 const CACHE_TAGS = ['location-directory', 'guest-feeds'];
+const CACHE_OPTIONS = {
+  tags: CACHE_TAGS,
+  revalidate: LOCATION_DIRECTORY_REVALIDATE_SECONDS,
+};
 
-/** The statuses the directory counts, so a node lists as many feeds. */
+/** The statuses `feed_counts` counts, so a location lists as many feeds. */
 const DIRECTORY_FEED_STATUSES: Array<
   'active' | 'inactive' | 'development' | 'future'
 > = ['active', 'inactive', 'development', 'future'];
 
 /**
- * 400 (invalid hierarchy) and 404 (nothing located there) both mean the URL
- * does not exist. They are thrown as this error inside the cached functions,
- * because unstable_cache never stores a thrown error: caching the miss would
- * keep a location missing for hours after it starts to exist (e.g. a
- * 404 served before the API route was deployed).
+ * A URL that does not exist: a 400/404 from the API, or no location at the
+ * requested path. Thrown inside the cached functions because unstable_cache
+ * never stores a thrown error: caching the miss would keep a location missing
+ * for hours after it starts to exist.
  */
 class LocationNotFoundError extends Error {}
 
@@ -46,7 +53,7 @@ async function requireData<T>(
   try {
     const data = await request();
     if (data == undefined) {
-      throw new Error('Empty response from the location directory API');
+      throw new Error('Empty response from the locations API');
     }
     return data;
   } catch (error) {
@@ -72,61 +79,114 @@ async function nullWhenMissing<T>(
   }
 }
 
-function toQuery(
-  continent: string | undefined,
-  country: string | undefined,
-  subdivision: string | undefined,
-  municipality: string | undefined,
-): LocationQuery {
-  const query: LocationQuery = {};
-  if (continent != undefined) query.continent = continent;
-  if (country != undefined) query.country = country;
-  if (subdivision != undefined) query.subdivision = subdivision;
-  if (municipality != undefined) query.municipality = municipality;
-  return query;
+/** Every page of `GET /v1/locations` for the query (100 per call). */
+async function getAllLocations(
+  query: LocationsParams,
+  accessToken: string,
+): Promise<LocationResult[]> {
+  return await fetchAllPages(
+    async (offset, limit) =>
+      await requireData(
+        async () =>
+          await getLocations({ ...query, limit, offset }, accessToken),
+      ),
+  );
 }
 
 // unstable_cache keys on the key parts plus the call arguments, so the
 // arguments are kept primitive.
-const cachedDirectory = unstable_cache(
-  async (
-    continent?: string,
-    country?: string,
-    subdivision?: string,
-    municipality?: string,
-  ): Promise<LocationDirectoryResponse> => {
+
+const cachedContinents = unstable_cache(
+  async (): Promise<LocationResult[]> => {
     const accessToken = await getGuestGcipIdToken();
-    return await requireData(
+    return await getAllLocations(
+      { location_type: 'continent', include_feed_counts: true },
+      accessToken,
+    );
+  },
+  ['location-directory-continents'],
+  CACHE_OPTIONS,
+);
+
+/** The location at `continent/path`; throws when there is none. */
+const cachedLocation = unstable_cache(
+  async (continent: string, path: string): Promise<LocationResult> => {
+    const accessToken = await getGuestGcipIdToken();
+    const response = await requireData(
       async () =>
-        await getLocationDirectory(
-          toQuery(continent, country, subdivision, municipality),
+        await getLocations(
+          { continent, path, include_feed_counts: true, limit: 1 },
           accessToken,
         ),
     );
+    const location = response.results?.[0];
+    if (
+      location == undefined ||
+      location.location_id == undefined ||
+      !isLocationAtPath(location, continent, path.split('/'))
+    ) {
+      throw new LocationNotFoundError(`No location at ${continent}/${path}`);
+    }
+    return location;
   },
-  ['location-directory'],
-  { tags: CACHE_TAGS, revalidate: LOCATION_DIRECTORY_REVALIDATE_SECONDS },
+  ['location-directory-location'],
+  CACHE_OPTIONS,
 );
 
-const cachedDirectoryFeeds = unstable_cache(
+const CHILDREN_QUERY = {
+  has_feeds: true,
+  include_feed_counts: true,
+  sort: 'feed_count',
+} as const satisfies LocationsParams;
+
+const cachedCountries = unstable_cache(
+  async (continent: string): Promise<LocationResult[]> => {
+    const accessToken = await getGuestGcipIdToken();
+    return await getAllLocations(
+      { ...CHILDREN_QUERY, continent, location_type: 'country' },
+      accessToken,
+    );
+  },
+  ['location-directory-countries'],
+  CACHE_OPTIONS,
+);
+
+const cachedSubLocations = unstable_cache(
+  async (parentLocationId: number): Promise<LocationResult[]> => {
+    const accessToken = await getGuestGcipIdToken();
+    return await getAllLocations(
+      { ...CHILDREN_QUERY, parent_location_id: parentLocationId },
+      accessToken,
+    );
+  },
+  ['location-directory-sub-locations'],
+  CACHE_OPTIONS,
+);
+
+/**
+ * One page of feeds: newest first at the root (no location), otherwise most
+ * relevant to the continent or location first.
+ */
+const cachedFeeds = unstable_cache(
   async (
     offset: number,
-    continent?: string,
-    country?: string,
-    subdivision?: string,
-    municipality?: string,
+    continent: string | null,
+    locationId: number | null,
   ): Promise<SearchFeedsResponse> => {
     const accessToken = await getGuestGcipIdToken();
+    const location =
+      locationId !== null
+        ? { location_id: locationId, sort: 'location' as const }
+        : continent !== null
+          ? { continent, sort: 'location' as const }
+          : {};
     return await requireData(
       async () =>
         await searchFeeds(
           {
             query: {
-              ...toQuery(continent, country, subdivision, municipality),
+              ...location,
               status: DIRECTORY_FEED_STATUSES,
-              // Most relevant location first; the API rejects it without a
-              // location, so the root lists the newest feeds first.
-              sort: continent != undefined ? 'location' : undefined,
               limit: LOCATION_FEEDS_PAGE_SIZE,
               offset,
             },
@@ -136,44 +196,78 @@ const cachedDirectoryFeeds = unstable_cache(
     );
   },
   ['location-directory-feeds'],
-  { tags: CACHE_TAGS, revalidate: LOCATION_DIRECTORY_REVALIDATE_SECONDS },
+  CACHE_OPTIONS,
 );
+
+export interface LocationPageData {
+  /** The current location; null at the root. */
+  location: LocationResult | null;
+  /** Continents at the root, otherwise the locations with feeds one level down. */
+  children: LocationResult[];
+  /** The requested page of feeds located there. */
+  feeds: SearchFeedsResponse;
+}
+
+async function loadLocationPage(
+  page: number,
+  continent: string | undefined,
+  path: string,
+): Promise<LocationPageData> {
+  const offset = getPageOffset(page);
+
+  if (continent === undefined) {
+    const [continents, feeds] = await Promise.all([
+      cachedContinents(),
+      cachedFeeds(offset, null, null),
+    ]);
+    // Children deeper down are fetched with `has_feeds`; continents are not,
+    // so that an empty continent still resolves.
+    const children = continents.filter(
+      (continent) => getTotalFeedCount(continent.feed_counts) > 0,
+    );
+    return { location: null, children, feeds };
+  }
+
+  if (path === '') {
+    // Resolve the continent before listing its countries and feeds, so an
+    // unknown slug is a 404 and never adds entries to the data cache.
+    const continents = await cachedContinents();
+    const location = continents.find(
+      (candidate) => getContinentSlug(candidate) === continent,
+    );
+    if (location == undefined) {
+      throw new LocationNotFoundError(`Unknown continent ${continent}`);
+    }
+    const [children, feeds] = await Promise.all([
+      cachedCountries(continent),
+      cachedFeeds(offset, continent, null),
+    ]);
+    return { location, children, feeds };
+  }
+
+  const location = await cachedLocation(continent, path);
+  const locationId = location.location_id ?? 0;
+  const [children, feeds] = await Promise.all([
+    cachedSubLocations(locationId),
+    cachedFeeds(offset, null, locationId),
+  ]);
+  return { location, children, feeds };
+}
 
 /**
- * Directory node (breadcrumb, counts, children), or null when the location
- * does not exist. React cache() dedupes the generateMetadata + page calls
- * within one request; it compares arguments by identity, hence primitives.
+ * Everything a directory page shows, or null when the location does not
+ * exist. `path` is the location's path slugs joined with `/` (empty at the
+ * root and on a continent page). React cache() dedupes the generateMetadata
+ * and page calls within one request; it compares arguments by identity,
+ * hence primitives.
  */
-export const fetchLocationDirectory = cache(
-  async (
-    continent?: string,
-    country?: string,
-    subdivision?: string,
-    municipality?: string,
-  ): Promise<LocationDirectoryResponse | null> =>
-    await nullWhenMissing(
-      async () =>
-        await cachedDirectory(continent, country, subdivision, municipality),
-    ),
-);
-
-/** One page (1-based) of the feeds located in a node, or null if missing. */
-export const fetchLocationDirectoryFeeds = cache(
+export const fetchLocationPage = cache(
   async (
     page: number,
     continent?: string,
-    country?: string,
-    subdivision?: string,
-    municipality?: string,
-  ): Promise<SearchFeedsResponse | null> =>
+    path: string = '',
+  ): Promise<LocationPageData | null> =>
     await nullWhenMissing(
-      async () =>
-        await cachedDirectoryFeeds(
-          getPageOffset(page),
-          continent,
-          country,
-          subdivision,
-          municipality,
-        ),
+      async () => await loadLocationPage(page, continent, path),
     ),
 );

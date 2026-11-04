@@ -1269,7 +1269,7 @@
   "locations": {
     "root": "Lieux",
     "title": "Flux par lieu",
-    "rootIntro": "Parcourez les flux ouverts GTFS Schedule, GTFS Realtime et GBFS par continent, pays, région et municipalité.",
+    "rootIntro": "Parcourez les flux ouverts GTFS Schedule, GTFS Realtime et GBFS par lieu, des continents jusqu’aux villes.",
     "nodeIntro": "{total, plural, =0 {Aucun flux n’est situé} one {# flux est situé} other {# flux sont situés}} dans : {place}.",
     "feedCountsAria": "Nombre de flux par type de données",
     "shortLabels": {
@@ -1278,10 +1278,9 @@
       "gbfs": "GBFS"
     },
     "childrenHeading": {
-      "continent": "Continents",
-      "country": "Pays",
-      "subdivision": "Régions",
-      "municipality": "Municipalités"
+      "continents": "Continents",
+      "countries": "Pays",
+      "places": "Lieux"
     },
     "childFeedTotal": "{count, plural, one {<b>#</b> flux} other {<b>#</b> flux}}",
     "childrenSearchPlaceholder": "Rechercher un lieu",
@@ -1296,7 +1295,7 @@
     "paginationAria": "Pages de la liste des flux",
     "meta": {
       "rootTitle": "Flux de transport par lieu | Mobility Database",
-      "rootDescription": "Parcourez les flux ouverts de transport et de mobilité GTFS Schedule, GTFS Realtime et GBFS par continent, pays, région et municipalité.",
+      "rootDescription": "Parcourez les flux ouverts de transport et de mobilité GTFS Schedule, GTFS Realtime et GBFS par lieu, des continents jusqu’aux villes.",
       "nodeTitle": "Flux de transport : {place} | Mobility Database",
       "nodeTitlePaged": "Flux de transport : {place}, page {page} | Mobility Database",
       "nodeDescription": "Parcourez {total} flux ouverts de transport et de mobilité situés dans : {place}. {gtfs} GTFS Schedule, {gtfs_rt} GTFS Realtime et {gbfs} GBFS."
