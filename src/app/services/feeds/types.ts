@@ -2626,7 +2626,7 @@ export interface operations {
         continent?: components['parameters']['location_continent'];
         /** @description Limit results to the direct children of this location (the next level down). */
         parent_location_id?: number;
-        /** @description Return the location at this path: its `path_slugs` joined with `/`, from the country down, e.g. `canada/quebec/montreal`. Case-insensitive. Returns no result when no location has that path. */
+        /** @description Return the location at this path: its `path_slugs` joined with `/`, from the country down, e.g. `canada/quebec/montreal`. Case-insensitive; leading and trailing slashes are ignored. Returns no result when no location has that path. */
         path?: string;
         /** @description When true, only return locations with at least one feed (see the feed count rules above). */
         has_feeds?: boolean;
