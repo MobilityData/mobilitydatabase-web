@@ -336,7 +336,8 @@ export interface paths {
      *     <br>
      *     - `continent` restricts the results to feeds with stops in that continent, and `location_id` to feeds with
      *     stops in that location of `/v1/locations`, sub-areas included. Feeds are matched through their
-     *     reverse-geolocated stops, so a feed that was never geolocated does not match. Unknown values return no feed.
+     *     reverse-geolocated stops, so a feed that was never geolocated does not match. A GTFS Realtime feed that was
+     *     never geolocated matches the locations of the schedule feeds it references. Unknown values return no feed.
      *     - To list the same feeds as a location's `feed_counts`, also pass `status=active,inactive,development,future`.
      *     - `sort=location` orders the results by the share of each feed's stops inside the requested location instead
      *     of by creation date.
@@ -358,7 +359,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description Search locations (continents, countries, subdivisions and municipalities). Results can be filtered by a free-text query and narrowed to a specific continent, country, subdivision, parent location, path or location type. Matches are ordered from the broadest area to the most specific, and by relevance within each level, unless `sort=feed_count` is given. <br> Feed counts (`include_feed_counts`, `has_feeds`, `sort=feed_count`) count distinct feeds with a status of `active`, `inactive`, `development` or `future` that have reverse-geolocated stops in the location, sub-areas included. Work-in-progress feeds are counted only for callers allowed to see them, as in `/v1/search`. To list a location's feeds, call `/v1/search` with its `location_id` (or `continent` for a continent), `status=active,inactive,development,future` and `sort=location`. <br> Continents come from a fixed classification and are not geopolygons. They are only returned with `location_type=continent`; their `location_id`, `parent_location_id` and ISO fields are null, `slug` and `continent_slug` both hold the continent slug, and `path_names` and `path_slugs` are empty. */
+    /** @description Search locations (continents, countries, subdivisions and municipalities). Results can be filtered by a free-text query and narrowed to a specific continent, country, subdivision, parent location, path or location type. Matches are ordered from the broadest area to the most specific, and by relevance within each level, unless `sort=feed_count` is given. <br> Feed counts (`include_feed_counts`, `has_feeds`, `sort=feed_count`) count distinct feeds with a status of `active`, `inactive`, `development` or `future` that have reverse-geolocated stops in the location, sub-areas included. A GTFS Realtime feed that was never geolocated is counted in the locations of the schedule feeds it references. Work-in-progress feeds are counted only for callers allowed to see them, as in `/v1/search`. To list a location's feeds, call `/v1/search` with its `location_id` (or `continent` for a continent), `status=active,inactive,development,future` and `sort=location`. <br> Continents come from a fixed classification and are not geopolygons. They are only returned with `location_type=continent`; their `location_id`, `parent_location_id` and ISO fields are null, `slug` and `continent_slug` both hold the continent slug, and `path_names` and `path_slugs` are empty. */
     get: operations['getLocations'];
     put?: never;
     post?: never;
@@ -1878,7 +1879,7 @@ export interface components {
     has_seal_query_param: boolean;
     /** @description Continent slug (`africa`, `antarctica`, `asia`, `europe`, `north-america`, `oceania`, `south-america`) or code (`AF`, `AN`, `AS`, `EU`, `NA`, `OC`, `SA`). Case-insensitive. */
     location_continent: string;
-    /** @description A `location_id` from `/v1/locations`: only feeds with reverse-geolocated stops in that location, sub-areas included. */
+    /** @description A `location_id` from `/v1/locations`: only feeds with reverse-geolocated stops in that location, sub-areas included. A GTFS Realtime feed that was never geolocated takes the locations of the schedule feeds it references. */
     location_id_query_param: number;
     /** @description Sort order of the results. `admin_level` (default): from the broadest area to the most specific, then by relevance to `search_query` when one is given, then by display name. `feed_count`: most feeds first, then by display name. */
     locations_sort: 'admin_level' | 'feed_count';
@@ -2556,7 +2557,7 @@ export interface operations {
         license_tags?: components['parameters']['license_tags'];
         /** @description Continent slug (`africa`, `antarctica`, `asia`, `europe`, `north-america`, `oceania`, `south-america`) or code (`AF`, `AN`, `AS`, `EU`, `NA`, `OC`, `SA`). Case-insensitive. */
         continent?: components['parameters']['location_continent'];
-        /** @description A `location_id` from `/v1/locations`: only feeds with reverse-geolocated stops in that location, sub-areas included. */
+        /** @description A `location_id` from `/v1/locations`: only feeds with reverse-geolocated stops in that location, sub-areas included. A GTFS Realtime feed that was never geolocated takes the locations of the schedule feeds it references. */
         location_id?: components['parameters']['location_id_query_param'];
         /** @description Sort order of the results. `created_at` (default): newest feeds first, then by relevance to `search_query` when one is given. `location`: by relevance to the requested location, which requires `continent` or `location_id`. Feeds with the largest share of their reverse-geolocated stops inside the location come first (on Montréal, a city bus feed with all its stops in Montréal ranks above a regional train with a fifth of them there); ties are broken by provider, feed name and feed id. */
         sort?: components['parameters']['search_sort'];
