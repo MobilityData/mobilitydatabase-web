@@ -144,6 +144,26 @@
     "missingCode": "Il manque à ce lien le code de sécurité nécessaire.",
     "backToSignIn": "Aller à la connexion"
   },
+  "unsubscribe": {
+    "loadingTitle": "Chargement de votre abonnement",
+    "loadingDescription": "Veuillez patienter pendant que nous recherchons cette notification.",
+    "title": "Se désabonner des courriels",
+    "description": "Ce lien concerne uniquement vos notifications <strong>{type}</strong>. Vous désabonner de celles-ci ne modifiera aucune de vos autres notifications de Mobility Database.",
+    "alreadyUnsubscribedTitle": "Déjà désabonné",
+    "alreadyUnsubscribedDescription": "Vous ne recevez plus les notifications <strong>{type}</strong>. Vous pouvez tout de même vous désabonner de toutes vos autres notifications ci-dessous.",
+    "unsubscribeOne": "Se désabonner de {type} uniquement",
+    "unsubscribeAll": "Se désabonner de toutes les notifications",
+    "manageNotifications": "Gérer les notifications",
+    "manageHint": "Pour choisir les flux ou les types de notifications qui vous intéressent, utilisez Gérer les notifications.",
+    "successTitle": "Vous êtes désabonné",
+    "successOneDescription": "Vous ne recevrez plus les notifications <strong>{type}</strong>. Vos autres notifications restent inchangées.",
+    "successAllDescription": "Vous ne recevrez plus aucun courriel de notification de Mobility Database.",
+    "errorTitle": "Impossible de se désabonner",
+    "notFoundDescription": "Ce lien de désabonnement n'est pas valide, ou vous êtes déjà désabonné.",
+    "loadFailedDescription": "Nous n'avons pas pu charger cet abonnement. Veuillez réessayer dans un instant.",
+    "unsubscribeFailed": "Une erreur s'est produite et vous êtes toujours abonné. Veuillez réessayer.",
+    "tryAgain": "Réessayer"
+  },
   "resetPassword": {
     "verifyingTitle": "Vérification de votre lien",
     "verifyingDescription": "Veuillez patienter pendant que nous vérifions votre lien de réinitialisation.",
