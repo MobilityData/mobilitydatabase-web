@@ -46,6 +46,7 @@ import {
 } from './Header.style';
 import ThemeToggle from './ThemeToggle';
 import HeaderSearchBar from './HeaderSearchBar';
+import HeaderFeedsMenu from './HeaderFeedsMenu';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { useAuthSession } from './AuthSessionProvider';
@@ -280,31 +281,44 @@ export default function DrawerAppBar(): React.ReactElement {
 
           <Box sx={{ display: { xs: 'none', md: 'block' } }}>
             <HeaderSearchBar onOpenChange={setIsSearchOpen} />
-            {navigationItems.map((item) => (
-              <Link
-                data-cy={
-                  'header-' + item.title.toLowerCase().replace(/\s+/g, '-')
-                }
-                href={item.external === true ? item.target : '/' + item.target}
-                key={item.title}
-                target={item.external === true ? '_blank' : '_self'}
-                rel={item.external === true ? 'noopener noreferrer' : ''}
-              >
-                <Button
-                  sx={(theme) => ({
-                    ...animatedButtonStyling(theme),
-                    color: theme.vars.palette.text.primary,
-                  })}
-                  variant={'text'}
-                  endIcon={item.external === true ? <OpenInNew /> : null}
-                  className={
-                    activeTab.includes('/' + item.target) ? 'active' : ''
+            {navigationItems.map((item) =>
+              item.target === 'feeds' ? (
+                <HeaderFeedsMenu
+                  key={item.title}
+                  title={item.title}
+                  isActive={
+                    activeTab.includes('/feeds') ||
+                    activeTab.includes('/locations')
                   }
+                />
+              ) : (
+                <Link
+                  data-cy={
+                    'header-' + item.title.toLowerCase().replace(/\s+/g, '-')
+                  }
+                  href={
+                    item.external === true ? item.target : '/' + item.target
+                  }
+                  key={item.title}
+                  target={item.external === true ? '_blank' : '_self'}
+                  rel={item.external === true ? 'noopener noreferrer' : ''}
                 >
-                  {item.title}
-                </Button>
-              </Link>
-            ))}
+                  <Button
+                    sx={(theme) => ({
+                      ...animatedButtonStyling(theme),
+                      color: theme.vars.palette.text.primary,
+                    })}
+                    variant={'text'}
+                    endIcon={item.external === true ? <OpenInNew /> : null}
+                    className={
+                      activeTab.includes('/' + item.target) ? 'active' : ''
+                    }
+                  >
+                    {item.title}
+                  </Button>
+                </Link>
+              ),
+            )}
 
             <Box
               component='span'

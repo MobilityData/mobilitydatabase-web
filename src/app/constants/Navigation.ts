@@ -15,6 +15,22 @@ export const MOBILITY_DATA_LINKS = {
   github: 'https://github.com/MobilityData/mobility-database-catalogs',
 };
 
+export const FEEDS_TARGET = '/feeds';
+export const LOCATIONS_TARGET = '/locations';
+
+/**
+ * Sub-items of the "Feeds" header menu (desktop dropdown and mobile drawer).
+ * `titleKey` is a key of the `common` messages namespace.
+ */
+export const feedsMenuItems = [
+  { titleKey: 'search', target: FEEDS_TARGET, dataCy: 'header-feeds-search' },
+  {
+    titleKey: 'locations',
+    target: LOCATIONS_TARGET,
+    dataCy: 'header-feeds-locations',
+  },
+] as const;
+
 export const WEB_VALIDATOR_LINK = 'https://gtfs-validator.mobilitydata.org';
 export const GTFS_ORG_LINK = 'https://gtfs.org';
 export const GBFS_LINK = 'https://github.com/MobilityData/gbfs';

@@ -125,7 +125,9 @@
     "metricsAdminOnly": "Metrics - Admin Only",
     "languageSelect": "Language select",
     "transitFeedsRedirectTitle": "You've been redirected from TransitFeeds",
-    "transitFeedsRedirectBody": "This page now lives on MobilityDatabase.org, where you'll find the most up-to-date transit data."
+    "transitFeedsRedirectBody": "This page now lives on MobilityDatabase.org, where you'll find the most up-to-date transit data.",
+    "locations": "Locations",
+    "feedsMenu": "Feeds menu"
   },
   "emailVerification": {
     "loadingTitle": "Verifying your email",
@@ -1254,13 +1256,49 @@
       "contactUs": "Contact Us",
       "shareFeedback": "Share Feedback",
       "privacyPolicy": "Privacy Policy",
-      "termsAndConditions": "Terms and Conditions"
+      "termsAndConditions": "Terms and Conditions",
+      "locations": "Locations"
     },
     "aria": {
       "github": "GitHub",
       "slack": "Slack",
       "linkedin": "LinkedIn",
       "logo": "Mobility Database logo"
+    }
+  },
+  "locations": {
+    "root": "Locations",
+    "title": "Feeds by location",
+    "rootIntro": "Browse open GTFS Schedule, GTFS Realtime and GBFS feeds by location, from continents down to cities.",
+    "nodeIntro": "{total, plural, =0 {No feeds are} one {# feed is} other {# feeds are}} located in {place}.",
+    "feedCountsAria": "Feed counts by data type",
+    "shortLabels": {
+      "gtfs": "GTFS",
+      "gtfs_rt": "GTFS-RT",
+      "gbfs": "GBFS"
+    },
+    "childrenHeading": {
+      "continents": "Continents",
+      "countries": "Countries",
+      "places": "Places"
+    },
+    "childFeedTotal": "{count, plural, one {<b>#</b> feed} other {<b>#</b> feeds}}",
+    "childrenSearchPlaceholder": "Search locations",
+    "childrenSearchAria": "Filter the locations below by name",
+    "childLoadingAria": "Loading {name}",
+    "childrenSearchResults": "{count, plural, =0 {No matching locations} one {# matching location} other {# matching locations}}",
+    "childrenSearchEmpty": "No location matches “{query}”.",
+    "feedsHeading": "Feeds in {place}",
+    "allFeedsHeading": "All feeds",
+    "resultsRange": "Showing {start}–{end} of {total} feeds",
+    "noFeeds": "No feeds are listed for this location yet.",
+    "paginationAria": "Feed list pages",
+    "meta": {
+      "rootTitle": "Transit Feeds by Location | Mobility Database",
+      "rootDescription": "Browse open GTFS Schedule, GTFS Realtime and GBFS transit and mobility feeds by location, from continents down to cities.",
+      "nodeTitle": "{place} Transit Feeds | Mobility Database",
+      "nodeTitlePaged": "{place} Transit Feeds, Page {page} | Mobility Database",
+      "nodeDescription": "Browse {total} open transit and mobility feeds located in {place}: {gtfs} GTFS Schedule, {gtfs_rt} GTFS Realtime and {gbfs} GBFS."
     }
   }
 }
