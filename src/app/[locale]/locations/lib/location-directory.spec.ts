@@ -3,16 +3,15 @@ import {
   buildLocationHref,
   buildPlaceName,
   fetchAllPages,
+  fetchRemainingPages,
   filterByName,
   formatCount,
-  getContinentSlug,
   getFeedCountEntries,
   getLocationName,
   getLocationSegments,
   getPageCount,
   getPageOffset,
   getTotalFeedCount,
-  isLocationAtPath,
   type LocationResult,
   normalizeLocationName,
   parseLocationSegments,
@@ -21,15 +20,15 @@ import {
 } from './location-directory';
 
 const northAmerica: LocationResult = {
-  location_id: null,
+  location_id: -5,
   parent_location_id: null,
   location_type: 'continent',
+  continent_code: 'NA',
   name: 'North America',
   slug: 'north-america',
-  continent_slug: 'north-america',
-  continent_name: 'North America',
-  path_slugs: [],
-  path_names: [],
+  path: 'north-america',
+  path_slugs: ['north-america'],
+  path_names: ['North America'],
 };
 
 // Variable depth: Montréal sits under an intermediate region.
@@ -37,46 +36,69 @@ const montreal: LocationResult = {
   location_id: 175905,
   parent_location_id: 161950,
   location_type: 'municipality',
+  continent_code: 'NA',
   name: 'Montréal',
   slug: 'montreal',
-  continent_slug: 'north-america',
-  continent_name: 'North America',
-  path_slugs: ['canada', 'quebec', 'montreal-region', 'montreal'],
-  path_names: ['Canada', 'Québec', 'Montréal (region)', 'Montréal'],
+  path: 'north-america/canada/quebec/montreal-region/montreal',
+  path_slugs: [
+    'north-america',
+    'canada',
+    'quebec',
+    'montreal-region',
+    'montreal',
+  ],
+  path_names: [
+    'North America',
+    'Canada',
+    'Québec',
+    'Montréal (region)',
+    'Montréal',
+  ],
 };
 
 const canada: LocationResult = {
   location_id: 1,
-  parent_location_id: null,
+  parent_location_id: -5,
   location_type: 'country',
+  continent_code: 'NA',
   name: 'Canada',
   slug: 'canada',
-  continent_slug: 'north-america',
-  continent_name: 'North America',
-  path_slugs: ['canada'],
-  path_names: ['Canada'],
+  path: 'north-america/canada',
+  path_slugs: ['north-america', 'canada'],
+  path_names: ['North America', 'Canada'],
+};
+
+// A country without continent in the classification.
+const clipperton: LocationResult = {
+  location_id: 2,
+  parent_location_id: null,
+  location_type: 'country',
+  continent_code: null,
+  name: 'Clipperton',
+  slug: 'clipperton',
+  path: 'clipperton',
+  path_slugs: ['clipperton'],
+  path_names: ['Clipperton'],
 };
 
 describe('parseLocationSegments', () => {
-  it('returns an empty path at the root', () => {
-    expect(parseLocationSegments(undefined)).toEqual({ path: [] });
-    expect(parseLocationSegments([])).toEqual({ path: [] });
+  it('returns no slugs at the root', () => {
+    expect(parseLocationSegments(undefined)).toEqual([]);
+    expect(parseLocationSegments([])).toEqual([]);
   });
 
-  it('splits the continent from the path slugs, at any depth', () => {
-    expect(parseLocationSegments(['north-america'])).toEqual({
-      continent: 'north-america',
-      path: [],
-    });
-    expect(parseLocationSegments(['north-america', 'canada'])).toEqual({
-      continent: 'north-america',
-      path: ['canada'],
-    });
-    const deep = ['canada', 'quebec', 'montreal-region', 'montreal', 'a', 'b'];
-    expect(parseLocationSegments(['north-america', ...deep])).toEqual({
-      continent: 'north-america',
-      path: deep,
-    });
+  it('keeps every slug, continent first, at any depth', () => {
+    expect(parseLocationSegments(['north-america'])).toEqual(['north-america']);
+    const deep = [
+      'north-america',
+      'canada',
+      'quebec',
+      'montreal-region',
+      'montreal',
+      'a',
+    ];
+    expect(parseLocationSegments(deep)).toEqual(deep);
+    expect(parseLocationSegments(['clipperton'])).toEqual(['clipperton']);
   });
 
   it('accepts collision suffixes and non-Latin lowercase slugs', () => {
@@ -86,15 +108,20 @@ describe('parseLocationSegments', () => {
         'united-states',
         'ohio',
         'washington-township-123456',
-      ])?.path,
-    ).toEqual(['united-states', 'ohio', 'washington-township-123456']);
-    expect(parseLocationSegments(['asia', '東京'])?.path).toEqual(['東京']);
+      ]),
+    ).toEqual([
+      'north-america',
+      'united-states',
+      'ohio',
+      'washington-township-123456',
+    ]);
+    expect(parseLocationSegments(['asia', '東京'])).toEqual(['asia', '東京']);
   });
 
   it('decodes percent-encoded segments', () => {
-    expect(
-      parseLocationSegments(['asia', encodeURIComponent('東京')])?.path,
-    ).toEqual(['東京']);
+    expect(parseLocationSegments(['asia', encodeURIComponent('東京')])).toEqual(
+      ['asia', '東京'],
+    );
   });
 
   it.each([
@@ -171,74 +198,54 @@ describe('buildLocationHref', () => {
 });
 
 describe('location segments and names', () => {
-  it('links a location through its path slugs under the continent', () => {
-    expect(getLocationSegments('north-america', montreal)).toEqual([
+  it('links a location through its API path', () => {
+    expect(getLocationSegments(montreal)).toEqual([
       'north-america',
       'canada',
       'quebec',
       'montreal-region',
       'montreal',
     ]);
-    expect(
-      buildLocationHref(getLocationSegments('north-america', canada)),
-    ).toBe('/locations/north-america/canada');
-  });
-
-  it('links a continent through its own slug', () => {
-    expect(getLocationSegments('', northAmerica)).toEqual(['north-america']);
-    expect(getContinentSlug({ ...northAmerica, continent_slug: null })).toBe(
-      'north-america',
+    expect(buildLocationHref(getLocationSegments(canada))).toBe(
+      '/locations/north-america/canada',
+    );
+    expect(buildLocationHref(getLocationSegments(northAmerica))).toBe(
+      '/locations/north-america',
+    );
+    expect(buildLocationHref(getLocationSegments(clipperton))).toBe(
+      '/locations/clipperton',
     );
   });
 
   it('round-trips with URL parsing', () => {
-    const href = buildLocationHref(
-      getLocationSegments('north-america', montreal),
-      2,
-    );
+    const href = buildLocationHref(getLocationSegments(montreal), 2);
     expect(href).toBe(
       '/locations/north-america/canada/quebec/montreal-region/montreal?page=2',
     );
     const segments = href.split('?')[0].split('/').slice(2);
-    const parsed = parseLocationSegments(segments);
-    expect(parsed).toEqual({
-      continent: 'north-america',
-      path: montreal.path_slugs,
-    });
-    expect(
-      isLocationAtPath(montreal, 'north-america', parsed?.path ?? []),
-    ).toBe(true);
-  });
-
-  it('checks the result is the requested location', () => {
-    expect(isLocationAtPath(canada, 'north-america', ['canada'])).toBe(true);
-    // The API also accepts continent codes: only the slug is canonical.
-    expect(isLocationAtPath(canada, 'na', ['canada'])).toBe(false);
-    expect(isLocationAtPath(canada, 'north-america', ['mexico'])).toBe(false);
+    expect(parseLocationSegments(segments)?.join('/')).toBe(montreal.path);
   });
 
   it('names a location, falling back to its slug', () => {
     expect(getLocationName(montreal)).toBe('Montréal');
     expect(getLocationName({ ...montreal, name: null })).toBe('montreal');
-    expect(getLocationName({ ...northAmerica, name: null })).toBe(
-      'North America',
-    );
+    expect(getLocationName(northAmerica)).toBe('North America');
   });
 });
 
 describe('buildBreadcrumbSteps', () => {
   it('is empty at the root', () => {
-    expect(buildBreadcrumbSteps('', null)).toEqual([]);
+    expect(buildBreadcrumbSteps(null)).toEqual([]);
   });
 
   it('has a single step on a continent', () => {
-    expect(buildBreadcrumbSteps('north-america', northAmerica)).toEqual([
+    expect(buildBreadcrumbSteps(northAmerica)).toEqual([
       { label: 'North America', segments: ['north-america'] },
     ]);
   });
 
   it('adds one step per path name, linked by the path slug prefix', () => {
-    expect(buildBreadcrumbSteps('north-america', montreal)).toEqual([
+    expect(buildBreadcrumbSteps(montreal)).toEqual([
       { label: 'North America', segments: ['north-america'] },
       { label: 'Canada', segments: ['north-america', 'canada'] },
       { label: 'Québec', segments: ['north-america', 'canada', 'quebec'] },
@@ -259,14 +266,19 @@ describe('buildBreadcrumbSteps', () => {
     ]);
   });
 
-  it('falls back to the continent slug and ignores unaligned names', () => {
-    const steps = buildBreadcrumbSteps('north-america', {
+  it('starts at the country without continent', () => {
+    expect(buildBreadcrumbSteps(clipperton)).toEqual([
+      { label: 'Clipperton', segments: ['clipperton'] },
+    ]);
+  });
+
+  it('ignores unaligned names', () => {
+    const steps = buildBreadcrumbSteps({
       ...canada,
-      continent_name: null,
-      path_names: ['Canada', 'Extra'],
+      path_names: ['North America', 'Canada', 'Extra'],
     });
     expect(steps.map((step) => step.label)).toEqual([
-      'north-america',
+      'North America',
       'Canada',
     ]);
   });
@@ -286,6 +298,14 @@ describe('buildPlaceName', () => {
     expect(buildPlaceName(montreal)).toBe(
       'Montréal, Montréal (region), Québec, Canada',
     );
+  });
+
+  it('keeps the country of a location without continent', () => {
+    expect(buildPlaceName(clipperton)).toBe('Clipperton');
+  });
+
+  it('falls back to the name without path names', () => {
+    expect(buildPlaceName({ ...canada, path_names: [] })).toBe('Canada');
   });
 });
 
@@ -328,6 +348,22 @@ describe('fetchAllPages', () => {
     const fetchPage = jest.fn(async (offset: number) => pageOf(25, offset, 10));
     await expect(fetchAllPages(fetchPage)).resolves.toHaveLength(25);
     expect(fetchPage.mock.calls.map(([offset]) => offset)).toEqual([0, 10, 20]);
+  });
+
+  it('completes a first page fetched elsewhere', async () => {
+    const fetchPage = jest.fn(async (offset: number, limit: number) =>
+      pageOf(230, offset, limit),
+    );
+    const results = await fetchRemainingPages(pageOf(230, 0, 100), fetchPage);
+    expect(results).toEqual(Array.from({ length: 230 }, (_, index) => index));
+    expect(fetchPage.mock.calls).toEqual([
+      [100, 100],
+      [200, 100],
+    ]);
+    await expect(
+      fetchRemainingPages(pageOf(42, 0, 100), fetchPage),
+    ).resolves.toHaveLength(42);
+    expect(fetchPage).toHaveBeenCalledTimes(2);
   });
 
   it('handles empty and total-less responses', async () => {

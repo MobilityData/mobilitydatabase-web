@@ -1,13 +1,17 @@
 /**
  * Mock data and logic for the location directory endpoints:
- *   GET /v1/locations (continents and geopolygon locations)
- *   GET /v1/search with `continent` / `location_id` (the feeds of a location)
+ *   GET /v1/locations (list and search)
+ *   GET /v1/locations/lookup (one location by path, with its children)
+ *   GET /v1/locations/{location_id} and /v1/locations/{location_id}/children
+ *   GET /v1/search with `location_id` / `location_path` (a location's feeds)
  *
- * Locations form a tree of variable depth (Los Angeles sits under a county,
- * San Francisco directly under California). Feed counts, `has_feeds` and the
- * `sort=location` relevance are derived from MOCK_FEEDS' stop locations, so
- * the mock behaves like the API: a feed counts once per location, sub-areas
- * included. Location ids, feed ids, URLs and names are fictional mock data.
+ * Locations form a tree of variable depth under the continents (Los Angeles
+ * sits under a county, San Francisco directly under California). Continents
+ * have negative ids and parent their countries; a country without continent
+ * starts its own path. Feed counts, `has_feeds` and the `sort=location`
+ * relevance are derived from MOCK_FEEDS' stop locations, so the mock behaves
+ * like the API: a feed counts once per location, sub-areas included.
+ * Location ids, feed ids, URLs and names are fictional mock data.
  */
 import type { components } from '../app/services/feeds/types';
 
@@ -15,44 +19,45 @@ type Feed = components['schemas']['SearchFeedItemResult'];
 type LocationResult = components['schemas']['LocationSearchResult'];
 type FeedCounts = components['schemas']['LocationFeedCounts'];
 type LocationsResponse = components['schemas']['LocationSearchResponse'];
+type LocationDetail = components['schemas']['LocationDetail'];
 interface FeedsResponse {
   total: number;
   results: Feed[];
 }
 
-interface Continent {
-  slug: string;
-  code: string;
-  name: string;
-}
-
-const CONTINENTS: Continent[] = [
-  { slug: 'africa', code: 'AF', name: 'Africa' },
-  { slug: 'antarctica', code: 'AN', name: 'Antarctica' },
-  { slug: 'europe', code: 'EU', name: 'Europe' },
-  { slug: 'north-america', code: 'NA', name: 'North America' },
-  { slug: 'oceania', code: 'OC', name: 'Oceania' },
-];
-
-type PlaceType = 'country' | 'subdivision' | 'municipality';
+type PlaceType = 'continent' | 'country' | 'subdivision' | 'municipality';
 
 interface Place {
   id: number;
   parent: number | null;
   type: PlaceType;
   name: string;
-  /** ISO 3166-1 (countries) or ISO 3166-2 (subdivisions) code. */
+  /**
+   * Continent code, ISO 3166-1 (countries) or ISO 3166-2 (subdivisions)
+   * code.
+   */
   code?: string;
-  /** Countries only. */
-  continent?: string;
 }
+
+/** Fixed ids, as in the API; Asia and South America have no feeds here. */
+const continent = (id: number, name: string, code: string): Place => ({
+  id,
+  parent: null,
+  type: 'continent',
+  name,
+  code,
+});
+const AFRICA = -1;
+const EUROPE = -4;
+const NORTH_AMERICA = -5;
+const OCEANIA = -6;
 
 const country = (
   id: number,
   name: string,
   code: string,
-  continent: string,
-): Place => ({ id, parent: null, type: 'country', name, code, continent });
+  continentId: number | null,
+): Place => ({ id, parent: continentId, type: 'country', name, code });
 const subdivision = (
   id: number,
   parent: number,
@@ -67,7 +72,14 @@ const municipality = (id: number, parent: number, name: string): Place => ({
 });
 
 export const MOCK_PLACES: Place[] = [
-  country(100, 'Canada', 'CA', 'north-america'),
+  continent(AFRICA, 'Africa', 'AF'),
+  continent(-2, 'Antarctica', 'AN'),
+  continent(-3, 'Asia', 'AS'),
+  continent(EUROPE, 'Europe', 'EU'),
+  continent(NORTH_AMERICA, 'North America', 'NA'),
+  continent(OCEANIA, 'Oceania', 'OC'),
+  continent(-7, 'South America', 'SA'),
+  country(100, 'Canada', 'CA', NORTH_AMERICA),
   subdivision(110, 100, 'Québec', 'CA-QC'),
   municipality(111, 110, 'Montréal'),
   municipality(112, 110, 'Laval'),
@@ -77,7 +89,7 @@ export const MOCK_PLACES: Place[] = [
   municipality(121, 120, 'Toronto'),
   subdivision(130, 100, 'British Columbia', 'CA-BC'),
   municipality(131, 130, 'Vancouver'),
-  country(200, 'United States', 'US', 'north-america'),
+  country(200, 'United States', 'US', NORTH_AMERICA),
   subdivision(210, 200, 'California', 'US-CA'),
   // Extra intermediate level: county > city.
   municipality(211, 210, 'Los Angeles County'),
@@ -90,18 +102,20 @@ export const MOCK_PLACES: Place[] = [
   // Siblings sharing a name: both slugs get `-<location_id>`.
   municipality(123456, 230, 'Washington Township'),
   municipality(123457, 230, 'Washington Township'),
-  country(300, 'France', 'FR', 'europe'),
+  country(300, 'France', 'FR', EUROPE),
   subdivision(310, 300, 'Île-de-France', 'FR-IDF'),
   municipality(311, 310, 'Paris'),
-  country(400, 'Germany', 'DE', 'europe'),
+  country(400, 'Germany', 'DE', EUROPE),
   subdivision(410, 400, 'Berlin', 'DE-BE'),
   municipality(411, 410, 'Berlin'),
-  country(500, 'Australia', 'AU', 'oceania'),
+  country(500, 'Australia', 'AU', OCEANIA),
   subdivision(510, 500, 'New South Wales', 'AU-NSW'),
   municipality(511, 510, 'Sydney'),
-  country(600, 'South Africa', 'ZA', 'africa'),
+  country(600, 'South Africa', 'ZA', AFRICA),
   subdivision(610, 600, 'Western Cape', 'ZA-WC'),
   municipality(611, 610, 'Cape Town'),
+  // No continent in the classification: its path starts at the country.
+  country(700, 'Clipperton', 'CP', null),
 ];
 
 const PLACES_BY_ID = new Map(MOCK_PLACES.map((place) => [place.id, place]));
@@ -127,7 +141,7 @@ function slugOf(place: Place): string {
   return collides ? `${slug}-${place.id}` : slug;
 }
 
-/** The place and its ancestors, from the country down. */
+/** The place and its ancestors, from the continent down. */
 function chainOf(place: Place): Place[] {
   const chain: Place[] = [];
   let current: Place | undefined = place;
@@ -139,9 +153,8 @@ function chainOf(place: Place): Place[] {
   return chain;
 }
 
-function continentOf(place: Place): Continent | undefined {
-  const slug = chainOf(place)[0].continent;
-  return CONTINENTS.find((continent) => continent.slug === slug);
+function ancestorOfType(place: Place, type: PlaceType): Place | undefined {
+  return chainOf(place).find((ancestor) => ancestor.type === type);
 }
 
 function isWithin(placeId: number, ancestorId: number): boolean {
@@ -225,6 +238,8 @@ const FEED_SEEDS: FeedSeed[] = [
   ['gtfs_rt', 'Example Transport NSW', 'Trip updates', [511]],
   // Africa
   ['gtfs', 'Example Cape Town Bus', 'Bus rapid transit', [611]],
+  // No continent
+  ['gtfs', 'Example Island Boats', 'Supply boats', [700]],
 ];
 
 interface MockFeed {
@@ -235,12 +250,14 @@ interface MockFeed {
 function declaredLocation(
   placeId: number,
 ): NonNullable<Feed['locations']>[number] {
-  const chain = chainOf(PLACES_BY_ID.get(placeId) as Place);
+  const place = PLACES_BY_ID.get(placeId) as Place;
+  const chain = chainOf(place);
+  const placeCountry = ancestorOfType(place, 'country');
   const municipalities = chain.filter(({ type }) => type === 'municipality');
   return {
-    country_code: chain[0].code,
-    country: chain[0].name,
-    subdivision_name: chain.find(({ type }) => type === 'subdivision')?.name,
+    country_code: placeCountry?.code,
+    country: placeCountry?.name,
+    subdivision_name: ancestorOfType(place, 'subdivision')?.name,
     municipality: municipalities[municipalities.length - 1]?.name,
   };
 }
@@ -274,29 +291,14 @@ function toMockFeed(
 
 const MOCK_FEEDS: MockFeed[] = FEED_SEEDS.map(toMockFeed);
 
-/** Where to look for feeds: a continent slug and/or a location id. */
-interface FeedScope {
-  continent?: string;
-  locationId?: number;
-}
-
-/** Share of a feed's stop groups inside the scope, 0 when outside. */
-function shareIn({ stopPlaces }: MockFeed, scope: FeedScope): number {
-  const inside = stopPlaces.filter((placeId) => {
-    const place = PLACES_BY_ID.get(placeId) as Place;
-    if (
-      scope.continent != undefined &&
-      continentOf(place)?.slug !== scope.continent
-    ) {
-      return false;
-    }
-    return scope.locationId == undefined || isWithin(placeId, scope.locationId);
-  });
+/** Share of a feed's stop groups inside the location, 0 when outside. */
+function shareIn({ stopPlaces }: MockFeed, locationId: number): number {
+  const inside = stopPlaces.filter((placeId) => isWithin(placeId, locationId));
   return inside.length / stopPlaces.length;
 }
 
-function feedsIn(scope: FeedScope): MockFeed[] {
-  return MOCK_FEEDS.filter((feed) => shareIn(feed, scope) > 0);
+function feedsIn(locationId: number): MockFeed[] {
+  return MOCK_FEEDS.filter((feed) => shareIn(feed, locationId) > 0);
 }
 
 function countFeeds(feeds: MockFeed[]): FeedCounts {
@@ -312,74 +314,60 @@ function countFeeds(feeds: MockFeed[]): FeedCounts {
 
 interface Row {
   result: LocationResult;
-  scope: FeedScope;
   depth: number;
+  counts: FeedCounts;
 }
 
-function continentRow(continent: Continent): Row {
-  return {
-    depth: 0,
-    scope: { continent: continent.slug },
-    result: {
-      location_id: null,
-      parent_location_id: null,
-      name: continent.name,
-      alt_name: null,
-      location_type: 'continent',
-      continent_code: continent.code,
-      continent_slug: continent.slug,
-      continent_name: continent.name,
-      slug: continent.slug,
-      path_slugs: [],
-      path_names: [],
-      country_name: null,
-      country_code: null,
-      subdivision_name: null,
-      subdivision_code: null,
-      display_name: continent.name,
-    },
-  };
-}
-
-function placeRow(place: Place): Row {
+function toRow(place: Place): Row {
   const chain = chainOf(place);
-  const continent = continentOf(place);
-  const placeSubdivision = chain.find(({ type }) => type === 'subdivision');
+  const placeContinent = ancestorOfType(place, 'continent');
+  const placeCountry = ancestorOfType(place, 'country');
+  const placeSubdivision = ancestorOfType(place, 'subdivision');
+  const pathSlugs = chain.map(slugOf);
+  // From the country down, or the continent itself.
+  const displayChain =
+    place.type === 'continent'
+      ? chain
+      : chain.filter(({ type }) => type !== 'continent');
   return {
     depth: chain.length,
-    scope: { locationId: place.id },
+    counts: countFeeds(feedsIn(place.id)),
     result: {
       location_id: place.id,
       parent_location_id: place.parent,
       name: place.name,
       alt_name: null,
       location_type: place.type,
-      continent_code: continent?.code ?? null,
-      continent_slug: continent?.slug ?? null,
-      continent_name: continent?.name ?? null,
+      continent_code: placeContinent?.code ?? null,
       slug: slugOf(place),
-      path_slugs: chain.map(slugOf),
+      path: pathSlugs.join('/'),
+      path_slugs: pathSlugs,
       path_names: chain.map(({ name }) => name),
-      country_name: chain[0].name,
-      country_code: chain[0].code ?? null,
+      country_name: placeCountry?.name ?? null,
+      country_code: placeCountry?.code ?? null,
       subdivision_name: placeSubdivision?.name ?? null,
       subdivision_code: placeSubdivision?.code ?? null,
-      display_name: chain.map(({ name }) => name).join(', '),
+      display_name: displayChain.map(({ name }) => name).join(', '),
     },
   };
 }
 
-const ROWS: Row[] = [
-  ...CONTINENTS.map(continentRow),
-  ...MOCK_PLACES.map(placeRow),
-];
+const ROWS: Row[] = MOCK_PLACES.map(toRow);
+const ROWS_BY_ID = new Map(
+  ROWS.map((row) => [row.result.location_id as number, row]),
+);
 
 export type MockResult<T> =
   | { status: 200; body: T }
-  | { status: 400; body: { detail: string } };
+  | { status: 400 | 404; body: { detail: string } };
 
 const badRequest = (detail: string): MockResult<never> => ({
   status: 400,
+  body: { detail },
+});
+
+const notFound = (detail: string): MockResult<never> => ({
+  status: 404,
   body: { detail },
 });
 
@@ -394,14 +382,35 @@ function readPaging(
   return { limit, offset };
 }
 
-function readContinent(params: URLSearchParams): string | undefined {
+/** The comma-separated `include` values, or null when one is unsupported. */
+function readInclude(
+  params: URLSearchParams,
+  allowed: readonly string[],
+): Set<string> | null {
+  const values = (params.get('include') ?? '')
+    .split(',')
+    .filter((value) => value !== '');
+  if (values.some((value) => !allowed.includes(value))) return null;
+  return new Set(values);
+}
+
+function readSort(
+  params: URLSearchParams,
+): 'admin_level' | 'feed_count' | null {
+  const sort = params.get('sort') ?? 'admin_level';
+  return sort === 'admin_level' || sort === 'feed_count' ? sort : null;
+}
+
+function readContinent(params: URLSearchParams): number | undefined {
   const value = params.get('continent')?.toLowerCase();
   if (value == undefined || value === '') return undefined;
   // Slug or code, case-insensitive; unknown values match nothing.
   return (
-    CONTINENTS.find(({ slug, code }) =>
-      [slug, code.toLowerCase()].includes(value),
-    )?.slug ?? `unknown:${value}`
+    ROWS.find(
+      ({ result }) =>
+        result.location_type === 'continent' &&
+        [result.slug, result.continent_code?.toLowerCase()].includes(value),
+    )?.result.location_id ?? Number.NaN
   );
 }
 
@@ -411,40 +420,70 @@ const normalize = (text: string): string =>
     .replace(/\p{Diacritic}/gu, '')
     .toLowerCase();
 
+function sortRows(rows: Row[], sort: 'admin_level' | 'feed_count'): Row[] {
+  return [...rows].sort(
+    (a, b) =>
+      (sort === 'feed_count'
+        ? (b.counts.total ?? 0) - (a.counts.total ?? 0)
+        : a.depth - b.depth) ||
+      (a.result.display_name ?? '').localeCompare(b.result.display_name ?? ''),
+  );
+}
+
+/**
+ * Filters, sorts and pages rows like the list endpoints; `include` adds the
+ * feed counts.
+ */
+function listRows(
+  rows: Row[],
+  params: URLSearchParams,
+  include: Set<string>,
+): MockResult<LocationsResponse> {
+  const sort = readSort(params);
+  if (sort === null) return badRequest('Unsupported sort.');
+  const paging = readPaging(params, 100);
+  if (paging === null) return badRequest('Invalid limit or offset.');
+  const hasFeeds = params.get('has_feeds') === 'true';
+  const matching = sortRows(
+    rows.filter(({ counts }) => !hasFeeds || (counts.total ?? 0) > 0),
+    sort,
+  );
+  return {
+    status: 200,
+    body: {
+      total: matching.length,
+      results: matching
+        .slice(paging.offset, paging.offset + paging.limit)
+        .map(({ result, counts }) =>
+          include.has('feed_counts')
+            ? { ...result, feed_counts: counts }
+            : result,
+        ),
+    },
+  };
+}
+
 /** GET /v1/locations */
 export function getMockLocations(
   params: URLSearchParams,
 ): MockResult<LocationsResponse> {
-  const sort = params.get('sort') ?? 'admin_level';
-  if (sort !== 'admin_level' && sort !== 'feed_count') {
-    return badRequest('Unsupported sort.');
-  }
-  const paging = readPaging(params, 100);
-  if (paging === null) return badRequest('Invalid limit or offset.');
-
+  const include = readInclude(params, ['feed_counts']);
+  if (include === null) return badRequest('Unsupported include.');
   const locationType = params.get('location_type');
-  const continent = readContinent(params);
-  const parentId = params.get('parent_location_id');
-  const path = params.get('path')?.toLowerCase();
+  const continentId = readContinent(params);
   const countryCode = params.get('country_code')?.toUpperCase();
   const subdivisionCode = params.get('subdivision_code')?.toUpperCase();
   const words = normalize(params.get('search_query') ?? '')
     .split(/\s+/)
     .filter((word) => word !== '');
-  const hasFeeds = params.get('has_feeds') === 'true';
-  const includeCounts = params.get('include_feed_counts') === 'true';
 
-  const rows = ROWS.map((row) => ({
-    row,
-    counts: countFeeds(feedsIn(row.scope)),
-  })).filter(({ row: { result }, counts }) => {
+  const rows = ROWS.filter(({ result }) => {
     if (locationType != null && result.location_type !== locationType)
       return false;
-    if (continent != undefined && result.continent_slug !== continent)
-      return false;
-    if (parentId != null && String(result.parent_location_id) !== parentId)
-      return false;
-    if (path != undefined && (result.path_slugs ?? []).join('/') !== path)
+    if (
+      continentId != undefined &&
+      !isWithin(result.location_id as number, continentId)
+    )
       return false;
     if (countryCode != undefined && result.country_code !== countryCode)
       return false;
@@ -454,70 +493,132 @@ export function getMockLocations(
     )
       return false;
     const haystack = normalize(result.display_name ?? '');
-    if (!words.every((word) => haystack.includes(word))) return false;
-    return !hasFeeds || (counts.total ?? 0) > 0;
+    return words.every((word) => haystack.includes(word));
   });
+  return listRows(rows, params, include);
+}
 
-  rows.sort(
-    (a, b) =>
-      (sort === 'feed_count'
-        ? (b.counts.total ?? 0) - (a.counts.total ?? 0)
-        : a.row.depth - b.row.depth) ||
-      (a.row.result.display_name ?? '').localeCompare(
-        b.row.result.display_name ?? '',
-      ),
+function childRows(locationId: number): Row[] {
+  return ROWS.filter(({ result }) => result.parent_location_id === locationId);
+}
+
+/** The location of `row`, with its children when `include` has them. */
+function detailOf(
+  row: Row,
+  params: URLSearchParams,
+): MockResult<LocationDetail> {
+  const include = readInclude(params, ['feed_counts', 'children']);
+  if (include === null) return badRequest('Unsupported include.');
+  const location: LocationDetail = include.has('feed_counts')
+    ? { ...row.result, feed_counts: row.counts }
+    : { ...row.result };
+  if (!include.has('children')) return { status: 200, body: location };
+  const children = listRows(
+    childRows(row.result.location_id as number),
+    params,
+    include,
   );
+  if (children.status !== 200) return children;
+  return { status: 200, body: { ...location, children: children.body } };
+}
 
-  return {
-    status: 200,
-    body: {
-      total: rows.length,
-      results: rows
-        .slice(paging.offset, paging.offset + paging.limit)
-        .map(({ row, counts }) =>
-          includeCounts ? { ...row.result, feed_counts: counts } : row.result,
-        ),
-    },
-  };
+function normalizePath(path: string): string {
+  return path.toLowerCase().replace(/^\/+|\/+$/g, '');
+}
+
+/** GET /v1/locations/lookup */
+export function getMockLocationByPath(
+  params: URLSearchParams,
+): MockResult<LocationDetail> {
+  const path = normalizePath(params.get('path') ?? '');
+  if (path === '') return badRequest('Missing path.');
+  const row = ROWS.find(({ result }) => result.path === path);
+  if (row == undefined) return notFound(`No location at ${path}.`);
+  return detailOf(row, params);
+}
+
+function readLocationId(raw: string): number | undefined {
+  const id = Number(raw);
+  return Number.isInteger(id) ? id : undefined;
+}
+
+/** GET /v1/locations/{location_id} */
+export function getMockLocation(
+  rawId: string,
+  params: URLSearchParams,
+): MockResult<LocationDetail> {
+  const id = readLocationId(rawId);
+  if (id === undefined) return badRequest('Invalid location_id.');
+  const row = ROWS_BY_ID.get(id);
+  if (row == undefined) return notFound(`No location ${id}.`);
+  return detailOf(row, params);
+}
+
+/** GET /v1/locations/{location_id}/children */
+export function getMockLocationChildren(
+  rawId: string,
+  params: URLSearchParams,
+): MockResult<LocationsResponse> {
+  const id = readLocationId(rawId);
+  if (id === undefined) return badRequest('Invalid location_id.');
+  if (!ROWS_BY_ID.has(id)) return notFound(`No location ${id}.`);
+  const include = readInclude(params, ['feed_counts']);
+  if (include === null) return badRequest('Unsupported include.');
+  return listRows(childRows(id), params, include);
 }
 
 /** True when a /v1/search request targets a location. */
 export function isLocationSearch(params: URLSearchParams): boolean {
   return (
-    params.has('continent') ||
     params.has('location_id') ||
+    params.has('location_path') ||
     params.get('sort') === 'location'
   );
 }
 
-/** GET /v1/search with `continent` and/or `location_id`. */
+/** GET /v1/search with `location_id` or `location_path`. */
 export function getMockLocationFeeds(
   params: URLSearchParams,
 ): MockResult<FeedsResponse> {
   const sort = params.get('sort') ?? 'created_at';
-  const continent = readContinent(params);
   const rawLocationId = params.get('location_id');
-  const locationId = rawLocationId == null ? undefined : Number(rawLocationId);
-  if (locationId != undefined && !Number.isInteger(locationId)) {
-    return badRequest('Invalid location_id.');
+  const rawPath = params.get('location_path');
+  if (rawLocationId != null && rawPath != null) {
+    return badRequest('Pass location_id or location_path, not both.');
+  }
+  let locationId: number | undefined;
+  if (rawLocationId != null) {
+    locationId = readLocationId(rawLocationId);
+    if (locationId === undefined) return badRequest('Invalid location_id.');
   }
   if (sort !== 'created_at' && sort !== 'location') {
     return badRequest('Unsupported sort.');
   }
-  if (
-    sort === 'location' &&
-    continent == undefined &&
-    locationId == undefined
-  ) {
-    return badRequest('sort=location requires continent or location_id.');
+  if (sort === 'location' && rawLocationId == null && rawPath == null) {
+    return badRequest('sort=location requires location_id or location_path.');
   }
   const paging = readPaging(params, 3500);
   if (paging === null) return badRequest('Invalid limit or offset.');
 
-  const scope: FeedScope = { continent, locationId };
-  const sorted = feedsIn(scope).sort((a, b) =>
-    sort === 'location'
-      ? shareIn(b, scope) - shareIn(a, scope) ||
+  if (rawPath != null) {
+    const path = normalizePath(rawPath);
+    locationId = ROWS.find(({ result }) => result.path === path)?.result
+      .location_id;
+    // Unknown values return no feed.
+    if (locationId == undefined) {
+      return { status: 200, body: { total: 0, results: [] } };
+    }
+  }
+
+  const scoped =
+    locationId == undefined
+      ? MOCK_FEEDS
+      : ROWS_BY_ID.has(locationId)
+        ? feedsIn(locationId)
+        : [];
+  const sorted = [...scoped].sort((a, b) =>
+    sort === 'location' && locationId != undefined
+      ? shareIn(b, locationId) - shareIn(a, locationId) ||
         (a.feed.provider ?? '').localeCompare(b.feed.provider ?? '') ||
         (a.feed.feed_name ?? '').localeCompare(b.feed.feed_name ?? '') ||
         a.feed.id.localeCompare(b.feed.id)

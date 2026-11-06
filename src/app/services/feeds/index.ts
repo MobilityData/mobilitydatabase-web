@@ -1,5 +1,5 @@
 import createClient, { type Middleware } from 'openapi-fetch';
-import type { paths } from './types';
+import type { components, paths } from './types';
 import { type AllFeedsParams, type AllFeedType } from './utils';
 import { type GtfsRoute } from '../../types';
 import { getFeedFilesBaseUrl } from '../../utils/config';
@@ -352,8 +352,8 @@ export type SearchFeedsResponse =
   paths['/v1/search']['get']['responses'][200]['content']['application/json'];
 
 /**
- * Also lists the feeds of a location directory page, with `continent` or
- * `location_id` and `sort: 'location'`.
+ * Also lists the feeds of a location directory page, with `location_path`
+ * (or `location_id`) and `sort: 'location'`.
  */
 export const searchFeeds = async (
   params: AllFeedsParams,
@@ -380,7 +380,7 @@ export type LocationsResponse =
 /**
  * Searches locations (continents, countries, subdivisions, municipalities).
  * Returns at most 100 results per call: page with `limit` and `offset`.
- * Throws an `ApiError` with status 400 on an unsupported `sort`.
+ * Throws an `ApiError` with status 400 on an unsupported `sort` or `include`.
  */
 export const getLocations = async (
   params: LocationsParams,
@@ -394,6 +394,88 @@ export const getLocations = async (
   return await withAuthMiddleware(authMiddleware, async () => {
     const response = await client.GET('/v1/locations', {
       params: { query: params },
+    });
+    return response.data;
+  });
+};
+
+export type LocationDetail = components['schemas']['LocationDetail'];
+
+export type LocationLookupParams =
+  paths['/v1/locations/lookup']['get']['parameters']['query'];
+
+/**
+ * One location from its `path` (e.g. `north-america/canada/quebec`), with
+ * the first page of its children when `include` has `children`; `has_feeds`,
+ * `sort`, `limit` and `offset` then apply to the children.
+ * Throws an `ApiError` with status 404 when no location has that path.
+ */
+export const getLocationByPath = async (
+  params: LocationLookupParams,
+  accessToken: string,
+  userContextJwt?: string,
+): Promise<LocationDetail | undefined> => {
+  const authMiddleware = generateAuthMiddlewareWithToken(
+    accessToken,
+    userContextJwt,
+  );
+  return await withAuthMiddleware(authMiddleware, async () => {
+    const response = await client.GET('/v1/locations/lookup', {
+      params: { query: params },
+    });
+    return response.data;
+  });
+};
+
+export type LocationParams = NonNullable<
+  paths['/v1/locations/{location_id}']['get']['parameters']['query']
+>;
+
+/**
+ * One location from its `location_id` (negative for a continent), same
+ * response as `getLocationByPath`.
+ * Throws an `ApiError` with status 404 when no location has that id.
+ */
+export const getLocation = async (
+  locationId: number,
+  params: LocationParams,
+  accessToken: string,
+  userContextJwt?: string,
+): Promise<LocationDetail | undefined> => {
+  const authMiddleware = generateAuthMiddlewareWithToken(
+    accessToken,
+    userContextJwt,
+  );
+  return await withAuthMiddleware(authMiddleware, async () => {
+    const response = await client.GET('/v1/locations/{location_id}', {
+      params: { path: { location_id: locationId }, query: params },
+    });
+    return response.data;
+  });
+};
+
+export type LocationChildrenParams = NonNullable<
+  paths['/v1/locations/{location_id}/children']['get']['parameters']['query']
+>;
+
+/**
+ * The direct children of a location, at most 100 per call: page with
+ * `limit` and `offset`.
+ * Throws an `ApiError` with status 404 when no location has that id.
+ */
+export const getLocationChildren = async (
+  locationId: number,
+  params: LocationChildrenParams,
+  accessToken: string,
+  userContextJwt?: string,
+): Promise<LocationsResponse | undefined> => {
+  const authMiddleware = generateAuthMiddlewareWithToken(
+    accessToken,
+    userContextJwt,
+  );
+  return await withAuthMiddleware(authMiddleware, async () => {
+    const response = await client.GET('/v1/locations/{location_id}/children', {
+      params: { path: { location_id: locationId }, query: params },
     });
     return response.data;
   });

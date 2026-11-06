@@ -10,20 +10,10 @@ export type LocationFeedCounts = components['schemas']['LocationFeedCounts'];
 
 export const LOCATIONS_BASE_PATH = '/locations';
 export const LOCATION_FEEDS_PAGE_SIZE = 20;
-/** Maximum `limit` of `GET /v1/locations`. */
+/** Maximum `limit` of the `/v1/locations` endpoints. */
 export const LOCATIONS_API_PAGE_SIZE = 100;
 /** Anchor of the feed list; pagination links jump back to it. */
 export const FEEDS_SECTION_ID = 'feeds';
-
-/**
- * A directory location as addressed by its URL: the continent slug, then the
- * `path_slugs` of the location from the country down. Both are empty at the
- * root; `path` is empty on a continent page.
- */
-export interface LocationPath {
-  continent?: string;
-  path: string[];
-}
 
 // API slugs: lowercase letters (any script), digits and hyphens, e.g.
 // `north-america`, `montreal`, `washington-township-123456`.
@@ -39,24 +29,24 @@ function decodeSegment(segment: string): string | null {
 }
 
 /**
- * Maps the optional catch-all segments to a location path: the first segment
- * is the continent, the others are the location's path slugs, at any depth.
+ * Maps the optional catch-all segments to the slugs of a location's API
+ * `path`, continent first, at any depth: `/locations/<path>` is the
+ * location's `path`.
  *
- * @returns the path (empty at the root), or null when a segment is not a
+ * @returns the slugs (empty at the root), or null when a segment is not a
  * valid slug (empty, uppercase, spaces, punctuation other than `-`).
  */
 export function parseLocationSegments(
   segments: readonly string[] | undefined,
-): LocationPath | null {
-  if (segments == undefined || segments.length === 0) return { path: [] };
+): string[] | null {
+  if (segments == undefined) return [];
   const slugs: string[] = [];
   for (const segment of segments) {
     const slug = decodeSegment(segment);
     if (slug === null || !SLUG_PATTERN.test(slug)) return null;
     slugs.push(slug);
   }
-  const [continent, ...path] = slugs;
-  return { continent, path };
+  return slugs;
 }
 
 const PAGE_PATTERN = /^[1-9]\d*$/;
@@ -109,33 +99,18 @@ export function buildLocationHref(
   return page > 1 ? `${path}?page=${page}` : path;
 }
 
-/** URL slug of a continent row; continents have no geopolygon path. */
-export function getContinentSlug(continent: LocationResult): string {
-  return continent.continent_slug ?? continent.slug ?? '';
-}
-
 /** Display name of a location, falling back to its slug. */
 export function getLocationName(location: LocationResult): string {
-  if (location.location_type === 'continent') {
-    return (
-      location.name ?? location.continent_name ?? getContinentSlug(location)
-    );
-  }
   return location.name ?? location.slug ?? '';
 }
 
 /**
- * URL segments of a location under the continent of the current page:
- * `[continent, ...path_slugs]`. A continent row links to its own slug.
+ * URL segments of a location: its `path_slugs`, continent first
+ * (`['north-america', 'canada', 'quebec']`), so that its directory URL is
+ * `/locations/<path>`.
  */
-export function getLocationSegments(
-  continentSlug: string,
-  location: LocationResult,
-): string[] {
-  if (location.location_type === 'continent') {
-    return [getContinentSlug(location)];
-  }
-  return [continentSlug, ...(location.path_slugs ?? [])];
+export function getLocationSegments(location: LocationResult): string[] {
+  return location.path_slugs;
 }
 
 export interface BreadcrumbStep {
@@ -145,59 +120,40 @@ export interface BreadcrumbStep {
 }
 
 /**
- * The continent, then one step per `path_names` entry, each linked through
- * the matching prefix of `path_slugs`. Empty at the root.
+ * One step per `path_names` entry, continent first, each linked through the
+ * matching prefix of `path_slugs`. Empty at the root.
  */
 export function buildBreadcrumbSteps(
-  continentSlug: string,
   location: LocationResult | null,
 ): BreadcrumbStep[] {
   if (location === null) return [];
-  const continentStep: BreadcrumbStep = {
-    label:
-      location.continent_name ??
-      (location.location_type === 'continent'
-        ? getLocationName(location)
-        : continentSlug),
-    segments: [continentSlug],
-  };
-  if (location.location_type === 'continent') return [continentStep];
-  const names = location.path_names ?? [];
-  const slugs = location.path_slugs ?? [];
+  const names = location.path_names;
+  const slugs = location.path_slugs;
   const depth = Math.min(names.length, slugs.length);
-  const steps = [continentStep];
+  const steps: BreadcrumbStep[] = [];
   for (let index = 0; index < depth; index++) {
     steps.push({
       label: names[index],
-      segments: [continentSlug, ...slugs.slice(0, index + 1)],
+      segments: slugs.slice(0, index + 1),
     });
   }
   return steps;
 }
 
 /**
- * Human-readable place for titles, most specific first:
- * `Montréal, Québec, Canada`. A continent is named on its own; empty at the
- * root.
+ * Human-readable place for titles, most specific first and without the
+ * continent: `Montréal, Québec, Canada`. A continent is named on its own;
+ * empty at the root.
  */
 export function buildPlaceName(location: LocationResult | null): string {
   if (location === null) return '';
   if (location.location_type === 'continent') return getLocationName(location);
-  const names = location.path_names ?? [];
-  if (names.length === 0) return getLocationName(location);
-  return [...names].reverse().join(', ');
-}
-
-/** True when the API result is the location the URL asked for. */
-export function isLocationAtPath(
-  location: LocationResult,
-  continentSlug: string,
-  path: readonly string[],
-): boolean {
-  return (
-    location.continent_slug === continentSlug &&
-    (location.path_slugs ?? []).join('/') === path.join('/')
-  );
+  const names = location.path_names;
+  // `path_names` starts with the continent, when the country has one.
+  const placeNames =
+    location.continent_code != undefined ? names.slice(1) : names;
+  if (placeNames.length === 0) return getLocationName(location);
+  return [...placeNames].reverse().join(', ');
 }
 
 export interface ResultsPage<T> {
@@ -205,16 +161,21 @@ export interface ResultsPage<T> {
   results?: T[];
 }
 
+export type PageFetcher<T> = (
+  offset: number,
+  limit: number,
+) => Promise<ResultsPage<T>>;
+
 /**
- * Fetches every result of an offset-paginated endpoint: the first page tells
- * the total and the effective page size, the remaining pages are then
- * fetched in parallel.
+ * Completes the first page of an offset-paginated endpoint: it tells the
+ * total and the effective page size, the remaining pages are then fetched
+ * in parallel.
  */
-export async function fetchAllPages<T>(
-  fetchPage: (offset: number, limit: number) => Promise<ResultsPage<T>>,
+export async function fetchRemainingPages<T>(
+  first: ResultsPage<T>,
+  fetchPage: PageFetcher<T>,
   pageSize: number = LOCATIONS_API_PAGE_SIZE,
 ): Promise<T[]> {
-  const first = await fetchPage(0, pageSize);
   const results = [...(first.results ?? [])];
   const total = first.total ?? results.length;
   // A server that caps `limit` lower than asked still pages consistently.
@@ -229,6 +190,15 @@ export async function fetchAllPages<T>(
   );
   for (const page of rest) results.push(...(page.results ?? []));
   return results;
+}
+
+/** Every result of an offset-paginated endpoint; see fetchRemainingPages. */
+export async function fetchAllPages<T>(
+  fetchPage: PageFetcher<T>,
+  pageSize: number = LOCATIONS_API_PAGE_SIZE,
+): Promise<T[]> {
+  const first = await fetchPage(0, pageSize);
+  return await fetchRemainingPages(first, fetchPage, pageSize);
 }
 
 export const FEED_COUNT_DATA_TYPES = ['gtfs', 'gtfs_rt', 'gbfs'] as const;

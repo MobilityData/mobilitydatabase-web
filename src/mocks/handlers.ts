@@ -8,19 +8,42 @@ import feed2947 from '../../cypress/fixtures/feed_mdb-2947.json';
 import gtfsFeed2947 from '../../cypress/fixtures/gtfs_feed_mdb-2947.json';
 import datasets2947 from '../../cypress/fixtures/feed_datasets_mdb-2947.json';
 import {
+  getMockLocation,
+  getMockLocationByPath,
+  getMockLocationChildren,
   getMockLocationFeeds,
   getMockLocations,
   isLocationSearch,
 } from './locationDirectory';
 
 export const handlers = [
-  // Locations: continents, children by parent, path lookup, feed counts
+  // Locations: list and search, with feed counts
   http.get(`*/v1/locations`, ({ request }) => {
     const params = new URL(request.url).searchParams;
     const { status, body } = getMockLocations(params);
     return HttpResponse.json(body, { status });
   }),
-  // Mock search endpoint. With `continent` or `location_id` (location
+  // One location by path, with its first page of children; before the
+  // `{location_id}` route so that `lookup` is not read as an id.
+  http.get(`*/v1/locations/lookup`, ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const { status, body } = getMockLocationByPath(params);
+    return HttpResponse.json(body, { status });
+  }),
+  http.get(`*/v1/locations/:locationId/children`, ({ request, params }) => {
+    const query = new URL(request.url).searchParams;
+    const { status, body } = getMockLocationChildren(
+      String(params.locationId),
+      query,
+    );
+    return HttpResponse.json(body, { status });
+  }),
+  http.get(`*/v1/locations/:locationId`, ({ request, params }) => {
+    const query = new URL(request.url).searchParams;
+    const { status, body } = getMockLocation(String(params.locationId), query);
+    return HttpResponse.json(body, { status });
+  }),
+  // Mock search endpoint. With `location_id` or `location_path` (location
   // directory pages): the feeds located there, paginated and sorted.
   // Otherwise: a list including test-516 and mdb-2947.
   http.get(`*/v1/search`, ({ request }) => {

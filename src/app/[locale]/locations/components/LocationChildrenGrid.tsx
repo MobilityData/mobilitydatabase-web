@@ -17,11 +17,6 @@ import {
 
 interface Props {
   locations: LocationResult[];
-  /**
-   * Continent slug of the current page; empty at the root, where the
-   * children are the continents themselves.
-   */
-  continent: string;
   locale: string;
 }
 
@@ -44,7 +39,6 @@ function getFlag(location: LocationResult): string | undefined {
  */
 export default async function LocationChildrenGrid({
   locations,
-  continent,
   locale,
 }: Props): Promise<ReactElement> {
   const t = await getTranslations('locations');
@@ -56,7 +50,7 @@ export default async function LocationChildrenGrid({
       counts: location.feed_counts,
     })),
   ).map(({ location, name, counts }) => {
-    const href = buildLocationHref(getLocationSegments(continent, location));
+    const href = buildLocationHref(getLocationSegments(location));
     return {
       key: href,
       name,

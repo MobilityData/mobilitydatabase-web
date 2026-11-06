@@ -16,10 +16,8 @@ import {
   buildPlaceName,
   FEEDS_SECTION_ID,
   getLocationName,
-  getLocationSegments,
   getPageCount,
   getTotalFeedCount,
-  type LocationPath,
   parseLocationSegments,
   parsePageParam,
 } from '../lib/location-directory';
@@ -37,7 +35,8 @@ interface PageProps {
 
 interface ParsedRequest {
   locale: string;
-  location: LocationPath;
+  /** URL segments: the location's API path slugs, continent first. */
+  segments: string[];
   page: number;
 }
 
@@ -49,10 +48,10 @@ async function parseRequest({
   const [{ locale, location: segments }, { page: rawPage }] = await Promise.all(
     [params, searchParams],
   );
-  const location = parseLocationSegments(segments);
+  const slugs = parseLocationSegments(segments);
   const page = parsePageParam(rawPage);
-  if (location === null || page === null) return null;
-  return { locale, location, page };
+  if (slugs === null || page === null) return null;
+  return { locale, segments: slugs, page };
 }
 
 /**
@@ -61,14 +60,10 @@ async function parseRequest({
  * the page.
  */
 async function fetchPageData({
-  location,
+  segments,
   page,
 }: ParsedRequest): Promise<LocationPageData | null> {
-  const data = await fetchLocationPage(
-    page,
-    location.continent,
-    location.path.join('/'),
-  );
+  const data = await fetchLocationPage(page, segments.join('/'));
   if (data === null || page > getPageCount(data.feeds.total ?? 0)) {
     return null;
   }
@@ -104,11 +99,8 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
           gtfs_rt: counts?.gtfs_rt ?? 0,
           gbfs: counts?.gbfs ?? 0,
         });
-  const segments =
-    location === null || request.location.continent === undefined
-      ? []
-      : getLocationSegments(request.location.continent, location);
-  const url = `${SITE_URL}${buildLocationHref(segments, page)}`;
+  // The URL is the location's API path.
+  const url = `${SITE_URL}${buildLocationHref(request.segments, page)}`;
 
   return {
     title,
@@ -129,7 +121,7 @@ export default async function LocationsPage(
 ): Promise<ReactElement> {
   const request = await parseRequest(props);
   if (request === null) notFound();
-  const { locale, page } = request;
+  const { locale, page, segments } = request;
   setRequestLocale(locale);
 
   const [data, t, tCommon] = await Promise.all([
@@ -140,13 +132,11 @@ export default async function LocationsPage(
   if (data === null) notFound();
 
   const { location, children, feeds } = data;
-  const continent = request.location.continent ?? '';
   const isRoot = location === null;
   const total = feeds.total ?? 0;
   const pageCount = getPageCount(total);
-  const segments = isRoot ? [] : getLocationSegments(continent, location);
   const place = buildPlaceName(location);
-  const steps = buildBreadcrumbSteps(continent, location);
+  const steps = buildBreadcrumbSteps(location);
 
   const crumbs: Crumb[] = [
     { label: tCommon('feeds'), href: '/feeds' },
@@ -218,11 +208,7 @@ export default async function LocationsPage(
                 ({children.length})
               </Box>
             </Typography>
-            <LocationChildrenGrid
-              locations={children}
-              continent={continent}
-              locale={locale}
-            />
+            <LocationChildrenGrid locations={children} locale={locale} />
           </Box>
         ) : null}
 

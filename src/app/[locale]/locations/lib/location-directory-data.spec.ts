@@ -31,6 +31,8 @@ jest.mock('next/cache', () => ({
 }));
 
 const mockGetLocations = jest.fn();
+const mockGetLocationByPath = jest.fn();
+const mockGetLocationChildren = jest.fn();
 const mockSearchFeeds = jest.fn();
 
 jest.mock('../../../services/feeds', () => ({
@@ -42,6 +44,8 @@ jest.mock('../../../services/feeds', () => ({
     }
   },
   getLocations: (...args: unknown[]) => mockGetLocations(...args),
+  getLocationByPath: (...args: unknown[]) => mockGetLocationByPath(...args),
+  getLocationChildren: (...args: unknown[]) => mockGetLocationChildren(...args),
   searchFeeds: (...args: unknown[]) => mockSearchFeeds(...args),
 }));
 
@@ -50,47 +54,45 @@ jest.mock('../../../utils/auth-server', () => ({
 }));
 
 const STATUSES = ['active', 'inactive', 'development', 'future'];
+const MONTREAL_PATH = 'north-america/canada/quebec/montreal';
 
 const northAmerica = {
-  location_id: null,
+  location_id: -5,
   location_type: 'continent',
   name: 'North America',
   slug: 'north-america',
-  continent_slug: 'north-america',
-  path_slugs: [],
+  path: 'north-america',
+  path_slugs: ['north-america'],
   feed_counts: { total: 30 },
-};
-const antarctica = {
-  ...northAmerica,
-  name: 'Antarctica',
-  slug: 'antarctica',
-  continent_slug: 'antarctica',
-  feed_counts: { total: 0 },
 };
 const montreal = {
   location_id: 175905,
   location_type: 'municipality',
   name: 'Montréal',
   slug: 'montreal',
-  continent_slug: 'north-america',
-  path_slugs: ['canada', 'quebec', 'montreal'],
+  path: MONTREAL_PATH,
+  path_slugs: ['north-america', 'canada', 'quebec', 'montreal'],
   feed_counts: { total: 22 },
 };
-const feeds = { total: 22, results: [] };
+const feeds = { total: 22, results: [{ id: 'mdb-1' }] };
+const emptyFeeds = { total: 0, results: [] };
 
-/** getLocations answers by query shape. */
-function answerLocations(
-  byQuery: (query: Record<string, unknown>) => unknown,
-): void {
-  mockGetLocations.mockImplementation(async (query: Record<string, unknown>) =>
-    byQuery(query),
-  );
+function child(index: number): typeof montreal {
+  return {
+    ...montreal,
+    location_id: index + 1,
+    slug: `child-${index + 1}`,
+    path: `${MONTREAL_PATH}/child-${index + 1}`,
+  };
 }
 
-function locationQueries(): Array<Record<string, unknown>> {
-  return mockGetLocations.mock.calls.map(
-    ([query]) => query as Record<string, unknown>,
-  );
+/** The lookup answer: the location and the first page of its children. */
+function detail(
+  location: Record<string, unknown>,
+  children: unknown[],
+  total: number = children.length,
+): Record<string, unknown> {
+  return { ...location, children: { total, results: children } };
 }
 
 function searchQueries(): Array<Record<string, unknown>> {
@@ -103,169 +105,164 @@ describe('fetchLocationPage', () => {
   beforeEach(() => {
     mockCacheStore.clear();
     mockGetLocations.mockReset();
+    mockGetLocationByPath.mockReset();
+    mockGetLocationChildren.mockReset();
     mockSearchFeeds.mockReset();
     mockSearchFeeds.mockResolvedValue(feeds);
   });
 
   it('lists the continents with feeds and the newest feeds at the root', async () => {
-    answerLocations(() => ({ total: 2, results: [northAmerica, antarctica] }));
+    mockGetLocations.mockResolvedValue({ total: 1, results: [northAmerica] });
 
     const data = await fetchLocationPage(2);
 
     expect(data).toEqual({ location: null, children: [northAmerica], feeds });
-    expect(locationQueries()).toEqual([
-      {
-        location_type: 'continent',
-        include_feed_counts: true,
-        limit: 100,
-        offset: 0,
-      },
+    expect(mockGetLocations.mock.calls).toEqual([
+      [
+        {
+          location_type: 'continent',
+          has_feeds: true,
+          include: ['feed_counts'],
+          sort: 'feed_count',
+          limit: 100,
+          offset: 0,
+        },
+        'guest-token',
+      ],
     ]);
-    expect(mockGetLocations.mock.calls[0][1]).toBe('guest-token');
     expect(searchQueries()).toEqual([
       { status: STATUSES, limit: 20, offset: 20 },
     ]);
+    expect(mockGetLocationByPath).not.toHaveBeenCalled();
   });
 
-  it('lists the countries and feeds of a continent', async () => {
+  it('looks a continent up by path, like any other location', async () => {
     const canada = { ...montreal, location_type: 'country', slug: 'canada' };
-    answerLocations((query) =>
-      query.location_type === 'continent'
-        ? { total: 1, results: [northAmerica] }
-        : { total: 1, results: [canada] },
-    );
+    mockGetLocationByPath.mockResolvedValue(detail(northAmerica, [canada]));
 
-    const data = await fetchLocationPage(1, 'north-america', '');
+    const data = await fetchLocationPage(1, 'north-america');
 
     expect(data).toEqual({ location: northAmerica, children: [canada], feeds });
-    expect(locationQueries()[1]).toEqual({
-      continent: 'north-america',
-      location_type: 'country',
-      has_feeds: true,
-      include_feed_counts: true,
-      sort: 'feed_count',
-      limit: 100,
-      offset: 0,
-    });
     expect(searchQueries()).toEqual([
       {
-        continent: 'north-america',
+        location_path: 'north-america',
         sort: 'location',
         status: STATUSES,
         limit: 20,
         offset: 0,
       },
     ]);
+    expect(mockGetLocations).not.toHaveBeenCalled();
   });
 
-  it('is null for an unknown continent, without listing anything', async () => {
-    answerLocations(() => ({ total: 1, results: [northAmerica] }));
-
-    await expect(fetchLocationPage(1, 'atlantis', '')).resolves.toBeNull();
-    expect(mockGetLocations).toHaveBeenCalledTimes(1);
-    expect(mockSearchFeeds).not.toHaveBeenCalled();
-  });
-
-  it('resolves a deeper location by path, then its children and feeds', async () => {
-    const child = { ...montreal, location_id: 1, slug: 'ville-marie' };
-    answerLocations((query) =>
-      query.path !== undefined
-        ? { total: 1, results: [montreal] }
-        : { total: 1, results: [child] },
+  it('fetches the location, its children and its feeds in parallel', async () => {
+    let resolveLookup: (value: unknown) => void = () => {};
+    mockGetLocationByPath.mockReturnValue(
+      new Promise((resolve) => {
+        resolveLookup = resolve;
+      }),
     );
 
-    const data = await fetchLocationPage(
-      3,
-      'north-america',
-      'canada/quebec/montreal',
-    );
-
-    expect(data).toEqual({ location: montreal, children: [child], feeds });
-    expect(locationQueries()).toEqual([
-      {
-        continent: 'north-america',
-        path: 'canada/quebec/montreal',
-        include_feed_counts: true,
-        limit: 1,
-      },
-      {
-        parent_location_id: 175905,
-        has_feeds: true,
-        include_feed_counts: true,
-        sort: 'feed_count',
-        limit: 100,
-        offset: 0,
-      },
-    ]);
+    const pending = fetchLocationPage(3, MONTREAL_PATH);
+    // The feeds are requested before the lookup answers.
+    await new Promise((resolve) => setTimeout(resolve, 0));
     expect(searchQueries()).toEqual([
       {
-        location_id: 175905,
+        location_path: MONTREAL_PATH,
         sort: 'location',
         status: STATUSES,
         limit: 20,
         offset: 40,
       },
     ]);
+    resolveLookup(detail(montreal, [child(0)]));
+
+    await expect(pending).resolves.toEqual({
+      location: montreal,
+      children: [child(0)],
+      feeds,
+    });
+    expect(mockGetLocationByPath.mock.calls).toEqual([
+      [
+        {
+          path: MONTREAL_PATH,
+          include: ['feed_counts', 'children'],
+          has_feeds: true,
+          sort: 'feed_count',
+          limit: 100,
+        },
+        'guest-token',
+      ],
+    ]);
+    expect(mockGetLocationChildren).not.toHaveBeenCalled();
   });
 
-  it('pages through every child location', async () => {
-    const children = Array.from({ length: 230 }, (_, index) => ({
-      ...montreal,
-      location_id: index + 1,
-      slug: `child-${index + 1}`,
-    }));
-    answerLocations((query) => {
-      if (query.path !== undefined) return { total: 1, results: [montreal] };
-      const offset = query.offset as number;
-      const limit = query.limit as number;
-      return { total: 230, results: children.slice(offset, offset + limit) };
-    });
-
-    const data = await fetchLocationPage(
-      1,
-      'north-america',
-      'canada/quebec/montreal',
+  it('pages through the children beyond the first 100', async () => {
+    const children = Array.from({ length: 230 }, (_, index) => child(index));
+    mockGetLocationByPath.mockResolvedValue(
+      detail(montreal, children.slice(0, 100), 230),
+    );
+    mockGetLocationChildren.mockImplementation(
+      async (_id: number, query: { offset: number; limit: number }) => ({
+        total: 230,
+        results: children.slice(query.offset, query.offset + query.limit),
+      }),
     );
 
+    const data = await fetchLocationPage(1, MONTREAL_PATH);
+
     expect(data?.children).toEqual(children);
-    expect(
-      locationQueries()
-        .slice(1)
-        .map(({ offset, limit }) => [offset, limit]),
-    ).toEqual([
-      [0, 100],
-      [100, 100],
-      [200, 100],
+    expect(mockGetLocationChildren.mock.calls).toEqual([
+      [
+        175905,
+        {
+          has_feeds: true,
+          include: ['feed_counts'],
+          sort: 'feed_count',
+          limit: 100,
+          offset: 100,
+        },
+        'guest-token',
+      ],
+      [
+        175905,
+        {
+          has_feeds: true,
+          include: ['feed_counts'],
+          sort: 'feed_count',
+          limit: 100,
+          offset: 200,
+        },
+        'guest-token',
+      ],
     ]);
   });
 
-  it('is null when no location has the path, and never caches the miss', async () => {
-    answerLocations(() => ({ total: 0, results: [] }));
-    await expect(
-      fetchLocationPage(1, 'north-america', 'canada/quebec/montreal'),
-    ).resolves.toBeNull();
-    expect(mockSearchFeeds).not.toHaveBeenCalled();
+  it('is null when the lookup is a 404, and never caches the miss', async () => {
+    mockSearchFeeds.mockResolvedValue(emptyFeeds);
+    mockGetLocationByPath.mockRejectedValueOnce(new ApiError('Not Found', 404));
+    await expect(fetchLocationPage(1, MONTREAL_PATH)).resolves.toBeNull();
+    // Nothing cached for the unknown path, not even its empty feed page.
+    expect(mockCacheStore.size).toBe(0);
 
-    answerLocations((query) =>
-      query.path !== undefined
-        ? { total: 1, results: [montreal] }
-        : { total: 0, results: [] },
-    );
-    await expect(
-      fetchLocationPage(1, 'north-america', 'canada/quebec/montreal'),
-    ).resolves.toMatchObject({ location: montreal });
+    mockSearchFeeds.mockResolvedValue(feeds);
+    mockGetLocationByPath.mockResolvedValue(detail(montreal, []));
+    await expect(fetchLocationPage(1, MONTREAL_PATH)).resolves.toMatchObject({
+      location: montreal,
+      feeds,
+    });
   });
 
-  it('is null when the result is not at the requested continent or path', async () => {
-    answerLocations(() => ({ total: 1, results: [montreal] }));
+  it('never caches an empty feed page', async () => {
+    mockGetLocationByPath.mockResolvedValue(detail(montreal, []));
+    mockSearchFeeds.mockResolvedValue(emptyFeeds);
 
-    // The API accepts continent codes too; only slugs are valid URLs.
-    await expect(
-      fetchLocationPage(1, 'na', 'canada/quebec/montreal'),
-    ).resolves.toBeNull();
-    await expect(
-      fetchLocationPage(1, 'north-america', 'canada/quebec'),
-    ).resolves.toBeNull();
+    await expect(fetchLocationPage(9, MONTREAL_PATH)).resolves.toMatchObject({
+      feeds: emptyFeeds,
+    });
+    await fetchLocationPage(9, MONTREAL_PATH);
+    expect(mockSearchFeeds).toHaveBeenCalledTimes(2);
+    expect(mockGetLocationByPath).toHaveBeenCalledTimes(1);
   });
 
   it('resolves a 400 or 404 to null without caching it', async () => {
@@ -287,22 +284,25 @@ describe('fetchLocationPage', () => {
   });
 
   it('caches a found location', async () => {
-    answerLocations((query) =>
-      query.path !== undefined
-        ? { total: 1, results: [montreal] }
-        : { total: 0, results: [] },
-    );
+    mockGetLocationByPath.mockResolvedValue(detail(montreal, []));
 
-    await fetchLocationPage(1, 'north-america', 'canada/quebec/montreal');
-    await fetchLocationPage(2, 'north-america', 'canada/quebec/montreal');
-    // Location and children once; one feed page each.
-    expect(mockGetLocations).toHaveBeenCalledTimes(2);
+    await fetchLocationPage(1, MONTREAL_PATH);
+    await fetchLocationPage(2, MONTREAL_PATH);
+    await fetchLocationPage(2, MONTREAL_PATH);
+    // The location once; one call per feed page.
+    expect(mockGetLocationByPath).toHaveBeenCalledTimes(1);
     expect(mockSearchFeeds).toHaveBeenCalledTimes(2);
   });
 
   it('rethrows other API errors', async () => {
     mockGetLocations.mockRejectedValueOnce(new ApiError('Server Error', 500));
-
     await expect(fetchLocationPage(1)).rejects.toThrow('Server Error');
+
+    mockGetLocationByPath.mockRejectedValueOnce(
+      new ApiError('Server Error', 500),
+    );
+    await expect(fetchLocationPage(1, MONTREAL_PATH)).rejects.toThrow(
+      'Server Error',
+    );
   });
 });
