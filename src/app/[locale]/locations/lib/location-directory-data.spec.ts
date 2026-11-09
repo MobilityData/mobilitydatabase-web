@@ -270,6 +270,19 @@ describe('fetchLocationPage', () => {
     expect(mockGetLocationByPath).toHaveBeenCalledTimes(2);
   });
 
+  it('never caches a later page of a location without feeds', async () => {
+    // Any page number would otherwise add a cache entry.
+    mockGetLocationByPath.mockResolvedValue(detail(montreal, []));
+    mockSearchFeeds.mockResolvedValue(emptyFeeds);
+
+    await fetchLocationPage(2, MONTREAL_PATH);
+    await fetchLocationPage(2, MONTREAL_PATH);
+    await fetchLocationPage(3, MONTREAL_PATH);
+    expect(mockSearchFeeds).toHaveBeenCalledTimes(3);
+    // The location lookup only: no existence check for a page after the first.
+    expect(mockGetLocationByPath).toHaveBeenCalledTimes(1);
+  });
+
   it('never caches a page past the last one', async () => {
     mockGetLocationByPath.mockResolvedValue(detail(montreal, []));
     mockSearchFeeds.mockResolvedValue({ total: 22, results: [] });

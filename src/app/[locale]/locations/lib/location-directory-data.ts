@@ -156,9 +156,10 @@ const cachedLocation = unstable_cache(
 
 /**
  * Carries a feed page without results out of unstable_cache without storing
- * it: an unknown path or a page past the last one. The feeds are fetched in
- * parallel with the location, so caching those would let any URL add entries
- * to the data cache. The empty page of an existing location is stored, so that
+ * it: an unknown path or a page past the last one, including any page after
+ * the first of a location without feeds. The feeds are fetched in parallel
+ * with the location, so caching those would let any URL add entries to the
+ * data cache. The first, empty page of an existing location is stored, so that
  * it replaces a page that had feeds: a refresh that throws keeps the old entry.
  */
 class UncachedFeedsPage extends Error {
@@ -211,9 +212,14 @@ const cachedFeeds = unstable_cache(
           accessToken,
         ),
     );
+    // An empty page is stored only when it is the first page of an existing
+    // location: any other empty page (an unknown path, a page past the last
+    // one, any page number of a location without feeds) would let a URL add
+    // cache entries.
     if (
       (feeds.results ?? []).length === 0 &&
       ((feeds.total ?? 0) > 0 ||
+        offset > 0 ||
         path === null ||
         !(await locationExists(path, accessToken)))
     ) {
