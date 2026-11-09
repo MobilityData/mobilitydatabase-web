@@ -1,4 +1,5 @@
 import {
+  getLowercaseLocationPathname,
   isFeedDetailPage,
   rewriteFeedRequest,
   hasLocaleInPathname,
@@ -291,5 +292,42 @@ describe('proxy-helpers', () => {
       const result = rewriteWithDefaultLocale(mockUrl);
       expect(result).toBeDefined();
     });
+  });
+});
+
+describe('getLowercaseLocationPathname', () => {
+  it('lowercases location paths with uppercase letters', () => {
+    expect(
+      getLowercaseLocationPathname('/locations/north-america/canada/Ontario'),
+    ).toBe('/locations/north-america/canada/ontario');
+    expect(getLowercaseLocationPathname('/fr/locations/North-America')).toBe(
+      '/fr/locations/north-america',
+    );
+    expect(getLowercaseLocationPathname('/Locations/Europe')).toBe(
+      '/locations/europe',
+    );
+    expect(getLowercaseLocationPathname('/FR/locations/europe')).toBe(
+      '/fr/locations/europe',
+    );
+  });
+
+  it('keeps encoded characters encoded', () => {
+    expect(getLowercaseLocationPathname('/locations/%C3%89TATS')).toBe(
+      '/locations/%C3%A9tats',
+    );
+  });
+
+  it('ignores lowercase paths and other routes', () => {
+    expect(
+      getLowercaseLocationPathname('/locations/north-america/canada/ontario'),
+    ).toBeNull();
+    expect(getLowercaseLocationPathname('/locations')).toBeNull();
+    expect(getLowercaseLocationPathname('/fr/locations')).toBeNull();
+    expect(getLowercaseLocationPathname('/feeds/gtfs/MDB-1')).toBeNull();
+    expect(getLowercaseLocationPathname('/locationsX/Foo')).toBeNull();
+  });
+
+  it('ignores malformed encodings', () => {
+    expect(getLowercaseLocationPathname('/locations/%E0%A4%A')).toBeNull();
   });
 });
