@@ -7,6 +7,7 @@ import BreadcrumbNavigation, {
   type Crumb,
 } from '../../../components/BreadcrumbNavigation';
 import SectionContainer from '../../../components/SectionContainer';
+import { getPathname } from '../../../../i18n/navigation';
 import FeedCountSummary from '../components/FeedCountSummary';
 import LocationChildrenGrid from '../components/LocationChildrenGrid';
 import LocationFeedsList from '../components/LocationFeedsList';
@@ -99,8 +100,15 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
           gtfs_rt: counts?.gtfs_rt ?? 0,
           gbfs: counts?.gbfs ?? 0,
         });
-  // The URL is the location's API path.
-  const url = `${SITE_URL}${buildLocationHref(request.segments, page)}`;
+  // The URL is the location's API path, in the request's locale (`/fr/...` in French).
+  const [pathname, query] = buildLocationHref(request.segments, page).split(
+    '?',
+  );
+  const localizedPathname = getPathname({
+    href: pathname,
+    locale: request.locale,
+  });
+  const url = `${SITE_URL}${localizedPathname}${query !== undefined ? `?${query}` : ''}`;
 
   return {
     title,

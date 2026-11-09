@@ -240,7 +240,10 @@ describe('fetchLocationPage', () => {
 
   it('is null when the lookup is a 404, and never caches the miss', async () => {
     mockSearchFeeds.mockResolvedValue(emptyFeeds);
-    mockGetLocationByPath.mockRejectedValueOnce(new ApiError('Not Found', 404));
+    // The lookup, then the existence check of the empty feed page.
+    mockGetLocationByPath
+      .mockRejectedValueOnce(new ApiError('Not Found', 404))
+      .mockRejectedValueOnce(new ApiError('Not Found', 404));
     await expect(fetchLocationPage(1, MONTREAL_PATH)).resolves.toBeNull();
     // Nothing cached for the unknown path, not even its empty feed page.
     expect(mockCacheStore.size).toBe(0);
@@ -253,15 +256,31 @@ describe('fetchLocationPage', () => {
     });
   });
 
-  it('never caches an empty feed page', async () => {
+  it('caches the empty feed page of a location without feeds', async () => {
+    // Stored, so that it replaces a page that had feeds before.
     mockGetLocationByPath.mockResolvedValue(detail(montreal, []));
     mockSearchFeeds.mockResolvedValue(emptyFeeds);
 
-    await expect(fetchLocationPage(9, MONTREAL_PATH)).resolves.toMatchObject({
+    await expect(fetchLocationPage(1, MONTREAL_PATH)).resolves.toMatchObject({
       feeds: emptyFeeds,
+    });
+    await fetchLocationPage(1, MONTREAL_PATH);
+    expect(mockSearchFeeds).toHaveBeenCalledTimes(1);
+    // The lookup and one existence check.
+    expect(mockGetLocationByPath).toHaveBeenCalledTimes(2);
+  });
+
+  it('never caches a page past the last one', async () => {
+    mockGetLocationByPath.mockResolvedValue(detail(montreal, []));
+    mockSearchFeeds.mockResolvedValue({ total: 22, results: [] });
+
+    // The page turns it into a 404 (page > page count); the data layer just does not store it.
+    await expect(fetchLocationPage(9, MONTREAL_PATH)).resolves.toMatchObject({
+      feeds: { total: 22, results: [] },
     });
     await fetchLocationPage(9, MONTREAL_PATH);
     expect(mockSearchFeeds).toHaveBeenCalledTimes(2);
+    // No existence check: the total says the location has feeds.
     expect(mockGetLocationByPath).toHaveBeenCalledTimes(1);
   });
 

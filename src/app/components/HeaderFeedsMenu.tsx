@@ -87,6 +87,9 @@ export default function HeaderFeedsMenu({
         open={anchorEl !== null}
         onClose={closeNow}
         disableScrollLock
+        // Opened by hovering: leave the focus where it is. Opened with the keyboard: move it into the menu and back.
+        disableAutoFocus={!openedByKeyboard}
+        disableEnforceFocus={!openedByKeyboard}
         disableRestoreFocus={!openedByKeyboard}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}

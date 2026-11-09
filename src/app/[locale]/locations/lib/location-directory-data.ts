@@ -156,9 +156,10 @@ const cachedLocation = unstable_cache(
 
 /**
  * Carries a feed page without results out of unstable_cache without storing
- * it: an unknown path, a page past the last one or a location without feeds.
- * The feeds are fetched in parallel with the location, so caching empty
- * pages would let any URL add entries to the data cache.
+ * it: an unknown path or a page past the last one. The feeds are fetched in
+ * parallel with the location, so caching those would let any URL add entries
+ * to the data cache. The empty page of an existing location is stored, so that
+ * it replaces a page that had feeds: a refresh that throws keeps the old entry.
  */
 class UncachedFeedsPage extends Error {
   readonly feeds: SearchFeedsResponse;
@@ -166,6 +167,24 @@ class UncachedFeedsPage extends Error {
   constructor(feeds: SearchFeedsResponse) {
     super('Empty feed page');
     this.feeds = feeds;
+  }
+}
+
+/** Whether a location has this path; only asked when its feed page is empty. */
+async function locationExists(
+  path: string,
+  accessToken: string,
+): Promise<boolean> {
+  try {
+    return (await getLocationByPath({ path }, accessToken)) !== undefined;
+  } catch (error) {
+    if (
+      error instanceof ApiError &&
+      (error.status === 400 || error.status === 404)
+    ) {
+      return false;
+    }
+    throw error;
   }
 }
 
@@ -192,7 +211,14 @@ const cachedFeeds = unstable_cache(
           accessToken,
         ),
     );
-    if ((feeds.results ?? []).length === 0) throw new UncachedFeedsPage(feeds);
+    if (
+      (feeds.results ?? []).length === 0 &&
+      ((feeds.total ?? 0) > 0 ||
+        path === null ||
+        !(await locationExists(path, accessToken)))
+    ) {
+      throw new UncachedFeedsPage(feeds);
+    }
     return feeds;
   },
   ['location-directory-feeds'],

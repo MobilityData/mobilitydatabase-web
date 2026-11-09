@@ -1423,7 +1423,7 @@ export interface components {
        */
       continent_code?: string | null;
       /**
-       * @description URL-safe identifier of the location among its siblings: its name lowercased, without accents, with every run of non-alphanumeric characters replaced by a single hyphen (`Montréal` -> `montreal`). When siblings under the same parent would share a slug, each of them gets `-<location_id>` appended. A name without any ASCII letter or digit uses its `location_id` as the slug. A continent's slug is fixed (`north-america`).
+       * @description URL-safe identifier of the location among its siblings: its name lowercased, without accents, with every run of non-alphanumeric characters replaced by a single hyphen (`Montréal` -> `montreal`). A name without any ASCII letter or digit uses its `location_id` as the slug. When siblings under the same parent would share a slug, each of them gets `--<location_id>` appended (`springfield--1234`); a name never produces `--`, so siblings never share a slug. A continent's slug is fixed (`north-america`).
        * @example montreal
        */
       slug: string;

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link, Typography, useTheme } from '@mui/material';
 import NextLink from 'next/link';
+import { Link as LocaleLink } from '../../i18n/navigation';
 import { fontFamily } from '../Theme';
 
 interface FooterLinkProps {
@@ -18,7 +19,8 @@ export const FooterLink: React.FC<FooterLinkProps> = ({
   const theme = useTheme();
   return (
     <Link
-      component={NextLink}
+      // Internal links keep the current locale (`/fr/...`); external ones are plain links.
+      component={external === true ? NextLink : LocaleLink}
       href={href}
       target={external === true ? '_blank' : undefined}
       rel={external === true ? 'noopener noreferrer' : undefined}
