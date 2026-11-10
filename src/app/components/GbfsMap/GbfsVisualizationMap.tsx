@@ -91,6 +91,8 @@ export interface GbfsVisualizationMapProps {
   onViewError?: (details: MapErrorDetails) => void;
   /** When this value changes a different feed is being shown — filters reset to defaults */
   feedUrl?: string | null;
+  /** Override the map container height. Defaults to 400. Pass '100%' to fill parent. */
+  height?: number | string;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -107,6 +109,7 @@ export const GbfsVisualizationMap = forwardRef<
     onRefresh,
     onViewError,
     feedUrl,
+    height: heightProp = 400,
   },
   ref,
 ) {
@@ -526,7 +529,7 @@ export const GbfsVisualizationMap = forwardRef<
       ref={containerRef}
       sx={{
         position: 'relative',
-        height: isFullscreen ? '100vh' : 400,
+        height: isFullscreen ? '100vh' : heightProp,
         borderRadius: 1,
         overflow: 'hidden',
         display: 'flex',

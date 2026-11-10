@@ -256,6 +256,8 @@
     "boundingBoxViewTooltip": "View the bounding box of the feed",
     "gtfsVisualizationView": "Routes and Stops",
     "gtfsVisualizationTooltip": "View the routes and stops of the feed",
+    "gbfsVisualizationView": "GBFS Visualization",
+    "gbfsVisualizationViewTooltip": "View the GBFS visualization map",
     "detailedCoveredAreaView": "Detailed",
     "detailedCoveredAreaViewTooltip": "View the detailed covered area of the feed",
     "unableToGenerateBoundingBox": "Unable to generate bounding box from the feed",
