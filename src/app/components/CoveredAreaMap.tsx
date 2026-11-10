@@ -151,9 +151,6 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
     );
   }, [feed, latestGbfsVersion]);
 
-  const routesJsonLoadingStatus = useSelector(
-    selectGtfsDatasetRoutesLoadingStatus,
-  );
   const hasNoRoutes = totalRoutes == undefined || totalRoutes === 0;
 
   const getAndSetGeoJsonData = (urlToExtract: string): void => {
@@ -221,7 +218,7 @@ const CoveredAreaMap: React.FC<CoveredAreaMapProps> = ({
       return;
     }
     setView('boundingBoxView');
-  }, [feed, routesJsonLoadingStatus, totalRoutes, boundingBox, geoJsonData, gbfsAutodiscoveryUrl]);
+  }, [feed, totalRoutes, boundingBox, geoJsonData, gbfsAutodiscoveryUrl]);
 
   const handleViewChange = (
     _: React.MouseEvent<HTMLElement>,
