@@ -15,6 +15,7 @@ import { Link } from '../../../../i18n/navigation';
 import LinkPendingIndicator from './LinkPendingIndicator';
 import {
   filterByName,
+  type ChildrenKind,
   type FeedCountDataType,
 } from '../lib/location-directory';
 
@@ -48,10 +49,15 @@ const countNumberSx = {
 interface Props {
   /** Already sorted, most feeds first. */
   items: LocationChildItem[];
+  /** Names the search box after the level it filters. */
+  kind: ChildrenKind;
 }
 
 /** Searchable, scrollable grid of child locations. */
-export default function LocationChildrenList({ items }: Props): ReactElement {
+export default function LocationChildrenList({
+  items,
+  kind,
+}: Props): ReactElement {
   const t = useTranslations('locations');
   const [query, setQuery] = useState('');
   const visibleItems = useMemo(
@@ -69,7 +75,7 @@ export default function LocationChildrenList({ items }: Props): ReactElement {
         onChange={(event) => {
           setQuery(event.target.value);
         }}
-        placeholder={t('childrenSearchPlaceholder')}
+        placeholder={t(`childrenSearchPlaceholder.${kind}`)}
         slotProps={{
           htmlInput: {
             'aria-label': t('childrenSearchAria'),

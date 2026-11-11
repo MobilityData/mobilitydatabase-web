@@ -16,6 +16,7 @@ import {
   buildLocationHref,
   buildPlaceName,
   FEEDS_SECTION_ID,
+  getChildrenKind,
   getLocationName,
   getPageCount,
   getTotalFeedCount,
@@ -161,11 +162,7 @@ export default async function LocationsPage(
   const backFallbackHref = isRoot
     ? '/feeds'
     : buildLocationHref(segments.slice(0, -1));
-  const childrenHeading = isRoot
-    ? t('childrenHeading.continents')
-    : location.location_type === 'continent'
-      ? t('childrenHeading.countries')
-      : t('childrenHeading.places');
+  const childrenKind = getChildrenKind(location);
 
   return (
     <Container
@@ -211,12 +208,16 @@ export default async function LocationsPage(
               variant='h5'
               sx={{ fontWeight: 700, mb: 2 }}
             >
-              {childrenHeading}{' '}
+              {t(`childrenHeading.${childrenKind}`)}{' '}
               <Box component='span' sx={{ color: 'text.secondary' }}>
                 ({children.length})
               </Box>
             </Typography>
-            <LocationChildrenGrid locations={children} locale={locale} />
+            <LocationChildrenGrid
+              locations={children}
+              kind={childrenKind}
+              locale={locale}
+            />
           </Box>
         ) : null}
 

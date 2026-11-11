@@ -12,11 +12,13 @@ import {
   getLocationSegments,
   getTotalFeedCount,
   sortByFeedCount,
+  type ChildrenKind,
   type LocationResult,
 } from '../lib/location-directory';
 
 interface Props {
   locations: LocationResult[];
+  kind: ChildrenKind;
   locale: string;
 }
 
@@ -39,6 +41,7 @@ function getFlag(location: LocationResult): string | undefined {
  */
 export default async function LocationChildrenGrid({
   locations,
+  kind,
   locale,
 }: Props): Promise<ReactElement> {
   const t = await getTranslations('locations');
@@ -69,5 +72,5 @@ export default async function LocationChildrenGrid({
     };
   });
 
-  return <LocationChildrenList items={items} />;
+  return <LocationChildrenList items={items} kind={kind} />;
 }

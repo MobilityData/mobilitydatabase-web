@@ -1283,7 +1283,11 @@
       "places": "Places"
     },
     "childFeedTotal": "{count, plural, one {<b>#</b> feed} other {<b>#</b> feeds}}",
-    "childrenSearchPlaceholder": "Search locations",
+    "childrenSearchPlaceholder": {
+      "continents": "Search continents",
+      "countries": "Search countries",
+      "places": "Search places"
+    },
     "childrenSearchAria": "Filter the locations below by name",
     "childLoadingAria": "Loading {name}",
     "childrenSearchResults": "{count, plural, =0 {No matching locations} one {# matching location} other {# matching locations}}",

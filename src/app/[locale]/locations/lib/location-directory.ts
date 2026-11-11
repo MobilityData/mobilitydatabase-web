@@ -113,6 +113,15 @@ export function getLocationSegments(location: LocationResult): string[] {
   return location.path_slugs;
 }
 
+/** What the children of a directory page are, for their heading and search. */
+export type ChildrenKind = 'continents' | 'countries' | 'places';
+
+/** Continents at the root, countries in a continent, places below. */
+export function getChildrenKind(location: LocationResult | null): ChildrenKind {
+  if (location === null) return 'continents';
+  return location.location_type === 'continent' ? 'countries' : 'places';
+}
+
 export interface BreadcrumbStep {
   label: string;
   /** URL segments of this step, continent first. */

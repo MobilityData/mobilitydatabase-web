@@ -6,6 +6,7 @@ import {
   fetchRemainingPages,
   filterByName,
   formatCount,
+  getChildrenKind,
   getFeedCountEntries,
   getLocationName,
   getLocationSegments,
@@ -306,6 +307,21 @@ describe('buildPlaceName', () => {
 
   it('falls back to the name without path names', () => {
     expect(buildPlaceName({ ...canada, path_names: [] })).toBe('Canada');
+  });
+});
+
+describe('getChildrenKind', () => {
+  it('lists continents at the root', () => {
+    expect(getChildrenKind(null)).toBe('continents');
+  });
+
+  it('lists countries in a continent', () => {
+    expect(getChildrenKind(northAmerica)).toBe('countries');
+  });
+
+  it('lists places below a country', () => {
+    expect(getChildrenKind(canada)).toBe('places');
+    expect(getChildrenKind(montreal)).toBe('places');
   });
 });
 
