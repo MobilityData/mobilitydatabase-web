@@ -331,6 +331,17 @@ export interface paths {
      *     Query: New York Transit
      *     <br>
      *     Search Executed: 'new' & york & 'transit'
+     *     <br><br>
+     *     Location filters:
+     *     <br>
+     *     - `location_id` (any location of `/v1/locations`, continents included) or `location_path` (its `path`)
+     *     restricts the results to feeds with stops in that location, sub-areas included. Feeds are matched through
+     *     their reverse-geolocated stops, so a feed that was never geolocated does not match. A GTFS Realtime feed that
+     *     was never geolocated matches the locations of the schedule feeds it references. Unknown values return no
+     *     feed. Pass one of the two, not both.
+     *     - To list the same feeds as a location's `feed_counts`, also pass `status=active,inactive,development,future`.
+     *     - `sort=location` orders the results by the share of each feed's stops inside the requested location instead
+     *     of by creation date.
      *     <br>
      */
     get: operations['searchFeeds'];
@@ -349,8 +360,59 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description Search locations (countries, subdivisions and municipalities). Results can be filtered by a free-text query and narrowed to a specific country, subdivision or location type. Matches are ordered from the broadest area to the most specific, and by relevance within each level. */
+    /** @description Search and filter locations: continents, countries, subdivisions and municipalities. Results can be filtered by a free-text query, a continent, a country, a subdivision or a location type. Matches are ordered from the broadest area to the most specific, and by relevance within each level, unless `sort=feed_count` is given. <br> To get one location, use `/v1/locations/{location_id}` or, from its path, `/v1/locations/lookup`; to list a location's direct children, use `/v1/locations/{location_id}/children` or `include=children` on those two endpoints. To list a location's feeds, call `/v1/search` with its `location_id` (or its `path` as `location_path`), `status=active,inactive,development,future` and `sort=location`. <br> Every location has a `location_id` and a `path`. Countries, subdivisions and municipalities are OpenStreetMap administrative areas and their `location_id` is the OSM id. Continents come from a fixed country-to-continent classification; their `location_id` is negative (`-1` Africa, `-2` Antarctica, `-3` Asia, `-4` Europe, `-5` North America, `-6` Oceania, `-7` South America) and they are the parent of their countries. <br> Feed counts (`include=feed_counts`, `has_feeds`, `sort=feed_count`) count distinct feeds with a status of `active`, `inactive`, `development` or `future` that have reverse-geolocated stops in the location, sub-areas included. A GTFS Realtime feed that was never geolocated is counted in the locations of the schedule feeds it references. Work-in-progress feeds are counted only for callers allowed to see them, as in `/v1/search`. */
     get: operations['getLocations'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/locations/lookup': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Get one location from its `path`: the slugs of the location and of every area containing it, from the continent down, joined with `/` (e.g. `north-america/canada/quebec`). A continent's path is its slug (`north-america`); a country without continent in the classification starts at the country. This is the same location as `/v1/locations/{location_id}`, addressed by path instead of id. <br> With `include=children`, the response also holds the first page of the location's direct children; `has_feeds`, `sort`, `limit` and `offset` then apply to the children. Paths follow OpenStreetMap names and can change when a place is renamed; store the `location_id` rather than the path. */
+    get: operations['getLocationByPath'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/locations/{location_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Get one location by its `location_id`. With `include=children`, the response also holds the first page of the location's direct children; `has_feeds`, `sort`, `limit` and `offset` then apply to the children. */
+    get: operations['getLocation'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/locations/{location_id}/children': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description List the direct children of a location, one level down: the countries of a continent, the subdivisions of a country, and so on. Depth varies by country, so the children of a subdivision can be regions or municipalities. */
+    get: operations['getLocationChildren'];
     put?: never;
     post?: never;
     delete?: never;
@@ -1308,20 +1370,34 @@ export interface components {
        */
       municipality?: string;
     };
+    /** @description Number of distinct feeds per data type with stops in a location, sub-areas included. */
+    LocationFeedCounts: {
+      /** @example 42 */
+      gtfs?: number;
+      /** @example 18 */
+      gtfs_rt?: number;
+      /** @example 7 */
+      gbfs?: number;
+      /**
+       * @description Number of distinct feeds of any data type.
+       * @example 67
+       */
+      total?: number;
+    };
     LocationSearchResponse: {
       /** @description The total number of matching locations regardless of limit and offset. */
-      total?: number;
+      total: number;
       /** @description The page of matching locations, ordered from the broadest area to the most specific and by relevance within each level. */
-      results?: components['schemas']['LocationSearchResult'][];
+      results: components['schemas']['LocationSearchResult'][];
     };
     LocationSearchResult: {
       /**
-       * @description Stable location identifier.
+       * @description Stable location identifier: the OpenStreetMap id of the area, or a negative id for a continent (`-1` to `-7`).
        * @example 175905
        */
-      location_id?: number;
+      location_id: number;
       /**
-       * @description Stable identifier of the nearest containing location.
+       * @description Identifier of the nearest containing location; for a country, its continent. Null for continents and for countries without continent in the classification.
        * @example 161950
        */
       parent_location_id?: number | null;
@@ -1336,11 +1412,38 @@ export interface components {
        */
       alt_name?: string | null;
       /**
-       * @description The type of location: `country` (has an ISO 3166-1 code), `subdivision` (has an ISO 3166-2 code) or `municipality` (a locality below the subdivision level).
+       * @description The type of location: `continent`, `country` (has an ISO 3166-1 code), `subdivision` (has an ISO 3166-2 code) or `municipality` (a locality below the subdivision level).
        * @example municipality
        * @enum {string}
        */
-      location_type?: 'country' | 'subdivision' | 'municipality';
+      location_type: 'continent' | 'country' | 'subdivision' | 'municipality';
+      /**
+       * @description Code of the continent that contains this location (`AF`, `AN`, `AS`, `EU`, `NA`, `OC`, `SA`). Null when the country has no continent in the classification.
+       * @example NA
+       */
+      continent_code?: string | null;
+      /**
+       * @description URL-safe identifier of the location among its siblings: its name lowercased, without accents, with every run of non-alphanumeric characters replaced by a single hyphen (`Montréal` -> `montreal`). A name without any ASCII letter or digit uses its `location_id` as the slug. When siblings under the same parent would share a slug, each of them gets `--<location_id>` appended (`springfield--1234`); a name never produces `--`, so siblings never share a slug. A continent's slug is fixed (`north-america`).
+       * @example montreal
+       */
+      slug: string;
+      /**
+       * @description The location's `path_slugs` joined with `/`, from the continent down, as accepted by `/v1/locations/lookup` and by the `location_path` parameter of `/v1/search`. Paths follow OpenStreetMap names and can change when a place is renamed; store the `location_id` instead.
+       * @example north-america/canada/quebec/montreal-region/montreal
+       */
+      path: string;
+      /**
+       * @description The slugs of the locations in `path_names`, in the same order.
+       * @example [
+       *       "north-america",
+       *       "canada",
+       *       "quebec",
+       *       "montreal-region",
+       *       "montreal"
+       *     ]
+       */
+      path_slugs: string[];
+      feed_counts?: components['schemas']['LocationFeedCounts'];
       /**
        * @description The name of the country that contains this location.
        * @example Canada
@@ -1362,20 +1465,24 @@ export interface components {
        */
       subdivision_code?: string | null;
       /**
-       * @description The ordered list of location names from the broadest containing area down to this location.
+       * @description The ordered list of location names from the broadest containing area, the continent, down to this location. A country without continent in the classification starts at the country.
        * @example [
+       *       "North America",
        *       "Canada",
        *       "Quebec",
        *       "Montréal (region)",
        *       "Montréal"
        *     ]
        */
-      path_names?: string[];
+      path_names: string[];
       /**
-       * @description A human-readable representation of the full location hierarchy, joined from the broadest area to this location.
+       * @description A human-readable representation of the location hierarchy, joined from the country (or, for a continent, the continent itself) down to this location.
        * @example Canada, Quebec, Montréal (region), Montréal
        */
       display_name?: string | null;
+    };
+    LocationDetail: components['schemas']['LocationSearchResult'] & {
+      children?: components['schemas']['LocationSearchResponse'];
     };
     BasicDataset: {
       /**
@@ -1822,6 +1929,26 @@ export interface components {
     is_official_query_param: boolean;
     /** @description If true, only return feeds that currently hold the Seal of Reliability; if false, only feeds without it. Viewing a feed's seal is public, but filtering the catalogue by it is granted per user and requires the `isSealFilterEnabled` feature flag - other callers receive a 403. To request access or learn more, contact us at api@mobilitydata.org. */
     has_seal_query_param: boolean;
+    /** @description Limit results to locations in this continent, the continent included, given as its slug (`africa`, `antarctica`, `asia`, `europe`, `north-america`, `oceania`, `south-america`) or code (`AF`, `AN`, `AS`, `EU`, `NA`, `OC`, `SA`). Case-insensitive. */
+    location_continent: string;
+    /** @description A `location_id` from `/v1/locations`, continents included: only feeds with reverse-geolocated stops in that location, sub-areas included. A GTFS Realtime feed that was never geolocated takes the locations of the schedule feeds it references. */
+    location_id_query_param: number;
+    /** @description A location's `path` (e.g. `north-america/canada/quebec`), as an alternative to `location_id`: only feeds with reverse-geolocated stops in that location, sub-areas included. Case-insensitive; leading and trailing slashes are ignored. */
+    location_path_query_param: string;
+    /** @description The location's `location_id`; negative for a continent. */
+    location_id_path_param: number;
+    /** @description When true, only return locations with at least one feed (see the feed count rules of `/v1/locations`). */
+    has_feeds_query_param: boolean;
+    /** @description With `include=children`, only return the children with at least one feed. */
+    children_has_feeds_query_param: boolean;
+    /** @description Optional data to add to each location: `feed_counts`, the location's feed counts per data type. */
+    locations_include: 'feed_counts'[];
+    /** @description Optional data to add, comma-separated: `feed_counts`, the feed counts of the location (and of its children when they are included); `children`, the first page of the location's direct children. */
+    location_include: ('feed_counts' | 'children')[];
+    /** @description With `include=children`, the sort order of the children. `admin_level` (default): from the broadest area to the most specific, then by display name. `feed_count`: most feeds first, then by display name. */
+    children_sort: 'admin_level' | 'feed_count';
+    /** @description Sort order of the results. `admin_level` (default): from the broadest area to the most specific, then by relevance to `search_query` when one is given, then by display name. `feed_count`: most feeds first, then by display name. */
+    locations_sort: 'admin_level' | 'feed_count';
     /** @description The number of items to be returned. */
     limit_query_param_locations_endpoint: number;
     /** @description The number of items to be returned. */
@@ -1842,6 +1969,8 @@ export interface components {
     offset: number;
     /** @description General search query to match against transit provider, location, and feed name. */
     search_text_query_param: string;
+    /** @description Sort order of the results. `created_at` (default): newest feeds first, then by relevance to `search_query` when one is given. `location`: by relevance to the requested location, which requires `location_id` or `location_path`. Feeds with the largest share of their reverse-geolocated stops inside the location come first (on Montréal, a city bus feed with all its stops in Montréal ranks above a regional train with a fifth of them there); ties are broken by provider, feed name and feed id. */
+    search_sort: 'created_at' | 'location';
     /** @description Comma separated list of GBFS versions to filter by. */
     version_query_param: string;
     /** @description Comma separated list of data types to filter by. Valid values are gtfs, gtfs_rt and gbfs. */
@@ -2492,6 +2621,12 @@ export interface operations {
         license_is_spdx?: components['parameters']['license_is_spdx'];
         /** @description Comma separated list of tags to filter feeds by their license tags. */
         license_tags?: components['parameters']['license_tags'];
+        /** @description A `location_id` from `/v1/locations`, continents included: only feeds with reverse-geolocated stops in that location, sub-areas included. A GTFS Realtime feed that was never geolocated takes the locations of the schedule feeds it references. */
+        location_id?: components['parameters']['location_id_query_param'];
+        /** @description A location's `path` (e.g. `north-america/canada/quebec`), as an alternative to `location_id`: only feeds with reverse-geolocated stops in that location, sub-areas included. Case-insensitive; leading and trailing slashes are ignored. */
+        location_path?: components['parameters']['location_path_query_param'];
+        /** @description Sort order of the results. `created_at` (default): newest feeds first, then by relevance to `search_query` when one is given. `location`: by relevance to the requested location, which requires `location_id` or `location_path`. Feeds with the largest share of their reverse-geolocated stops inside the location come first (on Montréal, a city bus feed with all its stops in Montréal ranks above a regional train with a fifth of them there); ties are broken by provider, feed name and feed id. */
+        sort?: components['parameters']['search_sort'];
       };
       header?: never;
       path?: never;
@@ -2512,6 +2647,13 @@ export interface operations {
           };
         };
       };
+      /** @description `sort=location` was requested without `location_id` or `location_path`, both `location_id` and `location_path` were given, or `sort` has an unsupported value. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
       /** @description Filtering by Seal of Reliability status is not available to this caller. */
       403: {
         headers: {
@@ -2530,17 +2672,30 @@ export interface operations {
         offset?: components['parameters']['offset'];
         /** @description Free-text search matched against the location name, alternate name and its full hierarchy (e.g. "Canada, Quebec, Montréal"). Matching is accent-insensitive and supports typeahead-style prefix matching, so "mon" matches "Montréal". When several words are provided, all of them must match. */
         search_query?: string;
-        /** @description Limit results to locations contained within this country, given as its ISO 3166-1 alpha-2 code. Case-insensitive. */
+        /** @description Limit results to locations in this continent, the continent included, given as its slug (`africa`, `antarctica`, `asia`, `europe`, `north-america`, `oceania`, `south-america`) or code (`AF`, `AN`, `AS`, `EU`, `NA`, `OC`, `SA`). Case-insensitive. */
+        continent?: components['parameters']['location_continent'];
+        /** @description Limit results to locations contained within this country, the country included, given as its ISO 3166-1 alpha-2 code. Case-insensitive. */
         country_code?: string;
-        /** @description Limit results to locations contained within this subdivision, given as its ISO 3166-2 code. Case-insensitive. */
+        /** @description Limit results to locations contained within this subdivision, the subdivision included, given as its ISO 3166-2 code. Case-insensitive. */
         subdivision_code?: string;
         /**
          * @description Filter by the type of location:
+         *       * `continent` - a continent, from a fixed country-to-continent classification.
          *       * `country` - a sovereign country, identified by an ISO 3166-1 code.
          *       * `subdivision` - a first-level subdivision (e.g. state or province), identified by an ISO 3166-2 code.
          *       * `municipality` - a locality below the subdivision level (e.g. a city or town).
          */
-        location_type?: 'country' | 'subdivision' | 'municipality';
+        location_type?:
+          | 'continent'
+          | 'country'
+          | 'subdivision'
+          | 'municipality';
+        /** @description When true, only return locations with at least one feed (see the feed count rules of `/v1/locations`). */
+        has_feeds?: components['parameters']['has_feeds_query_param'];
+        /** @description Optional data to add to each location: `feed_counts`, the location's feed counts per data type. */
+        include?: components['parameters']['locations_include'];
+        /** @description Sort order of the results. `admin_level` (default): from the broadest area to the most specific, then by relevance to `search_query` when one is given, then by display name. `feed_count`: most feeds first, then by display name. */
+        sort?: components['parameters']['locations_sort'];
       };
       header?: never;
       path?: never;
@@ -2556,6 +2711,156 @@ export interface operations {
         content: {
           'application/json': components['schemas']['LocationSearchResponse'];
         };
+      };
+      /** @description `sort` or `include` has an unsupported value. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getLocationByPath: {
+    parameters: {
+      query: {
+        /** @description The location's `path`. Case-insensitive; leading and trailing slashes are ignored. */
+        path: string;
+        /** @description Optional data to add, comma-separated: `feed_counts`, the feed counts of the location (and of its children when they are included); `children`, the first page of the location's direct children. */
+        include?: components['parameters']['location_include'];
+        /** @description With `include=children`, only return the children with at least one feed. */
+        has_feeds?: components['parameters']['children_has_feeds_query_param'];
+        /** @description With `include=children`, the sort order of the children. `admin_level` (default): from the broadest area to the most specific, then by display name. `feed_count`: most feeds first, then by display name. */
+        sort?: components['parameters']['children_sort'];
+        /** @description The number of items to be returned. */
+        limit?: components['parameters']['limit_query_param_locations_endpoint'];
+        /** @description Offset of the first item to return. */
+        offset?: components['parameters']['offset'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The location at that path. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LocationDetail'];
+        };
+      };
+      /** @description `path` is empty, or `sort` or `include` has an unsupported value. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description No location has that path. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getLocation: {
+    parameters: {
+      query?: {
+        /** @description Optional data to add, comma-separated: `feed_counts`, the feed counts of the location (and of its children when they are included); `children`, the first page of the location's direct children. */
+        include?: components['parameters']['location_include'];
+        /** @description With `include=children`, only return the children with at least one feed. */
+        has_feeds?: components['parameters']['children_has_feeds_query_param'];
+        /** @description With `include=children`, the sort order of the children. `admin_level` (default): from the broadest area to the most specific, then by display name. `feed_count`: most feeds first, then by display name. */
+        sort?: components['parameters']['children_sort'];
+        /** @description The number of items to be returned. */
+        limit?: components['parameters']['limit_query_param_locations_endpoint'];
+        /** @description Offset of the first item to return. */
+        offset?: components['parameters']['offset'];
+      };
+      header?: never;
+      path: {
+        /** @description The location's `location_id`; negative for a continent. */
+        location_id: components['parameters']['location_id_path_param'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The location. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LocationDetail'];
+        };
+      };
+      /** @description `sort` or `include` has an unsupported value. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description No location has that id. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getLocationChildren: {
+    parameters: {
+      query?: {
+        /** @description The number of items to be returned. */
+        limit?: components['parameters']['limit_query_param_locations_endpoint'];
+        /** @description Offset of the first item to return. */
+        offset?: components['parameters']['offset'];
+        /** @description When true, only return locations with at least one feed (see the feed count rules of `/v1/locations`). */
+        has_feeds?: components['parameters']['has_feeds_query_param'];
+        /** @description Optional data to add to each location: `feed_counts`, the location's feed counts per data type. */
+        include?: components['parameters']['locations_include'];
+        /** @description Sort order of the results. `admin_level` (default): from the broadest area to the most specific, then by relevance to `search_query` when one is given, then by display name. `feed_count`: most feeds first, then by display name. */
+        sort?: components['parameters']['locations_sort'];
+      };
+      header?: never;
+      path: {
+        /** @description The location's `location_id`; negative for a continent. */
+        location_id: components['parameters']['location_id_path_param'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The children of the location. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LocationSearchResponse'];
+        };
+      };
+      /** @description `sort` or `include` has an unsupported value. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description No location has that id. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };

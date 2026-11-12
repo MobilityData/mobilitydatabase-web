@@ -48,6 +48,41 @@ export function isFeedDetailPage(pathname: string): FeedDetailPageInfo {
 }
 
 // ============================================================================
+// Location Directory
+// ============================================================================
+
+const LOCATION_PATH_REGEX = /^(\/(?:en|fr))?(\/locations(?:\/.*)?)$/i;
+
+/**
+ * The lowercase form of a location directory path, or null when the path is
+ * not under /locations or is already lowercase.
+ *
+ * Location slugs are lowercase, so `/locations/north-america/canada/Ontario`
+ * would otherwise render the not-found page; it is redirected to
+ * `/locations/north-america/canada/ontario` instead, keeping one URL per place.
+ */
+export function getLowercaseLocationPathname(pathname: string): string | null {
+  const match = pathname.match(LOCATION_PATH_REGEX);
+  if (match == null) return null;
+  const localePrefix = (match[1] ?? '').toLowerCase();
+  let decodedPath: string;
+  try {
+    decodedPath = decodeURIComponent(match[2]);
+  } catch {
+    return null;
+  }
+  const lowercasePath = decodedPath.toLowerCase();
+  if (lowercasePath === decodedPath && localePrefix === (match[1] ?? '')) {
+    return null;
+  }
+  const encodedPath = lowercasePath
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/');
+  return `${localePrefix}${encodedPath}`;
+}
+
+// ============================================================================
 // Auth State Detection
 // ============================================================================
 
