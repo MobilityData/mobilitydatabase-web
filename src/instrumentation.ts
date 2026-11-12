@@ -10,6 +10,9 @@
 
 export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
+    // Log the runtime Node version once per instance start. Vercel picks the
+    // patch version itself, so this is how we confirm it in production logs.
+    console.info(`Node.js runtime ${process.version}`);
     // Initialize Sentry for the Node.js runtime
     await import('../sentry.server.config');
   }

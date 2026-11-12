@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '24.12.0'
+  NODE_VERSION: '24.22.3'
 
 jobs:
   # ✅ Runs for all PRs (including forks)
