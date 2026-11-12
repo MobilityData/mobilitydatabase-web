@@ -48,7 +48,6 @@ export default function SelectedTripPanel({
   onOpenDetails,
   rawDatasetId,
 }: SelectedTripPanelProps): React.ReactElement {
-  const [showRaw, setShowRaw] = useState(false);
   const name = (id: string): string => stopNames[id] ?? id;
   const trip = pair.new ?? pair.base;
   const tone = pairTone(pair);
@@ -174,36 +173,9 @@ export default function SelectedTripPanel({
         </Box>
       </Box>
 
-      {rawDatasetId != null && trip != null ? (
+      {rawDatasetId != null ? (
         <Box sx={{ mt: 2 }}>
-          <Button
-            size='small'
-            onClick={() => setShowRaw((v) => !v)}
-            sx={{ textTransform: 'none' }}
-          >
-            {showRaw
-              ? 'Hide the raw stop_times.txt rows'
-              : 'Show this trip’s raw stop_times.txt rows'}
-          </Button>
-          {showRaw ? (
-            <Box
-              sx={{
-                mt: 1,
-                bgcolor: 'background.paper',
-                borderRadius: '6px',
-                p: 1.5,
-              }}
-            >
-              <RawDiffTable
-                // A new trip needs new initial filters.
-                key={pair.key}
-                datasetId={rawDatasetId}
-                file='stop_times.txt'
-                // The trip_id filter matches the base or the new id.
-                initialFilters={{ actions: RAW_ACTIONS, tripId: trip.id }}
-              />
-            </Box>
-          ) : null}
+          <RawStopTimesToggle pair={pair} rawDatasetId={rawDatasetId} />
         </Box>
       ) : null}
     </Box>
@@ -232,7 +204,17 @@ function InfoBox({
   );
 }
 
-function TripAttributes({ pair }: { pair: TripPair }): React.ReactElement {
+/**
+ * A trip's attributes as set, then what changed (unless `changes` is false:
+ * the trip drawer lists the changes itself).
+ */
+export function TripAttributes({
+  pair,
+  changes = true,
+}: {
+  pair: TripPair;
+  changes?: boolean;
+}): React.ReactElement {
   const trip = pair.new ?? pair.base;
   if (!trip) return <>—</>;
   const attrs = [
@@ -245,7 +227,7 @@ function TripAttributes({ pair }: { pair: TripPair }): React.ReactElement {
         {attrs.map(([k, v]) => `${k} "${v}"`).join(', ') || 'No attributes set'}
         .
       </Box>{' '}
-      {pair.attr_changes.length === 0 ? (
+      {!changes ? null : pair.attr_changes.length === 0 ? (
         'No attribute changes.'
       ) : (
         <Box component='ul' sx={{ m: 0, mt: 0.5, pl: 2.5 }}>
@@ -259,6 +241,51 @@ function TripAttributes({ pair }: { pair: TripPair }): React.ReactElement {
           ))}
         </Box>
       )}
+    </>
+  );
+}
+
+/** "Show this trip's raw stop_times.txt rows", and the rows when shown. */
+export function RawStopTimesToggle({
+  pair,
+  rawDatasetId,
+}: {
+  pair: TripPair;
+  rawDatasetId: string;
+}): React.ReactElement | null {
+  const [showRaw, setShowRaw] = useState(false);
+  const trip = pair.new ?? pair.base;
+  if (trip == null) return null;
+  return (
+    <>
+      <Button
+        size='small'
+        onClick={() => setShowRaw((v) => !v)}
+        sx={{ textTransform: 'none' }}
+      >
+        {showRaw
+          ? 'Hide the raw stop_times.txt rows'
+          : 'Show this trip’s raw stop_times.txt rows'}
+      </Button>
+      {showRaw ? (
+        <Box
+          sx={{
+            mt: 1,
+            bgcolor: 'background.paper',
+            borderRadius: '6px',
+            p: 1.5,
+          }}
+        >
+          <RawDiffTable
+            // A new trip needs new initial filters.
+            key={pair.key}
+            datasetId={rawDatasetId}
+            file='stop_times.txt'
+            // The trip_id filter matches the base or the new id.
+            initialFilters={{ actions: RAW_ACTIONS, tripId: trip.id }}
+          />
+        </Box>
+      ) : null}
     </>
   );
 }

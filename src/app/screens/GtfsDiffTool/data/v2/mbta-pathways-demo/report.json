@@ -1,7 +1,7 @@
 {
-  "schema": 1,
+  "schema": 2,
   "dataset": "mbta-pathways-demo",
-  "generated_at": "2026-10-27T12:46:34.422Z",
+  "generated_at": "2026-11-02T12:44:42.551Z",
   "feeds": {
     "base": {
       "file": "base.zip",
@@ -18,194 +18,270 @@
       "end": "20260905"
     }
   },
-  "sections": [
+  "files": [
     {
-      "id": "agency",
-      "slug": "agency",
-      "label": "Agency",
-      "count": 0,
+      "file": "agency.txt",
+      "group": "agency",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "attributions.txt",
+      "group": "agency",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "stops.txt",
+      "group": "stops",
+      "present": true,
+      "counts": {
+        "added": 2,
+        "deleted": 0,
+        "modified": 1,
+        "unchanged": 123
+      }
+    },
+    {
+      "file": "levels.txt",
+      "group": "stops",
+      "present": true,
       "counts": {
         "added": 0,
         "deleted": 0,
-        "modified": 0,
-        "unchanged": 0
-      },
-      "files": [
-        "agency.txt",
-        "attributions.txt"
-      ],
-      "present_files": [],
-      "present": false
+        "modified": 1,
+        "unchanged": 9
+      }
     },
     {
-      "id": "stops",
-      "slug": "stops",
-      "label": "Stops",
-      "count": 139,
+      "file": "pathways.txt",
+      "group": "stops",
+      "present": true,
       "counts": {
-        "added": 67,
+        "added": 65,
         "deleted": 63,
-        "modified": 9,
-        "unchanged": 377
-      },
-      "files": [
-        "stops.txt",
-        "levels.txt",
-        "pathways.txt"
-      ],
-      "present_files": [
-        "stops.txt",
-        "levels.txt",
-        "pathways.txt"
-      ],
-      "present": true
+        "modified": 7,
+        "unchanged": 245
+      }
     },
     {
-      "id": "routes",
-      "slug": "routes",
-      "label": "Routes",
-      "count": 0,
-      "counts": {
-        "added": 0,
-        "deleted": 0,
-        "modified": 0,
-        "unchanged": 0
-      },
-      "files": [
-        "shapes.txt",
-        "routes.txt",
-        "networks.txt",
-        "route_networks.txt",
-        "areas.txt",
-        "stop_areas.txt"
-      ],
-      "present_files": [],
-      "present": false
+      "file": "shapes.txt",
+      "group": "routes",
+      "present": false,
+      "counts": null
     },
     {
-      "id": "trips",
-      "slug": "trips",
-      "label": "Trips",
-      "count": 0,
-      "counts": {
-        "added": 0,
-        "deleted": 0,
-        "modified": 0,
-        "unchanged": 0
-      },
-      "files": [
-        "trips.txt",
-        "stop_times.txt",
-        "frequencies.txt"
-      ],
-      "present_files": [],
-      "present": false
+      "file": "routes.txt",
+      "group": "routes",
+      "present": false,
+      "counts": null
     },
     {
-      "id": "calendar",
-      "slug": "calendar",
-      "label": "Service Dates",
-      "count": 0,
-      "counts": {
-        "added": 0,
-        "deleted": 0,
-        "modified": 0,
-        "unchanged": 0
-      },
-      "files": [
-        "calendar.txt",
-        "calendar_dates.txt"
-      ],
-      "present_files": [],
-      "present": false
+      "file": "networks.txt",
+      "group": "routes",
+      "present": false,
+      "counts": null
     },
     {
-      "id": "fares_v1",
-      "slug": "fares-v1",
-      "label": "Fares v1",
-      "count": 0,
-      "counts": {
-        "added": 0,
-        "deleted": 0,
-        "modified": 0,
-        "unchanged": 0
-      },
-      "files": [
-        "fare_attributes.txt",
-        "fare_rules.txt"
-      ],
-      "present_files": [],
-      "present": false
+      "file": "route_networks.txt",
+      "group": "routes",
+      "present": false,
+      "counts": null
     },
     {
-      "id": "fares_v2",
-      "slug": "fares-v2",
-      "label": "Fares v2",
-      "count": 0,
-      "counts": {
-        "added": 0,
-        "deleted": 0,
-        "modified": 0,
-        "unchanged": 0
-      },
-      "files": [
-        "fare_products.txt",
-        "fare_media.txt",
-        "fare_leg_rules.txt",
-        "fare_leg_join_rules.txt",
-        "fare_transfer_rules.txt",
-        "rider_categories.txt",
-        "timeframes.txt"
-      ],
-      "present_files": [],
-      "present": false
+      "file": "areas.txt",
+      "group": "routes",
+      "present": false,
+      "counts": null
     },
     {
-      "id": "flex",
-      "slug": "flex",
-      "label": "Flex",
-      "count": 0,
-      "counts": {
-        "added": 0,
-        "deleted": 0,
-        "modified": 0,
-        "unchanged": 0
-      },
-      "files": [
-        "booking_rules.txt",
-        "location_groups.txt",
-        "location_group_stops.txt",
-        "locations.geojson"
-      ],
-      "present_files": [],
-      "present": false
+      "file": "stop_areas.txt",
+      "group": "routes",
+      "present": false,
+      "counts": null
     },
     {
-      "id": "meta",
-      "slug": "meta",
-      "label": "Meta",
-      "count": 0,
+      "file": "trips.txt",
+      "group": "trips",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "stop_times.txt",
+      "group": "trips",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "frequencies.txt",
+      "group": "trips",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "calendar.txt",
+      "group": "calendar",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "calendar_dates.txt",
+      "group": "calendar",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "fare_attributes.txt",
+      "group": "fares_v1",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "fare_rules.txt",
+      "group": "fares_v1",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "fare_products.txt",
+      "group": "fares_v2",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "fare_media.txt",
+      "group": "fares_v2",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "fare_leg_rules.txt",
+      "group": "fares_v2",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "fare_leg_join_rules.txt",
+      "group": "fares_v2",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "fare_transfer_rules.txt",
+      "group": "fares_v2",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "rider_categories.txt",
+      "group": "fares_v2",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "timeframes.txt",
+      "group": "fares_v2",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "booking_rules.txt",
+      "group": "flex",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "location_groups.txt",
+      "group": "flex",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "location_group_stops.txt",
+      "group": "flex",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "locations.geojson",
+      "group": "flex",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "feed_info.txt",
+      "group": "meta",
+      "present": true,
       "counts": {
         "added": 0,
         "deleted": 0,
         "modified": 0,
         "unchanged": 1
-      },
-      "files": [
-        "feed_info.txt",
-        "translations.txt",
-        "transfers.txt"
-      ],
-      "present_files": [
-        "feed_info.txt"
-      ],
+      }
+    },
+    {
+      "file": "translations.txt",
+      "group": "meta",
+      "present": false,
+      "counts": null
+    },
+    {
+      "file": "transfers.txt",
+      "group": "meta",
+      "present": false,
+      "counts": null
+    }
+  ],
+  "groups": [
+    {
+      "id": "agency",
+      "label": "Agency",
+      "present": false
+    },
+    {
+      "id": "stops",
+      "label": "Stops",
+      "present": true
+    },
+    {
+      "id": "routes",
+      "label": "Routes",
+      "present": false
+    },
+    {
+      "id": "trips",
+      "label": "Trips",
+      "present": false
+    },
+    {
+      "id": "calendar",
+      "label": "Service Dates",
+      "present": false
+    },
+    {
+      "id": "fares_v1",
+      "label": "Fares v1",
+      "present": false
+    },
+    {
+      "id": "fares_v2",
+      "label": "Fares v2",
+      "present": false
+    },
+    {
+      "id": "flex",
+      "label": "Flex",
+      "present": false
+    },
+    {
+      "id": "meta",
+      "label": "Meta",
       "present": true
     },
     {
       "id": "pathways",
-      "slug": "pathways",
       "label": "Pathways and levels",
-      "count": 4,
+      "present": true,
       "counts": {
         "added": 0,
         "deleted": 0,
@@ -215,12 +291,7 @@
       "files": [
         "levels.txt",
         "pathways.txt"
-      ],
-      "present_files": [
-        "levels.txt",
-        "pathways.txt"
-      ],
-      "present": true
+      ]
     }
   ],
   "highlights": {

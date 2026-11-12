@@ -25,9 +25,10 @@ describe('listDiffDatasets', () => {
 
   it('reports which diff files each dataset has', () => {
     expect(getDiffDataset('direxis')?.files.entity).toBe(true);
+    // Rebuilt with every step: its entity and trips diffs exist too.
     expect(getDiffDataset('mbta-pathways-demo')?.files).toEqual({
-      entity: false,
-      trips: false,
+      entity: true,
+      trips: true,
       pathways: true,
     });
   });

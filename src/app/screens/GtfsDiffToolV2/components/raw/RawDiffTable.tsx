@@ -38,7 +38,10 @@ import ColumnIntensityBar from '../../../GtfsDiffTool/components/ColumnIntensity
 import { RAW_COLORS } from './raw-colors';
 import {
   LinkedValue,
+  RowActionButton,
+  rowActionHoverSx,
   ValueLinkContext,
+  type RowAction,
 } from '../../../GtfsDiffTool/components/GtfsDiffFileDiffPanel';
 import { useForeignKeyLinker } from '../../lib/foreign-keys';
 
@@ -117,9 +120,17 @@ export interface RawDiffTableProps {
   initialFilters?: Partial<RawDiffFilters>;
   /**
    * GTFS column that identifies a row's entity (trip_key in the Parquet),
-   * shown in its own column: trip_id, or shape_id for shapes.txt.
+   * shown in its own column: trip_id, or shape_id for shapes.txt. null for
+   * a file without a key (feed_info.txt): no identifier column.
    */
-  keyLabel?: string;
+  keyLabel?: string | null;
+  /** An action on each row, keyed by keyLabel (e.g. "See on map"). */
+  rowAction?: RowAction;
+  /**
+   * Whether rows belong to routes (route column and filter): false for
+   * keyed files such as stops.txt, whose rows have no route.
+   */
+  routeColumn?: boolean;
   /**
    * Only the rows table (no tabs, search, filters or column bars), for rows
    * a caller already scoped through initialFilters (e.g. a highlight).
@@ -223,8 +234,10 @@ export default function RawDiffTable({
   file,
   initialFilters,
   keyLabel = 'trip_id',
+  routeColumn = true,
   compact = false,
   maxHeight = MAX_LIST_H,
+  rowAction,
 }: RawDiffTableProps): React.ReactElement {
   // Fixed for the table's lifetime (callers remount to change it).
   const predicate = initialFilters?.predicate ?? null;
@@ -296,8 +309,17 @@ export default function RawDiffTable({
   const shown = columns.filter((c) => c !== keyLabel);
   // Files with their own route_id column (trips.txt) show it, with its
   // changes, as a GTFS column; others (stop_times.txt) get the trip's route.
-  const metaRoute = !columns.includes('route_id');
-  const colSpan = shown.length + (metaRoute ? 3 : 2);
+  const metaRoute = routeColumn && !columns.includes('route_id');
+  const action =
+    rowAction != null && keyLabel != null && rowAction.files.includes(file)
+      ? rowAction
+      : null;
+  const colSpan =
+    shown.length +
+    1 +
+    (keyLabel != null ? 1 : 0) +
+    (metaRoute ? 1 : 0) +
+    (action ? 1 : 0);
   const modified = counts.modified;
 
   const sortBy = (column: string): void =>
@@ -414,24 +436,28 @@ export default function RawDiffTable({
               <Typography variant='caption' color='text.secondary'>
                 Filter:
               </Typography>
-              <Autocomplete
-                size='small'
-                options={routes}
-                value={routeId}
-                onChange={(_, v) => setRouteId(v)}
-                renderInput={(params) => (
-                  <TextField {...params} placeholder='route_id' />
-                )}
-                sx={{ width: 150 }}
-              />
-              <TextField
-                size='small'
-                placeholder={keyLabel}
-                value={tripId}
-                onChange={(e) => setTripId(e.target.value)}
-                sx={{ width: 160 }}
-              />
-              {columns.includes('stop_id') ? (
+              {routeColumn ? (
+                <Autocomplete
+                  size='small'
+                  options={routes}
+                  value={routeId}
+                  onChange={(_, v) => setRouteId(v)}
+                  renderInput={(params) => (
+                    <TextField {...params} placeholder='route_id' />
+                  )}
+                  sx={{ width: 150 }}
+                />
+              ) : null}
+              {keyLabel != null ? (
+                <TextField
+                  size='small'
+                  placeholder={keyLabel}
+                  value={tripId}
+                  onChange={(e) => setTripId(e.target.value)}
+                  sx={{ width: 160 }}
+                />
+              ) : null}
+              {columns.includes('stop_id') && keyLabel !== 'stop_id' ? (
                 <TextField
                   size='small'
                   placeholder='stop_id'
@@ -493,9 +519,12 @@ export default function RawDiffTable({
           <Table size='small' stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell sx={headSx}>
-                  {sortLabel('trip_key', 'Identifier')}
-                </TableCell>
+                {action ? <TableCell sx={{ ...headSx, width: 36 }} /> : null}
+                {keyLabel != null ? (
+                  <TableCell sx={headSx}>
+                    {sortLabel('trip_key', 'Identifier')}
+                  </TableCell>
+                ) : null}
                 {metaRoute ? (
                   <TableCell sx={headSx}>
                     {sortLabel('route_id', 'route_id')}
@@ -566,47 +595,62 @@ export default function RawDiffTable({
                           '& > td': {
                             borderBottom: '1px solid rgba(0,0,0,0.04)',
                           },
+                          ...(action ? rowActionHoverSx : {}),
                         }}
                       >
-                        <TableCell
-                          sx={{
-                            ...cellSx,
-                            color:
-                              r.action === 'added'
-                                ? RAW_COLORS.added
-                                : r.action === 'deleted'
-                                  ? RAW_COLORS.deleted
-                                  : 'text.secondary',
-                            fontWeight: 700,
-                          }}
-                        >
-                          {renamed ? (
-                            <>
-                              <Box
-                                component='span'
-                                sx={{
-                                  textDecoration: 'line-through',
-                                  color: 'text.disabled',
-                                  mr: 0.5,
-                                }}
-                              >
+                        {action && keyLabel != null ? (
+                          <TableCell sx={{ ...cellSx, py: 0, width: 36 }}>
+                            <RowActionButton
+                              action={action}
+                              identifier={{
+                                [keyLabel]:
+                                  r.new_trip_id ?? r.base_trip_id ?? '',
+                              }}
+                              fileName={file}
+                            />
+                          </TableCell>
+                        ) : null}
+                        {keyLabel != null ? (
+                          <TableCell
+                            sx={{
+                              ...cellSx,
+                              color:
+                                r.action === 'added'
+                                  ? RAW_COLORS.added
+                                  : r.action === 'deleted'
+                                    ? RAW_COLORS.deleted
+                                    : 'text.secondary',
+                              fontWeight: 700,
+                            }}
+                          >
+                            {renamed ? (
+                              <>
+                                <Box
+                                  component='span'
+                                  sx={{
+                                    textDecoration: 'line-through',
+                                    color: 'text.disabled',
+                                    mr: 0.5,
+                                  }}
+                                >
+                                  <LinkedValue
+                                    column={keyLabel}
+                                    value={r.base_trip_id ?? ''}
+                                  />
+                                </Box>
                                 <LinkedValue
                                   column={keyLabel}
-                                  value={r.base_trip_id ?? ''}
+                                  value={r.new_trip_id ?? ''}
                                 />
-                              </Box>
+                              </>
+                            ) : (
                               <LinkedValue
                                 column={keyLabel}
-                                value={r.new_trip_id ?? ''}
+                                value={r.new_trip_id ?? r.base_trip_id ?? ''}
                               />
-                            </>
-                          ) : (
-                            <LinkedValue
-                              column={keyLabel}
-                              value={r.new_trip_id ?? r.base_trip_id ?? ''}
-                            />
-                          )}
-                        </TableCell>
+                            )}
+                          </TableCell>
+                        ) : null}
                         {metaRoute ? (
                           <TableCell
                             sx={{ ...cellSx, color: 'text.secondary' }}

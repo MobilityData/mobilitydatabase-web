@@ -2,8 +2,6 @@
 
 import {
   Box,
-  Button,
-  ButtonGroup,
   IconButton,
   ToggleButton,
   ToggleButtonGroup,
@@ -18,7 +16,6 @@ import type { GtfsDate } from '../../lib/entity-diff-types';
 import {
   MONTH_NAMES,
   type MonthCursor,
-  formatGtfsDate,
   parseGtfsDate,
   toGtfsDate,
 } from '../../lib/calendar-utils';
@@ -40,8 +37,6 @@ interface CalendarNavigatorProps {
   onJumpToDate: (date: GtfsDate) => void;
   /** Union of both feeds' service coverage. */
   bounds: { start: GtfsDate | null; end: GtfsDate | null };
-  /** First and last date with a (filtered) change. */
-  changeBounds: { first: GtfsDate | null; last: GtfsDate | null };
 }
 
 export default function CalendarNavigator({
@@ -52,32 +47,19 @@ export default function CalendarNavigator({
   focusedDate,
   onJumpToDate,
   bounds,
-  changeBounds,
 }: CalendarNavigatorProps): React.ReactElement {
   const unit = view === 'month' ? 'month' : 'year';
   const title =
     view === 'month'
       ? `${MONTH_NAMES[cursor.month]} ${cursor.year}`
       : String(cursor.year);
-
-  const jumpButton = (
-    label: string,
-    date: GtfsDate | null,
-    tooltip: string,
-  ): React.ReactElement => (
-    <Tooltip
-      title={date ? `${tooltip}: ${formatGtfsDate(date)}` : 'Not available'}
-    >
-      <span>
-        <Button
-          disabled={date == null}
-          onClick={() => date && onJumpToDate(date)}
-        >
-          {label}
-        </Button>
-      </span>
-    </Tooltip>
-  );
+  // The year view stays within the years the diff covers.
+  const startYear = bounds.start ? parseGtfsDate(bounds.start).year : null;
+  const endYear = bounds.end ? parseGtfsDate(bounds.end).year : null;
+  const canStepBack =
+    view === 'month' || startYear == null || cursor.year > startYear;
+  const canStepForward =
+    view === 'month' || endYear == null || cursor.year < endYear;
 
   return (
     <Box
@@ -101,13 +83,16 @@ export default function CalendarNavigator({
 
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <Tooltip title={`Previous ${unit}`}>
-          <IconButton
-            size='small'
-            onClick={() => onStep(-1)}
-            aria-label={`Previous ${unit}`}
-          >
-            <ChevronLeft />
-          </IconButton>
+          <span>
+            <IconButton
+              size='small'
+              disabled={!canStepBack}
+              onClick={() => onStep(-1)}
+              aria-label={`Previous ${unit}`}
+            >
+              <ChevronLeft />
+            </IconButton>
+          </span>
         </Tooltip>
         <Typography
           variant='subtitle1'
@@ -117,13 +102,16 @@ export default function CalendarNavigator({
           {title}
         </Typography>
         <Tooltip title={`Next ${unit}`}>
-          <IconButton
-            size='small'
-            onClick={() => onStep(1)}
-            aria-label={`Next ${unit}`}
-          >
-            <ChevronRight />
-          </IconButton>
+          <span>
+            <IconButton
+              size='small'
+              disabled={!canStepForward}
+              onClick={() => onStep(1)}
+              aria-label={`Next ${unit}`}
+            >
+              <ChevronRight />
+            </IconButton>
+          </span>
         </Tooltip>
       </Box>
 
@@ -140,15 +128,6 @@ export default function CalendarNavigator({
         }}
         slotProps={{ textField: { size: 'small', sx: { width: 180 } } }}
       />
-
-      <ButtonGroup size='small' variant='outlined'>
-        {jumpButton('Start', bounds.start, 'Feed calendar start')}
-        {jumpButton('End', bounds.end, 'Feed calendar end')}
-      </ButtonGroup>
-      <ButtonGroup size='small' variant='outlined'>
-        {jumpButton('First change', changeBounds.first, 'First change')}
-        {jumpButton('Last change', changeBounds.last, 'Last change')}
-      </ButtonGroup>
     </Box>
   );
 }

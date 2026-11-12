@@ -268,8 +268,6 @@ export function diffPathways(baseFeed, newFeed) {
       pathways: { base: base.pathways.length, new: next.pathways.length },
       levels: { base: base.levels.size, new: next.levels.size },
     },
-    /** Pathways whose endpoints don't belong to any station (not diffed). */
-    orphan_pathways: { base: base.orphans, new: next.orphans },
     unchanged_station_ids: unchanged,
     stations,
   };

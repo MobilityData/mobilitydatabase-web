@@ -184,7 +184,7 @@ function EntitySection({
           <CalendarEntityPanel
             datasetId={dataset.id}
             calendar={active.calendar}
-            fileDiffs={active.file_diffs ?? []}
+            rawTables={active.raw_tables ?? []}
             focus={focus}
           />
         ) : active.stops_map ? (
@@ -192,7 +192,7 @@ function EntitySection({
             datasetId={dataset.id}
             stopsMap={active.stops_map}
             entityTypes={active.entity_types ?? []}
-            fileDiffs={active.file_diffs ?? []}
+            rawTables={active.raw_tables ?? []}
             focus={focus}
           />
         ) : active.routes_map ? (
@@ -200,7 +200,6 @@ function EntitySection({
             datasetId={dataset.id}
             routesMap={active.routes_map}
             entityTypes={active.entity_types ?? []}
-            fileDiffs={active.file_diffs ?? []}
             rawTables={active.raw_tables ?? []}
             focus={focus}
           />
@@ -213,7 +212,11 @@ function EntitySection({
             focus={focus}
           />
         ) : (
-          <GenericEntityPanel entityTypes={active.entity_types ?? []} />
+          <GenericEntityPanel
+            entityTypes={active.entity_types ?? []}
+            datasetId={dataset.id}
+            rawTables={active.raw_tables ?? []}
+          />
         )}
       </ForeignKeyLinks>
     </DiffNavProvider>

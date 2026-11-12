@@ -12,7 +12,12 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { ErrorOutline, ExpandMore, WarningAmber } from '@mui/icons-material';
+import {
+  ErrorOutline,
+  ExpandMore,
+  InfoOutlined,
+  WarningAmber,
+} from '@mui/icons-material';
 import React from 'react';
 import { Link } from '../../../../../i18n/navigation';
 import type { GlobalHighlight } from '../../lib/global-highlights';
@@ -23,12 +28,14 @@ import {
   sectionPageHref,
   tripsRawDiffHref,
 } from '../../lib/highlight-links';
-import { tripsRouteHref } from '../../lib/trips-v2-routes';
+import { DEFAULT_TRIPS_VIEW, tripsRouteHref } from '../../lib/trips-v2-routes';
 import { formatGtfsDate } from '../../lib/calendar-utils';
+import ServiceDetails from './ServiceDetails';
 
 export const SEVERITY_COLORS: Record<HighlightSeverity, string> = {
   error: '#d32f2f',
   warning: '#ed6c02',
+  info: '#0288d1',
 };
 
 const MONO = 'var(--font-ibm-plex-mono)';
@@ -49,6 +56,8 @@ export function SeverityIcon({
   const sx = { color: SEVERITY_COLORS[severity], fontSize: 22, mt: 0.1 };
   return severity === 'error' ? (
     <ErrorOutline sx={sx} titleAccess='Critical' />
+  ) : severity === 'info' ? (
+    <InfoOutlined sx={sx} titleAccess='Info' />
   ) : (
     <WarningAmber sx={sx} titleAccess='Warning' />
   );
@@ -240,7 +249,7 @@ export function HighlightDetails({
                 <Typography
                   component={Link}
                   href={tripsRouteHref(datasetId, r.route, {
-                    view: 'trips-v3',
+                    view: DEFAULT_TRIPS_VIEW,
                   })}
                   variant='caption'
                   sx={linkSx}
@@ -253,6 +262,8 @@ export function HighlightDetails({
         </TableBody>
       </Table>
     );
+  if (e.kind === 'hours' || e.kind === 'spans')
+    return <ServiceDetails entities={e} datasetId={datasetId} />;
   if (e.kind === 'rows')
     return (
       <Typography variant='body2' color='text.secondary'>

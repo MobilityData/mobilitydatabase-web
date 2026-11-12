@@ -189,6 +189,7 @@ export function countsTotal(c: DayCounts | undefined): number {
 export type ExceptionFilter = 'all' | '1' | '2' | 'none';
 
 export interface CalendarFilters {
+  /** Empty means every kind. */
   kinds: ChangeKind[];
   routeIds: string[];
   serviceIds: string[];
@@ -196,7 +197,7 @@ export interface CalendarFilters {
 }
 
 export const DEFAULT_FILTERS: CalendarFilters = {
-  kinds: [...CHANGE_KINDS],
+  kinds: [],
   routeIds: [],
   serviceIds: [],
   exceptionType: 'all',
@@ -204,7 +205,7 @@ export const DEFAULT_FILTERS: CalendarFilters = {
 
 export function isFiltered(f: CalendarFilters): boolean {
   return (
-    f.kinds.length !== CHANGE_KINDS.length ||
+    f.kinds.length > 0 ||
     f.routeIds.length > 0 ||
     f.serviceIds.length > 0 ||
     f.exceptionType !== 'all'
@@ -262,7 +263,7 @@ export function filterDay(
   serviceRoutes: Map<string, Set<string>>,
 ): DayChanges {
   const keep = <T extends DayServiceEntry>(kind: ChangeKind, list: T[]): T[] =>
-    filters.kinds.includes(kind)
+    filters.kinds.length === 0 || filters.kinds.includes(kind)
       ? list.filter((e) => entryMatches(e, filters, serviceRoutes))
       : [];
   return {

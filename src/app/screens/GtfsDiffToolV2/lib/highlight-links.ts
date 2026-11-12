@@ -7,10 +7,11 @@
 import type { EntityRow } from './highlights';
 import type { RowKind } from './global-highlights';
 import { sectionSlug } from './report';
-import { tripsListHref, tripsRouteHref } from './trips-v2-routes';
-
-/** The Trips view links open: v3 is the default. */
-const TRIPS_VIEW = 'trips-v3';
+import {
+  DEFAULT_TRIPS_VIEW as TRIPS_VIEW,
+  tripsListHref,
+  tripsRouteHref,
+} from './trips-v2-routes';
 
 /** Raw diff anchor of the Trips page (components/diffmap/DiffMapControls). */
 const RAW_DIFF_ANCHOR = '#raw-diff';
@@ -19,7 +20,7 @@ export function highlightsHref(datasetId: string): string {
   return `/gtfs-diff-tool-v2/${datasetId}/highlights`;
 }
 
-/** The section's page; trips open in the Trips v3 view. */
+/** The section's page; trips open in the default Trips view (v5). */
 export function sectionPageHref(datasetId: string, section: string): string {
   if (section === 'trips')
     return tripsListHref(datasetId, undefined, undefined, TRIPS_VIEW);

@@ -5,7 +5,8 @@
  * the most concerning first.
  */
 
-export type HighlightSeverity = 'error' | 'warning';
+/** info: worth knowing, not a regression (service added). */
+export type HighlightSeverity = 'error' | 'warning' | 'info';
 
 export interface Highlight<E = unknown> {
   id: string;
@@ -16,6 +17,46 @@ export interface Highlight<E = unknown> {
   detail: string;
   /** What the highlight expands to. */
   entities?: E;
+  /**
+   * Entities in the full list, when `entities` holds only its first rows
+   * (inlineHighlights); the full list is in the section's highlights file.
+   */
+  entities_total?: number;
+}
+
+/** Entity rows a highlight keeps inline; the full lists are in their own file. */
+export const INLINE_ENTITY_ROWS = 50;
+
+/** A section's highlights with their full entity lists, as plain JSON. */
+export interface HighlightsFile<E = EntityRow> {
+  schema: 1;
+  /** stops, routes or calendar. */
+  section: string;
+  highlights: Array<Highlight<E[]>>;
+}
+
+/** File of a section's highlights with full entity lists: stops-highlights.json */
+export function highlightsFileName(section: string): string {
+  return `${section}-highlights.json`;
+}
+
+/**
+ * The highlights with at most `max` entity rows each, and the full count in
+ * `entities_total` where rows were left out.
+ */
+export function inlineHighlights<E>(
+  list: Array<Highlight<E[]>>,
+  max: number = INLINE_ENTITY_ROWS,
+): Array<Highlight<E[]>> {
+  return list.map((h) =>
+    h.entities && h.entities.length > max
+      ? {
+          ...h,
+          entities: h.entities.slice(0, max),
+          entities_total: h.entities.length,
+        }
+      : h,
+  );
 }
 
 /** An entity listed under a highlight (a stop, a route, a shape…). */

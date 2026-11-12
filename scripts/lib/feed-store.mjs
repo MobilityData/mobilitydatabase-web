@@ -29,6 +29,7 @@ import { closeSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, rm
 import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 import { DuckDBInstance } from '@duckdb/node-api';
+import { timed, timer } from './timings.mjs';
 
 /** DuckDB memory cap for the store. */
 const MEMORY_LIMIT = '6GB';
@@ -154,7 +155,7 @@ export async function openFeedStore({ basePath, newPath, files, lineOf }) {
     for (const [name, member] of members) {
       if (!files.has(name) && !EXTRA_FILES.has(name)) continue;
       const path = join(dir, name);
-      extract(zipPath, member, path);
+      timed(`load ${side} ${name}: unzip`, () => extract(zipPath, member, path), () => ({ bytes: statSync(path).size }));
       if (name.endsWith('.geojson')) {
         feed.files.set(name, JSON.parse(readFileSync(path, 'utf8')));
         continue;
@@ -165,10 +166,12 @@ export async function openFeedStore({ basePath, newPath, files, lineOf }) {
         feed.files.set(name, { header: [], rows: [] });
         continue;
       }
+      const endCsv = timer(`load ${side} ${name}: read_csv`);
       await run(
         `CREATE TABLE ${ident(table)} AS SELECT * FROM read_csv(${sqlString(path)}, all_varchar=true, header=true, ` +
           `delim=',', quote='"', escape='"', strict_mode=false, null_padding=true, parallel=false)`,
       );
+      endCsv();
       const header = [];
       for (const r of await all(`DESCRIBE ${ident(table)}`)) {
         const raw = String(r.column_name);
@@ -178,7 +181,7 @@ export async function openFeedStore({ basePath, newPath, files, lineOf }) {
         header.push(clean);
       }
       const [{ n }] = await all(`SELECT count(*)::INTEGER AS n FROM ${ident(table)}`);
-      const lines = recordLineBreaks(path);
+      const lines = timed(`load ${side} ${name}: line scan`, () => recordLineBreaks(path), { rows: n });
       if (lines.records !== n) {
         console.warn(`  ${side} ${name}: ${lines.records} records scanned, ${n} loaded; line numbers are approximate`);
         lines.breaks = [];
@@ -204,6 +207,7 @@ export async function openFeedStore({ basePath, newPath, files, lineOf }) {
       // line 1), plus the blank / multi-line offset from recordLineBreaks.
       let next = 0;
       let extra = 0;
+      const endRows = timer(`load ${side} ${name}: to JS rows`);
       const rows = (await all(`SELECT *, rowid AS __rowid FROM ${ident(table)} ORDER BY rowid`)).map((r) => {
         const obj = {};
         for (const h of header) {
@@ -215,6 +219,7 @@ export async function openFeedStore({ basePath, newPath, files, lineOf }) {
         lineOf?.set(obj, rowid + 2 + extra);
         return obj;
       });
+      endRows({ rows: rows.length });
       feed.files.set(name, { header, rows });
     }
     feeds[side] = feed;
@@ -224,6 +229,7 @@ export async function openFeedStore({ basePath, newPath, files, lineOf }) {
   for (const side of SIDES) {
     const t = (f) => ident(tableOf(side, f));
     const has = (f) => feeds[side].files.get(f)?.header.length > 0;
+    const endAlias = timer(`load ${side}: stop_alias table`);
     if (has('id_mappings.txt')) {
       // Google exports rename stops per trip: from_id "###TRIPID:<trip>###_<stop>"
       // (or a plain stop id) -> to_id. Reversed: (trip, new stop) -> original stop.
@@ -241,6 +247,8 @@ export async function openFeedStore({ basePath, newPath, files, lineOf }) {
            (SELECT count(DISTINCT original) FROM ${ident(`${side}__stop_alias`)} b WHERE b.trip_id IS NULL AND b.stop_id = a.stop_id) > 1`,
       );
     }
+    endAlias();
+    const endSt = timer(`load ${side}: derived ${side}__st (stop_times sorted)`);
     if (has('stop_times.txt')) {
       const alias = has('id_mappings.txt');
       const line = lineSql(tableOf(side, 'stop_times.txt'), 'st');
@@ -256,6 +264,8 @@ export async function openFeedStore({ basePath, newPath, files, lineOf }) {
       );
       await run(`DROP TABLE ${t('stop_times.txt')}`);
     }
+    endSt({ rows: feeds[side].files.get('stop_times.txt')?.count });
+    const endShp = timer(`load ${side}: derived ${side}__shp (shapes sorted)`);
     if (has('shapes.txt')) {
       const line = lineSql(tableOf(side, 'shapes.txt'), 's');
       await run(
@@ -266,6 +276,7 @@ export async function openFeedStore({ basePath, newPath, files, lineOf }) {
       );
       await run(`DROP TABLE ${t('shapes.txt')}`);
     }
+    endShp({ rows: feeds[side].files.get('shapes.txt')?.count });
   }
   // The unpacked CSVs are no longer needed.
   for (const side of SIDES) rmSync(join(work, side), { recursive: true, force: true });

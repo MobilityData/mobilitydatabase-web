@@ -21,6 +21,10 @@ interface ServiceProfileBarsProps {
   route: RouteDirDiff;
   range: [number, number] | null;
   onRangeChange: (range: [number, number] | null) => void;
+  /** Shows the line explaining the chart (default). */
+  caption?: boolean;
+  /** Labels the axes: "Trips per hour", 0 and the top count, "06h". */
+  axisLabels?: boolean;
 }
 
 function hh(h: number): string {
@@ -36,7 +40,11 @@ export default function ServiceProfileBars({
   route,
   range,
   onRangeChange,
+  caption = true,
+  axisLabels = false,
 }: ServiceProfileBarsProps): React.ReactElement {
+  // Room for the count labels left of the bars and the axis title above.
+  const m = axisLabels ? { ...M, left: 30, top: 26 } : M;
   const theme = useTheme();
   const [boxRef, width] = useElementWidth<HTMLDivElement>();
   const { base, new: next } = route.profile;
@@ -51,11 +59,11 @@ export default function ServiceProfileBars({
   const hours = Array.from({ length: h1 - h0 }, (_, i) => h0 + i);
   const max = Math.max(1, ...hours.map((h) => Math.max(base[h], next[h])));
 
-  const plotW = Math.max(0, width - M.left - M.right);
-  const plotH = HEIGHT - M.top - M.bottom;
+  const plotW = Math.max(0, width - m.left - m.right);
+  const plotH = HEIGHT - m.top - m.bottom;
   const band = hours.length > 0 ? plotW / hours.length : 0;
   const barW = Math.max(1, Math.min(14, (band - 6) / 2));
-  const y = (v: number): number => M.top + plotH - (v / max) * plotH;
+  const y = (v: number): number => m.top + plotH - (v / max) * plotH;
   const period = periodFor(range);
   const inRange = (h: number): boolean =>
     range == null || (h >= range[0] && h < range[1]);
@@ -65,7 +73,11 @@ export default function ServiceProfileBars({
     <Box>
       <SubHeading
         title='Service profile'
-        caption='Trips starting each hour, before and after. Select an hour or a period to focus the trips below.'
+        caption={
+          caption
+            ? 'Trips starting each hour, before and after. Select an hour or a period to focus the trips below.'
+            : undefined
+        }
         actions={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Legend color={OLD_COLOR} label='Before' />
@@ -131,14 +143,35 @@ export default function ServiceProfileBars({
             aria-label='Trips starting each hour, before vs after'
           >
             <line
-              x1={M.left}
-              x2={M.left + plotW}
-              y1={M.top + plotH}
-              y2={M.top + plotH}
+              x1={m.left}
+              x2={m.left + plotW}
+              y1={m.top + plotH}
+              y2={m.top + plotH}
               stroke={theme.palette.divider}
             />
+            {axisLabels ? (
+              <g fontSize={10} fill={ink} pointerEvents='none'>
+                <text x={0} y={10}>
+                  Trips per hour
+                </text>
+                <line
+                  x1={m.left}
+                  x2={m.left + plotW}
+                  y1={y(max)}
+                  y2={y(max)}
+                  stroke={theme.palette.divider}
+                  strokeDasharray='2 3'
+                />
+                <text x={m.left - 6} y={y(max) + 3} textAnchor='end'>
+                  {max}
+                </text>
+                <text x={m.left - 6} y={m.top + plotH + 3} textAnchor='end'>
+                  0
+                </text>
+              </g>
+            ) : null}
             {hours.map((h, i) => {
-              const x0 = M.left + i * band;
+              const x0 = m.left + i * band;
               const cx = x0 + band / 2;
               const d = next[h] - base[h];
               const faded = !inRange(h);
@@ -152,7 +185,7 @@ export default function ServiceProfileBars({
                     x={x}
                     y={y(v)}
                     width={barW}
-                    height={M.top + plotH - y(v)}
+                    height={m.top + plotH - y(v)}
                     fill={color}
                     rx={1}
                   />
@@ -206,7 +239,7 @@ export default function ServiceProfileBars({
                       fill={ink}
                       pointerEvents='none'
                     >
-                      {hh(h)}
+                      {axisLabels ? `${hh(h)}h` : hh(h)}
                     </text>
                   ) : null}
                 </g>

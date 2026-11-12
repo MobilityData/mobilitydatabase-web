@@ -27,7 +27,6 @@ function stop(over: Partial<StopChange>): StopChange {
 function stopsMap(stops: StopChange[]): StopsMapSource {
   return {
     columns: [],
-    move_threshold_m: 1,
     counts: { added: 0, deleted: 0, modified: 0, unchanged: 0, moved: 0 },
     stops,
     all_stops: { base: [], new: [] },

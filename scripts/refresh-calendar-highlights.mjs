@@ -5,7 +5,8 @@
  * calendar/services_detail.parquet and the day counts / coverage from
  * categories/calendar.json, runs the same rules as the build
  * (src/app/screens/GtfsDiffToolV2/lib/calendar-overview-highlights.ts), and
- * writes calendar.overview_highlights back into categories/calendar.json.
+ * writes calendar.overview_highlights back into categories/calendar.json
+ * (first rows of each list) and calendar-highlights.json (full lists).
  *
  * Useful after tuning the rules, or for a dataset built before they existed
  * (rebuilding IDFM takes far longer and far more memory). Run
@@ -22,6 +23,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DuckDBInstance } from '@duckdb/node-api';
 import './lib/ts-resolve.mjs';
+import { writeHighlightsFile } from './lib/map-tables.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DATA_DIR = join(ROOT, 'src/app/screens/GtfsDiffTool/data/v2');
@@ -66,7 +68,9 @@ for (const id of datasets) {
     active_counts: detail.calendar.active_counts,
     coverage: detail.calendar.coverage,
   });
-  detail.calendar.overview_highlights = highlights;
+  const inline = await writeHighlightsFile(dir, 'calendar', highlights);
+  detail.calendar.overview_highlights = inline.highlights;
+  detail.calendar.overview_highlights_file = inline.file;
 
   // Same encoding and check as the build (generate-gtfs-entity-diff.mjs).
   const text = JSON.stringify(encodeDeep(detail));

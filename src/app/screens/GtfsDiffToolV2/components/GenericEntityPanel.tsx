@@ -17,10 +17,12 @@ import type {
   DiffType,
   EntityChange,
   EntityTypeDiff,
+  RawTable,
 } from '../lib/entity-diff-types';
 import SummaryStatBar from '../../GtfsDiffTool/components/SummaryStatBar';
 import { DiffBadge } from '../../GtfsDiffTool/components/EntityCard';
 import { useEntityChanges } from '../lib/useEntityChanges';
+import RawFileDiffCard from './raw/RawFileDiffCard';
 
 const MONO_FONT = 'var(--font-ibm-plex-mono)';
 const FIELD_PREVIEW = 3;
@@ -266,10 +268,15 @@ function EntityTypeTable({
 
 interface GenericEntityPanelProps {
   entityTypes: EntityTypeDiff[];
+  datasetId?: string;
+  /** Row diffs of the files that changed, shown under the entity tables. */
+  rawTables?: RawTable[];
 }
 
 export default function GenericEntityPanel({
   entityTypes,
+  datasetId,
+  rawTables = [],
 }: GenericEntityPanelProps): React.ReactElement {
   if (entityTypes.length === 0) {
     return (
@@ -283,6 +290,16 @@ export default function GenericEntityPanel({
       {entityTypes.map((et) => (
         <EntityTypeTable key={et.file} entityType={et} />
       ))}
+      {datasetId != null && rawTables.length > 0 ? (
+        <Box sx={{ mt: 3 }}>
+          <Typography variant='h6' fontWeight={700} sx={{ mb: 2 }}>
+            Raw file diff
+          </Typography>
+          {rawTables.map((t) => (
+            <RawFileDiffCard key={t.file} datasetId={datasetId} table={t} />
+          ))}
+        </Box>
+      ) : null}
     </Box>
   );
 }

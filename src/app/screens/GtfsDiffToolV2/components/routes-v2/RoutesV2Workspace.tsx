@@ -31,7 +31,7 @@ import {
 } from '@mui/icons-material';
 import { useSearchParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
-import type { RouteDetail, RoutesMapDiff } from '../../lib/entity-diff-types';
+import type { RoutesMapDiff } from '../../lib/entity-diff-types';
 import {
   ROUTE_CHANGES,
   type RouteChange,
@@ -47,7 +47,7 @@ import {
   toRouteV2Overview,
   toRouteV2Row,
 } from '../../lib/map-table-query';
-import { type Json, decodeDeep } from '../../lib/entity-diff-codec';
+import { readRouteDetail as readDetail } from '../../lib/route-detail-codec';
 import {
   mapDetailUrl,
   mapTableUrl,
@@ -110,15 +110,6 @@ export function setRouteParam(
   const url = `${window.location.pathname}${qs ? `?${qs}` : ''}`;
   if (mode === 'push') window.history.pushState(null, '', url);
   else window.history.replaceState(null, '', url);
-}
-
-/** A route's `detail` column: RouteDetail, deep-encoded (polylines). */
-function readDetail(rows: Array<Record<string, unknown>>): RouteDetail | null {
-  return rows[0]
-    ? (decodeDeep(
-        JSON.parse(String(rows[0].detail)) as Json,
-      ) as unknown as RouteDetail)
-    : null;
 }
 
 function rowSelector(id: string): string {

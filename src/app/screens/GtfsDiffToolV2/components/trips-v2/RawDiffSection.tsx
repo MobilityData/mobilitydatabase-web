@@ -2,12 +2,7 @@
 
 import { Box, Button, Typography } from '@mui/material';
 import React, { useState } from 'react';
-import type {
-  EntityCategoryDiff,
-  FileDiff,
-  RawTable,
-} from '../../lib/entity-diff-types';
-import GtfsDiffFileDiffPanel from '../../../GtfsDiffTool/components/GtfsDiffFileDiffPanel';
+import type { EntityCategoryDiff, RawTable } from '../../lib/entity-diff-types';
 import { RAW_DIFF_ID } from '../diffmap/DiffMapControls';
 import RawTablesSection from '../raw/RawTablesSection';
 import { ALL_DATES, V2Card } from './shared';
@@ -17,8 +12,6 @@ interface RawDiffSectionProps {
   /** Full row diffs as Parquet, queried with DuckDB-WASM. */
   rawTables: RawTable[];
   tripMatching?: EntityCategoryDiff['trip_matching'];
-  /** In-memory row diffs, for datasets built before the Parquet tables. */
-  fileDiffs: FileDiff[];
   /** Route the page is focused on, to scope the rows. */
   routeId: string | null;
   /** "24", for the scope toggle. */
@@ -27,14 +20,12 @@ interface RawDiffSectionProps {
 
 /**
  * Row-level diff of the trip files at the bottom of the page: DuckDB over
- * Parquet when the dataset has the tables (millions of stop_times rows),
- * else the in-memory file diff.
+ * the Parquet row tables (millions of stop_times rows).
  */
 export default function RawDiffSection({
   datasetId,
   rawTables,
   tripMatching,
-  fileDiffs,
   routeId,
   routeLabel,
 }: RawDiffSectionProps): React.ReactElement {
@@ -89,13 +80,6 @@ export default function RawDiffSection({
             }
           />
         </Box>
-      ) : fileDiffs.length > 0 ? (
-        <GtfsDiffFileDiffPanel
-          fileDiffs={fileDiffs}
-          showActionFilter={false}
-          searchable
-          alwaysOpenFiles={['trips.txt']}
-        />
       ) : (
         <Typography variant='body2' color='text.secondary'>
           No row-level changes in the trip files.

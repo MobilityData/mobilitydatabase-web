@@ -14,9 +14,11 @@ import NotableHighlights from '../overview/NotableHighlights';
 import { HighlightDetails } from '../highlights/HighlightRow';
 import RawDiffSection from '../trips-v2/RawDiffSection';
 import { ALL_DATES, V2Card } from '../trips-v2/shared';
+import { periodByDate, servicePeriods } from '../../lib/trips-periods';
 import DayTripsDialog from './DayTripsDialog';
+import ServicePeriodList from './ServicePeriodList';
+import ServiceVerdict from './ServiceVerdict';
 import TripsCalendar from './TripsCalendar';
-import WeekdayTable from './WeekdayTable';
 import { TRIPS_V3_SECTION, TRIPS_V3_SLUG } from './shared';
 
 interface TripsV3ScreenProps {
@@ -50,8 +52,9 @@ function withTripsV3(report: ReportSummary): ReportSummary {
 
 /**
  * /gtfs-diff-tool-v2/<dataset>/trips-v3: notable highlights, trip changes
- * by weekday and by date (precomputed, scripts/generate-gtfs-trips-calendar.mjs),
- * a day's routes in a popup, and the raw rows. A route opens its own page
+ * by service period and by date (precomputed,
+ * scripts/generate-gtfs-trips-calendar.mjs), a day's routes in a popup, and
+ * the raw rows. A route opens its own page
  * (/trips-v3/<route>), the same as Trips v2's.
  */
 export default function TripsV3Screen({
@@ -65,19 +68,30 @@ export default function TripsV3Screen({
   const entity = useDiffData<GtfsEntityDiff>(dataset.id, 'entity');
   const category = entity.data?.categories.find((c) => c.id === 'trips');
   const [open, setOpen] = useState<GtfsDate | null>(null);
+  // Period singled out in the calendar while the list hovers it.
+  const [hovered, setHovered] = useState<string | null>(null);
+  const periods = calendar ? servicePeriods(calendar) : null;
+  const byDate = periodByDate(periods ?? []);
   const tripsLabel =
     report.sections.find((s) => s.id === 'trips')?.label ?? 'Trips';
 
   return (
     <ReportLayout dataset={dataset} report={header} section={TRIPS_V3_SECTION}>
       <V2Card title='Notable highlights' scope={ALL_DATES}>
+        {calendar ? (
+          <ServiceVerdict
+            calendar={calendar}
+            periods={periods ?? []}
+            onOpen={setOpen}
+          />
+        ) : null}
         <NotableHighlights
           heading={false}
           highlights={highlights ?? []}
           emptyText={
             highlights == null
               ? 'Highlights aren’t built for this dataset yet.'
-              : 'Nothing concerning stood out in the trips.'
+              : 'Nothing to flag.'
           }
           renderDetails={(h) =>
             h.entities ? (
@@ -102,18 +116,24 @@ export default function TripsV3Screen({
         </Alert>
       ) : (
         <>
-          <V2Card title='Trip changes by weekday'>
+          <V2Card title='Service periods'>
             {calendar.mode === 'cross' ? (
               <Typography variant='body2' color='text.secondary' sx={{ mb: 1 }}>
                 The feeds share no dates: each day of the new feed is compared
                 with the old feed’s typical same weekday.
               </Typography>
             ) : null}
-            <WeekdayTable calendar={calendar} onOpen={setOpen} />
+            <ServicePeriodList
+              periods={periods ?? []}
+              onHover={setHovered}
+              onOpen={setOpen}
+            />
           </V2Card>
           <V2Card title='Trip changes by date'>
             <TripsCalendar
               calendar={calendar}
+              periods={periods ?? []}
+              hovered={hovered}
               focused={open}
               onOpen={setOpen}
             />
@@ -122,6 +142,7 @@ export default function TripsV3Screen({
             datasetId={dataset.id}
             index={trips.data}
             calendar={calendar}
+            period={open ? byDate[open] : undefined}
             date={open}
             onClose={() => setOpen(null)}
             onNavigate={setOpen}
@@ -139,7 +160,6 @@ export default function TripsV3Screen({
             datasetId={dataset.id}
             rawTables={category?.raw_tables ?? []}
             tripMatching={category?.trip_matching}
-            fileDiffs={category?.file_diffs ?? []}
             routeId={null}
             routeLabel={null}
           />

@@ -24,6 +24,18 @@ export function useReportSubtitle(subtitle: string | null): void {
 }
 
 const ActionsSlotContext = createContext<HTMLElement | null>(null);
+const HeaderSlotContext = createContext<HTMLElement | null>(null);
+
+/**
+ * Content for the report header, under the subtitle (e.g. a route page's
+ * change chips), rendered from the page content through a portal.
+ */
+export function ReportHeaderSlot({
+  children,
+}: React.PropsWithChildren): React.ReactElement | null {
+  const slot = useContext(HeaderSlotContext);
+  return slot ? createPortal(children, slot) : null;
+}
 
 /**
  * Buttons for the row under the report header, like the feed detail page's
@@ -53,6 +65,7 @@ export default function ReportLayout({
 >): React.ReactElement {
   const [subtitle, setSubtitle] = useState<string | null>(null);
   const [actionsSlot, setActionsSlot] = useState<HTMLElement | null>(null);
+  const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
   return (
     <Container
       component='main'
@@ -60,7 +73,7 @@ export default function ReportLayout({
       sx={{ width: '100%', m: 'auto', px: 0 }}
     >
       <SectionContainer maxWidth='xl' sx={{ mb: 4 }}>
-        <ReportHeader {...header} subtitle={subtitle} />
+        <ReportHeader {...header} subtitle={subtitle} slotRef={setHeaderSlot} />
         <Box
           ref={setActionsSlot}
           sx={{
@@ -80,7 +93,9 @@ export default function ReportLayout({
         >
           <SubtitleContext.Provider value={setSubtitle}>
             <ActionsSlotContext.Provider value={actionsSlot}>
-              {children}
+              <HeaderSlotContext.Provider value={headerSlot}>
+                {children}
+              </HeaderSlotContext.Provider>
             </ActionsSlotContext.Provider>
           </SubtitleContext.Provider>
         </Box>

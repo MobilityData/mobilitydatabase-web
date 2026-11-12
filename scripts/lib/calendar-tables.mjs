@@ -16,7 +16,8 @@
  * id || chr(31))); `search` the normalised service_id.
  */
 
-import { appHelpers, writeSplitTable, writeTable } from './map-tables.mjs';
+import { appHelpers, writeHighlightsFile, writeSplitTable, writeTable } from './map-tables.mjs';
+import { timed, timer } from './timings.mjs';
 
 export const CALENDAR_DIR = 'calendar';
 const SEP = '\u001f';
@@ -67,6 +68,7 @@ export async function writeCalendarTables(datasetDir, calendar) {
   const wrap = (ids) => (ids.length > 0 ? `${SEP}${ids.join(SEP)}${SEP}` : '');
   const serviceRoutes = new Map(calendar.services.map((s) => [s.service_id, routesOf(s)]));
 
+  const endRows = timer('calendar: services and days rows');
   const sorted = [...calendar.services].sort(
     (a, b) => SORT_ORDER[a.status] - SORT_ORDER[b.status] || a.service_id.localeCompare(b.service_id),
   );
@@ -112,6 +114,7 @@ export async function writeCalendarTables(datasetDir, calendar) {
     });
   }
 
+  endRows({ rows: serviceRows.length + dayRows.length });
   const services = await writeSplitTable(datasetDir, 'services', SERVICE_COLUMNS, serviceRows, {
     dir: CALENDAR_DIR,
     key: 'service_id',
@@ -122,12 +125,17 @@ export async function writeCalendarTables(datasetDir, calendar) {
   });
   const routeIds = [...new Set([...serviceRoutes.values()].flat())];
   // The overview's notable highlights need the full lists, which leave here.
-  const overviewHighlights = h.calendarOverviewHighlights(calendar);
+  const overviewHighlights = await writeHighlightsFile(
+    datasetDir,
+    'calendar',
+    timed('calendar: overview highlights (calendarOverviewHighlights)', () => h.calendarOverviewHighlights(calendar)),
+  );
   const { services: _services, days: _days, ...rest } = calendar;
   return {
     ...rest,
     route_ids: routeIds,
-    overview_highlights: overviewHighlights,
+    overview_highlights: overviewHighlights.highlights,
+    overview_highlights_file: overviewHighlights.file,
     tables: { services, days },
   };
 }

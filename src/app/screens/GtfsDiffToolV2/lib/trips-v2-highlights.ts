@@ -6,6 +6,8 @@
  */
 
 import type { GtfsDate, RawTable } from './entity-diff-types';
+import type { HighlightSeverity } from './highlights';
+import type { ServiceEntities } from './trips-service-highlights';
 import type { RawAction, RawPredicate } from './raw-diff-query';
 import { formatGtfsDate } from './calendar-utils';
 
@@ -65,13 +67,15 @@ export type HighlightEntities =
       kind: 'dates';
       base: { min: GtfsDate | null; max: GtfsDate | null };
       new: { min: GtfsDate | null; max: GtfsDate | null };
-    };
+    }
+  /** Service highlights (lib/trips-service-highlights). */
+  | ServiceEntities;
 
 export interface TripsHighlight {
   id: string;
   /** 0–1: how concerning; the top ones are shown. */
   score: number;
-  severity: 'error' | 'warning';
+  severity: HighlightSeverity;
   title: string;
   detail: string;
   entities?: HighlightEntities;

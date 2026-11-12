@@ -17,7 +17,6 @@ import { Clear, ExpandMore, Place, Search } from '@mui/icons-material';
 import React, { useEffect, useRef, useState } from 'react';
 import type {
   EntityTypeDiff,
-  FileDiff,
   RawTable,
   RouteDetail,
   RouteFlag,
@@ -43,7 +42,7 @@ import {
   toRouteListRow,
   toRouteOverview,
 } from '../../lib/map-table-query';
-import { type Json, decodeDeep } from '../../lib/entity-diff-codec';
+import { readRouteDetail as readDetail } from '../../lib/route-detail-codec';
 import {
   mapDetailUrl,
   mapTableUrl,
@@ -52,9 +51,8 @@ import {
 } from '../../lib/useMapTable';
 import SegmentedList from '../diffmap/SegmentedList';
 import { type NavFocus, useDiffNav } from '../../lib/diff-nav';
-import GtfsDiffFileDiffPanel, {
-  type RowAction,
-} from '../../../GtfsDiffTool/components/GtfsDiffFileDiffPanel';
+import { type RowAction } from '../../../GtfsDiffTool/components/GtfsDiffFileDiffPanel';
+import RawFileDiffCard from '../raw/RawFileDiffCard';
 import NestedCheckboxList, {
   type CheckboxStructure,
 } from '../../../../components/NestedCheckboxList';
@@ -115,15 +113,6 @@ const NO_KIND_COUNTS: Record<RouteKind, number> = {
   modified: 0,
   unchanged: 0,
 };
-
-/** A route's `detail` column: RouteDetail, deep-encoded (polylines). */
-function readDetail(rows: Array<Record<string, unknown>>): RouteDetail | null {
-  return rows[0]
-    ? (decodeDeep(
-        JSON.parse(String(rows[0].detail)) as Json,
-      ) as unknown as RouteDetail)
-    : null;
-}
 
 function Legend({
   selected,
@@ -212,8 +201,7 @@ interface RoutesEntityPanelProps {
   routesMap: RoutesMapDiff;
   /** Other files of the category (networks, areas, …) shown as tables when present. */
   entityTypes: EntityTypeDiff[];
-  fileDiffs: FileDiff[];
-  /** Parquet row tables of the category (shapes.txt). */
+  /** Row diffs of the files that changed, as Parquet row tables. */
   rawTables: RawTable[];
   focus: NavFocus | null;
 }
@@ -222,7 +210,6 @@ export default function RoutesEntityPanel({
   datasetId,
   routesMap,
   entityTypes,
-  fileDiffs,
   rawTables,
   focus,
 }: RoutesEntityPanelProps): React.ReactElement {
@@ -521,7 +508,9 @@ export default function RoutesEntityPanel({
   return (
     <Box>
       <EntityOverviewCard
+        datasetId={datasetId}
         highlights={highlights}
+        highlightsFile={routesMap.highlights_file}
         noun={(h) => (h.id === 'unused_shapes' ? 'shapes' : 'routes')}
         onOpen={(h) =>
           nav && h.id !== 'unused_shapes'
@@ -838,13 +827,17 @@ export default function RoutesEntityPanel({
       >
         Raw file diff
       </Typography>
-      <GtfsDiffFileDiffPanel
-        fileDiffs={fileDiffs}
-        showActionFilter={false}
-        searchable
-        alwaysOpenFiles={['routes.txt']}
-        rowAction={seeOnMap}
-      />
+      {rawTables
+        .filter((t) => t.file !== 'shapes.txt')
+        .map((t) => (
+          <RawFileDiffCard
+            key={t.file}
+            datasetId={datasetId}
+            table={t}
+            defaultOpen={t.file === 'routes.txt'}
+            rowAction={seeOnMap}
+          />
+        ))}
 
       {shapesTable && (
         <Accordion

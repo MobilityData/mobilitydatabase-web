@@ -2,7 +2,7 @@
   "schema": 1,
   "id": "mbta-pathways-demo",
   "label": "mbta-pathways-demo",
-  "generated_at": "2026-10-27T12:46:34.424Z",
+  "generated_at": "2026-11-02T12:44:42.553Z",
   "feeds": {
     "base": {
       "file": "base.zip",
@@ -20,6 +20,9 @@
     }
   },
   "files": {
+    "calendar-highlights.json": {
+      "bytes": 49
+    },
     "calendar/days.parquet": {
       "bytes": 310
     },
@@ -30,31 +33,55 @@
       "bytes": 125
     },
     "categories/calendar.json": {
-      "bytes": 574
+      "bytes": 612
     },
     "categories/routes.json": {
-      "bytes": 35
+      "bytes": 19
     },
     "categories/stops.json": {
-      "bytes": 43295
+      "bytes": 931
     },
     "entity-diff.json": {
-      "bytes": 6698
+      "bytes": 4177
     },
     "highlights.json": {
-      "bytes": 879
+      "bytes": 871
+    },
+    "maps/all_stops_data.json": {
+      "bytes": 8302
     },
     "maps/stops.parquet": {
-      "bytes": 2284
+      "bytes": 2342
     },
     "maps/stops_detail.parquet": {
-      "bytes": 1949
+      "bytes": 1973
     },
     "pathways-diff.json": {
-      "bytes": 229951
+      "bytes": 229828
+    },
+    "raw/levels.parquet": {
+      "bytes": 3839
+    },
+    "raw/pathways.parquet": {
+      "bytes": 28327
+    },
+    "raw/stops.parquet": {
+      "bytes": 19958
     },
     "report.json": {
-      "bytes": 4939
+      "bytes": 6064
+    },
+    "stops-highlights.json": {
+      "bytes": 357
+    },
+    "trips-diff.json": {
+      "bytes": 378
+    },
+    "trips/base.parquet": {
+      "bytes": 152
+    },
+    "trips/new.parquet": {
+      "bytes": 152
     }
   }
 }

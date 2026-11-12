@@ -1,0 +1,1 @@
+{"metadata":{"schema_version":"2.1.0-poc-trips","generated_at":"2026-10-30T15:17:00.093Z","base_feed":{"source":"base.zip"},"new_feed":{"source":"new.zip"}},"routes":{},"stops":{},"service_sets":{"base":[],"new":[]},"dates":{},"day_types":[],"feeds":{"base":{"trips":[]},"new":{"trips":[]}},"trip_tables":{"base":"trips/base.parquet","new":"trips/new.parquet"},"service_ids":[]}

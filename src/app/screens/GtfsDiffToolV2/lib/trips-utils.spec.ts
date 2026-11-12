@@ -11,6 +11,7 @@ import {
   mergeStopOrder,
   peakHeadway,
   ruleChangeText,
+  stopAliases,
   stopBoard,
   timetableColumns,
 } from './trips-utils';
@@ -263,5 +264,87 @@ describe('day diff', () => {
     const day = computeDayDiff(doc, '20260915', 60);
     const board = stopBoard(day, 'C', 60);
     expect(board.map((e) => e.status)).toEqual(['retimed', 'no_longer_stops']);
+  });
+});
+
+describe('stop renames', () => {
+  const names: Record<string, string> = {
+    A: 'Main St',
+    B: 'Pine Ave',
+    B2: 'Pine Ave',
+    C: 'Oak St',
+    D: 'Elm St',
+    E1: 'Market',
+    E2: 'Market',
+    E3: 'Market',
+  };
+  const name = (id: string): string | undefined => names[id];
+
+  it('aliases an old stop_id replaced by a new one of the same name', () => {
+    const aliases = stopAliases(
+      new Set(['A', 'B', 'C']),
+      new Set(['A', 'B2', 'C']),
+      name,
+    );
+    expect([...aliases]).toEqual([['B', 'B2']]);
+  });
+
+  it('keeps stops of the same name apart when both still exist or the name repeats', () => {
+    // B still served in the new feed: B2 is another stop of that name.
+    expect(stopAliases(new Set(['B']), new Set(['B', 'B2']), name).size).toBe(
+      0,
+    );
+    // Two new "Market" stops: which one replaces E1 is unknown.
+    expect(stopAliases(new Set(['E1']), new Set(['E2', 'E3']), name).size).toBe(
+      0,
+    );
+  });
+
+  it('reads a renamed stop as an ID-only change in the day diff', () => {
+    const doc: TripsDiffDoc = {
+      metadata: {
+        schema_version: 't',
+        generated_at: '',
+        base_feed: { source: 'b', downloaded_at: '' },
+        new_feed: { source: 'n', downloaded_at: '' },
+      },
+      routes: {},
+      stops: names,
+      service_sets: { base: [['WK']], new: [['WK']] },
+      dates: { '20260915': [0, 0] },
+      day_types: [],
+      feeds: {
+        base: { trips: [trip('a1', 420)] },
+        new: { trips: [trip('a1', 420, ['A', 'B2', 'C', 'D'])] },
+      },
+    };
+    const [p] = computeDayDiff(doc, '20260915', 60).routes[0].pairs;
+    expect(p.cls).toBe('restructured');
+    expect(p.raw_changes).toEqual([
+      { stop_id: 'B2', field: 'stop_id', base: 'B', new: 'B2' },
+    ]);
+  });
+});
+
+describe('stop headsigns', () => {
+  it('count as a rider-facing change', () => {
+    const b = trip('a', 420, undefined, {
+      stop_headsign: ['', 'Downtown', '', ''],
+    });
+    const n = trip('a', 420, undefined, {
+      stop_headsign: ['', 'City Centre', '', ''],
+    });
+    const p = classifyPair(
+      { route: 'R1', dir: '0', base: b, new: n, method: 'same_pattern' },
+      60,
+    );
+    expect(p.cls).toBe('attributes');
+    expect(p.attr_changes).toEqual([
+      {
+        field: 'stop_headsign',
+        base_value: 'Downtown',
+        new_value: 'City Centre',
+      },
+    ]);
   });
 });

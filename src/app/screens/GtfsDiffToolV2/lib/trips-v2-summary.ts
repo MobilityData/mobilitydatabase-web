@@ -282,13 +282,104 @@ function firstStopName(
   return id == null ? 'the first stop' : (stopNames[id] ?? id);
 }
 
+// ── Main change categories ─────────────────────────────────────────
+
+/** The kind of each sentence mainChange writes, for chips and filters. */
+export type MainChangeCategory =
+  | 'new_stop'
+  | 'stop_removed'
+  | 'stop_swapped'
+  | 'rerouted'
+  | 'trips_added'
+  | 'trips_removed'
+  | 'shifted'
+  | 'running_time'
+  | 'rules'
+  | 'attributes'
+  | 'minor'
+  | 'id_only';
+
+/** Display order: stop changes first, then service, then the quiet ones. */
+export const MAIN_CHANGE_CATEGORIES: MainChangeCategory[] = [
+  'new_stop',
+  'stop_removed',
+  'stop_swapped',
+  'rerouted',
+  'trips_added',
+  'trips_removed',
+  'shifted',
+  'running_time',
+  'rules',
+  'attributes',
+  'minor',
+  'id_only',
+];
+
+export const MAIN_CHANGE_LABELS: Record<MainChangeCategory, string> = {
+  new_stop: 'New stop',
+  stop_removed: 'Stop removed',
+  stop_swapped: 'Stop swapped',
+  rerouted: 'Different stop pattern',
+  trips_added: 'Trips added',
+  trips_removed: 'Trips removed',
+  shifted: 'Shifted',
+  running_time: 'Running time',
+  rules: 'Pickup / drop-off',
+  attributes: 'Trip attributes',
+  minor: 'Minor time changes',
+  id_only: 'trip_id only',
+};
+
+/** Trip class whose colour (TRIP_CLASS_COLORS) a category borrows. */
+export const MAIN_CHANGE_CLASS: Record<MainChangeCategory, TripClass> = {
+  new_stop: 'pattern',
+  stop_removed: 'pattern',
+  stop_swapped: 'pattern',
+  rerouted: 'pattern',
+  trips_added: 'added',
+  trips_removed: 'removed',
+  shifted: 'shifted',
+  running_time: 'running_time',
+  rules: 'rules',
+  attributes: 'attributes',
+  minor: 'unchanged',
+  id_only: 'restructured',
+};
+
+export interface MainChangePart {
+  category: MainChangeCategory;
+  /** One sentence without the final period: "New stop Symphony on every trip". */
+  text: string;
+}
+
+/** Distinct categories of some parts, in MAIN_CHANGE_CATEGORIES order. */
+export function mainChangeCategories(
+  parts: MainChangePart[],
+): MainChangeCategory[] {
+  const present = new Set(parts.map((p) => p.category));
+  return MAIN_CHANGE_CATEGORIES.filter((c) => present.has(c));
+}
+
 /** "First trip removed. AM peak running time 4 min longer. 2 late trips added." */
 export function mainChange(
   r: RouteDirDiff,
   stopNames: Record<string, string>,
 ): string {
+  const parts = mainChangeParts(r, stopNames);
+  if (parts.length === 0) return 'No change.';
+  return parts.map((p) => `${p.text}.`).join(' ');
+}
+
+/** mainChange as categorised sentences; empty when nothing changed. */
+export function mainChangeParts(
+  r: RouteDirDiff,
+  stopNames: Record<string, string>,
+): MainChangePart[] {
   const name = (id: string): string => stopNames[id] ?? id;
-  const parts: string[] = [];
+  const parts: MainChangePart[] = [];
+  const push = (category: MainChangeCategory, text: string): void => {
+    parts.push({ category, text });
+  };
   const baseTimes = r.pairs
     .filter((p) => p.base_time != null && p.base)
     .map((p) => p.base_time as number);
@@ -308,7 +399,8 @@ export function mainChange(
 
   if (removed.length === 1) {
     const t = removed[0].base_time;
-    parts.push(
+    push(
+      'trips_removed',
       t === firstBase && baseTimes.length > 1
         ? 'First trip removed'
         : t === lastBase && baseTimes.length > 1
@@ -316,19 +408,23 @@ export function mainChange(
           : `Trip at ${formatTime(t)} removed`,
     );
   } else if (removed.length > 1) {
-    parts.push(`${removed.length} trips removed`);
+    push('trips_removed', `${removed.length} trips removed`);
   }
   if (replaced.length === 1)
-    parts.push(
+    push(
+      'rerouted',
       `Trip at ${formatTime(replaced[0].base_time)} replaced by one on a different stop pattern`,
     );
   else if (replaced.length > 1)
-    parts.push(
+    push(
+      'rerouted',
       `${replaced.length} trips replaced by trips on a different stop pattern`,
     );
 
   // Stops added to or dropped from matched trips, by name: a stop dropped
-  // and added under the same name only changed its stop_id.
+  // and added under the same name is another stop of that name (a stop
+  // that only got a new stop_id is aliased before matching, computeDayDiff),
+  // such as the other side of the street.
   const addedStops = new Map<string, number>();
   const droppedStops = new Map<string, number>();
   for (const p of matched) {
@@ -351,26 +447,30 @@ export function mainChange(
     droppedStops.delete(n);
   }
   const stopText = (
+    category: MainChangeCategory,
     stops: Map<string, number>,
     lead: (names: string) => string,
   ): void => {
     if (stops.size === 0) return;
     const n = Math.max(...stops.values());
-    parts.push(
+    push(
+      category,
       `${lead(listText([...stops.keys()], 2))} ${n === matched.length ? 'on every trip' : `on ${plural(n, 'trip')}`}`,
     );
   };
-  stopText(addedStops, (s) =>
+  stopText('new_stop', addedStops, (s) =>
     addedStops.size === 1 ? `New stop ${s}` : `New stops ${s}`,
   );
-  stopText(droppedStops, (s) => `No longer stops at ${s}`);
+  stopText('stop_removed', droppedStops, (s) => `No longer stops at ${s}`);
   if (renamed.length > 0)
-    parts.push(
-      `${renamed.length === 1 ? 'Same stop' : 'Same stops'} under new stop_ids: ${listText(renamed, 2)}`,
+    push(
+      'stop_swapped',
+      `Switches to ${renamed.length === 1 ? 'another stop' : 'other stops'} named ${listText(renamed, 2)}`,
     );
 
   if (r.running) {
-    parts.push(
+    push(
+      'running_time',
       `${capitalize(r.running.period)} running time ${duration(r.running.delta)} ${r.running.delta > 0 ? 'longer' : 'shorter'}`,
     );
   }
@@ -380,7 +480,8 @@ export function mainChange(
     const shift = mode(shifted.map((p) => p.shift ?? 0)) ?? 0;
     const allSame = shifted.every((p) => p.shift === shift);
     const dir = shift > 0 ? 'later' : 'earlier';
-    parts.push(
+    push(
+      'shifted',
       allSame && shifted.length === matched.length
         ? `Every trip runs ${duration(shift)} ${dir}`
         : `${plural(shifted.length, 'trip')} shifted, mostly ${duration(shift)} ${dir}`,
@@ -392,7 +493,8 @@ export function mainChange(
     const late = lastBase != null && times.every((t) => t > lastBase);
     const early = firstBase != null && times.every((t) => t < firstBase);
     if (added.length === 1)
-      parts.push(
+      push(
+        'trips_added',
         late
           ? `Late trip added at ${formatTime(times[0])}`
           : early
@@ -400,25 +502,28 @@ export function mainChange(
             : `Trip at ${formatTime(times[0])} added`,
       );
     else
-      parts.push(
+      push(
+        'trips_added',
         `${added.length} ${late ? 'late ' : early ? 'early ' : ''}trips added`,
       );
   }
 
   const rules = r.pairs.filter((p) => isClass(p, 'rules')).length;
   if (rules > 0)
-    parts.push(`Pickup or drop-off rules changed on ${plural(rules, 'trip')}`);
+    push(
+      'rules',
+      `Pickup or drop-off rules changed on ${plural(rules, 'trip')}`,
+    );
   const attrs = r.pairs.filter((p) => isClass(p, 'attributes')).length;
   if (attrs > 0)
-    parts.push(`Trip attributes changed on ${plural(attrs, 'trip')}`);
+    push('attributes', `Trip attributes changed on ${plural(attrs, 'trip')}`);
 
   if (parts.length === 0) {
-    if (r.minor_count > 0) return 'Minor time changes only.';
-    return r.pairs.some(isIdOnly)
-      ? 'Only trip_id values changed.'
-      : 'No change.';
+    if (r.minor_count > 0) push('minor', 'Minor time changes only');
+    else if (r.pairs.some(isIdOnly))
+      push('id_only', 'Only trip_id values changed');
   }
-  return parts.map((p) => `${p}.`).join(' ');
+  return parts;
 }
 
 export function routeChips(r: RouteDirDiff): SummaryChip[] {
@@ -592,7 +697,7 @@ export function tripExplanation(
         ),
       ];
       const dropped = new Set(names('remove'));
-      // Same name on both sides: only the stop_id changed.
+      // Same name on both sides: another stop of that name.
       const renamed = names('add').filter((n) => dropped.has(n));
       const added = names('add').filter((n) => !renamed.includes(n));
       const gone = [...dropped].filter((n) => !renamed.includes(n));
@@ -601,7 +706,7 @@ export function tripExplanation(
       if (gone.length) parts.push(`No longer stops at ${listText(gone)}.`);
       if (renamed.length)
         parts.push(
-          `${listText(renamed)} ${renamed.length === 1 ? 'is the same stop' : 'are the same stops'} under a new stop_id.`,
+          `Now uses ${renamed.length === 1 ? 'another stop' : 'other stops'} named ${listText(renamed)}.`,
         );
       return parts.join(' ') || 'The stop sequence changed.';
     }
@@ -690,6 +795,7 @@ export function technicalSummary(pairs: TripPair[]): TechnicalSummary {
     timepoint: 0,
     shape_dist_traveled: 0,
     stop_headsign: 0,
+    stop_id: 0,
   };
   for (const p of pairs) {
     for (const r of p.rules)

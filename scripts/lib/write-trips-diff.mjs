@@ -23,9 +23,12 @@
 
 import { mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { deepStrictEqual } from 'node:assert/strict';
 import { DuckDBInstance } from '@duckdb/node-api';
+import { parquetOptions } from './raw-diff-parquet.mjs';
+import { timer } from './timings.mjs';
+import { compactServiceSets, expandServiceSets } from '../../src/app/screens/GtfsDiffToolV2/lib/trips-index-codec.ts';
 
 export const TRIPS_DIR = 'trips';
 /** Trips per row group: a service's trips span few groups. */
@@ -88,11 +91,12 @@ export async function openTripsWriter(outPath) {
       const result = {};
       try {
         for (const [side, s] of Object.entries(sides)) {
+          const endWrite = timer(`write ${tables[side]} (sort + COPY + read-back check)`);
           s.appender.closeSync();
           const path = join(dirname(outPath), tables[side]);
           await s.con.run(
             `COPY (SELECT * FROM ${side} ORDER BY ${byRoute ? 'route, ' : ''}service, ord) TO ${sqlString(path)} ` +
-              `(FORMAT parquet, COMPRESSION zstd, ROW_GROUP_SIZE ${ROW_GROUP_SIZE})`,
+              `(${parquetOptions(ROW_GROUP_SIZE)})`,
           );
           // Read back: every row once, and the sample identical to what was appended.
           const read = async (sql) => (await s.con.runAndReadAll(sql)).getRowObjectsJS();
@@ -108,19 +112,24 @@ export async function openTripsWriter(outPath) {
           if (sample.length !== s.sample.size) throw new Error(`${path}: ${sample.length} sampled rows for ${s.sample.size}`);
           for (const { ord, trip } of sample) deepStrictEqual(JSON.parse(trip), s.sample.get(ord));
           result[side] = { path: tables[side], trips: s.count, bytes: statSync(path).size };
+          endWrite({ rows: s.count, bytes: result[side].bytes });
         }
       } finally {
         close();
       }
 
-      const doc = {
+      // Service sets as indices into one service_id list (lib/trips-index-codec.ts).
+      const endIndex = timer(`write ${basename(outPath)} (encode + checks + write)`);
+      const doc = compactServiceSets({
         ...index,
         feeds: { base: { trips: [] }, new: { trips: [] } },
         trip_tables: { ...tables, ...(byRoute ? { by_route: true } : {}) },
-      };
+      });
       const text = JSON.stringify(doc);
       deepStrictEqual(JSON.parse(text), doc);
+      deepStrictEqual(expandServiceSets(JSON.parse(text)).service_sets, index.service_sets);
       writeFileSync(outPath, text);
+      endIndex({ bytes: text.length });
       return { index_bytes: text.length, tables: result };
     },
 

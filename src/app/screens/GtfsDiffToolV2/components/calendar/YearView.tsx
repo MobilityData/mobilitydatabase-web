@@ -9,6 +9,7 @@ import {
   WEEKDAY_SHORT,
   type DayCounts,
   countsTotal,
+  cursorOf,
   formatGtfsDate,
   monthGrid,
   parseGtfsDate,
@@ -19,6 +20,8 @@ const CELL = 20;
 
 interface YearViewProps {
   year: number;
+  /** Union of both feeds' service coverage: months outside it are hidden. */
+  bounds: { start: GtfsDate | null; end: GtfsDate | null };
   /** Change counts per kind of the dates with changes (filters applied). */
   days: Record<GtfsDate, DayCounts>;
   activeCounts: Record<GtfsDate, [number, number]>;
@@ -34,7 +37,9 @@ function MiniMonth({
   focusedDate,
   onDayClick,
   onMonthClick,
-}: Omit<YearViewProps, 'year'> & { cursor: MonthCursor }): React.ReactElement {
+}: Omit<YearViewProps, 'year' | 'bounds'> & {
+  cursor: MonthCursor;
+}): React.ReactElement {
   const changed = monthGrid(cursor)
     .flat()
     .filter((d): d is GtfsDate => d != null && days[d] != null).length;
@@ -137,8 +142,20 @@ function MiniMonth({
 
 export default function YearView({
   year,
+  bounds,
   ...rest
 }: YearViewProps): React.ReactElement {
+  const first = bounds.start ? cursorOf(bounds.start) : null;
+  const last = bounds.end ? cursorOf(bounds.end) : null;
+  const months = MONTH_NAMES.map((_, month) => month).filter(
+    (month) =>
+      (first == null ||
+        year > first.year ||
+        (year === first.year && month >= first.month)) &&
+      (last == null ||
+        year < last.year ||
+        (year === last.year && month <= last.month)),
+  );
   return (
     <Box
       sx={{
@@ -147,7 +164,7 @@ export default function YearView({
         gap: 3,
       }}
     >
-      {MONTH_NAMES.map((_, month) => (
+      {months.map((month) => (
         <MiniMonth key={month} cursor={{ year, month }} {...rest} />
       ))}
     </Box>

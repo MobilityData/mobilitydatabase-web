@@ -76,6 +76,12 @@ export interface TripsCalendarDoc {
   days: Record<GtfsDate, { key: AnchorKey; s: number }>;
   /** One entry per distinct comparison. */
   counts: TripChangeCounts[];
+  /**
+   * Service sets of each comparison, [base, new] (-1 = none), parallel to
+   * `counts`: which days run the same schedule (lib/trips-periods).
+   * Absent in calendars built before it.
+   */
+  sets?: Array<[number, number]>;
   weekdays: WeekdaySummary[];
 }
 
@@ -258,6 +264,3 @@ export function addCounts(a: TripChangeCounts, b: TripChangeCounts): void {
 export function changedTrips(c: TripChangeCounts | undefined): number {
   return c ? c.added + c.removed + c.modified : 0;
 }
-
-/** Column order of the weekday table: Saturday first. */
-export const WEEKDAY_TABLE_ORDER = [5, 6, 0, 1, 2, 3, 4];

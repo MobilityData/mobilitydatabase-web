@@ -38,6 +38,11 @@ export interface CompactTrip {
   dist?: Array<number | null>;
   stop_headsign?: string[];
   freq?: FrequencyRow[];
+  /**
+   * Original stop_ids when `stops` was rewritten to the other feed's ids of
+   * the same stops (lib/trips-utils stopAliases).
+   */
+  stop_ids?: string[];
 }
 
 export interface DayTypeOption {
@@ -110,7 +115,7 @@ export interface RuleChange {
 
 export interface RawStopChange {
   stop_id: string;
-  field: 'timepoint' | 'shape_dist_traveled' | 'stop_headsign';
+  field: 'timepoint' | 'shape_dist_traveled' | 'stop_headsign' | 'stop_id';
   base: string;
   new: string;
 }

@@ -29,7 +29,17 @@ interface RouteDetailCardProps {
   /** The day compared, for the scope tag: "Weekday · Tue 8 Sep". */
   dayLabel: string;
   onOpenTrip: (pair: TripPair) => void;
-  onClose: () => void;
+  /** Shows a close button when set. */
+  onClose?: () => void;
+  /** Replaces the "Route <name>" title (Trips v5: "Service"). */
+  title?: React.ReactNode;
+  /** Replaces the route's summary chips. */
+  chips?: React.ReactNode;
+  /**
+   * Trips v5: no day tag, no service profile caption, and the trips in a
+   * box of their own that scrolls.
+   */
+  compact?: boolean;
   /** Set when the dataset has a stop_times Parquet table to query. */
   rawDatasetId: string | null;
 }
@@ -46,6 +56,9 @@ export default function RouteDetailCard({
   onOpenTrip,
   onClose,
   rawDatasetId,
+  title,
+  chips,
+  compact = false,
 }: RouteDetailCardProps): React.ReactElement {
   const [range, setRange] = useState<[number, number] | null>(null);
   const [view, setView] = useState<View>('timetable');
@@ -58,11 +71,13 @@ export default function RouteDetailCard({
   );
   const changedCount = pairs.filter(isRiderChange).length;
   // Keep the selection while it is in range; otherwise show the first change.
-  const selected =
-    pairs.find((p) => p.key === selectedKey) ??
-    pairs.find(isRiderChange) ??
-    pairs[0] ??
-    null;
+  // Compact (Trips v5): nothing selected; a trip opens the trip drawer.
+  const selected = compact
+    ? (pairs.find((p) => p.key === selectedKey) ?? null)
+    : (pairs.find((p) => p.key === selectedKey) ??
+      pairs.find(isRiderChange) ??
+      pairs[0] ??
+      null);
 
   const bg = info?.color ? `#${info.color}` : undefined;
   const fg = info?.text_color ? `#${info.text_color}` : undefined;
@@ -71,46 +86,50 @@ export default function RouteDetailCard({
   return (
     <V2Card
       title={
-        <Box
-          component='span'
-          sx={{ display: 'inline-flex', alignItems: 'center', gap: 1.25 }}
-        >
+        title ?? (
           <Box
             component='span'
-            sx={{
-              px: 1,
-              minWidth: 32,
-              textAlign: 'center',
-              borderRadius: '4px',
-              bgcolor: bg ?? 'primary.main',
-              color: fg ?? 'primary.contrastText',
-              fontSize: '0.9rem',
-              lineHeight: '28px',
-            }}
+            sx={{ display: 'inline-flex', alignItems: 'center', gap: 1.25 }}
           >
-            {label}
+            <Box
+              component='span'
+              sx={{
+                px: 1,
+                minWidth: 32,
+                textAlign: 'center',
+                borderRadius: '4px',
+                bgcolor: bg ?? 'primary.main',
+                color: fg ?? 'primary.contrastText',
+                fontSize: '0.9rem',
+                lineHeight: '28px',
+              }}
+            >
+              {label}
+            </Box>
+            <span>
+              Route {label} · {route.headsign || info?.long_name || route.route}
+            </span>
           </Box>
-          <span>
-            Route {label} · {route.headsign || info?.long_name || route.route}
-          </span>
-        </Box>
+        )
       }
-      scope={dayLabel}
+      scope={compact ? undefined : dayLabel}
       actions={
-        <IconButton size='small' aria-label='Close route' onClick={onClose}>
-          <Close fontSize='small' />
-        </IconButton>
+        onClose ? (
+          <IconButton size='small' aria-label='Close route' onClick={onClose}>
+            <Close fontSize='small' />
+          </IconButton>
+        ) : undefined
       }
     >
-      <Box sx={{ mb: 3 }}>
-        <ChipRow chips={routeChips(route)} />
-      </Box>
+      <Box sx={{ mb: 3 }}>{chips ?? <ChipRow chips={routeChips(route)} />}</Box>
 
       <Box sx={{ mb: 3 }}>
         <ServiceProfileBars
           route={route}
           range={range}
           onRangeChange={setRange}
+          caption={!compact}
+          axisLabels={compact}
         />
       </Box>
 
@@ -120,7 +139,11 @@ export default function RouteDetailCard({
 
       <SubHeading
         title='Trips'
-        caption={`${pairs.length} trip${pairs.length === 1 ? '' : 's'} start ${range ? 'in the selected period' : 'in the day'}, ${changedCount} with changes. Select a trip for its detail.`}
+        caption={
+          compact
+            ? undefined
+            : `${pairs.length} trip${pairs.length === 1 ? '' : 's'} start ${range ? 'in the selected period' : 'in the day'}, ${changedCount} with changes. Select a trip for its detail.`
+        }
         actions={
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             <ToggleButtonGroup
@@ -137,7 +160,7 @@ export default function RouteDetailCard({
                 Stringline
               </ToggleButton>
             </ToggleButtonGroup>
-            {view === 'timetable' ? (
+            {view === 'timetable' && !compact ? (
               <Button
                 size='small'
                 variant='outlined'
@@ -153,25 +176,42 @@ export default function RouteDetailCard({
           </Box>
         }
       />
-      {view === 'timetable' ? (
-        <TimetableGrid
-          route={route}
-          pairs={pairs}
-          stopNames={stopNames}
-          selectedKey={selected?.key ?? null}
-          onSelect={(p) => setSelectedKey(p.key)}
-          showUnchanged={showUnchanged}
-        />
-      ) : (
-        <StringlineChart
-          route={route}
-          pairs={pairs}
-          stopNames={stopNames}
-          range={range}
-          onOpenTrip={(p) => setSelectedKey(p.key)}
-        />
-      )}
-      {selected ? (
+      <Box
+        sx={
+          compact
+            ? {
+                overflow: 'hidden',
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: '6px',
+              }
+            : undefined
+        }
+      >
+        {view === 'timetable' ? (
+          <TimetableGrid
+            route={route}
+            pairs={pairs}
+            stopNames={stopNames}
+            selectedKey={selected?.key ?? null}
+            onSelect={(p) => (compact ? onOpenTrip(p) : setSelectedKey(p.key))}
+            showUnchanged={showUnchanged}
+            hoverColumns={compact}
+            maxHeight={compact ? 560 : undefined}
+          />
+        ) : (
+          <StringlineChart
+            route={route}
+            pairs={pairs}
+            stopNames={stopNames}
+            range={range}
+            onOpenTrip={(p) =>
+              compact ? onOpenTrip(p) : setSelectedKey(p.key)
+            }
+          />
+        )}
+      </Box>
+      {!compact && selected ? (
         <SelectedTripPanel
           pair={selected}
           stopNames={stopNames}

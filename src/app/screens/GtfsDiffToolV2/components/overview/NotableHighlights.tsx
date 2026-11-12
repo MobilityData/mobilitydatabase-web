@@ -22,6 +22,7 @@ const TOP_HIGHLIGHTS = 3;
 const SEVERITY_COLORS: Record<HighlightSeverity, string> = {
   error: '#d32f2f',
   warning: '#ed6c02',
+  info: '#0288d1',
 };
 
 interface HighlightLike {

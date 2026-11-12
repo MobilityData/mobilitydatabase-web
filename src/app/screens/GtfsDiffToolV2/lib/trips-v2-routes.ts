@@ -99,8 +99,15 @@ export function writeRouteFilters(
   else params.delete('q');
 }
 
-/** Trips views with route pages: v2, and v3 (the default; same route page). */
-export type TripsView = 'trips-v2' | 'trips-v3';
+/**
+ * Trips views with route pages: v2, v3 and v5 (one route page; v3 and v5
+ * open the technical drill-down in a popup, v5 drops the feed chips and the
+ * route list link and puts the day in a subheader).
+ */
+export type TripsView = 'trips-v2' | 'trips-v3' | 'trips-v5';
+
+/** The Trips view the report's links open (summary, highlights, routes). */
+export const DEFAULT_TRIPS_VIEW: TripsView = 'trips-v5';
 
 /**
  * /gtfs-diff-tool-v2/<dataset>/trips-v2/<route_id>?day=…&dir=…, carrying the
@@ -140,9 +147,18 @@ export function tripsListHref(
 
 // ── Route page ─────────────────────────────────────────────────────
 
-/** The day's diff restricted to one route_id (every direction), totals recomputed. */
-export function scopeDayToRoute(day: DayDiff, routeId: string): DayDiff {
-  const routes = day.routes.filter((r) => r.route === routeId);
+/**
+ * The day's diff restricted to one route_id, every direction or only `dir`,
+ * totals recomputed.
+ */
+export function scopeDayToRoute(
+  day: DayDiff,
+  routeId: string,
+  dir?: string,
+): DayDiff {
+  const routes = day.routes.filter(
+    (r) => r.route === routeId && (dir == null || r.dir === dir),
+  );
   const class_counts = Object.fromEntries(
     TRIP_CLASSES.map((c) => [c, 0]),
   ) as DayDiff['class_counts'];

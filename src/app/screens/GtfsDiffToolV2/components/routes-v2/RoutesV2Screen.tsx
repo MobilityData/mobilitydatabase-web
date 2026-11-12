@@ -18,22 +18,19 @@ import { routeOfShapeQuery } from '../../lib/map-table-query';
 import { mapTableUrl, queryMapTable } from '../../lib/useMapTable';
 import { useCategoryDetail, useDiffData } from '../../lib/useDiffData';
 import { ForeignKeyLinks } from '../../lib/foreign-keys';
-import GtfsDiffFileDiffPanel, {
-  type FileDiffFocus,
-  type RowAction,
-} from '../../../GtfsDiffTool/components/GtfsDiffFileDiffPanel';
+import { type RowAction } from '../../../GtfsDiffTool/components/GtfsDiffFileDiffPanel';
 import ReportLayout from '../report/ReportLayout';
 import EntityOverviewCard from '../overview/EntityOverviewCard';
 import { RAW_DIFF_ID } from '../diffmap/DiffMapControls';
 import TransitLoader from '../TransitLoader';
-import ShapesFileDiff from './ShapesFileDiff';
+import RawFileDiffCard from '../raw/RawFileDiffCard';
 import RoutesV2Workspace, {
   WORKSPACE_ID,
   setRouteParam,
 } from './RoutesV2Workspace';
 
-/** Files of the raw diff after routes.txt and shapes.txt, in order. */
-const AREA_FILES = ['areas.txt', 'stop_areas.txt'];
+/** Files at the top of the raw diff, in order. */
+const LEADING_FILES = ['routes.txt', 'shapes.txt'];
 
 interface RoutesV2ScreenProps {
   dataset: DiffDataset;
@@ -54,7 +51,10 @@ export default function RoutesV2Screen({
   const summary = entity.data?.categories.find((c) => c.id === 'routes');
   const detail = useCategoryDetail(dataset.id, summary);
   const routesMap = detail.data?.routes_map ?? null;
-  const [rawFocus, setRawFocus] = useState<FileDiffFocus | null>(null);
+  const [rawFocus, setRawFocus] = useState<{
+    id: string;
+    nonce: number;
+  } | null>(null);
 
   /** Select a route and bring the workspace into view. */
   const showRoute = (id: string): void => {
@@ -79,11 +79,7 @@ export default function RoutesV2Screen({
 
   /** "See full change": the route's routes.txt row in the raw diff. */
   const showRouteRow = (id: string): void =>
-    setRawFocus((f) => ({
-      file: 'routes.txt',
-      identifier: { route_id: id },
-      nonce: (f?.nonce ?? 0) + 1,
-    }));
+    setRawFocus((f) => ({ id, nonce: (f?.nonce ?? 0) + 1 }));
 
   // Links from other pages focus with a hash (#route/<id>, #shape/<id>):
   // turn it into ?route=<id>, the route using the shape for a shape.
@@ -115,13 +111,20 @@ export default function RoutesV2Screen({
     },
   };
 
-  const fileDiffs = detail.data?.file_diffs ?? [];
-  const routesFile = fileDiffs.filter((f) => f.file_name === 'routes.txt');
-  const shapesTable =
-    summary?.raw_tables?.find((t) => t.file === 'shapes.txt') ?? null;
-  const areaFiles = AREA_FILES.flatMap((name) =>
-    fileDiffs.filter((f) => f.file_name === name),
-  );
+  // One Parquet row table per file that changed.
+  const rawTables = summary?.raw_tables ?? [];
+  const rawCard = (name: string): React.ReactNode => {
+    const table = rawTables.find((t) => t.file === name);
+    return table ? (
+      <RawFileDiffCard
+        key={name}
+        datasetId={dataset.id}
+        table={table}
+        rowAction={seeOnMap}
+        focus={name === 'routes.txt' ? rawFocus : null}
+      />
+    ) : null;
+  };
 
   const error = entity.error ?? detail.error;
   return (
@@ -142,7 +145,9 @@ export default function RoutesV2Screen({
         <DiffNavProvider value={nav}>
           <ForeignKeyLinks datasetId={dataset.id}>
             <EntityOverviewCard
+              datasetId={dataset.id}
               highlights={routesMap.highlights}
+              highlightsFile={routesMap.highlights_file}
               noun={(h) => (h.id === 'unused_shapes' ? 'shapes' : 'routes')}
               onOpen={(h) => (h.id !== 'unused_shapes' ? showRoute : undefined)}
               emptyText='Nothing concerning stood out: no route is removed, changes mode, drops stops or is re-routed.'
@@ -162,26 +167,12 @@ export default function RoutesV2Screen({
             >
               Raw file diff
             </Typography>
-            {/* routes.txt, shapes.txt, areas.txt, stop_areas.txt; all collapsed. */}
-            {routesFile.length > 0 ? (
-              <GtfsDiffFileDiffPanel
-                fileDiffs={routesFile}
-                showActionFilter={false}
-                searchable
-                rowAction={seeOnMap}
-                focus={rawFocus}
-              />
-            ) : null}
-            {shapesTable ? (
-              <ShapesFileDiff datasetId={dataset.id} table={shapesTable} />
-            ) : null}
-            {areaFiles.length > 0 ? (
-              <GtfsDiffFileDiffPanel
-                fileDiffs={areaFiles}
-                showActionFilter={false}
-                searchable
-              />
-            ) : null}
+            {/* routes.txt, shapes.txt, then the other files; all collapsed. */}
+            {rawCard('routes.txt')}
+            {rawCard('shapes.txt')}
+            {rawTables
+              .filter((t) => !LEADING_FILES.includes(t.file))
+              .map((t) => rawCard(t.file))}
           </ForeignKeyLinks>
         </DiffNavProvider>
       )}

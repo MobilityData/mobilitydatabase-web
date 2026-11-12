@@ -14,7 +14,9 @@
  *
  * Each pair gets exactly one primary class plus secondary flags. Stop times
  * are aligned by an LCS on stop_ids, not by stop_sequence values, so one
- * inserted stop doesn't mark every downstream stop as changed.
+ * inserted stop doesn't mark every downstream stop as changed. A stop that
+ * only got a new stop_id (stopAliases) counts as the same stop: an ID-only
+ * change, not a new stop pattern.
  */
 
 import type { FieldChange, GtfsDate } from './entity-diff-types';
@@ -534,6 +536,11 @@ export function classifyPair(
           new: y ?? '',
         });
     };
+    raw(
+      'stop_id',
+      b.stop_ids?.[bi] ?? b.stops[bi],
+      n.stop_ids?.[ni] ?? n.stops[ni],
+    );
     const tp = (c: string | undefined): string =>
       c == null || c === '_' ? '' : c;
     raw('timepoint', tp(b.timepoint?.[bi]), tp(n.timepoint?.[ni]));
@@ -550,6 +557,15 @@ export function classifyPair(
   }
 
   const attrs = attrChanges(b, n);
+  // A stop's headsign is what riders read there: a real change, unlike the
+  // other raw stop_times fields.
+  const headsign = pair.raw_changes.find((c) => c.field === 'stop_headsign');
+  if (headsign)
+    attrs.attrs.push({
+      field: 'stop_headsign',
+      base_value: headsign.base,
+      new_value: headsign.new,
+    });
   pair.attr_changes = attrs.attrs;
   pair.id_attr_changes = attrs.ids;
   pair.id_changed = b.id !== n.id;
@@ -568,7 +584,7 @@ export function classifyPair(
     pair.id_changed ||
     pair.service_changed ||
     pair.id_attr_changes.length > 0 ||
-    pair.raw_changes.length > 0
+    pair.raw_changes.some((c) => c.field !== 'stop_headsign')
   )
     applicable.push('restructured');
 
@@ -768,6 +784,66 @@ export function matchRouteDirection(
   for (const t of newTrips)
     if (!used.has(t)) out.push({ base: null, new: t, method: null });
   return out;
+}
+
+// ── Stops that only got a new stop_id ──────────────────────────────
+
+/** Stops the trips serve. */
+export function stopSet(trips: CompactTrip[]): Set<string> {
+  const out = new Set<string>();
+  for (const t of trips) for (const s of t.stops) out.add(s);
+  return out;
+}
+
+/**
+ * Old stop_id -> new stop_id of stops that only got a new id: served only
+ * by the base trips, a new-only stop of the same name replacing it, and no
+ * other stop of that name on either side (two "Main St" stops may be the
+ * two sides of a street, which riders do notice).
+ */
+export function stopAliases(
+  baseStops: Set<string>,
+  newStops: Set<string>,
+  name: (stopId: string) => string | undefined,
+): Map<string, string> {
+  const byName = (
+    ids: Set<string>,
+    other: Set<string>,
+  ): Map<string, string | null> => {
+    const out = new Map<string, string | null>();
+    for (const id of ids) {
+      if (other.has(id)) continue;
+      const n = name(id)?.trim().toLowerCase();
+      if (!n) continue;
+      out.set(n, out.has(n) ? null : id);
+    }
+    return out;
+  };
+  const oldByName = byName(baseStops, newStops);
+  const newByName = byName(newStops, baseStops);
+  const aliases = new Map<string, string>();
+  for (const [n, oldId] of oldByName) {
+    const newId = newByName.get(n);
+    if (oldId != null && newId != null) aliases.set(oldId, newId);
+  }
+  return aliases;
+}
+
+/** Trips with aliased stops renamed to their new ids; the rest as is. */
+export function aliasStops(
+  trips: CompactTrip[],
+  aliases: Map<string, string>,
+): CompactTrip[] {
+  if (aliases.size === 0) return trips;
+  return trips.map((t) =>
+    t.stops.some((s) => aliases.has(s))
+      ? {
+          ...t,
+          stop_ids: t.stops,
+          stops: t.stops.map((s) => aliases.get(s) ?? s),
+        }
+      : t,
+  );
 }
 
 // ── Route + direction aggregation ──────────────────────────────────
@@ -1023,8 +1099,15 @@ export function computeDayDiff(
     }
     g[side].push(t);
   };
-  for (const t of doc.feeds.base.trips) if (bs.has(t.service)) add(t, 'base');
-  for (const t of doc.feeds.new.trips) if (ns.has(t.service)) add(t, 'new');
+  const baseDay = doc.feeds.base.trips.filter((t) => bs.has(t.service));
+  const newDay = doc.feeds.new.trips.filter((t) => ns.has(t.service));
+  const aliases = stopAliases(
+    stopSet(baseDay),
+    stopSet(newDay),
+    (id) => doc.stops[id],
+  );
+  for (const t of aliasStops(baseDay, aliases)) add(t, 'base');
+  for (const t of newDay) add(t, 'new');
 
   const routes = [...groups.values()].map((g) =>
     buildRouteDir(g.route, g.dir, g.base, g.new, minorThreshold),

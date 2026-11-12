@@ -15,8 +15,9 @@ import { readFileSync, writeFileSync, statSync, readdirSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { unzipSync, strFromU8 } from 'fflate';
 import { diffPathways } from './lib/gtfs-pathways-diff.mjs';
+import { markStartup, timed } from './lib/timings.mjs';
 
-const SCHEMA_VERSION = '2.0.0-poc-pathways';
+const SCHEMA_VERSION = '2.1.0-poc-pathways';
 const FILES = new Set(['stops.txt', 'levels.txt', 'pathways.txt', 'feed_info.txt']);
 
 /** RFC 4180 CSV parser. Returns header + rows as objects keyed by column. */
@@ -101,9 +102,10 @@ function main() {
     console.error('Usage: node scripts/generate-gtfs-pathways-diff.mjs <base> <new> <out.json> [--base-label ..] [--new-label ..] [--note ..]');
     process.exit(1);
   }
-  const baseFeed = loadFeed(basePath);
-  const newFeed = loadFeed(newPath);
-  const diff = diffPathways(baseFeed, newFeed);
+  markStartup();
+  const baseFeed = timed('load base feed (unzip + parse CSV)', () => loadFeed(basePath));
+  const newFeed = timed('load new feed (unzip + parse CSV)', () => loadFeed(newPath));
+  const diff = timed('diffPathways', () => diffPathways(baseFeed, newFeed));
   if (diff == null) {
     console.error('Neither feed has pathways.txt; nothing to diff.');
     process.exit(1);
@@ -112,13 +114,13 @@ function main() {
     metadata: {
       schema_version: SCHEMA_VERSION,
       generated_at: new Date().toISOString(),
-      base_feed: { source: baseFeed.source, downloaded_at: baseFeed.downloadedAt, label: opts['base-label'] ?? feedLabel(baseFeed) },
-      new_feed: { source: newFeed.source, downloaded_at: newFeed.downloadedAt, label: opts['new-label'] ?? feedLabel(newFeed) },
+      base_feed: { source: baseFeed.source, label: opts['base-label'] ?? feedLabel(baseFeed) },
+      new_feed: { source: newFeed.source, label: opts['new-label'] ?? feedLabel(newFeed) },
       note: opts.note ?? null,
     },
     ...diff,
   };
-  writeFileSync(outPath, JSON.stringify(out));
+  timed(`write ${basename(outPath)}`, () => writeFileSync(outPath, JSON.stringify(out)), () => ({ bytes: statSync(outPath).size }));
   console.log(`Wrote ${outPath} (${Math.round(statSync(outPath).size / 1024)} KB)`);
   console.log(`  ${diff.stations.length} stations changed, ${diff.unchanged_station_ids.length} unchanged`);
   for (const s of diff.stations) {

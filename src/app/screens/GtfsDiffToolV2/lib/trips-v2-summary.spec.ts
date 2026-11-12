@@ -5,6 +5,8 @@ import {
   daySummary,
   duration,
   mainChange,
+  mainChangeCategories,
+  mainChangeParts,
   patternsCaption,
   periodFor,
   routeChips,
@@ -89,6 +91,19 @@ describe('route summaries', () => {
     );
   });
 
+  it('tags each main-change sentence with its category', () => {
+    expect(mainChangeParts(r, NAMES).map((p) => p.category)).toEqual([
+      'trips_removed',
+      'running_time',
+      'trips_added',
+    ]);
+    expect(mainChangeCategories(mainChangeParts(r, NAMES))).toEqual([
+      'trips_added',
+      'trips_removed',
+      'running_time',
+    ]);
+  });
+
   it('counts changed trips and the largest running-time change', () => {
     const s = routeRowSummary(r, NAMES);
     expect(s.changedTrips).toBe(4);
@@ -161,12 +176,16 @@ describe('stop patterns', () => {
     expect(mainChange(r, { ...NAMES, X: 'Elm St' })).toMatch(
       /^New stop Elm St on every trip\./,
     );
+    expect(mainChangeParts(r, { ...NAMES, X: 'Elm St' })[0]).toEqual({
+      category: 'new_stop',
+      text: 'New stop Elm St on every trip',
+    });
     expect(patternsCaption(r)).toBe(
       '2 stop patterns: 1 new, 1 no longer used.',
     );
   });
 
-  it('treats a stop dropped and added under the same name as a new stop_id', () => {
+  it('reads a stop dropped and added under the same name as another stop of that name', () => {
     const names = { ...NAMES, B2: 'Pine Ave' };
     const r = route(
       [trip('a', 7 * 60), trip('b', 8 * 60)],
@@ -176,10 +195,13 @@ describe('stop patterns', () => {
       ],
     );
     expect(mainChange(r, names)).toBe(
-      'Same stop under new stop_ids: Pine Ave.',
+      'Switches to another stop named Pine Ave.',
     );
+    expect(mainChangeParts(r, names).map((p) => p.category)).toEqual([
+      'stop_swapped',
+    ]);
     expect(tripExplanation(r.pairs[0], names)).toBe(
-      'Pine Ave is the same stop under a new stop_id.',
+      'Now uses another stop named Pine Ave.',
     );
   });
 
@@ -191,6 +213,9 @@ describe('stop patterns', () => {
     expect(mainChange(r, NAMES)).toBe(
       'Trip at 08:00 replaced by one on a different stop pattern.',
     );
+    expect(mainChangeParts(r, NAMES).map((p) => p.category)).toEqual([
+      'rerouted',
+    ]);
   });
 
   it('counts a stop a loop visits twice once per trip', () => {
@@ -211,6 +236,8 @@ describe('stop patterns', () => {
   it('reports an unchanged single pattern', () => {
     const r = route([trip('a', 7 * 60)], [trip('a', 7 * 60)]);
     expect(patternsCaption(r)).toBe('1 stop pattern, unchanged.');
+    expect(mainChangeParts(r, NAMES)).toEqual([]);
+    expect(mainChange(r, NAMES)).toBe('No change.');
   });
 });
 

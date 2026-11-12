@@ -28,6 +28,14 @@ function h(
   return { id, score, severity, title: id, detail: `${id} detail`, entities };
 }
 
+/** The fixture's own rule scores, by key. */
+const RULE_SCORES: Record<string, number> = {
+  'stops:served_removed': 0.9,
+  'stops:renamed': 0.35,
+  'routes:routes_removed': 0.9,
+  'trips:routes_dropped': 0.95,
+};
+
 describe('rankGlobalHighlights', () => {
   const items = rankGlobalHighlights([
     {
@@ -66,8 +74,9 @@ describe('rankGlobalHighlights', () => {
 
   it('never lifts a highlight by more than the impact weight', () => {
     for (const x of items) {
-      expect(x.score - x.rule_score).toBeGreaterThanOrEqual(0);
-      expect(x.score - x.rule_score).toBeLessThanOrEqual(IMPACT_WEIGHT + 1e-9);
+      const lift = x.score - (RULE_SCORES[x.key] ?? NaN);
+      expect(lift).toBeGreaterThanOrEqual(0);
+      expect(lift).toBeLessThanOrEqual(IMPACT_WEIGHT + 1e-9);
     }
     // 300 renamed stops stay below one removed served stop.
     const renamed = items.find((x) => x.id === 'renamed');
@@ -114,6 +123,7 @@ describe('report and filters', () => {
       total: 3,
       error: 1,
       warning: 2,
+      info: 0,
       sections: { stops: 2, calendar: 1 },
     });
   });

@@ -10,9 +10,9 @@
  * It writes, next to the zips, the layout the backend will publish to object
  * storage (see src/app/screens/GtfsDiffToolV2/lib/datasets.ts):
  *   entity-diff.json      generate-gtfs-entity-diff.mjs: summaries and maps
- *   raw/*.parquet         full row diffs (trips, stop_times, shapes, …)
- *   categories/*.json     per-category maps, calendar and file diffs, loaded
- *                         with their tab
+ *   raw/*.parquet         full row diffs, one per GTFS file that changed
+ *   categories/*.json     per-category maps and calendar, loaded with their
+ *                         tab
  *   maps/*.parquet        the stops and routes maps' lists (one row per
  *                         changed stop / route, queried by the pages)
  *   calendar/*.parquet    the service calendar's services and service-day
@@ -26,8 +26,9 @@
  *                         removed / modified on every date (Trips v3)
  *   highlights.json       generate-gtfs-highlights.mjs: every entity's notable
  *                         highlights in one ranking
- *   report.json           feeds, per-section change counts and the top
- *                         highlights for the summary page
+ *   report.json           feeds, change counts per file tagged with their
+ *                         group (summary section), and the top highlights
+ *                         for the summary page
  *   manifest.json         every file above, written last; the app only lists
  *                         diffs that have one
  * Each step first removes what it wrote before.
@@ -49,8 +50,14 @@ import { totalmem } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { unzipSync, strFromU8 } from 'fflate';
-import { REPORT_FILE, reportHighlights, reportSections } from '../src/app/screens/GtfsDiffToolV2/lib/report.ts';
+import {
+  REPORT_FILE,
+  reportFilesAndGroups,
+  reportHighlights,
+  reportSummary,
+} from '../src/app/screens/GtfsDiffToolV2/lib/report.ts';
 import { decodeDeep } from '../src/app/screens/GtfsDiffToolV2/lib/entity-diff-codec.ts';
+import { markStartup, setTimingStep, timed, timer } from './lib/timings.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DATA_DIR = join(ROOT, 'src/app/screens/GtfsDiffTool/data/v2');
@@ -59,9 +66,19 @@ const MANIFEST_FILE = 'manifest.json';
 
 /** What each step writes; cleared before the step runs, so nothing stale survives. */
 const STEP_OUTPUTS = {
-  entity: ['entity-diff.json', 'categories', 'maps', 'calendar', 'raw', 'entities'],
+  entity: [
+    'entity-diff.json',
+    'categories',
+    'maps',
+    'calendar',
+    'raw',
+    'entities',
+    'stops-highlights.json',
+    'routes-highlights.json',
+    'calendar-highlights.json',
+  ],
   trips: ['trips-diff.json', 'trips', 'trips-diff'],
-  calendar: ['trips-calendar.json'],
+  calendar: ['trips-calendar.json', 'trips-service.json'],
   pathways: ['pathways-diff.json'],
   highlights: ['highlights.json'],
   report: [REPORT_FILE],
@@ -97,7 +114,10 @@ function writeManifest(dir, feeds) {
     feeds: { base: feeds.base.feed, new: feeds.new.feed },
     files,
   };
-  writeFileSync(join(dir, MANIFEST_FILE), JSON.stringify(manifest, null, 2));
+  timed(`write ${MANIFEST_FILE}`, () => writeFileSync(join(dir, MANIFEST_FILE), JSON.stringify(manifest, null, 2)), () => ({
+    rows: Object.keys(files).length,
+    bytes: statSync(join(dir, MANIFEST_FILE)).size,
+  }));
   const mb = Object.values(files).reduce((s, f) => s + f.bytes, 0) / 1048576;
   console.log(`Wrote ${MANIFEST_FILE}: ${Object.keys(files).length} files, ${mb.toFixed(1)} MB`);
 }
@@ -125,35 +145,36 @@ function splitCsvLine(line) {
   return out;
 }
 
-/**
- * Each section's files that at least one feed's zip holds: the zips are the
- * truth for presence (the entity diff can list a child file, e.g.
- * fare_rules.txt, that neither feed has).
- */
-function withFeedFiles(sections, feeds) {
-  const inFeeds = new Set([...(feeds.base.files ?? []), ...(feeds.new.files ?? [])]);
-  return sections.map((s) => ({ ...s, present_files: s.files.filter((f) => inFeeds.has(f)) }));
-}
-
-/** Feeds and per-section change counts, for the report header (lib/report.ts). */
+/** Feeds and per-file change counts by group, for the report header (lib/report.ts). */
 function writeReport(dir, feeds) {
   const read = (f) => (existsSync(join(dir, f)) ? JSON.parse(readFileSync(join(dir, f), 'utf8')) : null);
+  const endRead = timer('report: read entity-diff.json + categories/*.json + pathways-diff.json');
   const entity = read('entity-diff.json');
   // Categories' detail files (maps, calendar) merged back for the report.
   for (const cat of entity?.categories ?? []) if (cat.detail) Object.assign(cat, decodeDeep(read(cat.detail)));
   const pathways = read('pathways-diff.json');
+  endRead();
+  const endBuild = timer('report: files, groups and highlights');
+  // The zips are the truth for a file's presence (the entity diff can list a
+  // child file, e.g. fare_rules.txt, that neither feed has).
+  const inFeeds = new Set([...(feeds.base.files ?? []), ...(feeds.new.files ?? [])]);
   const report = {
-    schema: 1,
+    schema: 2,
     dataset: basename(dir),
     generated_at: new Date().toISOString(),
     feeds: { base: feeds.base.feed, new: feeds.new.feed },
-    sections: withFeedFiles(reportSections(entity, pathways), feeds),
+    ...reportFilesAndGroups(entity, pathways, inFeeds),
     // The global ranking's top few (scripts/generate-gtfs-highlights.mjs);
     // older diffs without it fall back to the calendar's highlights.
     highlights: read('highlights.json')?.report ?? reportHighlights(entity),
   };
-  writeFileSync(join(dir, REPORT_FILE), JSON.stringify(report, null, 2));
-  const shown = report.sections.filter((s) => s.present).map((s) => `${s.slug} ${s.count ?? '?'}`);
+  endBuild();
+  timed(`write ${REPORT_FILE}`, () => writeFileSync(join(dir, REPORT_FILE), JSON.stringify(report, null, 2)), () => ({
+    bytes: statSync(join(dir, REPORT_FILE)).size,
+  }));
+  const shown = reportSummary(report)
+    .sections.filter((s) => s.present)
+    .map((s) => `${s.slug} ${s.count ?? '?'}`);
   console.log(`Wrote ${REPORT_FILE}: ${shown.join(', ')}`);
 }
 
@@ -249,7 +270,10 @@ function main() {
   }
   const dir = existsSync(opts.target) && statSync(opts.target).isDirectory() ? resolve(opts.target) : join(DATA_DIR, opts.target);
   if (!existsSync(dir)) throw new Error(`No such dataset folder: ${dir}`);
-  const zips = readdirSync(dir).filter((f) => f.toLowerCase().endsWith('.zip')).map((f) => inspectZip(join(dir, f)));
+  markStartup();
+  const zips = timed('inspect zips (feed_info, calendar dates)', () =>
+    readdirSync(dir).filter((f) => f.toLowerCase().endsWith('.zip')).map((f) => inspectZip(join(dir, f))),
+  );
   if (zips.length !== 2) throw new Error(`Expected exactly 2 zips in ${dir}, found ${zips.length}`);
 
   const feeds = orderFeeds(zips, opts.keepNames);
@@ -259,6 +283,9 @@ function main() {
   const steps = opts.only.filter((s) => ALL_STEPS.includes(s));
   for (const step of steps) {
     const t0 = Date.now();
+    setTimingStep(step);
+    // The step's wall time, child process included (not the manifest).
+    const endStep = timer('step total (wall, from build)');
     console.log(`\n── ${step} ──`);
     for (const f of STEP_OUTPUTS[step]) rmSync(out(f), { recursive: true, force: true });
     if (step === 'entity') run('generate-gtfs-entity-diff.mjs', [feeds.base.path, feeds.new.path, out('entity-diff.json')]);
@@ -267,15 +294,18 @@ function main() {
     if (step === 'highlights') run('generate-gtfs-highlights.mjs', [dir]);
     if (step === 'report') {
       writeReport(dir, feeds);
+      endStep();
       continue;
     }
     if (step === 'pathways') {
       if (!feeds.base.hasPathways && !feeds.new.hasPathways) {
         console.log('No pathways.txt in either feed; skipped.');
+        endStep();
         continue;
       }
       run('generate-gtfs-pathways-diff.mjs', [feeds.base.path, feeds.new.path, out('pathways-diff.json')]);
     }
+    endStep();
     console.log(`(${((Date.now() - t0) / 1000).toFixed(0)} s)`);
   }
   console.log('');

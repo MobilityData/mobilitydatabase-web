@@ -20,7 +20,7 @@ import { Clear, Search, Place } from '@mui/icons-material';
 import React, { useEffect, useRef, useState } from 'react';
 import type {
   EntityTypeDiff,
-  FileDiff,
+  RawTable,
   StopChange,
   StopsMapDiff,
 } from '../../lib/entity-diff-types';
@@ -48,11 +48,11 @@ import {
   queryMapTable,
   useMapTableQuery,
 } from '../../lib/useMapTable';
+import { loadAllStops, useAllStops } from '../../lib/useDiffData';
 import SegmentedList from '../diffmap/SegmentedList';
-import GtfsDiffFileDiffPanel, {
-  type RowAction,
-} from '../../../GtfsDiffTool/components/GtfsDiffFileDiffPanel';
+import { type RowAction } from '../../../GtfsDiffTool/components/GtfsDiffFileDiffPanel';
 import EntityOverviewCard from '../overview/EntityOverviewCard';
+import RawFileDiffCard from '../raw/RawFileDiffCard';
 import StopsDiffMap, { type MapSelection } from './StopsDiffMap';
 import {
   DiffMapControlPanel,
@@ -224,7 +224,8 @@ interface StopsEntityPanelProps {
   stopsMap: StopsMapDiff;
   /** stops.txt, levels.txt, pathways.txt counts, for the overview. */
   entityTypes: EntityTypeDiff[];
-  fileDiffs: FileDiff[];
+  /** Row diffs of the files that changed, as Parquet row tables. */
+  rawTables: RawTable[];
   /** Cross-tab focus: a stop to select on the map. */
   focus: NavFocus | null;
 }
@@ -233,7 +234,7 @@ export default function StopsEntityPanel({
   datasetId,
   stopsMap,
   entityTypes,
-  fileDiffs,
+  rawTables,
   focus,
 }: StopsEntityPanelProps): React.ReactElement {
   const nav = useDiffNav();
@@ -241,6 +242,12 @@ export default function StopsEntityPanel({
   const [filters, setFilters] = useState<StopFilters>(DEFAULT_FILTERS);
   const [showBase, setShowBase] = useState(false);
   const [showNew, setShowNew] = useState(false);
+  // Every stop of both feeds: fetched the first time an overlay is shown.
+  const allStops = useAllStops(
+    datasetId,
+    stopsMap.all_stops,
+    showBase || showNew,
+  );
   const [selection, setSelectionState] = useState<MapSelection | null>(null);
   const [flyRequest, setFlyRequest] = useState(0);
   const mapBoxRef = useRef<HTMLDivElement>(null);
@@ -341,8 +348,9 @@ export default function StopsEntityPanel({
       }
       setSelectionState({ type: 'changed', stopId: id });
     } else {
-      const inNew = stopsMap.all_stops.new.find((s) => s[0] === id);
-      const inBase = stopsMap.all_stops.base.find((s) => s[0] === id);
+      const all = await loadAllStops(datasetId, stopsMap.all_stops);
+      const inNew = all.new.find((s) => s[0] === id);
+      const inBase = all.base.find((s) => s[0] === id);
       if (inNew) {
         setShowNew(true);
         setSelectionState({ type: 'overlay', feed: 'new', stop: inNew });
@@ -384,17 +392,23 @@ export default function StopsEntityPanel({
   const [refocusRequest, setRefocusRequest] = useState(0);
 
   useReportSubtitle(
-    `${stopsMap.all_stops.base.length.toLocaleString()} → ${stopsMap.all_stops.new.length.toLocaleString()} stops · showing ${total.toLocaleString()} changed`,
+    `${stopsMap.all_stops.base.toLocaleString()} → ${stopsMap.all_stops.new.toLocaleString()} stops · showing ${total.toLocaleString()} changed`,
   );
 
+  /** Shown on a checked overlay until its stops have arrived. */
+  const overlayStatus = allStops.error
+    ? ' · could not load'
+    : allStops.isLoading
+      ? ' · loading…'
+      : '';
   const visibilityCheckboxes: CheckboxStructure[] = [
     {
-      title: `All original stops (${stopsMap.all_stops.base.length.toLocaleString()})`,
+      title: `All original stops (${stopsMap.all_stops.base.toLocaleString()})${showBase ? overlayStatus : ''}`,
       type: 'checkbox',
       checked: showBase,
     },
     {
-      title: `All new stops (${stopsMap.all_stops.new.length.toLocaleString()})`,
+      title: `All new stops (${stopsMap.all_stops.new.toLocaleString()})${showNew ? overlayStatus : ''}`,
       type: 'checkbox',
       checked: showNew,
     },
@@ -483,7 +497,9 @@ export default function StopsEntityPanel({
   return (
     <Box>
       <EntityOverviewCard
+        datasetId={datasetId}
         highlights={highlights}
+        highlightsFile={stopsMap.highlights_file}
         noun={() => 'stops'}
         onOpen={() =>
           nav
@@ -651,7 +667,7 @@ export default function StopsEntityPanel({
             <StopsDiffMap
               points={points}
               selectedStop={selectedStop}
-              allStops={stopsMap.all_stops}
+              allStops={allStops.data ?? null}
               showBaseOverlay={showBase}
               showNewOverlay={showNew}
               minMoveM={filters.minMoveM}
@@ -675,13 +691,15 @@ export default function StopsEntityPanel({
       >
         Raw file diff
       </Typography>
-      <GtfsDiffFileDiffPanel
-        fileDiffs={fileDiffs}
-        showActionFilter={false}
-        searchable
-        alwaysOpenFiles={['stops.txt']}
-        rowAction={seeOnMap}
-      />
+      {rawTables.map((t) => (
+        <RawFileDiffCard
+          key={t.file}
+          datasetId={datasetId}
+          table={t}
+          defaultOpen={t.file === 'stops.txt'}
+          rowAction={seeOnMap}
+        />
+      ))}
     </Box>
   );
 }

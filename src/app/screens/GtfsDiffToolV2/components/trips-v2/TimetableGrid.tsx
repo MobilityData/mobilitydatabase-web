@@ -1,7 +1,7 @@
 'use client';
 
 import { Box, Typography } from '@mui/material';
-import React, { useMemo, useState } from 'react';
+import React, { useId, useMemo, useRef, useState } from 'react';
 import type { RouteDirDiff, TripPair } from '../../lib/trips-types';
 import {
   type PairRowTimes,
@@ -35,7 +35,32 @@ interface TimetableGridProps {
   onSelect: (pair: TripPair) => void;
   /** Expand every run of unchanged trips. */
   showUnchanged: boolean;
+  /** Shade the trip column under the pointer, to show a trip opens. */
+  hoverColumns?: boolean;
+  /** Scroll within this height, the trips' header row staying in view. */
+  maxHeight?: number;
 }
+
+/** The header row kept in view while the grid scrolls (maxHeight). */
+const stickyHeadSx = {
+  '& thead th:not(.fold)': {
+    position: 'sticky',
+    top: 0,
+    zIndex: 2,
+    bgcolor: 'background.paper',
+  },
+  '& thead th.stop': { zIndex: 4 },
+  // Tones as a layer over the opaque header background.
+  '& thead th.removed': {
+    backgroundImage: `linear-gradient(${REMOVED_BG}, ${REMOVED_BG})`,
+  },
+  '& thead th.added': {
+    backgroundImage: `linear-gradient(${ADDED_BG}, ${ADDED_BG})`,
+  },
+} as const;
+
+/** Shade of the hovered trip column. */
+const HOVER_SHADE = 'rgba(127, 127, 127, 0.18)';
 
 /**
  * Cells are plain table elements styled by class from the table's own sx:
@@ -152,7 +177,21 @@ export default function TimetableGrid({
   selectedKey,
   onSelect,
   showUnchanged,
+  hoverColumns = false,
+  maxHeight,
 }: TimetableGridProps): React.ReactElement {
+  // The hovered column is shaded by one CSS rule written straight into a
+  // <style>: re-rendering thousands of cells per pointer move would lag.
+  const gridId = useId();
+  const hoverStyle = useRef<HTMLStyleElement>(null);
+  const shadeColumn = (key: string | null): void => {
+    if (hoverStyle.current == null) return;
+    const q = (v: string): string => v.replace(/["\\]/g, '\\$&');
+    hoverStyle.current.textContent =
+      key == null
+        ? ''
+        : `[data-grid="${q(gridId)}"] [data-col="${q(key)}"] { background-image: linear-gradient(${HOVER_SHADE}, ${HOVER_SHADE}); }`;
+  };
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   const [limit, setLimit] = useState(PAGE);
   const rows = useMemo(() => timepointRows(route), [route]);
@@ -189,11 +228,29 @@ export default function TimetableGrid({
 
   return (
     <Box
-      sx={{
-        overflowX: 'auto',
-      }}
+      sx={
+        maxHeight == null
+          ? { overflowX: 'auto' }
+          : { overflow: 'auto', maxHeight }
+      }
     >
-      <Box component='table' sx={tableSx}>
+      {hoverColumns ? <style ref={hoverStyle} /> : null}
+      <Box
+        component='table'
+        sx={maxHeight == null ? tableSx : { ...tableSx, ...stickyHeadSx }}
+        data-grid={gridId}
+        onMouseOver={
+          hoverColumns
+            ? (e: React.MouseEvent<HTMLTableElement>) =>
+                shadeColumn(
+                  (e.target as HTMLElement)
+                    .closest<HTMLElement>('[data-col]')
+                    ?.getAttribute('data-col') ?? null,
+                )
+            : undefined
+        }
+        onMouseLeave={hoverColumns ? () => shadeColumn(null) : undefined}
+      >
         <thead>
           <tr>
             <th className='stop'>
@@ -289,6 +346,7 @@ function HeaderCell({
       className={columnClass(pair, selected)}
       title={`${pairSummary(pair)} · select for the trip detail`}
       onClick={onClick}
+      data-col={pair.key}
     >
       <T
         sec={pair.new_time ?? pair.base_time}
@@ -372,7 +430,7 @@ function TimeCell({
     );
   }
   return (
-    <td className={cls} title={title} onClick={onClick}>
+    <td className={cls} title={title} onClick={onClick} data-col={pair.key}>
       {content}
     </td>
   );

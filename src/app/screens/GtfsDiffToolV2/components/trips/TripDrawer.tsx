@@ -35,6 +35,12 @@ import {
   segmentsText,
 } from '../../lib/trips-utils';
 import { useDiffNav } from '../../lib/diff-nav';
+import { tripExplanation } from '../../lib/trips-v2-summary';
+import { CHANGED_BG, pairTone } from '../trips-v2/shared';
+import {
+  RawStopTimesToggle,
+  TripAttributes,
+} from '../trips-v2/SelectedTripPanel';
 import {
   ClassChip,
   MONO_FONT,
@@ -46,11 +52,24 @@ import {
 const ADDED_BG = 'rgba(46, 125, 50, 0.10)';
 const REMOVED_BG = 'rgba(211, 47, 47, 0.08)';
 
+/** Background of the "what changed" sentence, by the trip's tone. */
+const TONE_BG: Record<ReturnType<typeof pairTone>, string> = {
+  added: ADDED_BG,
+  removed: REMOVED_BG,
+  changed: CHANGED_BG,
+  quiet: 'action.hover',
+};
+
 interface TripDrawerProps {
   pair: TripPair | null;
   route: RouteInfo | undefined;
   stopNames: Record<string, string>;
   onClose: () => void;
+  /**
+   * Trips v5: also what changed in a sentence, every attribute the trip
+   * sets, and its raw stop_times rows (the timetable's selected-trip panel).
+   */
+  detailed?: { rawDatasetId: string | null };
 }
 
 function Section({
@@ -94,13 +113,18 @@ export default function TripDrawer({
   route,
   stopNames,
   onClose,
+  detailed,
 }: TripDrawerProps): React.ReactElement {
   return (
     <Drawer
       anchor='right'
       open={pair != null}
       onClose={onClose}
-      slotProps={{ paper: { sx: { width: { xs: '100vw', sm: 540 }, p: 2.5 } } }}
+      slotProps={{
+        paper: {
+          sx: { width: { xs: '100vw', sm: detailed ? 640 : 540 }, p: 2.5 },
+        },
+      }}
     >
       {pair && (
         <TripDetails
@@ -108,6 +132,7 @@ export default function TripDrawer({
           route={route}
           stopNames={stopNames}
           onClose={onClose}
+          detailed={detailed}
         />
       )}
     </Drawer>
@@ -119,11 +144,13 @@ function TripDetails({
   route,
   stopNames,
   onClose,
+  detailed,
 }: {
   pair: TripPair;
   route: RouteInfo | undefined;
   stopNames: Record<string, string>;
   onClose: () => void;
+  detailed?: { rawDatasetId: string | null };
 }): React.ReactElement {
   const nav = useDiffNav();
   const name = (id: string): string => stopNames[id] ?? id;
@@ -162,6 +189,21 @@ function TripDetails({
           </Typography>
         )}
       </Box>
+      {detailed ? (
+        <Box
+          sx={{
+            px: 1.5,
+            py: 1,
+            mb: 1.5,
+            borderRadius: '4px',
+            bgcolor: TONE_BG[pairTone(pair)],
+          }}
+        >
+          <Typography variant='body2'>
+            {tripExplanation(pair, stopNames)}
+          </Typography>
+        </Box>
+      ) : null}
       <Alert
         severity='info'
         icon={false}
@@ -342,6 +384,22 @@ function TripDetails({
           ))}
         </Section>
       )}
+
+      {detailed ? (
+        <Section title='Trip attributes'>
+          <Typography variant='body2' component='div' color='text.secondary'>
+            <TripAttributes pair={pair} changes={false} />
+          </Typography>
+        </Section>
+      ) : null}
+      {detailed?.rawDatasetId != null ? (
+        <Box sx={{ mb: 2, ml: -0.5 }}>
+          <RawStopTimesToggle
+            pair={pair}
+            rawDatasetId={detailed.rawDatasetId}
+          />
+        </Box>
+      ) : null}
 
       <Accordion disableGutters variant='outlined' sx={{ mt: 1 }}>
         <AccordionSummary expandIcon={<ExpandMore />}>

@@ -10,8 +10,8 @@ import React, {
 } from 'react';
 import type {
   CalendarDiff,
-  FileDiff,
   GtfsDate,
+  RawTable,
 } from '../../lib/entity-diff-types';
 import {
   CHANGE_COLORS,
@@ -51,7 +51,7 @@ import ServiceChangesList from './ServiceChangesList';
 import { type NavFocus, useDiffNav } from '../../lib/diff-nav';
 import EntityOverviewCard from '../overview/EntityOverviewCard';
 import { DATE_HIGHLIGHTS } from '../../lib/calendar-overview-highlights';
-import GtfsDiffFileDiffPanel from '../../../GtfsDiffTool/components/GtfsDiffFileDiffPanel';
+import RawFileDiffCard from '../raw/RawFileDiffCard';
 
 function minDate(...ds: Array<GtfsDate | null>): GtfsDate | null {
   const valid = ds.filter((d): d is GtfsDate => d != null).sort();
@@ -106,7 +106,8 @@ const NO_DAYS: Record<GtfsDate, DayCounts> = {};
 interface CalendarEntityPanelProps {
   datasetId: string;
   calendar: CalendarDiff;
-  fileDiffs: FileDiff[];
+  /** Row diffs of the files that changed, as Parquet row tables. */
+  rawTables: RawTable[];
   /** Cross-tab focus: a service to open, or a route to filter the calendar by. */
   focus: NavFocus | null;
 }
@@ -114,7 +115,7 @@ interface CalendarEntityPanelProps {
 export default function CalendarEntityPanel({
   datasetId,
   calendar,
-  fileDiffs,
+  rawTables,
   focus,
 }: CalendarEntityPanelProps): React.ReactElement {
   const { coverage } = calendar;
@@ -245,6 +246,19 @@ export default function CalendarEntityPanel({
     [view],
   );
 
+  /** The year view only covers the diff's years: clamp into them. */
+  const changeView = (next: CalendarView): void => {
+    setView(next);
+    if (next !== 'year') return;
+    setCursor((c) => {
+      if (bounds.start && c.year < cursorOf(bounds.start).year)
+        return cursorOf(bounds.start);
+      if (bounds.end && c.year > cursorOf(bounds.end).year)
+        return cursorOf(bounds.end);
+      return c;
+    });
+  };
+
   const scrollToCalendar = (): void => {
     calendarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -310,7 +324,9 @@ export default function CalendarEntityPanel({
   return (
     <Box>
       <EntityOverviewCard
+        datasetId={datasetId}
         highlights={calendar.overview_highlights ?? []}
+        highlightsFile={calendar.overview_highlights_file}
         noun={(h) => (DATE_HIGHLIGHTS.has(h.id) ? 'dates' : 'services')}
         openHint={(h) =>
           DATE_HIGHLIGHTS.has(h.id)
@@ -368,16 +384,12 @@ export default function CalendarEntityPanel({
         />
         <CalendarNavigator
           view={view}
-          onViewChange={setView}
+          onViewChange={changeView}
           cursor={cursor}
           onStep={step}
           focusedDate={focusedDate}
           onJumpToDate={jumpToDate}
           bounds={bounds}
-          changeBounds={{
-            first: changeDates[0] ?? null,
-            last: changeDates.at(-1) ?? null,
-          }}
         />
 
         {view === 'month' ? (
@@ -391,6 +403,7 @@ export default function CalendarEntityPanel({
         ) : (
           <YearView
             year={cursor.year}
+            bounds={bounds}
             days={filteredDays}
             activeCounts={calendar.active_counts}
             focusedDate={focusedDate}
@@ -435,12 +448,14 @@ export default function CalendarEntityPanel({
         }
       />
 
-      {fileDiffs.length > 0 && (
+      {rawTables.length > 0 && (
         <Box sx={{ mt: 3 }}>
           <Typography variant='h6' fontWeight={700} sx={{ mb: 2 }}>
             Raw file diff
           </Typography>
-          <GtfsDiffFileDiffPanel fileDiffs={fileDiffs} />
+          {rawTables.map((t) => (
+            <RawFileDiffCard key={t.file} datasetId={datasetId} table={t} />
+          ))}
         </Box>
       )}
 

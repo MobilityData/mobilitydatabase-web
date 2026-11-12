@@ -72,24 +72,54 @@ export function ChangeTriplet({
   );
 }
 
-/** Legend of ChangeTriplet's signs. */
-export function ChangeLegend(): React.ReactElement {
-  const items: Array<[keyof typeof CHANGE_COLORS, string]> = [
-    ['added', '+ added'],
-    ['removed', '− removed'],
-    ['modified', '~ modified'],
-  ];
+/**
+ * Colours of service periods (lib/trips-periods), in order. Clear of the
+ * added / removed / modified green, red and amber, which shade the days.
+ */
+export const PERIOD_COLORS = [
+  '#3d6fd6',
+  '#8b5cc4',
+  '#178f8f',
+  '#cc4f93',
+  '#8a6440',
+  '#4a5a78',
+];
+
+/** Periods without a colour of their own. */
+export const OTHER_PERIOD_COLOR = '#b0b0b0';
+
+export function periodColor(color: number | null): string {
+  return color == null
+    ? OTHER_PERIOD_COLOR
+    : PERIOD_COLORS[color % PERIOD_COLORS.length];
+}
+
+/** Background of a day by the share of its trips changed (0–1). */
+export function changeShade(share: number): string {
+  const alpha = share > 0 ? 0.06 + 0.5 * share : 0;
+  return `rgba(237, 170, 2, ${alpha.toFixed(3)})`;
+}
+
+/** Swatch of a period's colour. */
+export function PeriodSwatch({
+  color,
+  size = 10,
+}: {
+  color: number | null;
+  size?: number;
+}): React.ReactElement {
   return (
-    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-      {items.map(([k, label]) => (
-        <Typography
-          key={k}
-          variant='caption'
-          sx={{ color: CHANGE_COLORS[k], fontWeight: 700 }}
-        >
-          {label}
-        </Typography>
-      ))}
-    </Box>
+    <Box
+      component='span'
+      aria-hidden
+      sx={{
+        display: 'inline-block',
+        flexShrink: 0,
+        width: size,
+        height: size,
+        borderRadius: '3px',
+        bgcolor: periodColor(color),
+      }}
+    />
   );
 }

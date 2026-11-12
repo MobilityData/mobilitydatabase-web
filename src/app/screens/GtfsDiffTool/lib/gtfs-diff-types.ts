@@ -13,8 +13,8 @@ export interface ColumnEntry {
 
 export interface FeedSource {
   source: string;
-  /** ISO 8601 timestamp of when the feed was obtained. */
-  downloaded_at: string;
+  /** ISO 8601 timestamp of when the feed was obtained (not written by v2). */
+  downloaded_at?: string;
 }
 
 export interface UnsupportedFile {

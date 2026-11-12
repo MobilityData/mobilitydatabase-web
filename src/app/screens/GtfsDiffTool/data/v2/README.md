@@ -32,9 +32,11 @@ layout needs no other change.
    enough; e.g. `idfm`, an agency feed against its Google export, whose
    export looks older by date). `--only entity,trips,pathways,report`
    rebuilds a subset (the manifest is always rewritten). Feeds are loaded
-   into DuckDB (`scripts/lib/feed-store.mjs`), so size is bounded by disk,
-   not memory; still build one at a time (IDFM: about 12 min for entity,
-   4 min for trips, 7 GB peak).
+   into DuckDB (`scripts/lib/feed-store.mjs`), so stop_times and shapes
+   never become JS rows, but large feeds still need a lot of memory: build
+   one at a time (IDFM on an M3 Pro: about 9 min for entity, 2 min for
+   trips, 1 min for the calendar; entity peaks at about 18 GB of memory plus
+   4.5 GB of DuckDB files in the temp folder).
 
 3. Reload `/gtfs-diff-tool-v2`.
 
@@ -43,23 +45,24 @@ layout needs no other change.
 | File | Generator | Read by |
 |---|---|---|
 | `manifest.json` | build script, last | Every file below with its size, plus the feeds. |
-| `report.json` | build script | Report header and summary counts. |
+| `report.json` | build script | Report header, change counts per file (each tagged with its `group`, the summary section) and the top highlights. A group's counts are the sum of its files' (files with `part_of` excluded) unless the group carries its own (Routes, Service Dates, Pathways). The `*-highlights.json` files hold each section's highlights with full entity lists. |
 | `entity-diff.json` | `generate-gtfs-entity-diff.mjs` | Per-entity summaries and counts; change lists of up to 500 items. |
-| `categories/<id>.json` | same | A category's maps, calendar and inline file diffs, loaded when its page opens; deep-encoded (columns, polylines). |
+| `categories/<id>.json` | same | A category's maps and calendar, loaded when its page opens; plain JSON, except coordinate lists stored as encoded polylines (`{ "$pl": "…" }`). |
 | `maps/stops.parquet`, `maps/routes.parquet` | same (`scripts/lib/map-tables.mjs`) | The stops and routes maps: one row per changed stop / per route. The pages' filters, counts, map points, virtual-scrolled lists and selected entity are DuckDB-WASM queries on them; the category JSON keeps counts, overlays and precomputed highlights. |
 | `calendar/services.parquet`, `calendar/days.parquet` | same (`scripts/lib/calendar-tables.mjs`) | The service calendar: one row per service, one per service change on a date. |
 | `*_detail.parquet` (maps/, calendar/) | same | Each entity's full JSON, keyed and sorted by id with small row groups, read when one is opened; the list tables above leave it out so they stay small. |
 | `entities/<file>.parquet` | same | Longer change lists, paged with DuckDB-WASM. |
-| `raw/<file>.parquet` | same | Full row diffs (trips, stop_times, frequencies, shapes): every row of both feeds once, with its action. Trips are joined semantically, not by trip_id. |
-| `trips-diff.json` | `generate-gtfs-trips-diff.mjs` | Trips view day index: dates, service sets, day types, names. |
+| `raw/<file>.parquet` | same | The raw file diff: one table per GTFS file that changed (`raw/stops.parquet`, `raw/areas.parquet`, …; unchanged files get none), every row of both feeds once, with its action and `b_<column>` / `n_<column>` values. Listed in each category's `raw_tables`, with the file's key (`key_columns`) and any columns only one feed has. Trips are joined semantically, not by trip_id. `locations.geojson` has no table yet. |
+| `trips-diff.json` | `generate-gtfs-trips-diff.mjs` | Trips view day index: dates, service sets (indices into `service_ids`, lib/trips-index-codec.ts), day types, names. |
 | `trips/<side>.parquet` | same | Each feed's trips, sorted by service; the Trips view reads the selected day's services. Feeds with more than 50,000 trips on a day (`trip_tables.by_route`) are sorted by route instead and read one route at a time. |
 | `pathways-diff.json` | `generate-gtfs-pathways-diff.mjs` | Only when a feed has `pathways.txt`. |
 
 JSON stays for what the first screen needs; anything row-sized is Parquet,
 read in the browser with DuckDB-WASM: files up to 4 MB are downloaded whole,
 larger ones read with HTTP range requests (one request per column chunk and
-row group, hence 250k-row groups in the raw tables). Whole JSON files are
+row group, hence 250k-row groups in the raw tables). Every Parquet file is
+written as format V2 (delta-encoded numbers and strings, 38-50% smaller raw
+tables). Whole JSON files are
 served gzip-compressed. Every write is
-read back and checked by the generators. The entity encoding is covered by
-`entity-diff-codec.spec.ts`; `node scripts/compact-entity-diff.mjs <file>`
-re-checks (and re-encodes) an existing `entity-diff.json`.
+read back and checked by the generators. The polyline encoding is covered by
+`entity-diff-codec.spec.ts`.

@@ -138,6 +138,10 @@ describe('route page', () => {
     expect(scoped.routes).toHaveLength(2);
     expect(scoped.trips).toEqual({ base: 9, new: 7 });
     expect(scoped.minor_count).toBe(1);
+    const one = scopeDayToRoute(day, 'M1', '1');
+    expect(one.routes.map((r) => r.dir)).toEqual(['1']);
+    expect(one.trips).toEqual({ base: 4, new: 4 });
+    expect(one.minor_count).toBe(0);
   });
 
   it('opens the requested direction, else the most impacted', () => {

@@ -168,11 +168,11 @@ export interface RowAction {
 const ACTION_COL_W = 36; // px — row action column width
 
 /** Reveals `.row-action` on hover or keyboard focus of the row. */
-const rowActionHoverSx = {
+export const rowActionHoverSx = {
   '&:hover .row-action, &:focus-within .row-action': { opacity: 1 },
 } as const;
 
-function RowActionButton({
+export function RowActionButton({
   action,
   identifier,
   fileName,

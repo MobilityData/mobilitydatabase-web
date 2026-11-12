@@ -1,0 +1,1 @@
+{"schema":1,"section":"stops","highlights":[{"id":"new_unserved","score":0.3,"severity":"warning","title":"2 new stops no trip serves","detail":"Added to stops.txt, but no stop_times row uses them.","entities":[{"id":"node-901-lobby","label":"Broadway","note":"no trip stops here"},{"id":"node-901-street","label":"Broadway","note":"no trip stops here"}]}]}

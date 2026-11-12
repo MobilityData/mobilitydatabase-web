@@ -69,7 +69,6 @@ export interface StationPathwaysDiff {
 
 export interface PathwaysFeedSource {
   source: string;
-  downloaded_at: string;
   label: string;
 }
 
@@ -90,7 +89,6 @@ export interface PathwaysDiff {
     pathways: { base: number; new: number };
     levels: { base: number; new: number };
   };
-  orphan_pathways: { base: number; new: number };
   unchanged_station_ids: string[];
   /** Changed stations only. */
   stations: StationPathwaysDiff[];

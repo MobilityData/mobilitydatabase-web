@@ -68,12 +68,9 @@ export function entriesWhere(
 ): { sql: string; params: unknown[] } {
   const parts: string[] = [];
   const params: unknown[] = [];
-  if (withKinds) {
-    if (f.kinds.length === 0) parts.push('FALSE');
-    else {
-      parts.push(`kind IN (${f.kinds.map(() => '?').join(', ')})`);
-      params.push(...f.kinds);
-    }
+  if (withKinds && f.kinds.length > 0) {
+    parts.push(`kind IN (${f.kinds.map(() => '?').join(', ')})`);
+    params.push(...f.kinds);
   }
   idsClause(f.serviceIds, parts, params);
   routesClause(f.routeIds, parts, params);

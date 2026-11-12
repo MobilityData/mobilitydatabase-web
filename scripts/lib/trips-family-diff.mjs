@@ -19,9 +19,13 @@
  * in memory at once): open, addRoute() for every route, finish(). Outputs:
  *   - the trips.txt EntityTypeDiff (counts per trip, children counts),
  *   - every row, to the Parquet writer (raw-diff-parquet.mjs).
+ * stop_times rows are only recorded per trip in the loop; finish() builds,
+ * classifies and writes them in SQL (stop-times-diff-sql.mjs).
  */
 
 import { alignStops } from '../../src/app/screens/GtfsDiffToolV2/lib/trips-utils.ts';
+import { openStopTimesSql } from './stop-times-diff-sql.mjs';
+import { lap, now, timer } from './timings.mjs';
 
 /**
  * Columns whose differences alone make a row "id_only". Schedulers renumber
@@ -40,6 +44,19 @@ function unionColumns(a, b) {
   const cols = [...(a?.header ?? [])];
   for (const c of b?.header ?? []) if (!cols.includes(c)) cols.push(c);
   return cols;
+}
+
+/** Columns compared: in both feeds (columns in one feed only would flag every row). */
+function comparedColumns(a, b) {
+  const aCols = new Set(a?.header ?? []);
+  const bCols = new Set(b?.header ?? []);
+  return unionColumns(a, b).filter((c) => !a || !b || (aCols.has(c) && bCols.has(c)));
+}
+
+function sameList(a, b) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
 }
 
 function groupByTrip(rows) {
@@ -63,11 +80,7 @@ function sameEntity(column, b, n, sameShape) {
 
 /** Classifies one file's rows and streams them to its Parquet table. */
 function fileCollector(file, baseTable, newTable, { lineOf, parquetTable, sameShape }) {
-  const columns = unionColumns(baseTable, newTable);
-  const baseCols = new Set(baseTable?.header ?? []);
-  const newCols = new Set(newTable?.header ?? []);
-  // Columns in one feed only would flag every row; they aren't compared.
-  const compared = columns.filter((c) => !baseTable || !newTable || (baseCols.has(c) && newCols.has(c)));
+  const compared = comparedColumns(baseTable, newTable);
   const idCols = ID_COLUMNS[file];
 
   return {
@@ -104,12 +117,13 @@ function fileCollector(file, baseTable, newTable, { lineOf, parquetTable, sameSh
 
 /**
  * @param {object} o
+ * @param o.store     feed store (feed-store.mjs), for the stop_times SQL
  * @param o.baseFeed, o.newFeed  feeds from feed-store.mjs
  * @param o.lineOf    row -> 1-based CSV line number
  * @param o.parquet   writer from raw-diff-parquet.mjs, or null
  * @param o.sameShape (baseShapeId, newShapeId) -> boolean, or null
  */
-export async function openTripsFamilyDiff({ baseFeed, newFeed, lineOf, parquet, sameShape }) {
+export async function openTripsFamilyDiff({ store, baseFeed, newFeed, lineOf, parquet, sameShape }) {
   const table = (feed, f) => feed.files.get(f) ?? null;
   const bt = table(baseFeed, 'trips.txt');
   const nt = table(newFeed, 'trips.txt');
@@ -129,7 +143,19 @@ export async function openTripsFamilyDiff({ baseFeed, newFeed, lineOf, parquet, 
       : null;
   const files = {
     trips: await collect('trips.txt', bt, nt),
-    stopTimes: await collect('stop_times.txt', sb, sn),
+    stopTimes:
+      sb || sn
+        ? await openStopTimesSql({
+            store,
+            baseTable: sb,
+            newTable: sn,
+            columns: unionColumns(sb, sn),
+            compared: comparedColumns(sb, sn),
+            idColumns: ID_COLUMNS['stop_times.txt'],
+            sameShape,
+            parquet,
+          })
+        : null,
     frequencies: await collect('frequencies.txt', qb, qn),
   };
   const freqByTrip = (rows) => {
@@ -150,11 +176,11 @@ export async function openTripsFamilyDiff({ baseFeed, newFeed, lineOf, parquet, 
     if (!e) trips.set(k, (e = { base: null, new: null, action: 'unchanged', changes: [], children: {} }));
     return e;
   };
-  const childCount = (k, file, action) => {
+  const childCount = (k, file, action, n = 1) => {
     if (action !== 'added' && action !== 'deleted' && action !== 'modified') return;
     const e = tripEntry(k);
     const c = (e.children[file] ??= { added: 0, deleted: 0, modified: 0 });
-    c[action]++;
+    c[action] += n;
   };
 
   return {
@@ -162,8 +188,10 @@ export async function openTripsFamilyDiff({ baseFeed, newFeed, lineOf, parquet, 
      * One route of both feeds.
      * @param sides   { base: { trips, stopTimes }, new: { … } } (gtfs-trips-diff.mjs forEachRoute)
      * @param mapping Map<base trip_id, new trip_id> for this route
+     * @param route   the route's id (the stop_times rows' _route)
      */
-    addRoute(sides, mapping) {
+    addRoute(sides, mapping, route) {
+      let t = now();
       const targets = new Set(mapping.values());
       // Base trip -> the key it is joined on: its matched new trip_id; else
       // its own id, unless a matched base trip already claims that new id.
@@ -183,6 +211,7 @@ export async function openTripsFamilyDiff({ baseFeed, newFeed, lineOf, parquet, 
         };
       };
 
+      t = lap('routes loop: family diff setup', t);
       // ── trips.txt ──────────────────────────────────────────────────
       if (files.trips) {
         const fc = files.trips;
@@ -213,9 +242,11 @@ export async function openTripsFamilyDiff({ baseFeed, newFeed, lineOf, parquet, 
         }
       }
 
+      t = lap('routes loop: diff trips.txt (+ parquet append)', t);
       // ── stop_times.txt: aligned by stop order within matched trips ──
+      // Only recorded per trip here; rows are compared in SQL in finish().
       if (files.stopTimes) {
-        const fc = files.stopTimes;
+        const sq = files.stopTimes;
         const baseGroups = groupByTrip(sides.base.stopTimes);
         const newGroups = groupByTrip(sides.new.stopTimes);
         const stop = (r) => r._stop_key || r.stop_id;
@@ -224,37 +255,25 @@ export async function openTripsFamilyDiff({ baseFeed, newFeed, lineOf, parquet, 
           const k = keyOf(baseId);
           const nrows = newGroups.get(k);
           if (!nrows) {
-            brows.forEach((b, i) => {
-              fc.emit('deleted', b, null, { ...ctxOf(k, baseId, null), seq: i });
-              childCount(k, 'stop_times.txt', 'deleted');
-            });
+            sq.trip('deleted', route, baseId, null, brows.length, ctxOf(k, baseId, null));
+            childCount(k, 'stop_times.txt', 'deleted', brows.length);
             continue;
           }
           consumed.add(k);
           const ctx = ctxOf(k, baseId, k);
-          alignStops(brows.map(stop), nrows.map(stop)).forEach((o, i) => {
-            const b = o.bi != null ? brows[o.bi] : null;
-            const n = o.ni != null ? nrows[o.ni] : null;
-            if (o.op === 'keep') {
-              const { action, changes } = fc.compare(b, n);
-              fc.emit(action, b, n, { ...ctx, seq: i }, changes);
-              childCount(k, 'stop_times.txt', action);
-            } else {
-              const action = o.op === 'add' ? 'added' : 'deleted';
-              fc.emit(action, b, n, { ...ctx, seq: i });
-              childCount(k, 'stop_times.txt', action);
-            }
-          });
+          const bstops = brows.map(stop);
+          const nstops = nrows.map(stop);
+          if (sameList(bstops, nstops)) sq.trip('same', route, baseId, k, brows.length, ctx);
+          else sq.align(sq.trip('aligned', route, baseId, k, 0, ctx), alignStops(bstops, nstops));
         }
         for (const [newId, nrows] of newGroups) {
           if (consumed.has(newId)) continue;
-          nrows.forEach((n, i) => {
-            fc.emit('added', null, n, { ...ctxOf(newId, null, newId), seq: i });
-            childCount(newId, 'stop_times.txt', 'added');
-          });
+          sq.trip('added', route, null, newId, nrows.length, ctxOf(newId, null, newId));
+          childCount(newId, 'stop_times.txt', 'added', nrows.length);
         }
       }
 
+      t = lap('routes loop: diff stop_times.txt (record trips + align changed patterns)', t);
       // ── frequencies.txt ────────────────────────────────────────────
       if (files.frequencies) {
         const fc = files.frequencies;
@@ -281,17 +300,35 @@ export async function openTripsFamilyDiff({ baseFeed, newFeed, lineOf, parquet, 
           childCount(n.trip_id, 'frequencies.txt', 'added');
         }
       }
+      lap('routes loop: diff frequencies.txt (+ parquet append)', t);
     },
 
     /** Writes the Parquet files; returns the trips.txt entity and raw table descriptions. */
     async finish() {
       const rawTables = [];
-      for (const fc of [files.trips, files.stopTimes, files.frequencies]) {
-        const t = fc ? await fc.finishParquet() : null;
-        if (t) rawTables.push(t);
+      const tripsTable = files.trips ? await files.trips.finishParquet() : null;
+      if (tripsTable) rawTables.push(tripsTable);
+      if (files.stopTimes) {
+        const { table, childCounts } = await files.stopTimes.finish();
+        if (table) rawTables.push(table);
+        // Paired trips' changed rows (unpaired ones were counted in the
+        // loop). stop_times.txt goes first in `children`, as when counted
+        // route by route before frequencies.txt.
+        const endCounts = timer('trips family: stop_times children counts');
+        for (const { key, action, n } of childCounts) {
+          const e = tripEntry(key);
+          if (!e.children['stop_times.txt']) {
+            e.children = { 'stop_times.txt': { added: 0, deleted: 0, modified: 0 }, ...e.children };
+          }
+          e.children['stop_times.txt'][action] += n;
+        }
+        endCounts({ rows: childCounts.length });
       }
+      const freqTable = files.frequencies ? await files.frequencies.finishParquet() : null;
+      if (freqTable) rawTables.push(freqTable);
 
       // ── trips.txt entity: one entry per changed trip ───────────────
+      const endEntity = timer('trips family: trips.txt entity changes');
       const counts = { added: 0, deleted: 0, modified: 0, unchanged: 0 };
       let idOnly = 0;
       const changes = [];
@@ -325,6 +362,7 @@ export async function openTripsFamilyDiff({ baseFeed, newFeed, lineOf, parquet, 
       }
       const order = { modified: 0, added: 1, deleted: 2 };
       changes.sort((a, b) => order[a.status] - order[b.status] || a.key.localeCompare(b.key));
+      endEntity({ rows: changes.length });
 
       return {
         entityType: {

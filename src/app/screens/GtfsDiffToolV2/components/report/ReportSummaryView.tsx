@@ -30,15 +30,17 @@ import {
   sectionPageHref,
 } from '../../lib/highlight-links';
 import { SeverityIcon } from '../highlights/HighlightRow';
+import { DEFAULT_TRIPS_VIEW, tripsListHref } from '../../lib/trips-v2-routes';
 import ReportLayout from './ReportLayout';
 import { SUMMARY_SECTION, sectionHref } from './ReportHeader';
 
 const MONO_FONT = 'var(--font-ibm-plex-mono)';
 
-/** Where the summary sends a section: trips open in the Trips v3 view. */
+/** Where the summary sends a section: trips open in the default Trips view. */
 function summaryHref(dataset: DiffDataset, section: ReportSection): string {
-  const href = sectionHref(dataset.id, section);
-  return section.id === 'trips' && dataset.files.trips ? `${href}-v3` : href;
+  return section.id === 'trips' && dataset.files.trips
+    ? tripsListHref(dataset.id, undefined, undefined, DEFAULT_TRIPS_VIEW)
+    : sectionHref(dataset.id, section);
 }
 
 const COLORS = {

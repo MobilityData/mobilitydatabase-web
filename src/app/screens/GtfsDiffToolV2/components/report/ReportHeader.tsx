@@ -37,6 +37,10 @@ export interface ReportHeaderProps {
    * section crumb links back to `href` and the title becomes `title`.
    */
   subpage?: { label: string; title: string; href: string };
+  /** Leave out the dataset and feed chips under the title. */
+  hideFeeds?: boolean;
+  /** Where ReportHeaderSlot content goes, under the subtitle. */
+  slotRef?: (el: HTMLElement | null) => void;
 }
 
 /**
@@ -52,6 +56,8 @@ export default function ReportHeader({
   meta,
   subtitle,
   subpage,
+  hideFeeds = false,
+  slotRef,
 }: ReportHeaderProps): React.ReactElement {
   const isSummary = section === SUMMARY_SECTION;
   const current = report.sections.find((s) => s.id === section);
@@ -98,21 +104,35 @@ export default function ReportHeader({
           {subtitle}
         </Typography>
       ) : null}
+      {slotRef ? (
+        <Box ref={slotRef} sx={{ mt: 1, '&:empty': { display: 'none' } }} />
+      ) : null}
 
-      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1.5 }}>
-        <Chip size='small' color='primary' label={dataset.label} />
-        <Chip
-          size='small'
-          variant='outlined'
-          label={`Before · ${feedLabel(report.feeds.base)}`}
-          title={report.feeds.base?.file}
-        />
-        <Chip
-          size='small'
-          variant='outlined'
-          label={`After · ${feedLabel(report.feeds.new)}`}
-          title={report.feeds.new?.file}
-        />
+      <Box
+        sx={{
+          display: hideFeeds && meta == null ? 'none' : 'flex',
+          gap: 1,
+          flexWrap: 'wrap',
+          mt: 1.5,
+        }}
+      >
+        {hideFeeds ? null : (
+          <>
+            <Chip size='small' color='primary' label={dataset.label} />
+            <Chip
+              size='small'
+              variant='outlined'
+              label={`Before · ${feedLabel(report.feeds.base)}`}
+              title={report.feeds.base?.file}
+            />
+            <Chip
+              size='small'
+              variant='outlined'
+              label={`After · ${feedLabel(report.feeds.new)}`}
+              title={report.feeds.new?.file}
+            />
+          </>
+        )}
         {meta}
       </Box>
     </Box>

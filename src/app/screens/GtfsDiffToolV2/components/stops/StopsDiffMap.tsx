@@ -15,6 +15,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { Box } from '@mui/material';
 import { useMapConfig } from '../../../../hooks/useMapConfig';
 import type {
+  AllStops,
   CompactStop,
   LonLat,
   RouteInfo,
@@ -108,7 +109,8 @@ interface StopsDiffMapProps {
   points: StopPoint[];
   /** The selected changed stop's full row, once loaded (popup). */
   selectedStop: StopChange | null;
-  allStops: { base: CompactStop[]; new: CompactStop[] };
+  /** Every stop of both feeds, for the overlays; null until loaded. */
+  allStops: AllStops | null;
   showBaseOverlay: boolean;
   showNewOverlay: boolean;
   minMoveM: number;
@@ -276,12 +278,12 @@ export default function StopsDiffMap({
   const overlayData = React.useMemo(
     () => ({
       base: collection(
-        allStops.base.map((s) =>
+        (allStops?.base ?? []).map((s) =>
           point([s[1], s[2]], { stop_id: s[0], feed: 'base' }),
         ),
       ),
       new: collection(
-        allStops.new.map((s) =>
+        (allStops?.new ?? []).map((s) =>
           point([s[1], s[2]], { stop_id: s[0], feed: 'new' }),
         ),
       ),
@@ -395,7 +397,7 @@ export default function StopsDiffMap({
       return;
     }
     const feed = f.properties?.feed === 'base' ? 'base' : 'new';
-    const stop = allStops[feed].find((s) => s[0] === id);
+    const stop = allStops?.[feed].find((s) => s[0] === id);
     if (stop) onSelect({ type: 'overlay', feed, stop });
   };
 

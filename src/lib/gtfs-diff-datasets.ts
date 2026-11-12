@@ -9,7 +9,9 @@ import {
 } from '../app/screens/GtfsDiffToolV2/lib/datasets';
 import {
   REPORT_FILE,
+  type ReportDoc,
   type ReportSummary,
+  reportSummary,
 } from '../app/screens/GtfsDiffToolV2/lib/report';
 import {
   HIGHLIGHTS_FILE,
@@ -75,10 +77,14 @@ export function diffFilePath(id: string, file: string): string | null {
   return path.join(DIFF_DATA_DIR, id, file);
 }
 
-/** report.json of a diff: feeds and per-section change counts. */
+/** report.json of a diff as the pages' sections: feeds and per-section change counts. */
 export function getReportSummary(id: string): ReportSummary | null {
   const p = diffFilePath(id, REPORT_FILE);
-  return p ? (JSON.parse(readFileSync(p, 'utf8')) as ReportSummary) : null;
+  return p
+    ? reportSummary(
+        JSON.parse(readFileSync(p, 'utf8')) as ReportDoc | ReportSummary,
+      )
+    : null;
 }
 
 /** trips-calendar.json: trip changes per date (Trips v3); null if not built. */

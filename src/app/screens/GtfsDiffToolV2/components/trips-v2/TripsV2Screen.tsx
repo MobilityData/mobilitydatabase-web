@@ -1,7 +1,23 @@
 'use client';
 
-import { Alert, Box, Button, Tab, Tabs, Typography } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Tab,
+  Tabs,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import { ArrowBack, Close, Edit, SwapHoriz } from '@mui/icons-material';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useRouter } from '../../../../../i18n/navigation';
 import type { GtfsDate, GtfsEntityDiff } from '../../lib/entity-diff-types';
@@ -51,10 +67,31 @@ import {
   tripsRouteHref,
   writeRouteFilters,
 } from '../../lib/trips-v2-routes';
-import ReportLayout, { ReportActions } from '../report/ReportLayout';
+import ReportLayout, {
+  ReportActions,
+  ReportHeaderSlot,
+} from '../report/ReportLayout';
+import NotableHighlights from '../overview/NotableHighlights';
+import { HighlightDetails } from '../highlights/HighlightRow';
+import type { GlobalHighlight } from '../../lib/global-highlights';
+import type { TripsCalendarDoc } from '../../lib/trips-calendar';
+import { periodByDate, servicePeriods } from '../../lib/trips-periods';
+import { dayKindLabel } from '../../lib/trips-v5-day-kinds';
+import { routeHighlights } from '../../lib/trips-v5-route-highlights';
+import { routeChangeChips } from '../../lib/trips-v5-route-summary';
+import { categoryColor } from '../trips-v5/MainChangeChips';
+import { ADDED, CHANGED, REMOVED } from './shared';
+import type { ChipTone } from '../../lib/trips-v2-summary';
+import { dayRouteRows } from '../../lib/trips-v5-day-filter';
+import {
+  MAIN_CHANGE_LABELS,
+  type MainChangeCategory,
+  routeChips,
+} from '../../lib/trips-v2-summary';
 import TransitLoader from '../TransitLoader';
 import TripDrawer from '../trips/TripDrawer';
 import { TripRouteChip } from '../trips/shared';
+import { formatGtfsDateLong } from '../../lib/calendar-utils';
 import DayPickerCard from './DayPickerCard';
 import DayScope from './DayScope';
 import OverviewCard from './OverviewCard';
@@ -65,6 +102,25 @@ import RouteDetailCard from './RouteDetailCard';
 import TechnicalDrilldownCard from './TechnicalDrilldownCard';
 import DrilldownButton from '../trips-v3/DrilldownButton';
 import { ChipRow, V2Card } from './shared';
+
+/** Text and border colour of a count chip by its tone. */
+const TONE_COLORS: Record<ChipTone, string> = {
+  neutral: 'text.primary',
+  added: ADDED,
+  removed: REMOVED,
+  changed: CHANGED,
+  quiet: 'text.secondary',
+};
+
+/** Trips v5 route page: the direction and date lines under the title. */
+const SUBHEAD_SX = {
+  m: 0,
+  fontFamily: 'inherit',
+  fontWeight: 'bold',
+  fontSize: { xs: 15, sm: 18 },
+  lineHeight: 1.5,
+  letterSpacing: 'normal',
+} as const;
 
 /** Section id and slug of this page in the report header. */
 export const TRIPS_V2_SECTION = 'trips_v2';
@@ -80,6 +136,10 @@ interface TripsV2ScreenProps {
    * technical drill-down is a popup behind an info icon.
    */
   view?: TripsView;
+  /** Trips v5 route page: the day's schedule group comes from it. */
+  calendar?: TripsCalendarDoc | null;
+  /** Trips v5 route page: the trips highlights; those naming the route show. */
+  highlights?: GlobalHighlight[] | null;
 }
 
 /**
@@ -135,6 +195,8 @@ export default function TripsV2Screen({
   report,
   routeId,
   view = 'trips-v2',
+  calendar,
+  highlights,
 }: TripsV2ScreenProps): React.ReactElement {
   const header = useMemo(() => withTripsV2(report), [report]);
   const entity = useDiffData<GtfsEntityDiff>(dataset.id, 'entity');
@@ -151,6 +213,11 @@ export default function TripsV2Screen({
   const byRoute = trips.data != null && isByRoute(trips.data);
   const routeInfo = routeId ? trips.data?.routes[routeId] : undefined;
   const routeLabel = routeId ? routeInfo?.short_name || routeId : null;
+  // Trips v5: a lighter route page, titled after the route.
+  const v5 = view === 'trips-v5';
+  const routeName = routeInfo?.long_name
+    ? `${routeLabel} · ${routeInfo.long_name}`
+    : `Route ${routeLabel}`;
   const category = entity.data?.categories.find((c) => c.id === 'trips');
   const rawTables = category?.raw_tables ?? [];
   const hasRawStopTimes = rawTables.some((t) => t.file === 'stop_times.txt');
@@ -188,6 +255,8 @@ export default function TripsV2Screen({
         rawDatasetId={hasRawStopTimes ? dataset.id : null}
         routeId={routeId ?? null}
         view={view}
+        calendar={calendar ?? null}
+        highlights={highlights ?? null}
       />
     );
 
@@ -200,24 +269,25 @@ export default function TripsV2Screen({
         routeId
           ? {
               label: routeLabel ?? routeId,
-              title: routeInfo?.long_name
-                ? `${routeLabel} · ${routeInfo.long_name}`
-                : `Route ${routeLabel}`,
+              title: v5 ? `Trips: ${routeId}` : routeName,
               href: tripsListHref(dataset.id, undefined, undefined, view),
             }
           : undefined
       }
+      hideFeeds={v5}
     >
-      <ReportActions>
-        <Button
-          component={Link}
-          href={`/gtfs-diff-tool-v2/${dataset.id}/trips`}
-          variant='outlined'
-          sx={{ flexShrink: 0, alignSelf: 'center' }}
-        >
-          Classic trips view
-        </Button>
-      </ReportActions>
+      {v5 ? null : (
+        <ReportActions>
+          <Button
+            component={Link}
+            href={`/gtfs-diff-tool-v2/${dataset.id}/trips`}
+            variant='outlined'
+            sx={{ flexShrink: 0, alignSelf: 'center' }}
+          >
+            Classic trips view
+          </Button>
+        </ReportActions>
+      )}
       {/* After the trips index: it says whether the feed is too large to scan. */}
       {routeId == null && entity.data != null && trips.data != null ? (
         <OverviewCard
@@ -240,7 +310,6 @@ export default function TripsV2Screen({
           datasetId={dataset.id}
           rawTables={rawTables}
           tripMatching={category?.trip_matching}
-          fileDiffs={category?.file_diffs ?? []}
           routeId={routeId ?? null}
           routeLabel={routeLabel}
         />
@@ -265,6 +334,12 @@ function replaceQuery(update: (params: URLSearchParams) => void): void {
     '',
     `${pathname}${qs ? `?${qs}` : ''}${hash}`,
   );
+}
+
+/** "Direction 0 · Vacarisses": a route direction's id and headsign. */
+function directionName(r: RouteDirDiff): string {
+  const id = `Direction ${r.dir === '' ? '(none)' : r.dir}`;
+  return r.headsign ? `${id} · ${r.headsign}` : id;
 }
 
 /** A day key the document knows (typical day, period or service date). */
@@ -320,6 +395,8 @@ function TripsDay({
   rawDatasetId,
   routeId,
   view,
+  calendar,
+  highlights,
 }: {
   datasetId: string;
   /** Index document: for a sharded dataset its trip lists are empty. */
@@ -330,6 +407,8 @@ function TripsDay({
   /** Route page when set, else the route list. */
   routeId: string | null;
   view: TripsView;
+  calendar: TripsCalendarDoc | null;
+  highlights: GlobalHighlight[] | null;
 }): React.ReactElement {
   const router = useRouter();
   // Mounted after the trips data loaded (client only), so the query string
@@ -338,6 +417,9 @@ function TripsDay({
     const asked = new URLSearchParams(window.location.search).get('day');
     return asked && isKnownDay(doc, asked) ? asked : defaultDate(doc);
   });
+  // Trips v5: the day sits beside the date, changed in a popup.
+  const [picking, setPicking] = useState(false);
+  const [dirMenu, setDirMenu] = useState<HTMLElement | null>(null);
   const [filters, setFilters] = useState<RouteRowFilters>(() =>
     parseRouteFilters(new URLSearchParams(window.location.search)),
   );
@@ -358,9 +440,28 @@ function TripsDay({
     [dayDoc, dayDate],
   );
   // On a route page, the day's summary covers that route only.
-  const day = useMemo(
+  const routeDay = useMemo(
     () => (routeId ? scopeDayToRoute(fullDay, routeId) : fullDay),
     [fullDay, routeId],
+  );
+  const directions = useMemo(
+    () => [...routeDay.routes].sort((a, b) => a.dir.localeCompare(b.dir)),
+    [routeDay],
+  );
+  const current = useMemo(
+    () => defaultDirection(directions, dir),
+    [directions, dir],
+  );
+  // Trips v5: a route page covers its direction only, every figure included.
+  const scopedDir =
+    view === 'trips-v5' && routeId != null ? (current?.dir ?? null) : null;
+  const oneDirection = scopedDir != null && current != null;
+  const day = useMemo(
+    () =>
+      routeId && scopedDir != null
+        ? scopeDayToRoute(fullDay, routeId, scopedDir)
+        : routeDay,
+    [fullDay, routeId, scopedDir, routeDay],
   );
   const summary = useMemo(() => daySummary(day), [day]);
   const changed = useMemo(() => day.routes.filter(routeHasRiderChanges), [day]);
@@ -373,6 +474,44 @@ function TripsDay({
   const described = useMemo(
     () => describeDay(dayDate, doc, catalog, periodTypes),
     [dayDate, doc, catalog, periodTypes],
+  );
+  // Trips v5 route page: the day under the title, then chips: its schedule
+  // group, the route's change categories and its day totals.
+  const v5Route = view === 'trips-v5' && routeId != null;
+  // A "<base>~<new>" key (feeds sharing no dates) is titled by its new date.
+  const shownDate = date.includes('~') ? date.split('~')[1] : date;
+  const dayTitle = /^\d{8}$/.test(shownDate)
+    ? formatGtfsDateLong(shownDate)
+    : described.title;
+  const periods = useMemo(
+    () => (v5Route && calendar ? periodByDate(servicePeriods(calendar)) : {}),
+    [v5Route, calendar],
+  );
+  const period = periods[shownDate];
+  const scheduleGroup = period
+    ? dayKindLabel(period)
+    : described.title.split(' · ')[0];
+  const related = useMemo(
+    () =>
+      v5Route && highlights && routeId
+        ? routeHighlights(highlights, routeId)
+        : [],
+    [v5Route, highlights, routeId],
+  );
+  const routeCategories = useMemo((): MainChangeCategory[] => {
+    if (!v5Route) return [];
+    const found = new Set(
+      dayRouteRows(day.routes, doc.routes, doc.stops).flatMap(
+        (row) => row.categories,
+      ),
+    );
+    return (Object.keys(MAIN_CHANGE_LABELS) as MainChangeCategory[]).filter(
+      (c) => found.has(c),
+    );
+  }, [v5Route, day, doc]);
+  const changeChips = useMemo(
+    () => routeChangeChips(summary, routeCategories),
+    [summary, routeCategories],
   );
 
   // Mirror the day and filters in the URL so back/forward restore them.
@@ -414,6 +553,7 @@ function TripsDay({
       route={drawer ? doc.routes[drawer.route] : undefined}
       stopNames={doc.stops}
       onClose={() => setDrawer(null)}
+      detailed={view === 'trips-v5' ? { rawDatasetId } : undefined}
     />
   );
 
@@ -472,41 +612,240 @@ function TripsDay({
 
   const info = doc.routes[routeId];
   const label = info?.short_name || routeId;
-  const directions = [...day.routes].sort((a, b) => a.dir.localeCompare(b.dir));
-  const current = defaultDirection(directions, dir);
   const selectDir = (d: string): void => {
     setDir(d);
-    replaceQuery((p) => p.set('dir', d));
+    // Trips v5: each direction is a page of its own.
+    if (view === 'trips-v5')
+      router.push(
+        tripsRouteHref(datasetId, routeId, { day: date, dir: d, view }),
+      );
+    else replaceQuery((p) => p.set('dir', d));
   };
+  const scopeLabel = oneDirection
+    ? `Route ${label}, ${current.headsign || `direction ${current.dir || '(none)'}`}`
+    : `Route ${label}, every direction`;
+
+  const drilldown =
+    view === 'trips-v2' ? null : (
+      <DrilldownButton
+        pairs={allPairs}
+        scope={described.short}
+        subject={scopeLabel}
+      />
+    );
+  const v5 = view === 'trips-v5';
+  const daySubheader = v5;
+  const v5Chips = (
+    <Box
+      sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}
+    >
+      <Tooltip title={described.note} placement='bottom-start'>
+        <Chip
+          variant='outlined'
+          label={scheduleGroup}
+          sx={{ fontWeight: 600, cursor: 'help' }}
+        />
+      </Tooltip>
+      {current ? (
+        <Chip
+          variant='outlined'
+          label={routeChips(current)[0].label}
+          sx={{ fontWeight: 600 }}
+        />
+      ) : null}
+      {changeChips.counts.map((c) => (
+        <Chip
+          key={c.label}
+          variant='outlined'
+          label={c.label}
+          sx={{
+            fontWeight: 600,
+            color: TONE_COLORS[c.tone],
+            borderColor: TONE_COLORS[c.tone],
+          }}
+        />
+      ))}
+      {changeChips.categories.map((c) => (
+        <Chip
+          key={c}
+          variant='outlined'
+          label={MAIN_CHANGE_LABELS[c]}
+          sx={{
+            fontWeight: 600,
+            color: categoryColor(c),
+            borderColor: categoryColor(c),
+          }}
+        />
+      ))}
+    </Box>
+  );
 
   return (
     <Box>
-      <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Button
-          component={Link}
-          href={tripsListHref(datasetId, date, filters, view)}
-          startIcon={<ArrowBack />}
-          size='small'
+      {v5 ? (
+        <ReportHeaderSlot>
+          {current ? (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                columnGap: 1.5,
+                flexWrap: 'wrap',
+              }}
+            >
+              <Typography component='p' color='text.secondary' sx={SUBHEAD_SX}>
+                {directionName(current)}
+              </Typography>
+              {directions.length > 1 ? (
+                <>
+                  <Button
+                    size='small'
+                    startIcon={<SwapHoriz fontSize='small' />}
+                    onClick={(e) => setDirMenu(e.currentTarget)}
+                    aria-haspopup='menu'
+                    aria-expanded={dirMenu != null}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    Change direction
+                  </Button>
+                  <Menu
+                    anchorEl={dirMenu}
+                    open={dirMenu != null}
+                    onClose={() => setDirMenu(null)}
+                  >
+                    {directions.map((r) => (
+                      <MenuItem
+                        key={r.key}
+                        selected={r.dir === current.dir}
+                        onClick={() => {
+                          setDirMenu(null);
+                          if (r.dir !== current.dir) selectDir(r.dir);
+                        }}
+                      >
+                        <ListItemText
+                          primary={directionName(r)}
+                          secondary={
+                            r.trips.base === r.trips.new
+                              ? `${r.trips.new} trips`
+                              : `${r.trips.base} → ${r.trips.new} trips`
+                          }
+                        />
+                      </MenuItem>
+                    ))}
+                  </Menu>
+                </>
+              ) : null}
+            </Box>
+          ) : null}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              columnGap: 1.5,
+              flexWrap: 'wrap',
+            }}
+          >
+            <Typography component='h2' color='text.secondary' sx={SUBHEAD_SX}>
+              {dayTitle}
+            </Typography>
+            {daySubheader ? (
+              <Button
+                size='small'
+                startIcon={<Edit fontSize='small' />}
+                onClick={() => setPicking(true)}
+                sx={{ textTransform: 'none' }}
+              >
+                Change date
+              </Button>
+            ) : null}
+            <Box sx={{ flex: 1 }} />
+            {drilldown}
+          </Box>
+        </ReportHeaderSlot>
+      ) : (
+        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Button
+            component={Link}
+            href={tripsListHref(datasetId, date, filters, view)}
+            startIcon={<ArrowBack />}
+            size='small'
+          >
+            All routes
+          </Button>
+          <Box sx={{ flex: 1 }} />
+          {drilldown}
+        </Box>
+      )}
+      {daySubheader ? (
+        <Dialog
+          open={picking}
+          onClose={() => setPicking(false)}
+          maxWidth='lg'
+          fullWidth
         >
-          All routes
-        </Button>
-        <Box sx={{ flex: 1 }} />
-        {view === 'trips-v3' ? (
-          <DrilldownButton
-            pairs={allPairs}
+          <DialogTitle
+            sx={{ display: 'flex', alignItems: 'center', gap: 1, pr: 1 }}
+          >
+            <Box sx={{ flex: 1 }}>Change date</Box>
+            <IconButton
+              size='small'
+              onClick={() => setPicking(false)}
+              aria-label='Close'
+            >
+              <Close />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers>
+            <DayPickerCard
+              dayTypes={doc.day_types}
+              periodTypes={periodTypes}
+              catalog={catalog}
+              coverage={coverage}
+              value={date}
+              onChange={(d) => {
+                setDate(d);
+                setPicking(false);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      ) : (
+        picker
+      )}
+      <DayScope
+        day={described}
+        loading={loaded.loading}
+        error={loaded.error}
+        onChangeDay={daySubheader ? () => setPicking(true) : undefined}
+        plain={v5}
+      >
+        {v5 ? (
+          related.length > 0 ? (
+            <V2Card title='Notable highlights'>
+              <NotableHighlights
+                heading={false}
+                highlights={related}
+                emptyText='Nothing to flag.'
+                renderDetails={(h) =>
+                  h.entities ? (
+                    <HighlightDetails
+                      highlight={h}
+                      datasetId={datasetId}
+                      sectionLabel='Trips'
+                    />
+                  ) : null
+                }
+              />
+            </V2Card>
+          ) : null
+        ) : (
+          <DayAtAGlance
+            day={day}
+            summary={summary}
             scope={described.short}
-            subject={`Route ${label}, every direction`}
+            subject={`${scopeLabel}.`}
           />
-        ) : null}
-      </Box>
-      {picker}
-      <DayScope day={described} loading={loaded.loading} error={loaded.error}>
-        <DayAtAGlance
-          day={day}
-          summary={summary}
-          scope={described.short}
-          subject={`Route ${label}, every direction.`}
-        />
+        )}
         {current == null ? (
           <Alert severity='info' sx={{ mb: 3 }}>
             Route {label} has no trips on this day in either feed. Pick another
@@ -514,7 +853,7 @@ function TripsDay({
           </Alert>
         ) : (
           <>
-            {directions.length > 1 ? (
+            {directions.length > 1 && !v5 ? (
               <Tabs
                 value={current.dir}
                 onChange={(_, v: string) => selectDir(v)}
@@ -556,18 +895,24 @@ function TripsDay({
               stopNames={doc.stops}
               dayLabel={described.short}
               onOpenTrip={setDrawer}
-              onClose={() =>
-                router.push(tripsListHref(datasetId, date, filters, view))
+              onClose={
+                v5
+                  ? undefined
+                  : () =>
+                      router.push(tripsListHref(datasetId, date, filters, view))
               }
               rawDatasetId={rawDatasetId}
+              title={v5 ? 'Service' : undefined}
+              chips={v5 ? v5Chips : undefined}
+              compact={v5}
             />
           </>
         )}
-        {view === 'trips-v3' ? null : (
+        {view !== 'trips-v2' ? null : (
           <TechnicalDrilldownCard
             pairs={allPairs}
             scope={described.short}
-            subject={`Route ${label}, every direction.`}
+            subject={`${scopeLabel}.`}
           />
         )}
       </DayScope>

@@ -8,11 +8,14 @@
  * compared without precomputing every one.
  *
  * Input feeds come from lib/feed-store.mjs: { files: Map<name, { header,
- * rows }> } for small files, stop_times.txt in DuckDB (read a route at a
- * time, so feeds with millions of stop_times rows fit in memory).
+ * rows }> } for small files, stop_times.txt in DuckDB (streamed and handed
+ * out a route at a time, so feeds with millions of stop_times rows fit in
+ * memory).
  */
 
+import { JSDuckDBValueConverter } from '@duckdb/node-api';
 import { ident } from './feed-store.mjs';
+import { tally } from './timings.mjs';
 
 const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
@@ -240,6 +243,176 @@ export async function routeStopTimes(store, side, routeId) {
   });
 }
 
+/** Routes per INSERT into a stream's route order table. */
+const ROUTE_ORDER_BATCH = 1000;
+
+/**
+ * Whether <side>__st's stored order (feed-store.mjs: by _route, trip_id,
+ * _seq) already hands out `ordOf`'s routes in their order: each listed
+ * route's rows contiguous, the routes in ascending ord. DuckDB's VARCHAR
+ * order isn't JS's (UTF-16) sort order for every string, so this is
+ * checked, not assumed.
+ */
+async function storedRouteOrderMatches(con, table, ordOf) {
+  const groups = (
+    await con.runAndReadAll(
+      `SELECT _route, min(rowid) AS first, max(rowid) AS last, count(*) AS n FROM ${ident(table)}
+       WHERE _route IS NOT NULL GROUP BY _route`,
+    )
+  ).getRowObjectsJS();
+  const listed = groups.filter((g) => ordOf.has(g._route)).sort((a, b) => (a.first < b.first ? -1 : 1));
+  return listed.every(
+    (g, i) => g.last - g.first + 1n === BigInt(g.n) && (i === 0 || ordOf.get(g._route) > ordOf.get(listed[i - 1]._route)),
+  );
+}
+
+/** Equal _seq values, as ORDER BY sees them (NULL = NULL, NaN = NaN). */
+const sameSeq = (a, b) => a === b || (Number.isNaN(a) && Number.isNaN(b));
+
+/**
+ * One feed's stop_times rows of `routes`, read by a single streamed query
+ * on a connection of its own (callers keep querying the store meanwhile)
+ * and handed out a route at a time: `take(i)` returns the rows of
+ * routes[i], the same objects routeStopTimes() returns (in its trip_id,
+ * _seq, _line order), for i = 0, 1, 2, … in turn. Rows whose route isn't
+ * in `routes` (or is NULL) never come. Only the current chunk (and route)
+ * is held in JS.
+ *
+ * Usually a plain scan of the table in its stored order (no sort, so
+ * DuckDB holds next to nothing); rows tied on (trip_id, _seq) are put in
+ * _line order here. When the stored route order doesn't match `routes`
+ * (storedRouteOrderMatches), the query sorts instead, routes in `routes`
+ * order through a joined ordinal table.
+ */
+async function openRouteStopTimes(store, side, routes) {
+  const st = store[side].files.get('stop_times.txt');
+  if (!st?.sql || routes.length === 0) return { take: async () => [], close() {} };
+  const header = st.header;
+  const ordOf = new Map(routes.map((r, i) => [r, i]));
+  const con = await store.connect();
+  try {
+    const scan = await storedRouteOrderMatches(con, st.sql, ordOf);
+    let result;
+    if (scan) {
+      result = await con.stream(`SELECT *, rowid AS __rowid FROM ${ident(st.sql)}`);
+    } else {
+      console.log(`  ${side} stop_times: stored route order differs from JS sort order, streaming sorted`);
+      // TEMP: one per connection, so both feeds' streams can run at once.
+      await con.run('CREATE TEMP TABLE __route_order (ord INTEGER, route VARCHAR)');
+      for (let i = 0; i < routes.length; i += ROUTE_ORDER_BATCH) {
+        const values = routes
+          .slice(i, i + ROUTE_ORDER_BATCH)
+          .map((r, j) => `(${i + j}, '${r.replace(/'/g, "''")}')`)
+          .join(', ');
+        await con.run(`INSERT INTO __route_order VALUES ${values}`);
+      }
+      result = await con.stream(
+        `SELECT st.*, o.ord AS __route_ord FROM ${ident(st.sql)} st JOIN __route_order o ON st._route = o.route
+         ORDER BY o.ord, st.trip_id, st._seq, st._line`,
+      );
+    }
+    // Column indexes by (deduplicated) name, as routeStopTimes() reads them;
+    // the last column is __rowid (scan) or __route_ord (sort).
+    const names = result.deduplicatedColumnNames();
+    const col = (name) => names.indexOf(name);
+    const at = {
+      line: col('_line'),
+      stopKey: col('_stop_key'),
+      route: col('_route'),
+      seq: col('_seq'),
+      tripId: col('trip_id'),
+      last: names.length - 1,
+      header: header.map(col),
+    };
+    let cols = null; // the current chunk's converted columns
+    let ords = null; // its rows' route ord (-1: not delivered)
+    let n = 0;
+    let pos = 0;
+    let done = false;
+    let lastRowid = -1n;
+    const fill = async () => {
+      const chunk = await result.fetchChunk();
+      pos = 0;
+      if (!chunk || chunk.rowCount === 0) {
+        done = true;
+        cols = ords = null;
+        n = 0;
+        return;
+      }
+      const conv = (c) => (c < 0 ? null : chunk.convertColumnValues(c, JSDuckDBValueConverter));
+      n = chunk.rowCount;
+      cols = { line: conv(at.line), stopKey: conv(at.stopKey), header: at.header.map(conv) };
+      if (scan) {
+        // The scan must come in stored order, or routes would interleave.
+        for (const rowid of conv(at.last)) {
+          if (rowid <= lastRowid) throw new Error(`${side} stop_times stream: rows not in stored order`);
+          lastRowid = rowid;
+        }
+        cols.seq = conv(at.seq);
+        cols.tripId = conv(at.tripId);
+        const route = conv(at.route);
+        ords = new Array(n);
+        let prev;
+        let prevOrd = -1;
+        for (let k = 0; k < n; k++) {
+          if (k === 0 || route[k] !== prev) prevOrd = route[k] == null ? -1 : (ordOf.get((prev = route[k])) ?? -1);
+          ords[k] = prevOrd;
+        }
+      } else {
+        ords = conv(at.last);
+      }
+      // Values are copied out: let go of the chunk's native data now. The
+      // chunk itself is only freed on a (rare, major) GC, and thousands of
+      // unfreed chunks hold GBs on large feeds.
+      chunk.reset();
+    };
+    let next = 0;
+    return {
+      async take(ord) {
+        if (ord !== next++) throw new Error(`${side} stop_times stream: route ${ord} asked, ${next - 1} expected`);
+        const out = [];
+        const keys = []; // scan: [trip_id, _seq] per row, for ties
+        for (;;) {
+          if (pos >= n) {
+            if (done) break;
+            await fill();
+            continue;
+          }
+          const o = ords[pos];
+          if (o !== ord) {
+            if (o === -1) {
+              pos++;
+              continue;
+            }
+            if (o < ord) throw new Error(`${side} stop_times stream: rows out of route order`);
+            break;
+          }
+          const row = { _line: Number(cols.line?.[pos]), _stop_key: cols.stopKey?.[pos] == null ? '' : String(cols.stopKey[pos]) };
+          for (let k = 0; k < header.length; k++) {
+            const v = cols.header[k]?.[pos];
+            row[header[k]] = v == null ? '' : String(v).trim();
+          }
+          out.push(row);
+          if (scan) keys.push([cols.tripId?.[pos], cols.seq?.[pos]]);
+          pos++;
+        }
+        // Stored order is (trip_id, _seq) only: runs tied on both, by _line.
+        for (let i = 0; scan && i < out.length; ) {
+          let j = i + 1;
+          while (j < out.length && keys[j][0] === keys[i][0] && sameSeq(keys[j][1], keys[i][1])) j++;
+          if (j - i > 1) out.slice(i, j).sort((a, b) => a._line - b._line).forEach((r, k) => (out[i + k] = r));
+          i = j;
+        }
+        return out;
+      },
+      close: () => con.closeSync(),
+    };
+  } catch (e) {
+    con.closeSync();
+    throw e;
+  }
+}
+
 export function groupByTrip(rows) {
   const out = new Map();
   for (const r of rows) {
@@ -253,7 +426,8 @@ export function groupByTrip(rows) {
 /**
  * Calls `fn` for every route of either feed (sorted), with each feed's
  * trips.txt rows and stop_times rows of that route. One route in memory at
- * a time.
+ * a time: each feed's stop_times are one streamed query, read in step with
+ * the routes (openRouteStopTimes).
  */
 export async function forEachRoute(store, fn) {
   const tripsOf = (side) => {
@@ -267,13 +441,25 @@ export async function forEachRoute(store, fn) {
   };
   const trips = { base: tripsOf('base'), new: tripsOf('new') };
   const routes = [...new Set([...trips.base.keys(), ...trips.new.keys()])].sort();
-  let i = 0;
-  for (const route of routes) {
-    const sides = {};
-    for (const side of ['base', 'new']) {
-      sides[side] = { trips: trips[side].get(route) ?? [], stopTimes: await routeStopTimes(store, side, route) };
+  // Stream setup (order check, sort if needed) and every route's rows: one
+  // total, comparable with the per-route queries it replaced.
+  const label = 'routes loop: stop_times query (per route, both feeds)';
+  const streams = {};
+  try {
+    for (const side of ['base', 'new']) streams[side] = await tally(label, () => openRouteStopTimes(store, side, routes));
+    let i = 0;
+    for (const route of routes) {
+      const sides = {};
+      for (const side of ['base', 'new']) {
+        sides[side] = {
+          trips: trips[side].get(route) ?? [],
+          stopTimes: await tally(label, () => streams[side].take(i)),
+        };
+      }
+      await fn(route, sides, i++, routes.length);
     }
-    await fn(route, sides, i++, routes.length);
+  } finally {
+    for (const s of Object.values(streams)) s.close();
   }
 }
 

@@ -35,16 +35,29 @@ import {
 } from '../../lib/trips-utils';
 import { type TripsCalendarDoc, changeCounts } from '../../lib/trips-calendar';
 import {
-  routeHasRiderChanges,
+  type MainChangeCategory,
   routeRowSummary,
   signed,
 } from '../../lib/trips-v2-summary';
-import { tripsRouteHref } from '../../lib/trips-v2-routes';
+import {
+  type DayRouteFilters,
+  NO_DAY_FILTERS,
+  dayCategoryCounts,
+  dayRouteRows,
+  filterDayRoutes,
+  isFiltering,
+} from '../../lib/trips-v5-day-filter';
+import {
+  MainChangeChips,
+  MainChangeFilterBar,
+} from '../trips-v5/MainChangeChips';
+import { type TripsView, tripsRouteHref } from '../../lib/trips-v2-routes';
 import { formatGtfsDate, formatGtfsDateLong } from '../../lib/calendar-utils';
 import { useTripsDay } from '../../lib/useTripsDay';
 import { CountChange, MONO_FONT, TripRouteChip } from '../trips/shared';
 import DrilldownButton from './DrilldownButton';
-import { ChangeTriplet } from './shared';
+import { ChangeTriplet, PeriodSwatch } from './shared';
+import type { ServicePeriod } from '../../lib/trips-periods';
 
 const headSx = {
   fontWeight: 700,
@@ -59,10 +72,19 @@ interface DayTripsDialogProps {
   /** Trips index (trips-diff.json); undefined while loading. */
   index: TripsIndexDoc | undefined;
   calendar: TripsCalendarDoc;
+  /** Service period of the date (lib/trips-periods). */
+  period?: ServicePeriod;
   /** Date opened; null when closed. */
   date: GtfsDate | null;
   onClose: () => void;
   onNavigate: (date: GtfsDate) => void;
+  /**
+   * Trips v5: main changes as category chips, with a search box and
+   * category filter chips above the table.
+   */
+  categorized?: boolean;
+  /** Trips view whose route page a route opens. */
+  routeView?: TripsView;
 }
 
 function spanText(s: [number, number] | null): string {
@@ -74,12 +96,21 @@ export default function DayTripsDialog({
   datasetId,
   index,
   calendar,
+  period,
   date,
   onClose,
   onNavigate,
+  categorized = false,
+  routeView = 'trips-v3',
 }: DayTripsDialogProps): React.ReactElement {
   const router = useRouter();
   const [showQuiet, setShowQuiet] = useState(false);
+  // Kept while paging between days, cleared when the popup closes.
+  const [filters, setFilters] = useState<DayRouteFilters>(NO_DAY_FILTERS);
+  const close = (): void => {
+    setFilters(NO_DAY_FILTERS);
+    onClose();
+  };
   const entry = date ? calendar.days[date] : undefined;
   const key = entry?.key ?? null;
   const counts = entry ? calendar.counts[entry.s] : undefined;
@@ -100,9 +131,25 @@ export default function DayTripsDialog({
         : null,
     [byRoute, index, key],
   );
-  const changed = day?.routes.filter(routeHasRiderChanges) ?? [];
-  const quiet = day?.routes.filter((r) => !routeHasRiderChanges(r)) ?? [];
-  const rows = showQuiet ? [...changed, ...quiet] : changed;
+  const allRows = useMemo(
+    () =>
+      day && index ? dayRouteRows(day.routes, index.routes, index.stops) : [],
+    [day, index],
+  );
+  const categoryCounts = useMemo(
+    () => (categorized ? dayCategoryCounts(allRows) : []),
+    [categorized, allRows],
+  );
+  const changed = allRows.filter((row) => row.changed);
+  const quiet = allRows.filter((row) => !row.changed);
+  // A filter searches every route, quiet ones included: minor and
+  // trip_id-only changes only occur on routes without rider changes.
+  const filtering = categorized && isFiltering(filters);
+  const rows = filtering
+    ? filterDayRoutes([...changed, ...quiet], filters)
+    : showQuiet
+      ? [...changed, ...quiet]
+      : changed;
 
   // Previous / next compared date.
   const dates = useMemo(() => Object.keys(calendar.days).sort(), [calendar]);
@@ -113,14 +160,14 @@ export default function DayTripsDialog({
   const pair = key ? anchorDates(key) : null;
   const openRoute = (route: string, dir?: string): void =>
     router.push(
-      tripsRouteHref(datasetId, route, { day: key, dir, view: 'trips-v3' }),
+      tripsRouteHref(datasetId, route, { day: key, dir, view: routeView }),
     );
   const shortDay = date ? formatGtfsDate(date).replace(/ \d{4}$/, '') : '';
 
   return (
     <Dialog
       open={date != null}
-      onClose={onClose}
+      onClose={close}
       maxWidth='lg'
       fullWidth
       scroll='paper'
@@ -144,6 +191,14 @@ export default function DayTripsDialog({
           <Typography variant='h6' component='div' fontWeight={700}>
             {date ? formatGtfsDateLong(date) : ''}
           </Typography>
+          {period ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              <PeriodSwatch color={period.color} />
+              <Typography variant='caption' color='text.secondary' noWrap>
+                {period.title}, {period.when} · {period.schedule}
+              </Typography>
+            </Box>
+          ) : null}
           {pair && pair.base !== pair.new ? (
             <Typography variant='caption' color='text.secondary'>
               vs {formatGtfsDate(pair.base)}
@@ -169,7 +224,7 @@ export default function DayTripsDialog({
             subject='Every route'
           />
         ) : null}
-        <IconButton size='small' onClick={onClose} aria-label='Close'>
+        <IconButton size='small' onClick={close} aria-label='Close'>
           <Close />
         </IconButton>
       </DialogTitle>
@@ -203,6 +258,24 @@ export default function DayTripsDialog({
           <LinearProgress />
         ) : (
           <>
+            {categorized ? (
+              <MainChangeFilterBar
+                counts={categoryCounts}
+                filters={filters}
+                onChange={setFilters}
+              />
+            ) : null}
+            {filtering ? (
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                component='p'
+                sx={{ mb: 0.5 }}
+              >
+                {rows.length.toLocaleString()} of{' '}
+                {allRows.length.toLocaleString()} route directions match
+              </Typography>
+            ) : null}
             <Table size='small' stickyHeader>
               <TableHead>
                 <TableRow>
@@ -211,21 +284,34 @@ export default function DayTripsDialog({
                   <TableCell sx={headSx}>Trips</TableCell>
                   <TableCell sx={headSx}>Service span</TableCell>
                   <TableCell sx={headSx}>Running time</TableCell>
-                  <TableCell sx={headSx}>Main change</TableCell>
+                  <TableCell sx={headSx}>
+                    {categorized ? 'Main changes' : 'Main change'}
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.map((r) => (
+                {rows.map(({ r, categories }) => (
                   <RouteRow
                     key={r.key}
                     r={r}
                     index={index as TripsIndexDoc}
+                    categories={categorized ? categories : undefined}
+                    selected={filters.categories}
                     onOpen={() => openRoute(r.route, r.dir)}
                   />
                 ))}
+                {filtering && rows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} sx={{ ...cellSx, py: 2 }}>
+                      <Typography variant='body2' color='text.secondary'>
+                        No routes match the filters.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : null}
               </TableBody>
             </Table>
-            {quiet.length > 0 ? (
+            {!filtering && quiet.length > 0 ? (
               <Button
                 size='small'
                 onClick={() => setShowQuiet((v) => !v)}
@@ -246,10 +332,16 @@ export default function DayTripsDialog({
 function RouteRow({
   r,
   index,
+  categories,
+  selected,
   onOpen,
 }: {
   r: RouteDirDiff;
   index: TripsIndexDoc;
+  /** Shown as chips above the main change; undefined = text only. */
+  categories?: MainChangeCategory[];
+  /** Categories filtered on: their chips are filled. */
+  selected: MainChangeCategory[];
   onOpen: () => void;
 }): React.ReactElement {
   const info = index.routes[r.route];
@@ -291,7 +383,15 @@ function RouteRow({
       <TableCell sx={{ ...cellSx, whiteSpace: 'nowrap' }}>
         {s.runningMax == null ? '—' : signed(s.runningMax)}
       </TableCell>
-      <TableCell sx={{ ...cellSx, minWidth: 220 }}>{s.mainChange}</TableCell>
+      <TableCell sx={{ ...cellSx, minWidth: 220 }}>
+        {categories == null ? (
+          s.mainChange
+        ) : categories.length > 0 ? (
+          <MainChangeChips categories={categories} selected={selected} />
+        ) : (
+          '—'
+        )}
+      </TableCell>
     </TableRow>
   );
 }

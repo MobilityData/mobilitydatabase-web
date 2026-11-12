@@ -81,12 +81,15 @@ export async function rawSignals(
   };
   const { trips, stopTimes } = tables;
   if (trips) {
+    // Ordered, so the routes the highlights list (and their ties) don't vary
+    // from run to run.
     signals.routeTrips = (
       await query(
         `SELECT route_id,
            count(*) FILTER (WHERE action <> 'added')::INTEGER AS base,
            count(*) FILTER (WHERE action <> 'deleted')::INTEGER AS new
-         FROM ${checkView(trips.view)} WHERE route_id IS NOT NULL GROUP BY route_id`,
+         FROM ${checkView(trips.view)} WHERE route_id IS NOT NULL
+         GROUP BY route_id ORDER BY route_id`,
       )
     ).map((r) => ({
       route: String(r.route_id),

@@ -6,12 +6,18 @@
  * them with DuckDB-WASM, so a page never holds 55k stops (IDFM) in memory.
  *
  * Highlights need every entity, so they are computed here, with the same
- * helpers the app uses, and stored in the map's JSON instead.
+ * helpers the app uses, and stored in the map's JSON instead: their first
+ * rows only, the full entity lists going to <section>-highlights.json
+ * (writeHighlightsFile), fetched when a page shows a whole list.
  *
  * Each table is split in two: the list (every column but `detail`, sorted by
  * `ord`, large row groups: the pages scan its filter columns whole, and a
  * small one is downloaded in one request) and <name>_detail.parquet (key +
  * detail, sorted by key, small row groups: a click reads one group).
+ *
+ * Every stop of both feeds (the Stops page's "All original / new stops"
+ * overlays and links to unchanged stops) goes to maps/all_stops_data.json,
+ * fetched only when needed; the stops map keeps its path and counts.
  *
  * Tables, sorted by `ord` (the order the pages list them in):
  *   maps/stops.parquet   ord, stop_id, status, name, search, lon, lat,
@@ -30,10 +36,13 @@
  */
 
 import './ts-resolve.mjs';
-import { mkdirSync, rmSync, statSync } from 'node:fs';
+import { deepStrictEqual } from 'node:assert/strict';
+import { mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DuckDBInstance } from '@duckdb/node-api';
+import { parquetOptions } from './raw-diff-parquet.mjs';
+import { timed, timer } from './timings.mjs';
 
 export const MAPS_DIR = 'maps';
 /** List tables: scanned whole by the pages, so few row groups (requests). */
@@ -46,7 +55,7 @@ const LIB = new URL('../../src/app/screens/GtfsDiffToolV2/lib/', import.meta.url
 
 /** The app's helpers, so lists, searches and highlights match the UI. */
 export async function appHelpers() {
-  const [stopsUtils, routesUtils, stopsHl, routesHl, codec, calendarUtils, calendarHl] = await Promise.all([
+  const [stopsUtils, routesUtils, stopsHl, routesHl, codec, calendarUtils, calendarHl, routeDetail, highlights] = await Promise.all([
     import(new URL('stops-utils.ts', LIB).href),
     import(new URL('routes-utils.ts', LIB).href),
     import(new URL('stops-highlights.ts', LIB).href),
@@ -54,8 +63,47 @@ export async function appHelpers() {
     import(new URL('entity-diff-codec.ts', LIB).href),
     import(new URL('calendar-utils.ts', LIB).href),
     import(new URL('calendar-overview-highlights.ts', LIB).href),
+    import(new URL('route-detail-codec.ts', LIB).href),
+    import(new URL('highlights.ts', LIB).href),
   ]);
-  return { ...stopsUtils, ...routesUtils, ...stopsHl, ...routesHl, ...codec, ...calendarUtils, ...calendarHl };
+  return {
+    ...stopsUtils,
+    ...routesUtils,
+    ...stopsHl,
+    ...routesHl,
+    ...codec,
+    ...calendarUtils,
+    ...calendarHl,
+    ...routeDetail,
+    ...highlights,
+  };
+}
+
+/**
+ * Writes a section's highlights with their full entity lists to
+ * <section>-highlights.json (plain JSON, HighlightsFile) and returns them with
+ * their first INLINE_ENTITY_ROWS rows only, for the section's JSON.
+ */
+export async function writeHighlightsFile(datasetDir, section, highlights) {
+  const h = await appHelpers();
+  const file = h.highlightsFileName(section);
+  timed(
+    `write ${file}`,
+    () => writeFileSync(join(datasetDir, file), JSON.stringify({ schema: 1, section, highlights })),
+    () => ({ bytes: statSync(join(datasetDir, file)).size }),
+  );
+  return { file, highlights: h.inlineHighlights(highlights) };
+}
+
+/**
+ * A route's `detail`: direction lines equal to a shape's line become
+ * references (lib/route-detail-codec.ts), then deep-encoded. Checked to read
+ * back as the route.
+ */
+function routeDetailJson(h, detail) {
+  const text = JSON.stringify(h.encodeDeep(h.packRouteDetail(detail)));
+  deepStrictEqual(h.unpackRouteDetail(h.decodeDeep(JSON.parse(text))), JSON.parse(JSON.stringify(detail)));
+  return text;
 }
 
 function sqlString(s) {
@@ -76,6 +124,7 @@ export async function writeTable(
   const outDir = join(datasetDir, dir);
   mkdirSync(outDir, { recursive: true });
   const path = join(outDir, `${name}.parquet`);
+  const end = timer(`write ${dir}/${name}.parquet`);
   const dbPath = join(tmpdir(), `gtfs-map-${name}-${process.pid}-${Date.now()}.duckdb`);
   const instance = await DuckDBInstance.create(dbPath);
   const con = await instance.connect();
@@ -94,7 +143,7 @@ export async function writeTable(
     }
     a.closeSync();
     await con.run(
-      `COPY (SELECT * FROM t ORDER BY ${orderBy}) TO ${sqlString(path)} (FORMAT parquet, COMPRESSION zstd, ROW_GROUP_SIZE ${rowGroupSize})`,
+      `COPY (SELECT * FROM t ORDER BY ${orderBy}) TO ${sqlString(path)} (${parquetOptions(rowGroupSize)})`,
     );
     const [{ n }] = (await con.runAndReadAll(`SELECT count(*)::INTEGER AS n FROM read_parquet(${sqlString(path)})`)).getRowObjectsJS();
     if (n !== rows.length) throw new Error(`${path}: ${n} rows for ${rows.length}`);
@@ -104,6 +153,7 @@ export async function writeTable(
     rmSync(dbPath, { force: true });
     rmSync(`${dbPath}.wal`, { force: true });
   }
+  end(() => ({ rows: rows.length, bytes: statSync(path).size }));
   return { path: `${dir}/${name}.parquet`, rows: rows.length, bytes: statSync(path).size };
 }
 
@@ -151,13 +201,20 @@ const STOP_COLUMNS = [
 
 const COORD_FIELDS = new Set(['stop_lat', 'stop_lon']);
 
+/** Every stop of both feeds, outside the stops map (loaded on demand). */
+export const ALL_STOPS_FILE = `${MAPS_DIR}/all_stops_data.json`;
+
 /**
- * Writes maps/stops.parquet and returns the stops map without its stop list
- * (`table` points at the Parquet file; `highlights` are precomputed).
+ * Writes maps/stops.parquet and maps/all_stops_data.json and returns the
+ * stops map without either list (`table` and `all_stops` point at the files;
+ * `highlights` are precomputed).
  */
 export async function writeStopsTable(datasetDir, stopsMap) {
   const h = await appHelpers();
-  const highlights = h.stopsHighlights(stopsMap, (id) => stopsMap.routes[id]?.short_name || id);
+  const highlights = timed('stops: highlights (stopsHighlights)', () =>
+    h.stopsHighlights(stopsMap, (id) => stopsMap.routes[id]?.short_name || id),
+  );
+  const endRows = timer('stops: list rows');
   const rows = stopsMap.stops.map((s, ord) => {
     const display = s.new_coord ?? s.base_coord;
     const fields = s.field_changes.map((c) => c.field);
@@ -179,9 +236,18 @@ export async function writeStopsTable(datasetDir, stopsMap) {
       JSON.stringify(s),
     ];
   });
+  endRows({ rows: rows.length });
   const table = await writeSplitTable(datasetDir, 'stops', STOP_COLUMNS, rows, { key: 'stop_id' });
+  const { base: baseStops, new: newStops } = stopsMap.all_stops;
+  timed(
+    `write ${ALL_STOPS_FILE}`,
+    () => writeFileSync(join(datasetDir, ALL_STOPS_FILE), JSON.stringify({ base: baseStops, new: newStops })),
+    () => ({ rows: baseStops.length + newStops.length, bytes: statSync(join(datasetDir, ALL_STOPS_FILE)).size }),
+  );
+  const all_stops = { path: ALL_STOPS_FILE, base: baseStops.length, new: newStops.length };
   const { stops: _stops, ...rest } = stopsMap;
-  return { ...rest, highlights, table };
+  const inline = await writeHighlightsFile(datasetDir, 'stops', highlights);
+  return { ...rest, highlights: inline.highlights, highlights_file: inline.file, table, all_stops };
 }
 
 const ROUTE_FLAGS = ['path', 'stops', 'trips', 'services', 'attributes', 'network'];
@@ -218,7 +284,9 @@ const ROUTE_COLUMNS = [
  */
 export async function writeRoutesTable(datasetDir, routesMap) {
   const h = await appHelpers();
-  const highlights = h.routesHighlights(routesMap);
+  const highlights = timed('routes: highlights (routesHighlights)', () => h.routesHighlights(routesMap));
+  // List rows, with each route's encoded and verified detail.
+  const endRows = timer('routes: list rows (detail encode + verify)');
   const threshold = routesMap.path_change_threshold_m;
   const pl = (line) => h.encodePolyline(line);
   const rows = h.sortRoutes(routesMap.routes).map((r, ord) => {
@@ -257,9 +325,10 @@ export async function writeRoutesTable(datasetDir, routesMap) {
       bounds?.[1][1] ?? null,
       wrap(shapes.filter((sh) => sh.trips.new > 0).map((sh) => sh.shape_id)),
       wrap(shapes.flatMap((sh) => [sh.shape_id, ...(sh.renamed_from ? [sh.renamed_from] : [])])),
-      JSON.stringify(h.encodeDeep({ ...r, stop_info: stopInfo })),
+      routeDetailJson(h, { ...r, stop_info: stopInfo }),
     ];
   });
+  endRows({ rows: rows.length });
   const table = await writeSplitTable(datasetDir, 'routes', ROUTE_COLUMNS, rows, { key: 'route_id' });
   const routeInfo = {};
   for (const r of routesMap.routes) {
@@ -272,5 +341,6 @@ export async function writeRoutesTable(datasetDir, routesMap) {
     };
   }
   const { routes: _routes, stops: _stops, ...rest } = routesMap;
-  return { ...rest, highlights, route_info: routeInfo, table };
+  const inline = await writeHighlightsFile(datasetDir, 'routes', highlights);
+  return { ...rest, highlights: inline.highlights, highlights_file: inline.file, route_info: routeInfo, table };
 }

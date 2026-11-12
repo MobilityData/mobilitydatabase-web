@@ -15,7 +15,7 @@
 import { deepStrictEqual } from 'node:assert/strict';
 import { mkdirSync, writeFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { decodeDeep, encodeDeep, encodeEntityDiff } from '../src/app/screens/GtfsDiffToolV2/lib/entity-diff-codec.ts';
+import { decodeDeep, encodeDeep } from '../src/app/screens/GtfsDiffToolV2/lib/entity-diff-codec.ts';
 import { ident, openFeedStore } from './lib/feed-store.mjs';
 import { buildTripsIndex, forEachRoute, groupByTrip, routeCompactTrips } from './lib/gtfs-trips-diff.mjs';
 import { MAPPING_PASSES, mapTrips, serviceMasks } from './lib/trip-id-mapping.mjs';
@@ -23,11 +23,12 @@ import { openTripsFamilyDiff } from './lib/trips-family-diff.mjs';
 import { writeRoutesTable, writeStopsTable } from './lib/map-tables.mjs';
 import { writeCalendarTables } from './lib/calendar-tables.mjs';
 import { shapeMatcher } from './lib/shape-match.mjs';
-import { ACTIONS, RAW_DIR, ROW_GROUP_SIZE, openRawParquet, tableName, writeChangesTable } from './lib/raw-diff-parquet.mjs';
+import { ACTIONS, RAW_DIR, openRawParquet, parquetOptions, tableName, writeChangesTable } from './lib/raw-diff-parquet.mjs';
+import { flushTallies, markStartup, tally, timed, timer } from './lib/timings.mjs';
 
-const SCHEMA_VERSION = '2.0.0-poc';
+const SCHEMA_VERSION = '2.1.0-poc';
 /** Category fields written to their own file (categories/<id>.json). */
-const DETAIL_KEYS = ['calendar', 'stops_map', 'routes_map', 'file_diffs'];
+const DETAIL_KEYS = ['calendar', 'stops_map', 'routes_map'];
 const DETAILS_DIR = 'categories';
 
 // ── Category configuration ─────────────────────────────────────────
@@ -50,7 +51,6 @@ const CATEGORIES = [
   {
     id: 'stops',
     label: 'Stops',
-    raw: true,
     entities: [
       { file: 'stops.txt', key: ['stop_id'], label: ['stop_name'] },
       { file: 'levels.txt', key: ['level_id'] },
@@ -60,7 +60,6 @@ const CATEGORIES = [
   {
     id: 'routes',
     label: 'Routes',
-    raw: true,
     entities: [
       // Shapes are analysed per route (routes_map.routes[].shapes); this entry
       // keeps shapes.txt in the category's file list and generic counts.
@@ -95,7 +94,6 @@ const CATEGORIES = [
     id: 'calendar',
     label: 'Service Dates',
     special: 'calendar',
-    raw: true,
     files: ['calendar.txt', 'calendar_dates.txt'],
   },
   {
@@ -471,89 +469,66 @@ function diffEntityType(baseFeed, newFeed, spec, sqlGroups) {
   return result;
 }
 
-// ── Raw file diff (v1 FileDiff schema, rendered by the v1 file panel) ─
+// ── Raw file diff (raw/<file>.parquet) ─────────────────────────────
 
-function csvField(v) {
-  return /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
-}
-
-function rawValue(row, columns) {
-  return columns.map((c) => csvField(row[c] ?? '')).join(',');
-}
-
-function identifierOf(row, key) {
-  return Object.fromEntries(key.map((k) => [k, row[k] ?? '']));
-}
-
-/** Row-level diff of one file in the v1 FileDiff shape. */
-function rawFileDiff(fileName, baseTable, newTable, key) {
+/**
+ * Every row of one keyed file (stops.txt, calendar_dates.txt, …) to
+ * raw/<file>.parquet, or null when the file did not change. trip_key and
+ * base/new_trip_id hold the first key column's value (returned as
+ * key_column; the whole key as key_columns), seq the CSV line, so rows sort
+ * in file order within a key.
+ */
+async function writeRawFileTable(parquet, fileName, baseTable, newTable, key) {
   if (!baseTable && !newTable) return null;
   const columns = unionColumns(baseTable, newTable);
   const baseCols = new Set(baseTable?.header ?? []);
   const newCols = new Set(newTable?.header ?? []);
-  const columnsAdded = baseTable ? (newTable?.header ?? []).filter((c) => !baseCols.has(c)).map((name) => ({ name, position: newTable.header.indexOf(name) + 1 })) : [];
-  const columnsDeleted = newTable ? (baseTable?.header ?? []).filter((c) => !newCols.has(c)).map((name) => ({ name, position: baseTable.header.indexOf(name) + 1 })) : [];
+  // Columns in one feed only are column changes, not row changes.
+  const compared = columns.filter((c) => !baseTable || !newTable || (baseCols.has(c) && newCols.has(c)));
+  const columnsAdded = baseTable && newTable ? newTable.header.filter((c) => !baseCols.has(c)) : [];
+  const columnsDeleted = baseTable && newTable ? baseTable.header.filter((c) => !newCols.has(c)) : [];
   const baseIdx = indexRows(baseTable?.rows ?? [], key);
   const newIdx = indexRows(newTable?.rows ?? [], key);
-  const added = [];
-  const deleted = [];
-  const modified = [];
-  const count = { added: 0, deleted: 0, modified: 0 };
-  const columnCounts = new Map();
-  // Columns present in only one feed would flag every row; they are reported as column changes instead.
-  const compared = columns.filter((c) => !baseTable || !newTable || (baseCols.has(c) && newCols.has(c)));
+  const rowsChanged = () => {
+    for (const [k, b] of baseIdx) {
+      const n = newIdx.get(k);
+      if (!n || fieldChanges(b, n, compared).length > 0) return true;
+    }
+    for (const k of newIdx.keys()) if (!baseIdx.has(k)) return true;
+    return false;
+  };
+  const fileChanged = !baseTable || !newTable || columnsAdded.length + columnsDeleted.length > 0;
+  if (!fileChanged && !rowsChanged()) return null;
+  const keyColumn = key[0];
+  const table = await parquet.table(fileName, columns);
+  const append = (action, b, n, changed) =>
+    table.append({
+      action,
+      trip_key: (n ?? b)[keyColumn] ?? '',
+      base_trip_id: b ? (b[keyColumn] ?? '') : null,
+      new_trip_id: n ? (n[keyColumn] ?? '') : null,
+      seq: ROW_LINES.get(n ?? b) ?? null,
+      base_line: b ? (ROW_LINES.get(b) ?? null) : null,
+      new_line: n ? (ROW_LINES.get(n) ?? null) : null,
+      changed,
+      base: b,
+      new: n,
+    });
   for (const [k, b] of baseIdx) {
     const n = newIdx.get(k);
-    if (!n) {
-      count.deleted++;
-      deleted.push({ identifier: identifierOf(b, key), raw_value: rawValue(b, columns), base_line_number: ROW_LINES.get(b) });
-      continue;
+    if (!n) append('deleted', b, null, null);
+    else {
+      const fc = fieldChanges(b, n, compared).map((c) => c.field);
+      append(fc.length > 0 ? 'modified' : 'unchanged', b, n, fc);
     }
-    const fc = fieldChanges(b, n, compared);
-    if (fc.length === 0) continue;
-    for (const c of fc) columnCounts.set(c.field, (columnCounts.get(c.field) ?? 0) + 1);
-    count.modified++;
-    modified.push({
-      identifier: identifierOf(b, key),
-      raw_value: rawValue(b, columns),
-      base_line_number: ROW_LINES.get(b),
-      new_line_number: ROW_LINES.get(n),
-      field_changes: fc,
-    });
   }
-  for (const [k, n] of newIdx) {
-    if (baseIdx.has(k)) continue;
-    count.added++;
-    added.push({ identifier: identifierOf(n, key), raw_value: rawValue(n, columns), new_line_number: ROW_LINES.get(n) });
-  }
-  const totalBase = baseTable?.rows.length ?? 0;
-  const totalNew = newTable?.rows.length ?? 0;
-  const changed = count.added + count.deleted + count.modified;
-  const fileAction = !baseTable ? 'added' : !newTable ? 'deleted' : 'modified';
-  if (fileAction === 'modified' && changed === 0 && columnsAdded.length + columnsDeleted.length === 0) return null;
+  for (const [k, n] of newIdx) if (!baseIdx.has(k)) append('added', null, n, null);
   return {
-    file_name: fileName,
-    file_action: fileAction,
-    columns_added: columnsAdded,
-    columns_deleted: columnsDeleted,
-    row_changes: { primary_key: key, columns, added, deleted, modified },
-    stats: {
-      total_rows_base: totalBase,
-      total_rows_new: totalNew,
-      columns_added_count: columnsAdded.length,
-      columns_deleted_count: columnsDeleted.length,
-      rows_added_count: count.added,
-      rows_deleted_count: count.deleted,
-      rows_modified_count: count.modified,
-      rows_changed_percentage: Math.round((changed / Math.max(totalBase, totalNew, 1)) * 10000) / 100,
-      column_stats: [...columnCounts.entries()]
-        .map(([column, n]) => ({
-          column,
-          modifications_count: n,
-          modifications_percentage: Math.round((n / Math.max(count.modified, 1)) * 10000) / 100,
-        }))
-        .sort((a, b) => b.modifications_count - a.modifications_count),
-    },
+    ...(await table.finish()),
+    ...(keyColumn ? { key_column: keyColumn } : {}),
+    key_columns: key,
+    ...(columnsAdded.length > 0 ? { columns_added: columnsAdded } : {}),
+    ...(columnsDeleted.length > 0 ? { columns_deleted: columnsDeleted } : {}),
   };
 }
 
@@ -601,7 +576,11 @@ async function diffStopsMap(baseFeed, newFeed, store) {
     for (const r of rows) out.set(r.s, new Set(r.routes));
     return out;
   };
-  const [baseRoutes, newRoutes] = [await stopRoutes(baseFeed), await stopRoutes(newFeed)];
+  const [baseRoutes, newRoutes] = [
+    await timed('stops map: routes per stop (SQL, base)', () => stopRoutes(baseFeed)),
+    await timed('stops map: routes per stop (SQL, new)', () => stopRoutes(newFeed)),
+  ];
+  const endStops = timer('stops map: changed stops');
 
   const stops = [];
   const counts = { added: 0, deleted: 0, modified: 0, unchanged: 0, moved: 0 };
@@ -635,6 +614,7 @@ async function diffStopsMap(baseFeed, newFeed, store) {
   }
   const order = { modified: 0, added: 1, deleted: 2 };
   stops.sort((a, b) => order[a.status] - order[b.status] || a.stop_id.localeCompare(b.stop_id));
+  endStops({ rows: stops.length });
 
   const compact = (table) =>
     (table?.rows ?? [])
@@ -646,7 +626,6 @@ async function diffStopsMap(baseFeed, newFeed, store) {
 
   return {
     columns,
-    move_threshold_m: MOVE_THRESHOLD_M,
     counts,
     stops,
     all_stops: { base: compact(baseTable), new: compact(newTable) },
@@ -1026,10 +1005,11 @@ async function diffRouteShapes(store) {
   const baseFeed = store.base;
   const newFeed = store.new;
   const columns = unionColumns(baseFeed.files.get('shapes.txt'), newFeed.files.get('shapes.txt'));
-  const bs = await loadShapes(store, baseFeed, columns);
-  const ns = await loadShapes(store, newFeed, columns);
-  const bu = shapeUsage(baseFeed);
-  const nu = shapeUsage(newFeed);
+  const bs = await timed('shapes: load base shapes (SQL + arrays)', () => loadShapes(store, baseFeed, columns), (m) => ({ rows: m.size }));
+  const ns = await timed('shapes: load new shapes (SQL + arrays)', () => loadShapes(store, newFeed, columns), (m) => ({ rows: m.size }));
+  const bu = timed('shapes: usage from trips.txt (base)', () => shapeUsage(baseFeed));
+  const nu = timed('shapes: usage from trips.txt (new)', () => shapeUsage(newFeed));
+  const endRenames = timer('shapes: rename matching (geometry)');
   const round = (m) => (Number.isFinite(m) ? Math.round(m * 10) / 10 : null);
 
   // Renames: a shape only in base and one only in new, used by a common
@@ -1101,7 +1081,9 @@ async function diffRouteShapes(store) {
     }
   }
 
+  endRenames(() => ({ rows: renamedFrom.size }));
   // Display geometry per route and feed, for novelty of added/removed shapes.
+  const endLines = timer('shapes: display lines per route (simplify)');
   const routeLines = (shapes, usage) => {
     const out = new Map();
     for (const [id, u] of usage) {
@@ -1116,7 +1098,9 @@ async function diffRouteShapes(store) {
   };
   const baseLines = routeLines(bs, bu);
   const newLines = routeLines(ns, nu);
+  endLines();
 
+  const endClassify = timer('shapes: classify + path comparison (deviation, divergence)');
   const byRoute = new Map(); // route_id -> shape entries
   const unused = [];
   const primaryRoute = new Map(); // shape key (new id, else base id) -> route_id
@@ -1189,6 +1173,7 @@ async function diffRouteShapes(store) {
       });
     }
   }
+  endClassify({ rows: ids.length });
   return { byRoute, unused, renamedFrom, primaryRoute, baseShapes: bs, newShapes: ns };
 }
 
@@ -1243,6 +1228,7 @@ async function writeShapesRaw(parquet, store, shapeInfo) {
   // order. Rows are written a batch of shapes at a time (IDFM: 15M rows
   // don't fit DuckDB's memory cap in one query), in that order, so the
   // table needs no final sort.
+  const endPairs = timer('shapes raw: pairs table');
   const pairs = ids.map((id) => {
     const baseId = ns.has(id) ? (renamedFrom.get(id) ?? (bs.has(id) ? id : null)) : id;
     const newId = ns.has(id) ? id : null;
@@ -1271,6 +1257,7 @@ async function writeShapesRaw(parquet, store, shapeInfo) {
     appender.endRow();
   }
   appender.closeSync();
+  endPairs({ rows: pairs.length });
 
   // Rows of one feed's shapes: those with a counterpart in the other feed
   // (joined row by row below), or without one (passed straight through, so
@@ -1314,12 +1301,16 @@ async function writeShapesRaw(parquet, store, shapeInfo) {
          ${columns.map((c, i) => `j.b${i} AS ${ident(`b_${c}`)}, j.n${i} AS ${ident(`n_${c}`)}`).join(', ')}
        FROM j JOIN shape_pairs p ON p.key = j.key AND p.batch = ${b}
        ORDER BY p.route_id NULLS LAST, trip_key, seq`;
+  const endJoin = timer('shapes raw: row join (SQL batches)');
   for (let b = 0; b <= batch; b++) {
     await store.run(b === 0 ? `CREATE OR REPLACE TABLE shapes_raw AS ${select(b)}` : `INSERT INTO shapes_raw ${select(b)}`);
   }
+  endJoin({ calls: batch + 1 });
   // Insertion order is the table order (preserve_insertion_order).
-  await store.run(
-    `COPY shapes_raw TO '${path.replace(/'/g, "''")}' (FORMAT parquet, COMPRESSION zstd, ROW_GROUP_SIZE ${ROW_GROUP_SIZE})`,
+  await timed(
+    `write ${RAW_DIR}/${tableName('shapes.txt')}.parquet (COPY)`,
+    () => store.run(`COPY shapes_raw TO '${path.replace(/'/g, "''")}' (${parquetOptions()})`),
+    () => ({ bytes: statSync(path).size }),
   );
   await store.run('DROP TABLE shapes_raw');
   await store.run('DROP TABLE shape_pairs');
@@ -1341,12 +1332,14 @@ function diffRoutesMap(store, shapeInfo, patterns) {
   const columns = unionColumns(baseTable, newTable);
   const baseRows = new Map((baseTable?.rows ?? []).map((r) => [r.route_id, r]));
   const newRows = new Map((newTable?.rows ?? []).map((r) => [r.route_id, r]));
-  const bp = routeProfiles(baseFeed, shapeInfo.baseShapes, patterns.base);
-  const np = routeProfiles(newFeed, shapeInfo.newShapes, patterns.new);
+  const bp = timed('routes map: route profiles (base)', () => routeProfiles(baseFeed, shapeInfo.baseShapes, patterns.base));
+  const np = timed('routes map: route profiles (new)', () => routeProfiles(newFeed, shapeInfo.newShapes, patterns.new));
   const bn = routeNetworks(baseFeed);
   const nn = routeNetworks(newFeed);
-  const tb = typicalTrips(baseFeed, bp);
-  const tn = typicalTrips(newFeed, np);
+  // The first feedServices() call builds the feed's services (cached for the calendar).
+  const tb = timed('routes map: typical trips (base, + services build)', () => typicalTrips(baseFeed, bp));
+  const tn = timed('routes map: typical trips (new, + services build)', () => typicalTrips(newFeed, np));
+  const endRoutes = timer('routes map: per-route comparison + stop lookup');
   const referenced = new Set();
   // Agencies of both feeds (new names win). A feed with one agency may leave
   // routes.agency_id empty: those routes belong to that agency.
@@ -1407,8 +1400,6 @@ function diffRoutesMap(store, shapeInfo, patterns) {
     const shapes = (shapeInfo?.byRoute.get(id) ?? []).sort(
       (x, y) => order[x.status] - order[y.status] || x.shape_id.localeCompare(y.shape_id, undefined, { numeric: true }),
     );
-    const shapeCounts = Object.fromEntries(SHAPE_STATUSES.map((st) => [st, 0]));
-    for (const sh of shapes) shapeCounts[sh.status]++;
 
     const flags = {
       attributes: fc.length > 0,
@@ -1447,7 +1438,6 @@ function diffRoutesMap(store, shapeInfo, patterns) {
       stops: { base_count: stopsB.size, new_count: stopsN.size, added, removed },
       directions,
       shapes,
-      shape_counts: shapeCounts,
     });
   }
 
@@ -1471,16 +1461,9 @@ function diffRoutesMap(store, shapeInfo, patterns) {
     };
   }
 
+  endRoutes({ rows: routes.length });
   const counts = emptyCounts();
   for (const r of routes) counts[r.status]++;
-  // Totals count each shape once, even when several routes use it.
-  const shapeTotals = Object.fromEntries(SHAPE_STATUSES.map((st) => [st, 0]));
-  const seen = new Set();
-  for (const sh of [...routes.flatMap((r) => r.shapes), ...(shapeInfo?.unused ?? [])]) {
-    if (seen.has(sh.shape_id)) continue;
-    seen.add(sh.shape_id);
-    shapeTotals[sh.status]++;
-  }
   return {
     columns,
     path_change_threshold_m: PATH_CHANGE_THRESHOLD_M,
@@ -1492,7 +1475,6 @@ function diffRoutesMap(store, shapeInfo, patterns) {
       .sort((x, y) => x.name.localeCompare(y.name)),
     routes,
     stops,
-    shape_counts: shapeTotals,
     unused_shapes: shapeInfo?.unused ?? [],
   };
 }
@@ -1823,7 +1805,9 @@ function diffCalendar(baseFeed, newFeed) {
     services,
     days: sortedDays,
     active_counts: activeCounts,
-    highlights: calendarHighlights({ services, baseServices, newServices, baseRoutes, newRoutes, routes, coverage, activeCounts, days: sortedDays }),
+    highlights: timed('calendar: highlights (calendarHighlights)', () =>
+      calendarHighlights({ services, baseServices, newServices, baseRoutes, newRoutes, routes, coverage, activeCounts, days: sortedDays }),
+    ),
   };
 }
 
@@ -2153,59 +2137,59 @@ async function main() {
     console.error('Usage: node scripts/generate-gtfs-entity-diff.mjs <base.zip> <new.zip> <out.json>');
     process.exit(1);
   }
+  markStartup();
   const knownFiles = new Set(
     CATEGORIES.flatMap((c) => c.files ?? c.entities.flatMap((e) => [e.file, ...(e.children ?? []).map((ch) => ch.file)])),
   );
   // Both feeds in DuckDB; stop_times and shapes are only queried, never
   // held as JS rows (scripts/lib/feed-store.mjs).
-  const store = await openFeedStore({ basePath, newPath, files: knownFiles, lineOf: ROW_LINES });
+  const store = await timed('feed store: open (total)', () =>
+    openFeedStore({ basePath, newPath, files: knownFiles, lineOf: ROW_LINES }),
+  );
   try {
-    await writeEntityDiff(store, knownFiles, outPath);
+    await timed('writeEntityDiff (total)', () => writeEntityDiff(store, outPath));
   } finally {
-    store.close();
+    timed('feed store: close', () => store.close());
   }
 }
 
-async function writeEntityDiff(store, knownFiles, outPath) {
+async function writeEntityDiff(store, outPath) {
   const baseFeed = store.base;
   const newFeed = store.new;
-  const unsupported = [...new Set([...baseFeed.allFiles, ...newFeed.allFiles])]
-    .filter((f) => !knownFiles.has(f))
-    .map((f) => ({
-      file_name: f,
-      present_in: baseFeed.allFiles.includes(f) && newFeed.allFiles.includes(f) ? 'both' : baseFeed.allFiles.includes(f) ? 'base' : 'new',
-    }));
 
-  // Raw row diffs are only emitted for categories flagged `raw` to keep the
-  // JSON small (stop_times / shapes row diffs can run to many MB).
+  // Keys of the calendar files' raw row diffs (the category has no entity specs).
   const RAW_KEYS = {
     'calendar.txt': ['service_id'],
     'calendar_dates.txt': ['service_id', 'date'],
   };
   /** Entity change lists longer than this are written to Parquet. */
   const INLINE_CHANGES = 500;
-  const rawDiffs = (cat) => {
-    if (!cat.raw) return undefined;
-    const specs = cat.files
+  /**
+   * The files of a category that get a raw row diff, with their keys (a
+   * child file's key starts with its parent column). Shapes and the trip
+   * files have their own writers.
+   */
+  const rawSpecs = (cat) =>
+    cat.files
       ? cat.files.map((f) => ({ file: f, key: RAW_KEYS[f] }))
-      : cat.entities.filter((e) => !e.geojson && !e.groupBy);
-    return specs
-      .map((e) => rawFileDiff(e.file, baseFeed.files.get(e.file), newFeed.files.get(e.file), e.key))
-      .filter(Boolean);
-  };
+      : cat.entities
+          .filter((e) => !e.geojson && !e.groupBy)
+          .flatMap((e) => [e, ...(e.children ?? []).map((c) => ({ file: c.file, key: [c.parent, ...c.key] }))]);
 
   const t1 = Date.now();
-  const shapeInfo = await diffRouteShapes(store);
+  const shapeInfo = await timed('shapes: diffRouteShapes (total)', () => diffRouteShapes(store));
   console.log(`Shapes: ${shapeInfo.baseShapes.size} -> ${shapeInfo.newShapes.size}, ${shapeInfo.renamedFrom.size} renamed, ${shapeInfo.unused.length} unused, ${((Date.now() - t1) / 1000).toFixed(1)} s`);
   const hasShapes = (feed) => feed.files.get('shapes.txt')?.sql != null;
-  const sameShape = hasShapes(baseFeed) && hasShapes(newFeed) ? shapeMatcher(shapeInfo.baseShapes, shapeInfo.newShapes) : null;
+  const sameShape = hasShapes(baseFeed) && hasShapes(newFeed)
+    ? timed('shapes: shapeMatcher (same-path index)', () => shapeMatcher(shapeInfo.baseShapes, shapeInfo.newShapes))
+    : null;
 
   // Trips are joined semantically, not by trip_id: schedulers renumber every
   // trip on each export. Matched route by route; every row of
   // trips/stop_times/frequencies also goes to Parquet (<dataset>/raw/) for
   // the browsable raw diff table.
   const t0 = Date.now();
-  const masks = serviceMasks(buildTripsIndex(baseFeed, newFeed, new Set()));
+  const masks = timed('trip matching: service masks (buildTripsIndex)', () => serviceMasks(buildTripsIndex(baseFeed, newFeed, new Set())));
   const matching = { mapped: 0, renamed: 0, base_trips: 0, new_trips: 0 };
   const perPass = MAPPING_PASSES.map(() => 0);
   // Stop patterns per route, for the Routes map (collected in the same pass).
@@ -2214,27 +2198,35 @@ async function writeEntityDiff(store, knownFiles, outPath) {
   let tripsFamily;
   let shapesRaw;
   try {
-    const family = await openTripsFamilyDiff({ baseFeed, newFeed, lineOf: (row) => ROW_LINES.get(row), parquet, sameShape });
+    const family = await openTripsFamilyDiff({ store, baseFeed, newFeed, lineOf: (row) => ROW_LINES.get(row), parquet, sameShape });
+    // Per-route parts, summed (flushTallies() below).
+    const endLoop = timer('routes loop (trip matching + trips/stop_times/frequencies diff): total');
     await forEachRoute(store, async (route, sides, i, total) => {
-      const { map, perPass: passes } = mapTrips(routeCompactTrips(store, 'base', sides.base), routeCompactTrips(store, 'new', sides.new), masks);
+      const baseTrips = tally('routes loop: compact trips (base)', () => routeCompactTrips(store, 'base', sides.base));
+      const newTrips = tally('routes loop: compact trips (new)', () => routeCompactTrips(store, 'new', sides.new));
+      const { map, perPass: passes } = tally('routes loop: trip matching (mapTrips)', () => mapTrips(baseTrips, newTrips, masks));
       passes.forEach((n, p) => (perPass[p] += n));
       matching.mapped += map.size;
       for (const [b, n] of map) if (b !== n) matching.renamed++;
       matching.base_trips += sides.base.trips.length;
       matching.new_trips += sides.new.trips.length;
-      family.addRoute(sides, map);
-      for (const side of ['base', 'new']) patterns[side].set(route, routePatterns(sides[side]));
+      tally('routes loop: family.addRoute (all three files)', () => family.addRoute(sides, map, route));
+      tally('routes loop: stop patterns (routePatterns)', () => {
+        for (const side of ['base', 'new']) patterns[side].set(route, routePatterns(sides[side]));
+      });
       if ((i + 1) % 200 === 0 || i + 1 === total) {
         console.log(`  trips: ${i + 1}/${total} routes, ${((Date.now() - t0) / 1000).toFixed(0)} s`);
       }
     });
-    tripsFamily = await family.finish();
+    endLoop(() => ({ rows: matching.base_trips + matching.new_trips }));
+    flushTallies();
+    tripsFamily = await timed('trips family: finish (raw parquet + entity)', () => family.finish());
     console.log(
       `Trip matching: ${matching.mapped} of ${matching.base_trips} base trips paired with a new trip ` +
         `(${matching.renamed} with a new trip_id; ${perPass.map((n, p) => `${n} by ${MAPPING_PASSES[p]}`).join(', ')}), ` +
         `${((Date.now() - t0) / 1000).toFixed(0)} s`,
     );
-    shapesRaw = await writeShapesRaw(parquet, store, shapeInfo);
+    shapesRaw = await timed('shapes raw: writeShapesRaw (total)', () => writeShapesRaw(parquet, store, shapeInfo), (t) => ({ rows: t?.rows, bytes: t?.bytes }));
   } finally {
     parquet.close();
   }
@@ -2246,49 +2238,91 @@ async function writeEntityDiff(store, knownFiles, outPath) {
   // Grouped files kept in DuckDB (shapes.txt) are diffed there.
   const sqlGroups = new Map();
   for (const cat of CATEGORIES) {
-    for (const spec of cat.entities ?? []) if (spec.groupBy) sqlGroups.set(spec.file, await diffGroupsSql(store, spec));
+    for (const spec of cat.entities ?? []) {
+      if (spec.groupBy) sqlGroups.set(spec.file, await timed(`entity diff ${spec.file} (SQL groups)`, () => diffGroupsSql(store, spec), (g) => ({ rows: g.length })));
+    }
   }
 
+  const fileParquet = await openRawParquet(dirname(outPath));
+  /** A category's raw row diffs: one Parquet table per file that changed. */
+  const writeRawTables = async (cat) => {
+    const tables = [];
+    for (const e of rawSpecs(cat)) {
+      const t = await timed(`raw table ${e.file} (writeRawFileTable)`, () =>
+        writeRawFileTable(fileParquet, e.file, baseFeed.files.get(e.file), newFeed.files.get(e.file), e.key),
+      );
+      if (!t) continue;
+      const changed = t.counts.added + t.counts.deleted + t.counts.modified;
+      console.log(`  ${t.path}: ${t.rows} rows (${changed} changed), ${Math.round(t.bytes / 1024)} KB`);
+      tables.push(t);
+    }
+    return tables;
+  };
+
   const categories = [];
-  for (const cat of CATEGORIES) {
-    const tc = Date.now();
-    const done = () => console.log(`  ${cat.label}: ${((Date.now() - tc) / 1000).toFixed(1)} s`);
-    if (cat.id === 'trips') {
-      const et = tripsFamily.entityType;
+  try {
+    for (const cat of CATEGORIES) {
+      const tc = Date.now();
+      const endCat = timer(`category ${cat.label} (total)`);
+      const done = () => {
+        endCat();
+        console.log(`  ${cat.label}: ${((Date.now() - tc) / 1000).toFixed(1)} s`);
+      };
+      if (cat.id === 'trips') {
+        const et = tripsFamily.entityType;
+        categories.push({
+          id: cat.id,
+          label: cat.label,
+          files: cat.entities.flatMap((e) => [e.file, ...(e.children ?? []).map((c) => c.file)]),
+          counts: { ...et.counts },
+          entity_types: et.present.base || et.present.new ? [et] : [],
+          raw_tables: tripsFamily.rawTables,
+          trip_matching: matching,
+        });
+        done();
+        continue;
+      }
+      if (cat.special === 'calendar') {
+        const calendar = timed('calendar: diffCalendar', () => diffCalendar(baseFeed, newFeed));
+        const tables = await timed(`category ${cat.label}: raw tables`, () => writeRawTables(cat));
+        categories.push({
+          id: cat.id,
+          label: cat.label,
+          files: cat.files,
+          counts: calendar.counts,
+          calendar,
+          raw_tables: tables.length > 0 ? tables : undefined,
+        });
+        done();
+        continue;
+      }
+      const entityTypes = cat.entities.map((spec) =>
+        timed(`entity diff ${spec.file}`, () => diffEntityType(baseFeed, newFeed, spec, sqlGroups), (et) => ({ rows: et.changes.length })),
+      );
+      const counts = emptyCounts();
+      for (const et of entityTypes) for (const k of Object.keys(counts)) counts[k] += et.counts[k];
+      const tables = await timed(`category ${cat.label}: raw tables`, () => writeRawTables(cat));
+      const rawTables = [...(cat.id === 'routes' && shapesRaw ? [shapesRaw] : []), ...tables];
       categories.push({
         id: cat.id,
         label: cat.label,
         files: cat.entities.flatMap((e) => [e.file, ...(e.children ?? []).map((c) => c.file)]),
-        counts: { ...et.counts },
-        entity_types: et.present.base || et.present.new ? [et] : [],
-        raw_tables: tripsFamily.rawTables,
-        trip_matching: matching,
+        counts,
+        entity_types: entityTypes.filter((et) => et.present.base || et.present.new),
+        stops_map: cat.id === 'stops' ? await timed('stops map: diffStopsMap', () => diffStopsMap(baseFeed, newFeed, store)) : undefined,
+        routes_map: cat.id === 'routes' ? timed('routes map: diffRoutesMap', () => diffRoutesMap(store, shapeInfo, patterns)) : undefined,
+        raw_tables: rawTables.length > 0 ? rawTables : undefined,
       });
       done();
-      continue;
     }
-    if (cat.special === 'calendar') {
-      const calendar = diffCalendar(baseFeed, newFeed);
-      categories.push({ id: cat.id, label: cat.label, files: cat.files, counts: calendar.counts, calendar, file_diffs: rawDiffs(cat) });
-      done();
-      continue;
-    }
-    const entityTypes = cat.entities.map((spec) => diffEntityType(baseFeed, newFeed, spec, sqlGroups));
-    const counts = emptyCounts();
-    for (const et of entityTypes) for (const k of Object.keys(counts)) counts[k] += et.counts[k];
-    categories.push({
-      id: cat.id,
-      label: cat.label,
-      files: cat.entities.flatMap((e) => [e.file, ...(e.children ?? []).map((c) => c.file)]),
-      counts,
-      entity_types: entityTypes.filter((et) => et.present.base || et.present.new),
-      file_diffs: rawDiffs(cat),
-      stops_map: cat.id === 'stops' ? await diffStopsMap(baseFeed, newFeed, store) : undefined,
-      routes_map: cat.id === 'routes' ? diffRoutesMap(store, shapeInfo, patterns) : undefined,
-      raw_tables: cat.id === 'routes' && shapesRaw ? [shapesRaw] : undefined,
-    });
-    done();
+  } finally {
+    fileParquet.close();
   }
+
+  // Change lists no page shows: the Stops page and Routes read their maps
+  // (maps/*.parquet) instead. Their counts stay, for the summary.
+  const unlisted = (cat, et) => cat.id === 'stops' || (cat.id === 'routes' && (et.file === 'routes.txt' || et.file === 'shapes.txt'));
+  for (const cat of categories) for (const et of cat.entity_types ?? []) if (unlisted(cat, et)) et.changes = [];
 
   // Long change lists (MBTA: 80k trips, STM: 240k translations) go to
   // Parquet, read page by page in the browser; the JSON keeps summaries.
@@ -2309,17 +2343,17 @@ async function writeEntityDiff(store, knownFiles, outPath) {
   // by their pages.
   for (const cat of categories) {
     if (cat.stops_map) {
-      cat.stops_map = await writeStopsTable(outDir, cat.stops_map);
+      cat.stops_map = await timed('stops map: writeStopsTable (total)', () => writeStopsTable(outDir, cat.stops_map));
       const t = cat.stops_map.table;
       console.log(`  ${t.path}: ${t.rows} stops, ${Math.round(t.bytes / 1024)} KB`);
     }
     if (cat.routes_map) {
-      cat.routes_map = await writeRoutesTable(outDir, cat.routes_map);
+      cat.routes_map = await timed('routes map: writeRoutesTable (total)', () => writeRoutesTable(outDir, cat.routes_map));
       const t = cat.routes_map.table;
       console.log(`  ${t.path}: ${t.rows} routes, ${Math.round(t.bytes / 1024)} KB`);
     }
     if (cat.calendar) {
-      cat.calendar = await writeCalendarTables(outDir, cat.calendar);
+      cat.calendar = await timed('calendar: writeCalendarTables (total)', () => writeCalendarTables(outDir, cat.calendar));
       for (const t of Object.values(cat.calendar.tables)) {
         console.log(`  ${t.path}: ${t.rows} rows, ${Math.round(t.bytes / 1024)} KB`);
       }
@@ -2334,12 +2368,14 @@ async function writeEntityDiff(store, knownFiles, outPath) {
     }
     if (Object.keys(detail).length === 0) continue;
     const rel = `${DETAILS_DIR}/${cat.id}.json`;
+    const endDetail = timer(`write ${rel} (encode + decode check + write)`);
     mkdirSync(join(outDir, DETAILS_DIR), { recursive: true });
     const text = JSON.stringify(encodeDeep(detail));
     for (const k of Object.keys(detail)) {
       deepStrictEqual(decodeDeep(JSON.parse(text))[k], JSON.parse(JSON.stringify(detail[k])));
     }
     writeFileSync(join(outDir, rel), text);
+    endDetail({ bytes: text.length });
     cat.detail = rel;
     console.log(`  ${rel}: ${Math.round(text.length / 1024)} KB`);
   }
@@ -2348,19 +2384,17 @@ async function writeEntityDiff(store, knownFiles, outPath) {
     metadata: {
       schema_version: SCHEMA_VERSION,
       generated_at: new Date().toISOString(),
-      base_feed: { source: baseFeed.source, downloaded_at: baseFeed.downloadedAt },
-      new_feed: { source: newFeed.source, downloaded_at: newFeed.downloadedAt },
+      base_feed: { source: baseFeed.source },
+      new_feed: { source: newFeed.source },
       files: {
         base: baseFeed.allFiles,
         new: newFeed.allFiles,
       },
-      unsupported_files: unsupported,
     },
     categories,
   };
-  // Lossless: large change lists are stored column by column, and the UI
-  // decodes them on load (src/app/screens/GtfsDiffToolV2/lib/entity-diff-codec.ts).
-  writeFileSync(outPath, JSON.stringify(encodeEntityDiff(out)));
+  // Large change lists are already in entities/*.parquet (changes_table).
+  timed('write entity-diff.json', () => writeFileSync(outPath, JSON.stringify(out)), () => ({ bytes: statSync(outPath).size }));
   const kb = Math.round(statSync(outPath).size / 1024);
   console.log(`Wrote ${outPath} (${kb} KB)`);
   for (const c of categories) {

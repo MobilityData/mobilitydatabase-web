@@ -16,8 +16,9 @@
 import { openFeedStore, SIDES } from './lib/feed-store.mjs';
 import { buildTripsIndex, forEachRoute, routeCompactTrips, usedStops } from './lib/gtfs-trips-diff.mjs';
 import { describeWrite, openTripsWriter } from './lib/write-trips-diff.mjs';
+import { flushTallies, markStartup, tally, timed, timer } from './lib/timings.mjs';
 
-const SCHEMA_VERSION = '2.0.0-poc-trips';
+const SCHEMA_VERSION = '2.1.0-poc-trips';
 const FILES = new Set([
   'trips.txt',
   'stop_times.txt',
@@ -72,10 +73,12 @@ async function main() {
     console.error('Usage: node scripts/generate-gtfs-trips-diff.mjs <base.zip> <new.zip> <out.json>');
     process.exit(1);
   }
-  const store = await openFeedStore({ basePath, newPath, files: FILES });
+  markStartup();
+  const store = await timed('feed store: open (total)', () => openFeedStore({ basePath, newPath, files: FILES }));
   try {
-    const index = buildTripsIndex(store.base, store.new, await usedStops(store));
-    const busiest = busiestDay(index, store);
+    const used = await timed('used stops (SQL)', () => usedStops(store), (u) => ({ rows: u.size }));
+    const index = timed('index: buildTripsIndex', () => buildTripsIndex(store.base, store.new, used));
+    const busiest = timed('index: busiest day', () => busiestDay(index, store));
     const byRoute = SIDES.some((side) => busiest[side].trips > BY_ROUTE_DAY_TRIPS);
     console.log(
       `Busiest day: base ${busiest.base.trips} trips (${busiest.base.date}), new ${busiest.new.trips} trips (${busiest.new.date})` +
@@ -86,23 +89,30 @@ async function main() {
     let written;
     try {
       const t0 = Date.now();
+      // Per-route parts, summed (flushTallies() below).
+      const endLoop = timer('routes loop (compact trips + append): total');
       await forEachRoute(store, async (route, sides, i, total) => {
-        for (const side of SIDES) writer.append(side, routeCompactTrips(store, side, sides[side]));
+        for (const side of SIDES) {
+          const trips = tally('routes loop: compact trips (routeCompactTrips)', () => routeCompactTrips(store, side, sides[side]));
+          tally('routes loop: append to trips writer', () => writer.append(side, trips));
+        }
         if ((i + 1) % 200 === 0 || i + 1 === total) {
           console.log(`  ${i + 1}/${total} routes, ${((Date.now() - t0) / 1000).toFixed(0)} s`);
         }
       });
+      endLoop();
+      flushTallies();
       const doc = {
         metadata: {
           schema_version: SCHEMA_VERSION,
           generated_at: new Date().toISOString(),
-          base_feed: { source: store.base.source, downloaded_at: store.base.downloadedAt },
-          new_feed: { source: store.new.source, downloaded_at: store.new.downloadedAt },
+          base_feed: { source: store.base.source },
+          new_feed: { source: store.new.source },
         },
         ...index,
         ...(byRoute ? { route_service_trips: routeServiceTrips(store) } : {}),
       };
-      written = await writer.finish(doc, { byRoute });
+      written = await timed('trips writer: finish (total)', () => writer.finish(doc, { byRoute }));
     } catch (e) {
       writer.abort();
       throw e;
@@ -113,7 +123,7 @@ async function main() {
       console.log(`  ${d.primary ? '*' : ' '} ${d.label.padEnd(9)} ${d.date}  ${d.day_count}/${d.group_count} days  (${d.first}–${d.last})`);
     }
   } finally {
-    store.close();
+    timed('feed store: close', () => store.close());
   }
 }
 

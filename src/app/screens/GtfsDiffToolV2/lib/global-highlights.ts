@@ -41,7 +41,8 @@ export type RowKind = 'stop' | 'route' | 'shape' | 'service' | 'date';
 
 export type GlobalEntities =
   | { kind: 'list'; of: RowKind; rows: EntityRow[]; total: number }
-  | HighlightEntities;
+  // Stops leave as a 'list'.
+  | Exclude<HighlightEntities, { kind: 'stops' }>;
 
 export interface GlobalHighlight {
   /** "<section>:<rule id>", unique in a diff. */
@@ -54,8 +55,6 @@ export interface GlobalHighlight {
   rank: number;
   /** Rule score plus the impact bonus; what the ranking sorts by. */
   score: number;
-  /** The rule's own score (0–1), as on the entity page. */
-  rule_score: number;
   severity: HighlightSeverity;
   title: string;
   detail: string;
@@ -72,6 +71,8 @@ export interface HighlightsDoc {
     total: number;
     error: number;
     warning: number;
+    /** Absent in highlights built before info highlights. */
+    info?: number;
     sections: Record<string, number>;
   };
   items: GlobalHighlight[];
@@ -126,6 +127,18 @@ function entitiesOf(
       },
     };
   const e = entities as TripsHighlight['entities'];
+  if (e?.kind === 'stops')
+    return {
+      affected: e.rows.length,
+      entities: {
+        kind: 'list',
+        of: 'stop',
+        rows: e.rows.slice(0, MAX_ROWS),
+        total: e.rows.length,
+      },
+    };
+  if (e?.kind === 'hours' || e?.kind === 'spans')
+    return { affected: e.rows.length, entities: e };
   if (e?.kind === 'routes')
     return {
       affected: e.routes.length,
@@ -159,6 +172,7 @@ function entityIds(entities: unknown): Set<string> {
   else {
     const e = entities as TripsHighlight['entities'];
     if (e?.kind === 'routes') for (const r of e.routes) out.add(r.route);
+    if (e?.kind === 'stops') for (const r of e.rows) out.add(r.id);
   }
   return out;
 }
@@ -209,7 +223,6 @@ export function rankGlobalHighlights(
         score:
           Math.round((h.score + IMPACT_WEIGHT * impactOf(affected)) * 1e4) /
           1e4,
-        rule_score: h.score,
         severity: h.severity,
         title: h.title,
         detail: h.detail,
@@ -264,6 +277,7 @@ export function highlightsDoc(
       total: items.length,
       error: items.filter((h) => h.severity === 'error').length,
       warning: items.filter((h) => h.severity === 'warning').length,
+      info: items.filter((h) => h.severity === 'info').length,
       sections,
     },
     items,
@@ -280,7 +294,7 @@ export function reportTopHighlights(
       error: doc.counts.error,
       warning: doc.counts.warning,
       success: 0,
-      info: 0,
+      info: doc.counts.info ?? 0,
     },
     total: doc.counts.total,
     top: doc.items.slice(0, n).map(
@@ -298,11 +312,12 @@ export function reportTopHighlights(
 
 // ── Filters of the highlights page ─────────────────────────────────
 
-export const SEVERITIES: HighlightSeverity[] = ['error', 'warning'];
+export const SEVERITIES: HighlightSeverity[] = ['error', 'warning', 'info'];
 
 export const SEVERITY_LABELS: Record<HighlightSeverity, string> = {
   error: 'Critical',
   warning: 'Warning',
+  info: 'Info',
 };
 
 export interface HighlightFilters {

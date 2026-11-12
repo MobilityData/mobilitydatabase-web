@@ -24,6 +24,7 @@ import { mkdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DuckDBInstance } from '@duckdb/node-api';
+import { timer } from './timings.mjs';
 
 export const RAW_DIR = 'raw';
 export const ACTIONS = ['added', 'deleted', 'modified', 'id_only', 'unchanged'];
@@ -50,6 +51,16 @@ export const META = [
  * while a route's rows (tables are sorted by route) still span few groups.
  */
 export const ROW_GROUP_SIZE = 250000;
+
+/**
+ * COPY options of every Parquet file a diff holds. Format V2 delta-encodes
+ * integers and strings (the raw tables' line numbers and times): 38-50%
+ * smaller raw tables (STM stop_times 117 -> 72 MB), read by DuckDB-WASM
+ * as is.
+ */
+export function parquetOptions(rowGroupSize = ROW_GROUP_SIZE) {
+  return `FORMAT parquet, COMPRESSION zstd, PARQUET_VERSION V2, ROW_GROUP_SIZE ${rowGroupSize}`;
+}
 
 function ident(name) {
   return `"${name.replace(/"/g, '""')}"`;
@@ -111,17 +122,20 @@ export async function openRawParquet(datasetDir) {
           rows++;
         },
         async finish() {
+          // Rows were appended along the way; this is the sort + COPY.
+          const end = timer(`write ${RAW_DIR}/${name}.parquet (sort + COPY)`);
           appender.closeSync();
           const path = join(outDir, `${name}.parquet`);
           await tcon.run(
             `COPY (SELECT * FROM ${ident(name)} ORDER BY route_id NULLS LAST, trip_key, seq) TO ${sqlString(path)} ` +
-              `(FORMAT parquet, COMPRESSION zstd, ROW_GROUP_SIZE ${ROW_GROUP_SIZE})`,
+              `(${parquetOptions()})`,
           );
           const res = await tcon.runAndReadAll(`SELECT action, count(*)::INTEGER AS n FROM ${ident(name)} GROUP BY action`);
           const counts = Object.fromEntries(ACTIONS.map((a) => [a, 0]));
           for (const { action, n } of res.getRowObjectsJS()) counts[action] = n;
           await tcon.run(`DROP TABLE ${ident(name)}`);
           tcon.closeSync();
+          end(() => ({ rows, bytes: statSync(path).size }));
           return { file, path: `${RAW_DIR}/${name}.parquet`, rows, bytes: statSync(path).size, columns, counts };
         },
       };
@@ -150,6 +164,7 @@ export async function writeChangesTable(datasetDir, file, changes) {
   mkdirSync(outDir, { recursive: true });
   const name = file.replace(/\.(txt|geojson)$/, '').replace(/[^a-z0-9_]/gi, '_');
   const path = join(outDir, `${name}.parquet`);
+  const end = timer(`write ${ENTITIES_DIR}/${name}.parquet`);
   const dbPath = join(tmpdir(), `gtfs-changes-${process.pid}-${Date.now()}.duckdb`);
   const instance = await DuckDBInstance.create(dbPath);
   const con = await instance.connect();
@@ -171,7 +186,7 @@ export async function writeChangesTable(datasetDir, file, changes) {
       a.endRow();
     });
     a.closeSync();
-    await con.run(`COPY (SELECT * FROM c ORDER BY ord) TO ${sqlString(path)} (FORMAT parquet, COMPRESSION zstd, ROW_GROUP_SIZE ${ROW_GROUP_SIZE})`);
+    await con.run(`COPY (SELECT * FROM c ORDER BY ord) TO ${sqlString(path)} (${parquetOptions()})`);
     const res = await con.runAndReadAll(`SELECT count(*)::INTEGER AS n FROM read_parquet(${sqlString(path)})`);
     const [{ n }] = res.getRowObjectsJS();
     if (n !== changes.length) throw new Error(`${path}: ${n} rows for ${changes.length} changes`);
@@ -181,5 +196,6 @@ export async function writeChangesTable(datasetDir, file, changes) {
     rmSync(dbPath, { force: true });
     rmSync(`${dbPath}.wal`, { force: true });
   }
+  end(() => ({ rows: changes.length, bytes: statSync(path).size }));
   return { path: `${ENTITIES_DIR}/${name}.parquet`, rows: changes.length, bytes: statSync(path).size };
 }

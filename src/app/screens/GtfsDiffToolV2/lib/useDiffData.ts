@@ -2,15 +2,23 @@
 
 import useSWRImmutable from 'swr/immutable';
 import { type DiffFileKind, diffDataUrl, diffFileUrl } from './datasets';
-import { type Json, decodeDeep, decodeEntityDiff } from './entity-diff-codec';
-import type { EntityCategoryDiff, GtfsEntityDiff } from './entity-diff-types';
+import { type Json, decodeDeep } from './entity-diff-codec';
+import type {
+  AllStops,
+  AllStopsFile,
+  EntityCategoryDiff,
+  GtfsEntityDiff,
+} from './entity-diff-types';
+import type { HighlightsFile } from './highlights';
+import { expandServiceSets } from './trips-index-codec';
+import type { TripsDiffDoc } from './trips-types';
 
 /**
- * entity-diff.json: expand the compact encoding, and resolve the URLs of
- * change lists stored as Parquet against the diff's base URL.
+ * entity-diff.json: resolve the URLs of change lists stored as Parquet
+ * against the diff's base URL.
  */
 function prepareEntityDiff(raw: unknown, datasetId: string): unknown {
-  const doc = decodeEntityDiff(raw as GtfsEntityDiff);
+  const doc = raw as GtfsEntityDiff;
   for (const cat of doc.categories)
     for (const et of cat.entity_types ?? [])
       if (et.changes_table)
@@ -23,6 +31,8 @@ const PREPARE: Partial<
   Record<DiffFileKind, (doc: unknown, datasetId: string) => unknown>
 > = {
   entity: prepareEntityDiff,
+  // Service sets are stored as indices into one service_id list.
+  trips: (doc) => expandServiceSets(doc as TripsDiffDoc),
 };
 
 async function fetchJson(url: string): Promise<unknown> {
@@ -55,6 +65,56 @@ export function useDiffData<T>(
     },
   );
   return { data: data as T | undefined, error, isLoading };
+}
+
+/** In-flight and loaded all-stops files, by URL: fetched once per page load. */
+const allStopsLoads = new Map<string, Promise<AllStops>>();
+
+/**
+ * Every stop of both feeds (maps/all_stops_data.json). Kept out of the stops
+ * map because only the overlays and links to unchanged stops need it.
+ */
+export function loadAllStops(
+  datasetId: string,
+  file: AllStopsFile,
+): Promise<AllStops> {
+  const url = diffFileUrl(datasetId, file.path);
+  let p = allStopsLoads.get(url);
+  if (p == null) {
+    p = fetchJson(url) as Promise<AllStops>;
+    p.catch(() => allStopsLoads.delete(url));
+    allStopsLoads.set(url, p);
+  }
+  return p;
+}
+
+/** loadAllStops as a hook: nothing is fetched until `enabled`. */
+export function useAllStops(
+  datasetId: string,
+  file: AllStopsFile,
+  enabled: boolean,
+): DiffData<AllStops> {
+  const { data, error, isLoading } = useSWRImmutable<AllStops, Error>(
+    enabled ? diffFileUrl(datasetId, file.path) : null,
+    () => loadAllStops(datasetId, file),
+  );
+  return { data, error, isLoading };
+}
+
+/**
+ * A section's highlights with their full entity lists
+ * (<section>-highlights.json): the section's JSON keeps each list's first
+ * rows only. Nothing is fetched until `path` is set; then once per page load.
+ */
+export function useHighlightsFile(
+  datasetId: string,
+  path: string | null | undefined,
+): DiffData<HighlightsFile> {
+  const { data, error, isLoading } = useSWRImmutable<HighlightsFile, Error>(
+    path ? diffFileUrl(datasetId, path) : null,
+    async (url: string) => (await fetchJson(url)) as HighlightsFile,
+  );
+  return { data, error, isLoading };
 }
 
 /**

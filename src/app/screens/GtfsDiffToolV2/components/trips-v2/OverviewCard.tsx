@@ -27,6 +27,7 @@ import { formatGtfsDate } from '../../lib/calendar-utils';
 import { useRawOverview } from '../../lib/useRawOverview';
 import { MONO_FONT } from '../trips/shared';
 import { ALL_DATES, V2Card } from './shared';
+import ServiceDetails from '../highlights/ServiceDetails';
 
 interface OverviewCardProps {
   datasetId: string;
@@ -241,6 +242,12 @@ function HighlightDetails({
         </TableBody>
       </Table>
     );
+  if (
+    entities.kind === 'hours' ||
+    entities.kind === 'spans' ||
+    entities.kind === 'stops'
+  )
+    return <ServiceDetails entities={entities} datasetId={datasetId} />;
   // Same Parquet table as the raw file diff, scoped to the highlight's rows:
   // segments load as you scroll and far-away rows leave the DOM.
   return (
