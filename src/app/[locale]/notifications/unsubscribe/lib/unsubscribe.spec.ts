@@ -39,6 +39,18 @@ describe('toSubscriptionLookup', () => {
     ).toEqual({ status: 'invalidId' });
   });
 
+  it('treats a link with no id as a Brevo unsubscribe redirect', () => {
+    expect(
+      toSubscriptionLookup({
+        subscriptionId: undefined,
+        idMissing: true,
+        data: undefined,
+        error: undefined,
+        authFailed: false,
+      }),
+    ).toEqual({ status: 'noId' });
+  });
+
   it('is loading until the request settles', () => {
     expect(
       toSubscriptionLookup({
@@ -160,6 +172,14 @@ describe('resolveViewCopy', () => {
       'notFoundDescription',
     );
     expect(resolveViewCopy({ status: 'loading' }, null).status).toBe('loading');
+  });
+
+  it('confirms a Brevo unsubscribe instead of showing an error', () => {
+    expect(resolveViewCopy({ status: 'noId' }, null)).toEqual({
+      status: 'info',
+      titleKey: 'brevoUnsubscribedTitle',
+      descriptionKey: 'brevoUnsubscribedDescription',
+    });
   });
 });
 

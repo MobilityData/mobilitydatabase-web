@@ -186,6 +186,11 @@ export const userProfileSlice = createSlice({
           action.payload?.isRegisteredToReceiveAPIAnnouncements ?? false;
       }
     },
+    setApiAnnouncementsOptIn: (state, action: PayloadAction<boolean>) => {
+      if (state.user !== undefined) {
+        state.user.isRegisteredToReceiveAPIAnnouncements = action.payload;
+      }
+    },
     saveUserProfile: (
       state,
       action: PayloadAction<{
@@ -337,6 +342,7 @@ export const {
   updateUserProfile,
   saveUserProfile,
   saveUserProfileSuccess,
+  setApiAnnouncementsOptIn,
   saveUserProfileFail,
   saveUserProfileReset,
   changePassword,

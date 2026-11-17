@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useRouter } from '../../../i18n/navigation';
 import {
   Alert,
@@ -24,7 +25,11 @@ import { AccountSectionContainer } from './AccountSectionContainer';
 import {
   saveUserProfile,
   saveUserProfileReset,
+  setApiAnnouncementsOptIn,
 } from '../../store/profile-reducer';
+import { syncAnnouncementsFromBrevo } from '../../services/profile-service';
+import { ACCOUNT_TARGET } from '../../constants/Navigation';
+import { shouldSyncAnnouncements } from './lib/announcementsSync';
 
 export default function AccountGeneral(): React.ReactElement {
   const t = useTranslations('account');
@@ -34,6 +39,11 @@ export default function AccountGeneral(): React.ReactElement {
   const router = useRouter();
   const signedInWithProvider = useSelector(selectSignedInWithProvider);
   const saveStatus = useSelector(selectSaveUserProfileStatus);
+  const searchParams = useSearchParams();
+  const syncRequested = shouldSyncAnnouncements(searchParams);
+  const [announcementsSync, setAnnouncementsSync] = React.useState<
+    'idle' | 'syncing' | 'failed'
+  >(syncRequested ? 'syncing' : 'idle');
 
   const [isEditing, setIsEditing] = React.useState(false);
   const [draftFullName, setDraftFullName] = React.useState('');
@@ -73,6 +83,28 @@ export default function AccountGeneral(): React.ReactElement {
     dispatch(saveUserProfileReset());
   }, [dispatch]);
 
+  // After a Brevo unsubscribe the stored opt-in can still read "subscribed"
+  // until the daily reconcile runs, and saving the form with it would
+  // re-subscribe the user. Refresh it from Brevo first, then drop the param so
+  // a reload doesn't call Brevo again. On failure the stored value is kept.
+  React.useEffect(() => {
+    if (!syncRequested) {
+      return;
+    }
+    setAnnouncementsSync('syncing');
+    syncAnnouncementsFromBrevo()
+      .then((isRegistered) => {
+        dispatch(setApiAnnouncementsOptIn(isRegistered));
+        setAnnouncementsSync('idle');
+      })
+      .catch(() => {
+        setAnnouncementsSync('failed');
+      })
+      .finally(() => {
+        router.replace(ACCOUNT_TARGET);
+      });
+  }, [syncRequested]);
+
   React.useEffect(() => {
     if (saveStatus === 'success') {
       setIsEditing(false);
@@ -81,6 +113,7 @@ export default function AccountGeneral(): React.ReactElement {
 
   // Reference is due to dispatch save status acting faster than the exit animation of the alert, causing a flash of the wrong alert severity. With this reference, the severity will be consistent during the whole display of the alert.
   const isSaving = saveStatus === 'loading';
+  const isSyncing = announcementsSync === 'syncing';
   const alertSeverity = React.useRef<'success' | 'error'>('success');
   if (saveStatus === 'success') alertSeverity.current = 'success';
   if (saveStatus === 'fail') alertSeverity.current = 'error';
@@ -110,7 +143,7 @@ export default function AccountGeneral(): React.ReactElement {
       <AccountSectionContainer
         title={t('personalInformation')}
         subtitle={t('personalInformationSubtitle')}
-        loading={isSaving}
+        loading={isSaving || isSyncing}
         action={
           isEditing ? (
             <Box sx={{ display: 'flex', gap: 1 }}>
@@ -132,7 +165,12 @@ export default function AccountGeneral(): React.ReactElement {
               </Button>
             </Box>
           ) : (
-            <Button variant='outlined' size='small' onClick={handleEditClick}>
+            <Button
+              variant='outlined'
+              size='small'
+              onClick={handleEditClick}
+              disabled={isSyncing}
+            >
               {t('edit')}
             </Button>
           )
@@ -201,8 +239,13 @@ export default function AccountGeneral(): React.ReactElement {
               />
             }
             label={t('registerApiAnnouncements')}
-            sx={{ mt: 0.5 }}
+            sx={{ mt: 0.5, visibility: isSyncing ? 'hidden' : 'visible' }}
           />
+          {announcementsSync === 'failed' ? (
+            <Alert severity='info' data-testid='announcements-sync-failed'>
+              {t('announcementsSyncFailed')}
+            </Alert>
+          ) : null}
         </Box>
       </AccountSectionContainer>
       <AccountSectionContainer title={t('supportTitle')} sx={{ mt: 3 }}>

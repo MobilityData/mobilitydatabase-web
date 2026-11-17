@@ -129,6 +129,29 @@ export const retrieveUserInformation = async (): Promise<
   }
 };
 
+/**
+ * Asks the user service to turn API announcements off when the user
+ * unsubscribed from a Brevo email, and returns the resulting opt-in. It never
+ * turns announcements on. Used after Brevo's unsubscribe redirect, so the
+ * account page doesn't show a stale "subscribed" until the daily reconcile.
+ */
+export const syncAnnouncementsFromBrevo = async (): Promise<boolean> => {
+  const accessToken = await getUserAccessToken();
+  const authMiddleware = generateAuthMiddlewareWithToken(accessToken);
+  userServiceClient.use(authMiddleware);
+  try {
+    const { data, error } = await userServiceClient.POST(
+      '/v1/user/announcements/sync',
+    );
+    if (error !== undefined || data === undefined) {
+      throw new Error('Failed to sync API announcements');
+    }
+    return data.is_registered_to_receive_api_announcements;
+  } finally {
+    userServiceClient.eject(authMiddleware);
+  }
+};
+
 export const populateUserWithAdditionalInfo = (
   user: User,
   userData: UserData | undefined,

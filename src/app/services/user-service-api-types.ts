@@ -30,6 +30,30 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/user/announcements/sync': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Refresh the current user's API announcements opt-in from Brevo
+     * @description Reads the user's Brevo contact and turns their `api.announcements` subscription
+     *     off when they unsubscribed from a Brevo email, then returns the profile. It never
+     *     turns announcements on and never writes to Brevo. The daily reconcile task does the
+     *     same for every user; this lets the website show the change at once, e.g. after the
+     *     Brevo unsubscribe redirect. Makes one Brevo call, only when the subscription is on.
+     */
+    post: operations['syncUserAnnouncements'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/notifications': {
     parameters: {
       query?: never;
@@ -170,8 +194,8 @@ export interface paths {
      *     Behaviour depends on the notification type:
      *     - **`api.announcements`** — never deleted; the subscription is *disabled*
      *       (`active=false`), the contact is removed from the Brevo announcements
-     *       list, and `app_user.is_registered_to_receive_api_announcements` is
-     *       cleared. Kept idempotent so a repeated click still succeeds.
+     *       list, and the user's `is_registered_to_receive_api_announcements`
+     *       therefore reads `false`. Kept idempotent so a repeated click still succeeds.
      *     - **all other types** (e.g. `feed.url_updated`) — the subscription row is
      *       hard-deleted; a second call therefore returns `404`.
      *
@@ -179,8 +203,7 @@ export interface paths {
      *     (Brevo) cannot be reached while updating an announcements subscription.
      *
      *     The `id` embedded in an email is the subscription's own UUID
-     *     (`notification_subscription.id`) — mirrored onto the Brevo contact as the
-     *     `MDB_SUBSCRIPTION_ID` attribute — **not** the notification-type string
+     *     (`notification_subscription.id`) — **not** the notification-type string
      *     (`api.announcements`), which is shared by all recipients and is not a
      *     valid subscription ID.
      *
@@ -281,7 +304,7 @@ export interface components {
       description?: string | null;
     };
     NotificationSubscription: {
-      /** @description Unique subscription ID (UUID v4). This is the **capability token** used by the public `/v1/subscriptions/{id}` endpoints and by email unsubscribe links; for `api.announcements` it is mirrored onto the Brevo contact as the `MDB_SUBSCRIPTION_ID` attribute. */
+      /** @description Unique subscription ID (UUID v4). This is the **capability token** used by the public `/v1/subscriptions/{id}` endpoints and by email unsubscribe links. `api.announcements` emails are Brevo campaigns and use Brevo's own unsubscribe link instead. */
       id: string;
       /** @description The ID of the subscribed user. */
       user_id: string;
@@ -505,6 +528,54 @@ export interface operations {
       };
       /** @description Internal server error. */
       500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  syncUserAnnouncements: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The user's profile after the refresh. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserProfile'];
+        };
+      };
+      /** @description Unauthorized — missing or invalid token. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden — guest users have no profile. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description User not found. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Brevo could not be reached or returned an error. */
+      502: {
         headers: {
           [name: string]: unknown;
         };
