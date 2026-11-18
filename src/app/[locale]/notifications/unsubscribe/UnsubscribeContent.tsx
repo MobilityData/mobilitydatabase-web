@@ -233,7 +233,7 @@ export default function UnsubscribeContent(): React.ReactElement {
             <Button
               component={Link}
               href={manageHref}
-              variant={lookup.status === 'noId' ? 'contained' : 'text'}
+              variant={lookup.status === 'noId' ? 'outlined' : 'text'}
               disabled={isPending}
               data-testid='manage-notifications'
             >

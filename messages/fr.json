@@ -165,7 +165,7 @@
     "tryAgain": "Réessayer",
     "brevoUnsubscribedTitle": "Vous êtes désabonné",
     "brevoUnsubscribedDescription": "Vous ne recevrez plus les annonces de l'API de la Mobility Database. La mise à jour de votre compte peut prendre jusqu'à 24 heures.",
-    "signInToManage": "Se connecter pour gérer les abonnements"
+    "signInToManage": "Se connecter pour gérer les autres abonnements"
   },
   "resetPassword": {
     "verifyingTitle": "Vérification de votre lien",
