@@ -1,6 +1,9 @@
 /**
  * Types for the entity-level GTFS diff (v2 POC).
- * Produced by scripts/generate-gtfs-entity-diff.mjs.
+ * Produced by scripts/generate-gtfs-entity-diff.mjs as report.json's file
+ * entries and analyses (lib/report.ts ReportDoc; files.json, FilesDoc, in
+ * older builds) and the analyses' JSON; the viewer groups files into pages
+ * itself (lib/sections.ts, EntityCategoryDiff).
  */
 
 import type { DiffType } from '../../GtfsDiffTool/lib/gtfs-types';
@@ -10,6 +13,8 @@ import type {
   FileDiff,
 } from '../../GtfsDiffTool/lib/gtfs-diff-types';
 import type { EntityRow, Highlight } from './highlights';
+import type { DirectionStops } from './route-tables';
+import type { AnalysisName as LayoutAnalysisName } from './diff-layout';
 
 export type { DiffType, FieldChange, FileDiff };
 
@@ -19,23 +24,6 @@ export type DiffCounts = Record<DiffType, number>;
 export type GtfsDate = string;
 
 // ── Generic entities ───────────────────────────────────────────────
-
-export interface ChildChangeCounts {
-  added: number;
-  deleted: number;
-  modified: number;
-}
-
-export interface EntityChange {
-  key: string;
-  status: Exclude<DiffType, 'unchanged'>;
-  label?: string;
-  /** Extra columns useful for linking, e.g. a trip's route_id/service_id. */
-  context?: Record<string, string>;
-  field_changes?: FieldChange[];
-  /** Child row changes keyed by child file name (e.g. stop_times.txt). */
-  children?: Record<string, ChildChangeCounts>;
-}
 
 export interface EntityTypeDiff {
   file: string;
@@ -49,28 +37,11 @@ export interface EntityTypeDiff {
    * (trips: a renumbered trip_id / block_id).
    */
   id_only?: number;
-  /**
-   * Empty when the list is long (it is then in `changes_table`), and for
-   * the files no page lists change by change (the stops category, routes.txt
-   * and shapes.txt: their pages read the maps instead).
-   */
-  changes: EntityChange[];
-  changes_table?: ChangesTable;
-}
-
-/** A long change list written to Parquet (entities/<file>.parquet). */
-export interface ChangesTable {
-  /** Path inside the diff, e.g. entities/trips.parquet */
-  path: string;
-  rows: number;
-  bytes: number;
-  /** Resolved against the diff's base URL when entity-diff.json loads. */
-  url?: string;
 }
 
 // ── Raw row tables (Parquet, queried with DuckDB-WASM) ─────────────
 
-/** Every row of either feed appears once, with one of these actions. */
+/** A raw table row's action (unchanged rows are stored for the trip files only). */
 export type RawAction =
   | 'added'
   | 'deleted'
@@ -87,11 +58,18 @@ export interface RawTable {
   file: string;
   /** Path inside the dataset folder, e.g. raw/stop_times.parquet */
   path: string;
+  /** Rows stored in the table. */
   rows: number;
   bytes: number;
   /** GTFS columns; the table holds b_<column> and n_<column> for each. */
   columns: string[];
+  /** Rows of either feed per action, stored or not. */
   counts: Record<RawAction, number>;
+  /**
+   * Set when unchanged rows are counted but not stored: every file but the
+   * trip files (trips.txt, stop_times.txt, frequencies.txt).
+   */
+  unchanged_omitted?: boolean;
   /**
    * GTFS column whose value the table's trip_key holds: stop_id for
    * stops.txt, service_id for calendar_dates.txt. Absent: trip_id (shape_id
@@ -189,19 +167,6 @@ export interface DayChanges {
   modified: DayModifiedEntry[];
 }
 
-export type HighlightSeverity = 'success' | 'info' | 'warning' | 'error';
-
-export interface CalendarHighlight {
-  id: string;
-  kind: string;
-  severity: HighlightSeverity;
-  title: string;
-  detail?: string;
-  service_ids: string[];
-  route_ids: string[];
-  dates: GtfsDate[];
-}
-
 export interface RouteInfo {
   short_name: string;
   long_name: string;
@@ -221,22 +186,27 @@ export interface CalendarDiff {
   counts: DiffCounts;
   total: { base: number; new: number };
   coverage: { base: DateRange; new: DateRange };
+  /** Every route's name and colours: the route lookup (lib/route-info), attached when the category loads (useCategoryDetail). */
   routes: Record<string, RouteInfo>;
-  /** Routes any service is used by (the line filter's options). */
-  route_ids: string[];
+  /** The routes table (raw/routes.parquet); absent when there is none. */
+  route_info_file?: string;
   /**
-   * Services (one row each) and service-day changes (one row per service
-   * changed on a date, dates with changes only), queried with DuckDB-WASM
-   * (scripts/lib/calendar-tables.mjs).
+   * The analysis: services (one row each) and service-day changes (one row
+   * per service changed on a date), queried with DuckDB-WASM
+   * (scripts/lib/calendar-tables.mjs, lib/calendar-query).
    */
   tables: { services: MapTable; days: MapTable };
+  /**
+   * The services' rows: the calendar.txt and calendar_dates.txt raw tables
+   * (raw/calendar.parquet, raw/calendar_dates.parquet), null when neither
+   * feed has the file. Absent in older builds, whose tables held the rows.
+   */
+  calendar_rows_file?: string | null;
+  calendar_dates_rows_file?: string | null;
   /** [base, new] number of active services for every date in the union coverage. */
   active_counts: Record<GtfsDate, [number, number]>;
-  highlights: CalendarHighlight[];
-  /** Notable highlights of the overview (lib/calendar-overview-highlights), built with the full lists. */
-  overview_highlights?: Array<Highlight<EntityRow[]>>;
-  /** calendar-highlights.json: the overview highlights with full entity lists; absent in older builds. */
-  overview_highlights_file?: string;
+  /** highlights/services.json: the services' highlights with full entity lists. */
+  highlights_file?: string;
 }
 
 // ── Stops map ──────────────────────────────────────────────────────
@@ -260,32 +230,11 @@ export interface StopChange {
   route_ids: { base: string[]; new: string[] };
 }
 
-/** [stop_id, lon, lat, stop_name] */
-export type CompactStop = [string, number, number, string];
-
-/** Every stop with coordinates, per feed (maps/all_stops_data.json). */
-export interface AllStops {
-  base: CompactStop[];
-  new: CompactStop[];
-}
-
-/**
- * Where AllStops lives and how many stops each side has: the file is only
- * fetched for the overlays and links to unchanged stops.
- */
-export interface AllStopsFile {
-  path: string;
-  base: number;
-  new: number;
-}
-
-/** A map's entity list as Parquet (maps/<name>.parquet, scripts/lib/map-tables.mjs). */
+/** An analysis's entity list as Parquet (analysis/<name>.parquet, scripts/lib/map-tables.mjs). */
 export interface MapTable {
   path: string;
   rows: number;
   bytes: number;
-  /** <name>_detail.parquet: key + `detail` JSON, read one entity at a time. */
-  detail?: MapTable;
 }
 
 export interface StopsMapDiff {
@@ -293,21 +242,21 @@ export interface StopsMapDiff {
   counts: DiffCounts & { moved: number };
   /** Changed stops, one row each: queried with DuckDB-WASM. */
   table: MapTable;
-  /** Computed by the generator over every changed stop. */
-  highlights: Array<Highlight<EntityRow[]>>;
-  /** stops-highlights.json: the highlights with full entity lists; absent in older builds. */
+  /** Older builds only: the highlights inline (now in `highlights_file` only). */
+  highlights?: Array<Highlight<EntityRow[]>>;
+  /** highlights/stops.json: the highlights with full entity lists; absent in older builds. */
   highlights_file?: string;
-  all_stops: AllStopsFile;
-  routes: Record<string, RouteInfo>;
+  /** The routes.txt raw table (raw/routes.parquet; maps/route_info.json in older builds): names and colours of every route (chips), shared with the routes map. */
+  route_info_file?: string;
 }
 
 /** What the generator builds the stops map from (before the list goes to Parquet). */
 export type StopsMapSource = Omit<
   StopsMapDiff,
-  'table' | 'highlights' | 'highlights_file' | 'all_stops'
+  'table' | 'highlights' | 'highlights_file' | 'route_info_file'
 > & {
   stops: StopChange[];
-  all_stops: AllStops;
+  routes: Record<string, RouteInfo>;
 };
 
 // ── Routes map ─────────────────────────────────────────────────────
@@ -352,8 +301,12 @@ export interface RouteImpact {
   route_type: string;
   color: string;
   text_color: string;
-  base: Record<string, string> | null;
-  new: Record<string, string> | null;
+  /**
+   * The routes.txt rows: the build's, not stored in the route detail
+   * (raw/routes.parquet holds them, field_changes are read from it).
+   */
+  base?: Record<string, string> | null;
+  new?: Record<string, string> | null;
   field_changes: FieldChange[];
   flags: Record<RouteFlag, boolean>;
   networks: { base: string | null; new: string | null };
@@ -430,15 +383,30 @@ export type UnusedShapeDiff = Pick<
   | 'geometry'
 >;
 
-/** A route's `detail` in maps/routes.parquet: the route and the stops it draws. */
+/**
+ * A route as the pages show it, assembled from the typed tables when it is
+ * opened (lib/useMapTable loadRouteDetail; lib/route-tables): its routes
+ * row, its shapes (analysis/shapes.parquet), its stops (analysis/stops.parquet),
+ * its routes.txt rows (raw/routes.parquet) and its stops' names and
+ * positions (raw/stops.parquet). Fields the tables no longer hold are
+ * empty: `services`, `trips` (0), `typical_trips` (absent) and each
+ * direction's `trips`, `pattern_count` (0) and `pattern_diff` ([]).
+ */
 export type RouteDetail = RouteImpact & {
+  /** The stops `direction_stops` names, and the route's added / removed ones. */
   stop_info: Record<string, RouteStopInfo>;
+  /** direction_id -> its added, removed and moved stops. */
+  direction_stops: Record<string, DirectionStops>;
 };
 
 /** What the generator builds the routes map from (before the list goes to Parquet). */
 export type RoutesMapSource = Omit<
   RoutesMapDiff,
-  'table' | 'highlights' | 'highlights_file' | 'route_info'
+  | 'table'
+  | 'shapes_table'
+  | 'highlights'
+  | 'highlights_file'
+  | 'route_info_file'
 > & {
   routes: RouteImpact[];
   stops: Record<string, RouteStopInfo>;
@@ -456,14 +424,26 @@ export interface RoutesMapDiff {
   columns: string[];
   path_change_threshold_m: number;
   counts: DiffCounts;
-  /** Every route, one row each: queried with DuckDB-WASM. */
+  /** Every route, one row each (analysis/routes.parquet, lib/route-tables ROUTES_COLUMNS). */
   table: MapTable;
-  /** Computed by the generator over every route. */
-  highlights: Array<Highlight<EntityRow[]>>;
-  /** routes-highlights.json: the highlights with full entity lists; absent in older builds. */
+  /** Every shape of either feed, one row each (analysis/shapes.parquet, SHAPES_COLUMNS). */
+  shapes_table: MapTable;
+  /** Older builds only: the highlights inline (now in `highlights_file` only). */
+  highlights?: Array<Highlight<EntityRow[]>>;
+  /** highlights/routes.json: the highlights with full entity lists; absent in older builds. */
   highlights_file?: string;
-  /** Names and colours of every route (chips). */
-  route_info: Record<string, RouteInfo>;
+  /** The routes.txt raw table (raw/routes.parquet; maps/route_info.json in older builds): names and colours of every route (chips), shared with the other pages. */
+  route_info_file?: string;
+  /** The stops.txt raw table: a route's stops are looked up in it by stop_id (lib/stop-info); absent in older builds (`stop_info` in the detail). */
+  stop_info_file?: string;
+  /** The stops analysis table (analysis/stops.parquet): moves and served (route, direction) pairs. */
+  stop_moves_file?: string;
+  /**
+   * Prototype: the overview's lines as PMTiles, layer `routes`, properties
+   * route_id, kind and part (l line, a added, r removed). When set, the
+   * routes map can draw from it instead.
+   */
+  overview_tiles?: string;
   /** Agencies of both feeds, by name (the agency filter); absent in older builds. */
   agencies?: Array<{ agency_id: string; name: string }>;
   shape_same_m?: number;
@@ -472,10 +452,57 @@ export interface RoutesMapDiff {
     base: { start: GtfsDate; end: GtfsDate } | null;
     new: { start: GtfsDate; end: GtfsDate } | null;
   };
+  /** Older builds only: now the shapes table's rows with no uses. */
   unused_shapes?: UnusedShapeDiff[];
 }
 
-// ── Top-level document ─────────────────────────────────────────────
+// ── GTFS files (report.json's `files`; files.json in older builds) ──
+
+/**
+ * Analyses with their own JSON next to their tables, that a page loads
+ * (lib/diff-layout ANALYSIS_FILES; pathways has its own page and loader).
+ */
+export type AnalysisName = Exclude<LayoutAnalysisName, 'pathways'>;
+
+/** How many base trips were paired with a new one. */
+export interface TripMatching {
+  mapped: number;
+  renamed: number;
+  base_trips: number;
+  new_trips: number;
+}
+
+/** One GTFS file either feed has. */
+export interface DiffFileEntry {
+  file: string;
+  present: { base: boolean; new: boolean };
+  /** Entities per feed, and changes by the file's key (keyed and grouped files). */
+  total?: { base: number; new: number };
+  primary_key?: string[];
+  counts?: DiffCounts;
+  /** Unchanged entities whose only differences are identifiers (trips.txt). */
+  id_only?: number;
+  /** Parent file whose entities this file's rows belong to (stop_times.txt: trips.txt). */
+  part_of?: string;
+  /** The file's raw row diff, when it changed. */
+  raw_table?: RawTable;
+  /** trips.txt only. */
+  trip_matching?: TripMatching;
+}
+
+/**
+ * Every GTFS file of the diff and the analyses' files: files.json in older
+ * builds, and what the pages read from report.json (filesDocFromReport).
+ */
+export interface FilesDoc {
+  schema: 1;
+  metadata: GtfsEntityDiff['metadata'];
+  files: DiffFileEntry[];
+  /** Each analysis's JSON: analysis/stops.json, analysis/routes.json, analysis/services.json. */
+  analyses: Partial<Record<AnalysisName, string>>;
+}
+
+// ── The viewer's pages (built from the file entries by lib/sections.ts) ──
 
 export interface EntityCategoryDiff {
   id: string;
@@ -492,17 +519,12 @@ export interface EntityCategoryDiff {
    */
   raw_tables?: RawTable[];
   /**
-   * categories/<id>.json holding this category's calendar, stops_map and
-   * routes_map (loaded with its tab; see useCategoryDetail).
+   * The page's analysis JSON (analysis/stops.json…), loaded with its page
+   * (useCategoryDetail) into the `detail_key` field.
    */
   detail?: string;
-  /** How many base trips were paired with a new one (trips only). */
-  trip_matching?: {
-    mapped: number;
-    renamed: number;
-    base_trips: number;
-    new_trips: number;
-  };
+  detail_key?: 'stops_map' | 'routes_map' | 'calendar';
+  trip_matching?: TripMatching;
 }
 
 export interface GtfsEntityDiff {

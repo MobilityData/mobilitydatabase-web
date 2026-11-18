@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { type Metadata } from 'next';
 import { type Locale, routing } from '../../../../../i18n/routing';
 import HighlightsScreen from '../../../../screens/GtfsDiffToolV2/components/highlights/HighlightsScreen';
-import { HIGHLIGHTS_FILE } from '../../../../screens/GtfsDiffToolV2/lib/global-highlights';
+import { HIGHLIGHTS_INDEX_FILE } from '../../../../screens/GtfsDiffToolV2/lib/diff-layout';
 import {
   getDiffDataset,
   getDiffManifest,
@@ -18,13 +18,13 @@ export const dynamic = 'force-static';
 // demand; unknown or invalid params still 404 below.
 export const dynamicParams = true;
 
-/** Every dataset folder whose diff has a highlights.json. */
+/** Every dataset folder whose diff has a highlights/index.json. */
 export function generateStaticParams(): Array<{
   locale: Locale;
   dataset: string;
 }> {
   const datasets = listDiffDatasets().filter(
-    (d) => getDiffManifest(d.id)?.files[HIGHLIGHTS_FILE] != null,
+    (d) => getDiffManifest(d.id)?.files[HIGHLIGHTS_INDEX_FILE] != null,
   );
   return routing.locales.flatMap((locale) =>
     datasets.map((d) => ({ locale, dataset: d.id })),

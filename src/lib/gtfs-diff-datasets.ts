@@ -4,23 +4,24 @@ import path from 'node:path';
 import {
   type DiffDataset,
   type DiffManifest,
-  MANIFEST_FILE,
   datasetFromManifest,
 } from '../app/screens/GtfsDiffToolV2/lib/datasets';
 import {
+  HIGHLIGHTS_INDEX_FILE,
+  MANIFEST_FILE,
   REPORT_FILE,
-  type ReportDoc,
+  TRIPS_CALENDAR_FILE,
+} from '../app/screens/GtfsDiffToolV2/lib/diff-layout';
+import {
   type ReportSummary,
   reportSummary,
 } from '../app/screens/GtfsDiffToolV2/lib/report';
 import {
-  HIGHLIGHTS_FILE,
   type HighlightsDoc,
+  type SectionHighlightsFile,
+  joinHighlightEntities,
 } from '../app/screens/GtfsDiffToolV2/lib/global-highlights';
-import {
-  TRIPS_CALENDAR_FILE,
-  type TripsCalendarDoc,
-} from '../app/screens/GtfsDiffToolV2/lib/trips-calendar';
+import type { TripsCalendarDoc } from '../app/screens/GtfsDiffToolV2/lib/trips-calendar';
 
 /**
  * Local stand-in for the diff store: one folder per diff, holding the files
@@ -82,19 +83,34 @@ export function getReportSummary(id: string): ReportSummary | null {
   const p = diffFilePath(id, REPORT_FILE);
   return p
     ? reportSummary(
-        JSON.parse(readFileSync(p, 'utf8')) as ReportDoc | ReportSummary,
+        JSON.parse(readFileSync(p, 'utf8')) as Parameters<
+          typeof reportSummary
+        >[0],
       )
     : null;
 }
 
-/** trips-calendar.json: trip changes per date (Trips v3); null if not built. */
+/** views/trips/calendar.json: trip changes per date (Trips v3); null if not built. */
 export function getTripsCalendar(id: string): TripsCalendarDoc | null {
   const p = diffFilePath(id, TRIPS_CALENDAR_FILE);
   return p ? (JSON.parse(readFileSync(p, 'utf8')) as TripsCalendarDoc) : null;
 }
 
-/** highlights.json of a diff: every notable highlight, ranked; null if not built. */
+/**
+ * highlights/index.json of a diff: every notable highlight, ranked, with its
+ * entities from the sections' highlights files (the index leaves them out);
+ * null if not built.
+ */
 export function getHighlights(id: string): HighlightsDoc | null {
-  const p = diffFilePath(id, HIGHLIGHTS_FILE);
-  return p ? (JSON.parse(readFileSync(p, 'utf8')) as HighlightsDoc) : null;
+  const p = diffFilePath(id, HIGHLIGHTS_INDEX_FILE);
+  if (p == null) return null;
+  const doc = JSON.parse(readFileSync(p, 'utf8')) as HighlightsDoc;
+  const sections: Record<string, SectionHighlightsFile | null> = {};
+  for (const [section, file] of Object.entries(doc.files ?? {})) {
+    const fp = diffFilePath(id, file);
+    sections[section] = fp
+      ? (JSON.parse(readFileSync(fp, 'utf8')) as SectionHighlightsFile)
+      : null;
+  }
+  return joinHighlightEntities(doc, sections);
 }

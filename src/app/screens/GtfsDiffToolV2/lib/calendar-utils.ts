@@ -8,6 +8,7 @@ import type {
   DayChanges,
   DayModifiedEntry,
   DayServiceEntry,
+  DiffType,
   GtfsDate,
   ServiceDiff,
   ServiceSnapshot,
@@ -169,12 +170,18 @@ export function snapshotPatternText(s: ServiceSnapshot | null): string {
   return `${formatWeekdays(cal)} · ${range}`;
 }
 
-/** A service's weekly pattern for the services list ("Mon–Fri → Sat, Sun"). */
-export function serviceListPattern(s: ServiceDiff): string {
-  return s.status === 'modified' &&
-    formatWeekdays(s.base?.calendar) !== formatWeekdays(s.new?.calendar)
-    ? `${formatWeekdays(s.base?.calendar)} → ${formatWeekdays(s.new?.calendar)}`
-    : formatWeekdays((s.new ?? s.base)?.calendar);
+/**
+ * A service's weekly pattern for the services list ("Mon–Fri → Sat, Sun"),
+ * from its status and calendar.txt row in each feed.
+ */
+export function serviceListPattern(
+  status: DiffType,
+  cal: { base: CalendarRow | null; new: CalendarRow | null },
+): string {
+  return status === 'modified' &&
+    formatWeekdays(cal.base) !== formatWeekdays(cal.new)
+    ? `${formatWeekdays(cal.base)} → ${formatWeekdays(cal.new)}`
+    : formatWeekdays(status === 'deleted' ? cal.base : cal.new);
 }
 
 /** Change counts of one day, per kind. */
@@ -182,6 +189,18 @@ export type DayCounts = Record<ChangeKind, number>;
 
 export function countsTotal(c: DayCounts | undefined): number {
   return c == null ? 0 : c.added + c.removed + c.modified;
+}
+
+/**
+ * Share (0–1) of a day's services that changed: its changes out of the
+ * services active in the busier feed, at least the changes themselves.
+ */
+export function changedShare(
+  changes: number,
+  [base, next]: [number, number],
+): number {
+  const services = Math.max(base, next, changes);
+  return services > 0 ? changes / services : 0;
 }
 
 // ── Filters ────────────────────────────────────────────────────────

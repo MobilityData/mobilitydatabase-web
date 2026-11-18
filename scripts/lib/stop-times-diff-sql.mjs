@@ -22,7 +22,7 @@
 import { statSync } from 'node:fs';
 import { join } from 'node:path';
 import { ident } from './feed-store.mjs';
-import { ACTIONS, META, RAW_DIR, parquetOptions, tableName } from './raw-diff-parquet.mjs';
+import { ACTIONS, META, parquetOptions, rawTablePath } from './raw-diff-parquet.mjs';
 import { timer } from './timings.mjs';
 
 /** Every character String.prototype.trim() removes (all in the BMP). */
@@ -265,9 +265,9 @@ export async function openStopTimesSql({
       }
       let path = null;
       if (parquet) {
-        const name = tableName('stop_times.txt');
-        const end = timer(`write ${RAW_DIR}/${name}.parquet (${passes.length > 1 ? '' : 'SQL join + classify + '}sort + COPY)`);
-        path = join(parquet.outDir, `${name}.parquet`);
+        const rel = rawTablePath('stop_times.txt');
+        const end = timer(`write ${rel} (${passes.length > 1 ? '' : 'SQL join + classify + '}sort + COPY)`);
+        path = join(parquet.datasetDir, rel);
         const out = [...META.map(([c]) => c), ...columns.flatMap((c) => [`b_${c}`, `n_${c}`])].map(ident).join(', ');
         // _g breaks ties in trip order (the order rows used to be appended in).
         await store.run(
@@ -301,7 +301,7 @@ export async function openStopTimesSql({
       endCounts({ rows });
       for (const t of Object.values(T)) await store.run(`DROP TABLE IF EXISTS ${t}`);
       const table = path
-        ? { file: 'stop_times.txt', path: `${RAW_DIR}/${tableName('stop_times.txt')}.parquet`, rows, bytes: statSync(path).size, columns, counts }
+        ? { file: 'stop_times.txt', path: rawTablePath('stop_times.txt'), rows, bytes: statSync(path).size, columns, counts }
         : null;
       return { table, childCounts };
     },

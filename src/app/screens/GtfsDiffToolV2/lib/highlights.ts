@@ -30,15 +30,17 @@ export const INLINE_ENTITY_ROWS = 50;
 /** A section's highlights with their full entity lists, as plain JSON. */
 export interface HighlightsFile<E = EntityRow> {
   schema: 1;
-  /** stops, routes or calendar. */
+  /** stops, routes, services or trips (lib/diff-layout HIGHLIGHT_SECTIONS). */
   section: string;
   highlights: Array<Highlight<E[]>>;
 }
 
-/** File of a section's highlights with full entity lists: stops-highlights.json */
-export function highlightsFileName(section: string): string {
-  return `${section}-highlights.json`;
-}
+/**
+ * File of a section's highlights with full entity lists
+ * (highlights/stops.json): lib/diff-layout's, under the name the build
+ * scripts import.
+ */
+export { highlightsFilePath as highlightsFileName } from './diff-layout';
 
 /**
  * The highlights with at most `max` entity rows each, and the full count in

@@ -1,15 +1,26 @@
-import type { EntityCategoryDiff, GtfsEntityDiff } from './entity-diff-types';
+import type { DiffCounts, FilesDoc, RawTable } from './entity-diff-types';
 import { parseLocationHash, toFocusHash } from './diff-nav';
 import {
+  type ReportDoc,
+  type ReportDocV2,
+  type ReportDocV3,
   feedLabel,
+  filesDocFromReport,
+  highlightSectionLabel,
   isRequiredSection,
-  presentFiles,
-  reportFilesAndGroups,
+  pathwaysCounts,
+  reportFiles,
   reportHighlights,
-  reportSections,
   reportSummary,
   sectionSlug,
 } from './report';
+import {
+  PATHWAYS_SECTION,
+  SECTIONS,
+  categoriesFromFiles,
+  sectionPageId,
+} from './sections';
+import { entityRowHref, sectionPageHref } from './highlight-links';
 
 describe('entity page hashes', () => {
   it('round-trips a focus within the current entity', () => {
@@ -43,80 +54,214 @@ describe('entity page hashes', () => {
   });
 });
 
-describe('report sections', () => {
-  const entity = {
-    categories: [
+describe('report.json', () => {
+  const counts = (
+    added: number,
+    deleted: number,
+    modified: number,
+    unchanged: number,
+  ): DiffCounts => ({ added, deleted, modified, unchanged });
+  const both = { base: true, new: true };
+  const files: FilesDoc = {
+    schema: 1,
+    metadata: {} as FilesDoc['metadata'],
+    analyses: {},
+    files: [
+      { file: 'stops.txt', present: both, counts: counts(2, 1, 2, 9) },
       {
-        id: 'agency',
-        label: 'Agency',
-        files: [],
-        counts: { added: 0, deleted: 0, modified: 0, unchanged: 1 },
-        entity_types: [{}],
+        file: 'pathways.txt',
+        present: { base: false, new: true },
+        counts: counts(1, 0, 0, 1),
+      },
+      { file: 'routes.txt', present: both, counts: counts(0, 1, 1, 8) },
+      { file: 'trips.txt', present: both, counts: counts(5, 0, 1, 2) },
+      {
+        file: 'stop_times.txt',
+        present: both,
+        part_of: 'trips.txt',
+        raw_table: {
+          counts: { ...counts(50, 0, 3, 20), id_only: 4 },
+        } as RawTable,
       },
       {
-        id: 'calendar',
-        label: 'Service calendar',
-        files: [],
-        counts: { added: 1, deleted: 2, modified: 3, unchanged: 0 },
-        calendar: { present: { base: ['calendar.txt'], new: [] } },
-      },
-      {
-        id: 'fares_v2',
-        label: 'Fares v2',
-        files: [],
-        counts: { added: 0, deleted: 0, modified: 0, unchanged: 0 },
-        entity_types: [],
+        file: 'calendar.txt',
+        present: both,
+        raw_table: {
+          counts: { ...counts(1, 0, 2, 3), id_only: 0 },
+        } as RawTable,
       },
     ],
-  } as unknown as GtfsEntityDiff;
+  };
+  const doc: ReportDocV3 = {
+    schema: 3,
+    dataset: 'd',
+    generated_at: 't',
+    feeds: { base: null, new: null },
+    files: reportFiles(files),
+    // Route impact and services, not the files' rows.
+    analyses: { routes: counts(0, 1, 4, 5), services: counts(1, 2, 3, 0) },
+  };
 
-  it('lists categories with slugs and counts, then pathways', () => {
-    const sections = reportSections(entity, {
-      stations: [{ status: 'modified' }, { status: 'added' }],
-      unchanged_station_ids: ['a', 'b', 'c'],
-    });
-    expect(sections.map((s) => [s.slug, s.count, s.present])).toEqual([
-      ['agency', 0, true],
-      ['calendar', 6, true],
-      ['fares-v2', 0, false],
-      ['pathways', 2, true],
+  it('counts each file by its key, else by its raw rows', () => {
+    expect(
+      doc.files.map((f) => [f.file, f.present, f.part_of ?? null]),
+    ).toEqual([
+      ['stops.txt', true, null],
+      ['pathways.txt', true, null],
+      ['routes.txt', true, null],
+      ['trips.txt', true, null],
+      ['stop_times.txt', true, 'trips.txt'],
+      ['calendar.txt', true, null],
     ]);
-    expect(sections[1].counts).toEqual({
-      added: 1,
-      deleted: 2,
-      modified: 3,
-      unchanged: 0,
+    expect(doc.files.find((f) => f.file === 'stop_times.txt')?.counts).toEqual({
+      ...counts(50, 0, 3, 20),
+      id_only: 4,
     });
-    expect(sections[3].counts).toEqual({
-      added: 1,
-      deleted: 0,
-      modified: 1,
-      unchanged: 3,
+  });
+
+  it('groups files into the pages, with analysis counts where pages use them', () => {
+    const sections = reportSummary(doc).sections;
+    const byId = new Map(sections.map((x) => [x.id, x]));
+    expect(sections.map((x) => x.id)).toEqual(
+      SECTIONS.filter((x) => x.id !== PATHWAYS_SECTION).map((x) => x.id),
+    );
+    // Stops: its files' sum.
+    expect(byId.get('stops')?.counts).toEqual(counts(3, 1, 2, 10));
+    expect(byId.get('stops')?.present_files).toEqual([
+      'stops.txt',
+      'pathways.txt',
+    ]);
+    // Routes and Service Dates: their analyses' (routes, services).
+    expect(byId.get('routes')?.counts).toEqual(counts(0, 1, 4, 5));
+    expect(byId.get('calendar')?.count).toBe(6);
+    // Trips: stop_times.txt counts inside trips.txt.
+    expect(byId.get('trips')?.counts).toEqual(counts(5, 0, 1, 2));
+    expect(byId.get('fares_v2')?.present).toBe(false);
+  });
+
+  it('adds the pathways page when pathways were diffed', () => {
+    const withPathways: ReportDocV3 = {
+      ...doc,
+      analyses: {
+        ...doc.analyses,
+        pathways: pathwaysCounts({
+          stations: [{ status: 'modified' }, { status: 'added' }],
+          unchanged_station_ids: ['a', 'b', 'c'],
+        }),
+      },
+    };
+    const last = reportSummary(withPathways).sections.at(-1);
+    expect(last).toMatchObject({
+      id: 'pathways',
+      slug: 'pathways',
+      count: 2,
+      counts: counts(1, 0, 1, 3),
+      files: ['levels.txt', 'pathways.txt'],
     });
     expect(sectionSlug('fares_v1')).toBe('fares-v1');
   });
 
-  it('surfaces the most severe calendar highlights', () => {
-    const withHighlights = {
-      categories: [
+  it('shows the services analysis and highlights on the Service Dates page', () => {
+    expect(sectionPageId('services')).toBe('calendar');
+    expect(sectionPageId('stops')).toBe('stops');
+    expect(sectionPageId('trips')).toBe('trips');
+    const summary = reportSummary(doc);
+    expect(highlightSectionLabel(summary, 'services')).toBe('Service Dates');
+    expect(highlightSectionLabel(summary, 'unknown')).toBe('unknown');
+    expect(sectionPageHref('d', 'services')).toBe(
+      '/gtfs-diff-tool-v2/d/calendar',
+    );
+    expect(
+      entityRowHref('d', 'services', 'service', {
+        id: 'S1',
+        label: 'S1',
+        note: '',
+      }),
+    ).toBe('/gtfs-diff-tool-v2/d/calendar/S1');
+  });
+
+  it('reads schema 4: the full file entries and each analysis with its file', () => {
+    const v4: ReportDoc = {
+      schema: 4,
+      dataset: 'd',
+      generated_at: 't',
+      feeds: { base: null, new: null },
+      metadata: files.metadata,
+      files: files.files,
+      analyses: {
+        stops: { file: 'analysis/stops.json', counts: counts(3, 1, 2, 10) },
+        routes: { file: 'analysis/routes.json', counts: counts(0, 1, 4, 5) },
+        services: {
+          file: 'analysis/services.json',
+          counts: counts(1, 2, 3, 0),
+        },
+      },
+    };
+    // The same pages as the schema 3 report of the same diff.
+    expect(reportSummary(v4).sections).toEqual(reportSummary(doc).sections);
+    // The pages' entity diff reads the entries and the analyses' files.
+    expect(filesDocFromReport(v4)).toEqual({
+      schema: 1,
+      metadata: files.metadata,
+      files: files.files,
+      analyses: {
+        stops: 'analysis/stops.json',
+        routes: 'analysis/routes.json',
+        services: 'analysis/services.json',
+      },
+    });
+    // Feeds come with the report step; until then the header has none.
+    const { feeds: _f, ...noFeeds } = v4;
+    expect(reportSummary(noFeeds).feeds).toEqual({ base: null, new: null });
+  });
+
+  it('still reads schema 2 reports and passes summaries through', () => {
+    const v2: ReportDocV2 = {
+      schema: 2,
+      dataset: 'd',
+      generated_at: 't',
+      feeds: { base: null, new: null },
+      files: [
         {
-          id: 'calendar',
-          calendar: {
-            highlights: [
-              { severity: 'info', title: 'i' },
-              { severity: 'warning', title: 'w', detail: 'd' },
-              { severity: 'error', title: 'e' },
-              { severity: 'success', title: 's' },
-            ],
-          },
+          file: 'stops.txt',
+          group: 'stops',
+          present: true,
+          counts: counts(1, 0, 0, 1),
         },
       ],
-    } as unknown as GtfsEntityDiff;
-    expect(reportHighlights(withHighlights)).toEqual({
+      groups: [{ id: 'stops', label: 'Stops', present: true }],
+    };
+    expect(reportSummary(v2).sections).toEqual([
+      {
+        id: 'stops',
+        slug: 'stops',
+        label: 'Stops',
+        count: 1,
+        counts: counts(1, 0, 0, 1),
+        files: ['stops.txt'],
+        present_files: ['stops.txt'],
+        present: true,
+      },
+    ]);
+    const summary = reportSummary(doc);
+    expect(reportSummary(summary)).toBe(summary);
+  });
+
+  it("surfaces the calendar's most severe highlights as a fallback", () => {
+    expect(
+      reportHighlights({
+        highlights: [
+          { severity: 'info', title: 'i' },
+          { severity: 'warning', title: 'w', detail: 'd' },
+          { severity: 'error', title: 'e' },
+          { severity: 'success', title: 's' },
+        ],
+      }),
+    ).toEqual({
       counts: { error: 1, warning: 1, success: 1, info: 1 },
       top: [
-        { section: 'calendar', severity: 'error', title: 'e' },
-        { section: 'calendar', severity: 'warning', title: 'w', detail: 'd' },
+        { section: 'services', severity: 'error', title: 'e' },
+        { section: 'services', severity: 'warning', title: 'w', detail: 'd' },
       ],
     });
   });
@@ -133,145 +278,6 @@ describe('report sections', () => {
     expect(feedLabel({ file: 'a.zip' })).toBe('a.zip');
     expect(feedLabel(null)).toBe('unknown feed');
   });
-});
-
-describe('report.json files and groups', () => {
-  const counts = (
-    added: number,
-    deleted: number,
-    modified: number,
-    unchanged: number,
-  ): Record<string, number> => ({ added, deleted, modified, unchanged });
-  const entity = {
-    categories: [
-      {
-        id: 'stops',
-        label: 'Stops',
-        files: ['stops.txt', 'levels.txt', 'pathways.txt'],
-        counts: counts(3, 1, 2, 10),
-        entity_types: [
-          { file: 'stops.txt', counts: counts(2, 1, 2, 9), child_files: [] },
-          { file: 'pathways.txt', counts: counts(1, 0, 0, 1), child_files: [] },
-        ],
-      },
-      {
-        id: 'routes',
-        label: 'Routes',
-        files: ['routes.txt', 'shapes.txt'],
-        // Route impact, not the files' rows.
-        routes_map: { counts: counts(0, 1, 4, 5) },
-        counts: counts(7, 8, 1, 9),
-        entity_types: [
-          { file: 'routes.txt', counts: counts(0, 1, 1, 8), child_files: [] },
-          { file: 'shapes.txt', counts: counts(7, 7, 0, 1), child_files: [] },
-        ],
-      },
-      {
-        id: 'trips',
-        label: 'Trips',
-        files: ['trips.txt', 'stop_times.txt'],
-        counts: counts(5, 0, 1, 2),
-        entity_types: [
-          {
-            file: 'trips.txt',
-            counts: counts(5, 0, 1, 2),
-            child_files: ['stop_times.txt'],
-          },
-        ],
-        raw_tables: [
-          {
-            file: 'stop_times.txt',
-            counts: { ...counts(50, 0, 3, 20), id_only: 4 },
-          },
-        ],
-      },
-    ],
-  } as unknown as GtfsEntityDiff;
-  const pathways = {
-    stations: [{ status: 'modified' as const }],
-    unchanged_station_ids: ['s'],
-  };
-  const inFeeds = new Set(['stops.txt', 'pathways.txt', 'routes.txt']);
-
-  it('tags every file with its group and its own counts', () => {
-    const { files } = reportFilesAndGroups(entity, pathways, inFeeds);
-    expect(files.map((f) => [f.file, f.group, f.present])).toEqual([
-      ['stops.txt', 'stops', true],
-      ['levels.txt', 'stops', false],
-      ['pathways.txt', 'stops', true],
-      ['routes.txt', 'routes', true],
-      ['shapes.txt', 'routes', false],
-      ['trips.txt', 'trips', false],
-      ['stop_times.txt', 'trips', false],
-    ]);
-    expect(files.find((f) => f.file === 'levels.txt')?.counts).toBeNull();
-    expect(files.find((f) => f.file === 'stop_times.txt')).toEqual(
-      expect.objectContaining({
-        part_of: 'trips.txt',
-        counts: { ...counts(50, 0, 3, 20), id_only: 4 },
-      }),
-    );
-  });
-
-  it('gives a group its own counts only when its files do not add up', () => {
-    const { groups } = reportFilesAndGroups(entity, pathways, inFeeds);
-    expect(
-      groups.map((g) => [g.id, g.counts ?? null, g.files ?? null]),
-    ).toEqual([
-      ['stops', null, null],
-      ['routes', counts(0, 1, 4, 5), null],
-      ['trips', null, null],
-      ['pathways', counts(0, 0, 1, 1), ['levels.txt', 'pathways.txt']],
-    ]);
-  });
-
-  it('turns back into the sections the pages show', () => {
-    const doc = {
-      schema: 2 as const,
-      dataset: 'd',
-      generated_at: 't',
-      feeds: { base: null, new: null },
-      ...reportFilesAndGroups(entity, pathways, inFeeds),
-    };
-    const expected = reportSections(entity, pathways).map((s) => ({
-      ...s,
-      present_files: s.files.filter((f) => inFeeds.has(f)),
-    }));
-    expect(reportSummary(doc).sections).toEqual(expected);
-  });
-
-  it('passes reports in the section format through', () => {
-    const old = {
-      schema: 1 as const,
-      dataset: 'd',
-      generated_at: 't',
-      feeds: { base: null, new: null },
-      sections: reportSections(entity, pathways),
-    };
-    expect(reportSummary(old)).toBe(old);
-  });
-});
-
-describe('files in the summary', () => {
-  it('lists only the files a feed has, in the category order', () => {
-    const c = {
-      id: 'stops',
-      files: ['stops.txt', 'levels.txt', 'pathways.txt'],
-      entity_types: [
-        {
-          file: 'stops.txt',
-          present: { base: true, new: true },
-          child_files: [],
-        },
-        {
-          file: 'pathways.txt',
-          present: { base: false, new: true },
-          child_files: [],
-        },
-      ],
-    } as unknown as EntityCategoryDiff;
-    expect(presentFiles(c)).toEqual(['stops.txt', 'pathways.txt']);
-  });
 
   it('keeps sections GTFS requires, drops optional ones', () => {
     expect(
@@ -280,5 +286,80 @@ describe('files in the summary', () => {
     expect(
       isRequiredSection({ files: ['fare_products.txt', 'fare_media.txt'] }),
     ).toBe(false);
+  });
+});
+
+describe('pages from files.json', () => {
+  const both = { base: true, new: true };
+  const doc: FilesDoc = {
+    schema: 1,
+    metadata: {} as FilesDoc['metadata'],
+    analyses: {
+      stops: 'analysis/stops.json',
+      services: 'analysis/services.json',
+    },
+    files: [
+      {
+        file: 'stops.txt',
+        present: both,
+        primary_key: ['stop_id'],
+        total: { base: 3, new: 4 },
+        counts: { added: 1, deleted: 0, modified: 1, unchanged: 2 },
+        raw_table: { file: 'stops.txt' } as RawTable,
+      },
+      {
+        file: 'trips.txt',
+        present: both,
+        primary_key: ['trip_id'],
+        total: { base: 2, new: 2 },
+        counts: { added: 0, deleted: 0, modified: 1, unchanged: 1 },
+        raw_table: { file: 'trips.txt' } as RawTable,
+        trip_matching: { mapped: 2, renamed: 1, base_trips: 2, new_trips: 2 },
+      },
+      {
+        file: 'stop_times.txt',
+        present: both,
+        part_of: 'trips.txt',
+        raw_table: { file: 'stop_times.txt' } as RawTable,
+      },
+      {
+        file: 'calendar.txt',
+        present: both,
+        raw_table: { file: 'calendar.txt' } as RawTable,
+      },
+    ],
+  };
+  const pages = new Map(categoriesFromFiles(doc).map((c) => [c.id, c]));
+
+  it('groups the files into every page but pathways', () => {
+    expect([...pages.keys()]).toEqual(
+      SECTIONS.filter((x) => x.id !== PATHWAYS_SECTION).map((x) => x.id),
+    );
+    expect(pages.get('fares_v1')?.entity_types).toEqual([]);
+  });
+
+  it("gives each page its files' counts, raw tables and analysis", () => {
+    const stops = pages.get('stops');
+    expect(stops?.entity_types?.map((t) => t.file)).toEqual(['stops.txt']);
+    expect(stops?.raw_tables?.map((t) => t.file)).toEqual(['stops.txt']);
+    expect(stops).toMatchObject({
+      detail: 'analysis/stops.json',
+      detail_key: 'stops_map',
+    });
+    const trips = pages.get('trips');
+    expect(trips?.entity_types?.[0].child_files).toEqual(['stop_times.txt']);
+    expect(trips?.raw_tables?.map((t) => t.file)).toEqual([
+      'trips.txt',
+      'stop_times.txt',
+    ]);
+    expect(trips?.trip_matching?.renamed).toBe(1);
+    // Calendar files have raw rows only; the services analysis counts services
+    // and fills the Service Dates page's `calendar` field.
+    expect(pages.get('calendar')).toMatchObject({
+      entity_types: [],
+      detail: 'analysis/services.json',
+      detail_key: 'calendar',
+    });
+    expect(pages.get('routes')?.detail).toBeUndefined();
   });
 });

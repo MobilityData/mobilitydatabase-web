@@ -11,6 +11,7 @@
  */
 
 import type { AsyncDuckDB, AsyncDuckDBConnection } from '@duckdb/duckdb-wasm';
+import { isWholeDownloadFile } from './datasets';
 
 let dbPromise: Promise<AsyncDuckDB> | null = null;
 let connPromise: Promise<AsyncDuckDBConnection> | null = null;
@@ -85,11 +86,27 @@ async function remoteSize(url: string): Promise<number | null> {
 }
 
 /**
- * A view over a remote Parquet file: downloaded whole when small
- * (WHOLE_FILE_BYTES), otherwise read with HTTP range requests. Returns the
- * view's name; the same URL is registered once.
+ * How parquetView reads a file: `whole` downloads it in one GET and hands
+ * DuckDB the bytes; `ranged` reads it with HTTP range requests, so a query
+ * fetches only the column chunks of the row groups it needs; `auto` is
+ * whole up to WHOLE_FILE_BYTES, ranged past it.
  */
-export function parquetView(url: string): Promise<string> {
+export type ParquetRead = 'auto' | 'whole' | 'ranged';
+
+/**
+ * A view over a remote Parquet file, read as `read` says. The default is
+ * `whole` for the analysis tables a page reads most of
+ * (lib/datasets WHOLE_DOWNLOAD_FILES), else `auto`; the stop and route
+ * lookups ask `ranged`, reading a few columns of the raw tables. Returns
+ * the view's name; the same URL is registered once, as whichever was asked
+ * first.
+ */
+export function parquetView(
+  url: string,
+  {
+    read = isWholeDownloadFile(url) ? 'whole' : 'auto',
+  }: { read?: ParquetRead } = {},
+): Promise<string> {
   let p = registered.get(url);
   if (p == null) {
     const name = `raw_${nextView++}`;
@@ -98,8 +115,10 @@ export function parquetView(url: string): Promise<string> {
       const db = await getDuckDb();
       const conn = await getConnection();
       const absolute = new URL(url, window.location.href).toString();
-      const size = await remoteSize(absolute);
-      if (size != null && size <= WHOLE_FILE_BYTES) {
+      const size = read === 'auto' ? await remoteSize(absolute) : null;
+      const whole =
+        read === 'whole' || (size != null && size <= WHOLE_FILE_BYTES);
+      if (whole) {
         const res = await fetch(absolute);
         if (!res.ok) throw new Error(`${res.status} ${res.statusText}: ${url}`);
         await db.registerFileBuffer(
@@ -158,4 +177,30 @@ export function runQueued(query: {
   const result = queue.then(exec, exec);
   queue = result.catch(() => undefined);
   return result;
+}
+
+const derived = new Map<string, Promise<string>>();
+let nextTable = 0;
+
+/**
+ * A table built once from other views (a join every query of a page reads),
+ * so the join and its computed columns run once instead of per query.
+ * `build` gets the table's name and returns its CREATE TABLE … AS
+ * statement; the same key is built once per page load.
+ */
+export function derivedTable(
+  key: string,
+  build: (name: string) => Promise<{ sql: string; params: unknown[] }>,
+): Promise<string> {
+  let p = derived.get(key);
+  if (p == null) {
+    const name = `derived_${nextTable++}`;
+    p = build(name).then(async (q) => {
+      await runQueued(q);
+      return name;
+    });
+    p.catch(() => derived.delete(key));
+    derived.set(key, p);
+  }
+  return p;
 }

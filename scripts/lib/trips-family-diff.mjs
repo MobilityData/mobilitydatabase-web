@@ -108,7 +108,7 @@ function fileCollector(file, baseTable, newTable, { lineOf, parquetTable, sameSh
         new: n,
       });
     },
-    /** Writes the Parquet file; its description for entity-diff.json. */
+    /** Writes the Parquet file; its description for report.json's file entry. */
     async finishParquet() {
       return parquetTable ? parquetTable.finish() : null;
     },

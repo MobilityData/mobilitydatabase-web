@@ -90,6 +90,12 @@ export interface PathwaysDiff {
     levels: { base: number; new: number };
   };
   unchanged_station_ids: string[];
-  /** Changed stations only. */
+  /**
+   * Changed stations only. Stored with node ids and statuses only: their
+   * stops.txt rows (and the station's) are put back from `stop_info_file`
+   * when the diff loads (lib/lookups withPathwaysStops).
+   */
   stations: StationPathwaysDiff[];
+  /** The stops.txt raw table; absent in older builds, which store the rows. */
+  stop_info_file?: string;
 }

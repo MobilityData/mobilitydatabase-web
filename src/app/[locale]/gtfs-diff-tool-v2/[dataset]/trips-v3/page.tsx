@@ -18,7 +18,7 @@ export const dynamic = 'force-static';
 // demand; unknown or invalid params still 404 below.
 export const dynamicParams = true;
 
-/** Every dataset folder with both a trips-diff.json and an entity-diff.json. */
+/** Every dataset folder with both a views/trips/index.json and a report.json. */
 export function generateStaticParams(): Array<{
   locale: Locale;
   dataset: string;

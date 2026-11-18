@@ -2,7 +2,7 @@
   "schema": 1,
   "id": "mbta-pathways-demo",
   "label": "mbta-pathways-demo",
-  "generated_at": "2026-11-02T12:44:42.553Z",
+  "generated_at": "2026-11-18T14:16:51.013Z",
   "feeds": {
     "base": {
       "file": "base.zip",
@@ -20,67 +20,55 @@
     }
   },
   "files": {
-    "calendar-highlights.json": {
+    "analysis/pathways.json": {
+      "bytes": 176715
+    },
+    "analysis/service_dates.parquet": {
+      "bytes": 164
+    },
+    "analysis/services.json": {
+      "bytes": 515
+    },
+    "analysis/services.parquet": {
+      "bytes": 467
+    },
+    "analysis/stops.json": {
+      "bytes": 447
+    },
+    "analysis/stops.parquet": {
+      "bytes": 1058
+    },
+    "highlights/index.json": {
+      "bytes": 539
+    },
+    "highlights/services.json": {
       "bytes": 49
     },
-    "calendar/days.parquet": {
-      "bytes": 310
-    },
-    "calendar/services.parquet": {
-      "bytes": 340
-    },
-    "calendar/services_detail.parquet": {
-      "bytes": 125
-    },
-    "categories/calendar.json": {
-      "bytes": 612
-    },
-    "categories/routes.json": {
-      "bytes": 19
-    },
-    "categories/stops.json": {
-      "bytes": 931
-    },
-    "entity-diff.json": {
-      "bytes": 4177
-    },
-    "highlights.json": {
-      "bytes": 871
-    },
-    "maps/all_stops_data.json": {
-      "bytes": 8302
-    },
-    "maps/stops.parquet": {
-      "bytes": 2342
-    },
-    "maps/stops_detail.parquet": {
-      "bytes": 1973
-    },
-    "pathways-diff.json": {
-      "bytes": 229828
-    },
-    "raw/levels.parquet": {
-      "bytes": 3839
-    },
-    "raw/pathways.parquet": {
-      "bytes": 28327
-    },
-    "raw/stops.parquet": {
-      "bytes": 19958
-    },
-    "report.json": {
-      "bytes": 6064
-    },
-    "stops-highlights.json": {
+    "highlights/stops.json": {
       "bytes": 357
     },
-    "trips-diff.json": {
-      "bytes": 378
+    "highlights/trips.json": {
+      "bytes": 46
     },
-    "trips/base.parquet": {
+    "raw/levels.parquet": {
+      "bytes": 2768
+    },
+    "raw/pathways.parquet": {
+      "bytes": 14566
+    },
+    "raw/stops.parquet": {
+      "bytes": 16430
+    },
+    "report.json": {
+      "bytes": 5633
+    },
+    "views/trips/base.parquet": {
       "bytes": 152
     },
-    "trips/new.parquet": {
+    "views/trips/index.json": {
+      "bytes": 416
+    },
+    "views/trips/new.parquet": {
       "bytes": 152
     }
   }

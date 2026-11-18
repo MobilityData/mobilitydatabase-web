@@ -1,14 +1,16 @@
 /**
  * Diff datasets: one generated diff per feed pair, laid out the way the
- * future backend will store it in object storage:
+ * future backend will store it in object storage (lib/diff-layout, the
+ * single source of every path):
  *
  *   <base URL>/<id>/manifest.json        what the diff holds (always first)
- *   <base URL>/<id>/report.json          header and summary counts
- *   <base URL>/<id>/entity-diff.json     per-entity summaries and maps
- *   <base URL>/<id>/trips-diff.json      day index for the Trips view
- *   <base URL>/<id>/trips/<side>.parquet each feed's trips, by service
- *   <base URL>/<id>/raw/<file>.parquet   full row diffs
- *   <base URL>/<id>/entities/<file>.parquet  long entity change lists
+ *   <base URL>/<id>/report.json          feeds, one entry per GTFS file, the
+ *                                        analyses (file and counts), top highlights
+ *   <base URL>/<id>/raw/<file>.parquet   row diffs
+ *   <base URL>/<id>/analysis/            the stops, routes, services and
+ *                                        pathways analyses
+ *   <base URL>/<id>/highlights/          every section's highlights
+ *   <base URL>/<id>/views/               copies shaped for one viewer (Trips)
  *
  * Every file is read through diffFileUrl(), so moving the files from this
  * app's API (local folders under src/app/screens/GtfsDiffTool/data/v2/) to a
@@ -18,18 +20,49 @@
  */
 
 import { getEnvConfig } from '../../../utils/config';
+import {
+  ANALYSIS_FILES,
+  REPORT_FILE,
+  ROUTES_TABLE,
+  SERVICES_TABLE,
+  SERVICE_DATES_TABLE,
+  SHAPES_TABLE,
+  STOPS_TABLE,
+  TRIPS_DAY_ROUTES_FILE,
+  TRIPS_INDEX_FILE,
+} from './diff-layout';
 import type { ReportFeed } from './report';
-
-export const MANIFEST_FILE = 'manifest.json';
 
 /** Well-known JSON files of a diff, by kind. */
 export const DIFF_FILES = {
-  entity: 'entity-diff.json',
-  trips: 'trips-diff.json',
-  pathways: 'pathways-diff.json',
+  entity: REPORT_FILE,
+  trips: TRIPS_INDEX_FILE,
+  pathways: ANALYSIS_FILES.pathways,
 } as const;
 
 export type DiffFileKind = keyof typeof DIFF_FILES;
+
+/**
+ * Analysis tables a page ends up reading most of (overview, map, detail):
+ * downloaded whole whatever their size (lib/duckdb-client parquetView), as
+ * range reads would cost more requests and bytes than one GET. The raw and
+ * trips tables are read a page or a day at a time, by ranges once large.
+ */
+export const WHOLE_DOWNLOAD_FILES: readonly string[] = [
+  ROUTES_TABLE,
+  SHAPES_TABLE,
+  STOPS_TABLE,
+  SERVICE_DATES_TABLE,
+  SERVICES_TABLE,
+  // Trips v6 sums every row (lib/trips-day-routes).
+  TRIPS_DAY_ROUTES_FILE,
+];
+
+/** Whether a diff file URL is one of WHOLE_DOWNLOAD_FILES. */
+export function isWholeDownloadFile(url: string): boolean {
+  const path = url.split(/[?#]/)[0];
+  return WHOLE_DOWNLOAD_FILES.some((f) => path.endsWith(`/${f}`));
+}
 
 /** Builds every diff file of a dataset folder from its two GTFS zips. */
 export const DATASET_BUILDER = 'scripts/build-gtfs-diff-dataset.mjs';

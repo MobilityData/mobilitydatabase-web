@@ -15,8 +15,6 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { Box } from '@mui/material';
 import { useMapConfig } from '../../../../hooks/useMapConfig';
 import type {
-  AllStops,
-  CompactStop,
   LonLat,
   RouteInfo,
   StopChange,
@@ -29,7 +27,7 @@ import {
   displayCoord,
 } from '../../lib/stops-utils';
 import type { StopPoint } from '../../lib/map-table-query';
-import { StopDetails, UnchangedStopDetails } from './StopDetails';
+import { StopDetails } from './StopDetails';
 
 const ARROW_IMAGE = 'stop-move-arrow';
 /**
@@ -47,8 +45,6 @@ const INTERACTIVE_LAYERS = [
   ...POINT_LAYERS,
   'stops-selected',
   'stops-ghost',
-  'overlay-new',
-  'overlay-base',
 ];
 /** Changed stops are clustered up to this zoom; above it each stop is drawn. */
 const CLUSTER_MAX_ZOOM = 14;
@@ -100,19 +96,16 @@ function createArrowImage(color: string): ImageData | null {
   return ctx.getImageData(0, 0, size, size);
 }
 
-export type MapSelection =
-  | { type: 'changed'; stopId: string }
-  | { type: 'overlay'; feed: 'base' | 'new'; stop: CompactStop };
+export interface MapSelection {
+  type: 'changed';
+  stopId: string;
+}
 
 interface StopsDiffMapProps {
-  /** Changed stops matching the filters (maps/stops.parquet). */
+  /** Stops changed in stops.txt matching the filters (stopsTableQuery). */
   points: StopPoint[];
   /** The selected changed stop's full row, once loaded (popup). */
   selectedStop: StopChange | null;
-  /** Every stop of both feeds, for the overlays; null until loaded. */
-  allStops: AllStops | null;
-  showBaseOverlay: boolean;
-  showNewOverlay: boolean;
   minMoveM: number;
   columns: string[];
   routes: Record<string, RouteInfo>;
@@ -167,9 +160,6 @@ function pointBounds(points: StopPoint[]): [LonLat, LonLat] | null {
 export default function StopsDiffMap({
   points,
   selectedStop,
-  allStops,
-  showBaseOverlay,
-  showNewOverlay,
   minMoveM,
   columns,
   routes,
@@ -183,7 +173,7 @@ export default function StopsDiffMap({
   const [loaded, setLoaded] = React.useState(false);
   const [cursor, setCursor] = React.useState<string>('');
   const [clusters, setClusters] = React.useState<ClusterLabel[]>([]);
-  const selectedId = selection?.type === 'changed' ? selection.stopId : null;
+  const selectedId = selection?.stopId ?? null;
   const pointsById = React.useMemo(
     () => new Map(points.map((p) => [p.stop_id, p])),
     [points],
@@ -275,22 +265,6 @@ export default function StopsDiffMap({
     };
   }, [points]);
 
-  const overlayData = React.useMemo(
-    () => ({
-      base: collection(
-        (allStops?.base ?? []).map((s) =>
-          point([s[1], s[2]], { stop_id: s[0], feed: 'base' }),
-        ),
-      ),
-      new: collection(
-        (allStops?.new ?? []).map((s) =>
-          point([s[1], s[2]], { stop_id: s[0], feed: 'new' }),
-        ),
-      ),
-    }),
-    [allStops],
-  );
-
   // ── Camera ───────────────────────────────────────────────────────
 
   const bounds = React.useMemo(() => pointBounds(points), [points]);
@@ -311,10 +285,7 @@ export default function StopsDiffMap({
     // asked to (the recenter button).
   }, [loaded, boundsKey, refocusRequest]);
 
-  const popupCoord: LonLat | null =
-    selection?.type === 'overlay'
-      ? [selection.stop[1], selection.stop[2]]
-      : selectedCoord;
+  const popupCoord: LonLat | null = selectedCoord;
 
   React.useEffect(() => {
     if (!loaded || flyRequest === handledFly.current || popupCoord == null)
@@ -392,13 +363,8 @@ export default function StopsDiffMap({
       f.layer.id === 'stops-selected' ||
       f.layer.id === 'stops-ghost' ||
       pointsById.has(id)
-    ) {
+    )
       onSelect({ type: 'changed', stopId: id });
-      return;
-    }
-    const feed = f.properties?.feed === 'base' ? 'base' : 'new';
-    const stop = allStops?.[feed].find((s) => s[0] === id);
-    if (stop) onSelect({ type: 'overlay', feed, stop });
   };
 
   const handleLoad = (): void => {
@@ -458,34 +424,6 @@ export default function StopsDiffMap({
         onMouseLeave={() => setCursor('')}
         cursor={cursor}
       >
-        <Source id='overlay-base-src' type='geojson' data={overlayData.base}>
-          <Layer
-            id='overlay-base'
-            type='circle'
-            layout={{ visibility: showBaseOverlay ? 'visible' : 'none' }}
-            paint={{
-              'circle-radius': 3.5,
-              'circle-color': '#9e9e9e',
-              'circle-opacity': 0.7,
-              'circle-stroke-width': 1,
-              'circle-stroke-color': '#616161',
-            }}
-          />
-        </Source>
-        <Source id='overlay-new-src' type='geojson' data={overlayData.new}>
-          <Layer
-            id='overlay-new'
-            type='circle'
-            layout={{ visibility: showNewOverlay ? 'visible' : 'none' }}
-            paint={{
-              'circle-radius': 3.5,
-              'circle-color': '#64b5f6',
-              'circle-opacity': 0.7,
-              'circle-stroke-width': 1,
-              'circle-stroke-color': '#1565c0',
-            }}
-          />
-        </Source>
         <Source id='moves-src' type='geojson' data={moveData.lines}>
           <Layer
             id='moves'
@@ -623,13 +561,7 @@ export default function StopsDiffMap({
             closeOnClick={false}
             onClose={() => onSelect(null)}
           >
-            {selection?.type === 'overlay' ? (
-              <UnchangedStopDetails
-                stopId={selection.stop[0]}
-                name={selection.stop[3]}
-                feed={selection.feed}
-              />
-            ) : selectedStop ? (
+            {selectedStop ? (
               <StopDetails
                 stop={selectedStop}
                 columns={columns}

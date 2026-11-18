@@ -2,7 +2,7 @@
  * Notable highlights of the service calendar page: rider-facing calendar
  * regressions, from the full service and day lists. Run at build time
  * (scripts/lib/calendar-tables.mjs), since the page itself only queries those
- * lists from Parquet; the result is stored as calendar.overview_highlights.
+ * lists from Parquet; the result is written to highlights/services.json.
  */
 
 import type {

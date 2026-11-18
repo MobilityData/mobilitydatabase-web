@@ -32,9 +32,9 @@ const TRIPS_V5_SLUG = 'trips-v5';
 interface TripsV5ScreenProps {
   dataset: DiffDataset;
   report: ReportSummary;
-  /** trips-calendar.json; null when the dataset wasn't built with it. */
+  /** views/trips/calendar.json; null when the dataset wasn't built with it. */
   calendar: TripsCalendarDoc | null;
-  /** The trips section of highlights.json; null when not built. */
+  /** The trips section of highlights/index.json; null when not built. */
   highlights: GlobalHighlight[] | null;
 }
 

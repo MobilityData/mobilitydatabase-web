@@ -1,7 +1,7 @@
 /**
  * Trips of large feeds are loaded per service, for the day being compared.
  *
- * trips-diff.json is a small index (dates, service sets, day types, names)
+ * views/trips/index.json is a small index (dates, service sets, day types, names)
  * whose `trip_tables` point at one Parquet file per feed, written by
  * scripts/lib/write-trips-diff.mjs: rows (ord, service, route, trip), sorted
  * by service, `trip` being a CompactTrip as JSON. lib/useTripsDay.ts reads
@@ -32,7 +32,7 @@ export type RouteServiceTrips = Record<
   Record<string, Record<string, number>>
 >;
 
-/** trips-diff.json: the index; feeds.*.trips are empty when tables exist. */
+/** views/trips/index.json: the index; feeds.*.trips are empty when tables exist. */
 export type TripsIndexDoc = TripsDiffDoc & {
   trip_tables?: TripTables;
   route_service_trips?: RouteServiceTrips;

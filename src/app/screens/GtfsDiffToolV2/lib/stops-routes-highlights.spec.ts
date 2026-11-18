@@ -29,7 +29,6 @@ function stopsMap(stops: StopChange[]): StopsMapSource {
     columns: [],
     counts: { added: 0, deleted: 0, modified: 0, unchanged: 0, moved: 0 },
     stops,
-    all_stops: { base: [], new: [] },
     routes: {},
   };
 }

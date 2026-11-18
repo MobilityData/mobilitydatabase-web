@@ -16,6 +16,8 @@ import {
   MenuItem,
   Popover,
   Switch,
+  Tab,
+  Tabs,
   TextField,
   Tooltip,
   Typography,
@@ -31,7 +33,7 @@ import {
 } from '@mui/icons-material';
 import { useSearchParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
-import type { RoutesMapDiff } from '../../lib/entity-diff-types';
+import type { RawTable, RoutesMapDiff } from '../../lib/entity-diff-types';
 import {
   ROUTE_CHANGES,
   type RouteChange,
@@ -39,7 +41,6 @@ import {
   type RouteV2Filters,
   type RouteV2Overview,
   type RouteV2Row,
-  routeDetailQuery,
   routesChangeCountsQuery,
   routesV2KindCountsQuery,
   routesV2OverviewQuery,
@@ -47,25 +48,31 @@ import {
   toRouteV2Overview,
   toRouteV2Row,
 } from '../../lib/map-table-query';
-import { readRouteDetail as readDetail } from '../../lib/route-detail-codec';
 import {
-  mapDetailUrl,
   mapTableUrl,
   queryMapTable,
+  routesOverviewUrls,
   useMapTableQuery,
+  useMapTablesQuery,
+  useRouteDetail,
 } from '../../lib/useMapTable';
+import { useRouteInfo } from '../../lib/useDiffData';
 import {
   ROUTE_KIND_COLORS,
   ROUTE_KIND_LABELS,
   type RouteKind,
 } from '../../lib/routes-utils';
 import {
-  CALENDAR_SERVICES_PATH,
   DEFAULT_V2_FILTERS,
   ROUTE_CHANGE_LABELS,
   routeChanges,
   sameFilters,
 } from '../../lib/routes-v2';
+import {
+  DIR_PARAM,
+  parseDirParam,
+  withDirParam,
+} from '../../lib/routes-v2-directions';
 import { toFocusHash, useDiffNav } from '../../lib/diff-nav';
 import { tripsRouteHref } from '../../lib/trips-v2-routes';
 import { diffFileUrl } from '../../lib/datasets';
@@ -98,18 +105,32 @@ const NO_KIND_COUNTS: Record<RouteKind, number> = {
   unchanged: 0,
 };
 
-/** Sets or clears ?route= (a history entry when pushed, so Back undoes it). */
+/**
+ * Sets or clears ?route= (a history entry when pushed, so Back undoes it);
+ * another route drops ?dir=.
+ */
 export function setRouteParam(
   id: string | null,
   mode: 'push' | 'replace',
 ): void {
   const params = new URLSearchParams(window.location.search);
+  if (params.get('route') !== id) params.delete(DIR_PARAM);
   if (id == null) params.delete('route');
   else params.set('route', id);
   const qs = params.toString();
   const url = `${window.location.pathname}${qs ? `?${qs}` : ''}`;
   if (mode === 'push') window.history.pushState(null, '', url);
   else window.history.replaceState(null, '', url);
+}
+
+/** Sets or clears ?dir=, the selected route's direction (no history entry). */
+function setDirParam(dir: string | null): void {
+  const qs = withDirParam(window.location.search, dir);
+  window.history.replaceState(
+    null,
+    '',
+    `${window.location.pathname}${qs ? `?${qs}` : ''}`,
+  );
 }
 
 function rowSelector(id: string): string {
@@ -119,6 +140,8 @@ function rowSelector(id: string): string {
 interface RoutesV2WorkspaceProps {
   datasetId: string;
   routesMap: RoutesMapDiff;
+  /** raw/routes.parquet's entry; absent when routes.txt didn't change. */
+  rawRoutes?: RawTable;
   /** Show a route's routes.txt row in the raw file diff. */
   onSeeRouteRow: (routeId: string) => void;
 }
@@ -126,21 +149,31 @@ interface RoutesV2WorkspaceProps {
 /**
  * A workspace up to 80vh high: a side panel (route
  * list, or one route's detail) and the map. The selected route is
- * ?route=<route_id>.
+ * ?route=<route_id>, its selected direction ?dir=<direction_id> (all
+ * directions when absent).
  */
 export default function RoutesV2Workspace({
   datasetId,
   routesMap,
+  rawRoutes,
   onSeeRouteRow,
 }: RoutesV2WorkspaceProps): React.ReactElement {
   const nav = useDiffNav();
-  const selectedId = useSearchParams().get('route');
+  const searchParams = useSearchParams();
+  const selectedId = searchParams.get('route');
+  const dirParam = searchParams.get(DIR_PARAM);
   const [filters, setFilters] = useState<RouteV2Filters>(DEFAULT_V2_FILTERS);
   const [sort, setSort] = useState<RouteSort>('severity');
   const [hoverRouteId, setHoverRouteId] = useState<string | null>(null);
   const [hoverStopId, setHoverStopId] = useState<string | null>(null);
   const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
   const [filtersAnchor, setFiltersAnchor] = useState<HTMLElement | null>(null);
+  // Prototype: draw the overview from the list table's `geom` or from tiles.
+  const [mapSource, setMapSource] = useState<'geom' | 'pmtiles'>('geom');
+  const overviewTiles =
+    routesMap.overview_tiles != null && mapSource === 'pmtiles'
+      ? diffFileUrl(datasetId, routesMap.overview_tiles)
+      : null;
   const fullscreen = useDiffMapFullscreen();
   const listRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -150,12 +183,11 @@ export default function RoutesV2Workspace({
   const focusDetail = useRef(false);
 
   const url = mapTableUrl(datasetId, routesMap.table);
-  const detailUrl = mapDetailUrl(datasetId, routesMap.table);
   const filterKey = JSON.stringify(filters);
-  const overviewQ = useMapTableQuery(
-    url,
+  const overviewQ = useMapTablesQuery(
+    routesOverviewUrls(datasetId, routesMap),
     `${filterKey}|${sort}`,
-    (v) => routesV2OverviewQuery(v, filters, sort),
+    ([v, shapes]) => routesV2OverviewQuery(v, shapes, filters, sort),
     (rows) => rows.map(toRouteV2Overview),
   );
   const overview: RouteV2Overview[] = overviewQ.data ?? [];
@@ -180,18 +212,29 @@ export default function RoutesV2Workspace({
         return c;
       },
     ).data ?? NO_KIND_COUNTS;
-  const detailQ = useMapTableQuery(
-    selectedId ? detailUrl : null,
-    selectedId ?? '',
-    (v) => routeDetailQuery(v, selectedId ?? ''),
-    readDetail,
-  );
+  const detailQ = useRouteDetail(datasetId, routesMap, rawRoutes, selectedId);
   const selected =
     selectedId != null && detailQ.data?.route_id === selectedId
       ? detailQ.data
       : null;
   const selectedShape =
     selected?.shapes?.find((sh) => sh.shape_id === selectedShapeId) ?? null;
+  // Derived from the URL, so it resets with the route (setRouteParam drops
+  // ?dir=) and an unknown or single direction reads as all directions.
+  const selectedDir = selected
+    ? parseDirParam(
+        dirParam,
+        selected.directions.map((d) => d.direction_id),
+      )
+    : null;
+
+  const selectDirection = (dir: string | null): void => {
+    if (dir === selectedDir) return;
+    setDirParam(dir);
+    // The map fits the direction, not a shape of another one.
+    setSelectedShapeId(null);
+    setHoverStopId(null);
+  };
 
   // ── Selection ────────────────────────────────────────────────────
 
@@ -281,6 +324,8 @@ export default function RoutesV2Workspace({
     filters.kinds.length +
     (filters.showUnchanged ? 1 : 0);
   const agencies = routesMap.agencies ?? [];
+  // For the selected route's chips.
+  const routeInfo = useRouteInfo(datasetId, routesMap.route_info_file);
 
   const fetchRows = (offset: number, limit: number): Promise<RouteV2Row[]> =>
     queryMapTable(url, (v) =>
@@ -635,20 +680,15 @@ export default function RoutesV2Workspace({
                     <RouteDetailV2
                       route={selected}
                       routesMap={routesMap}
-                      routeInfo={routesMap.route_info}
+                      routeInfo={routeInfo}
                       headingRef={headingRef}
                       onHoverStop={setHoverStopId}
                       selectedShapeId={selectedShapeId}
                       onSelectShape={setSelectedShapeId}
-                      onOpenService={(id) =>
-                        nav?.navigate({ tab: 'calendar', kind: 'service', id })
-                      }
+                      directionId={selectedDir}
+                      onSelectDirection={selectDirection}
                       tripsHref={tripsRouteHref(datasetId, selected.route_id)}
                       onSeeFieldChanges={() => onSeeRouteRow(selected.route_id)}
-                      servicesUrl={diffFileUrl(
-                        datasetId,
-                        CALENDAR_SERVICES_PATH,
-                      )}
                       onOpenCalendar={() =>
                         nav?.navigate({
                           tab: 'calendar',
@@ -707,11 +747,45 @@ export default function RoutesV2Workspace({
                 {fullscreen.fullscreen ? <FullscreenExit /> : <Fullscreen />}
               </Fab>
             </Tooltip>
+            {routesMap.overview_tiles != null ? (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 10,
+                  left: 10,
+                  zIndex: 1000,
+                  bgcolor: 'background.paper',
+                  borderRadius: '6px',
+                  boxShadow: 2,
+                }}
+              >
+                <Tabs
+                  value={mapSource}
+                  onChange={(_, v: 'geom' | 'pmtiles') => setMapSource(v)}
+                  aria-label='Overview map data'
+                  sx={{ minHeight: 36, px: 0.5 }}
+                >
+                  <Tab
+                    value='geom'
+                    label='geom (Parquet)'
+                    sx={{ minHeight: 36, py: 0, textTransform: 'none' }}
+                  />
+                  <Tab
+                    value='pmtiles'
+                    label='PMTiles'
+                    sx={{ minHeight: 36, py: 0, textTransform: 'none' }}
+                  />
+                </Tabs>
+              </Box>
+            ) : null}
             <RoutesV2Map
+              key={mapSource}
+              overviewTiles={overviewTiles}
               routes={overview}
               fitKey={filterKey}
               selectedId={selectedId}
               selected={selected}
+              directionId={selectedDir}
               stops={selected?.stop_info ?? {}}
               onSelectRoute={openRoute}
               hoverRouteId={hoverRouteId}

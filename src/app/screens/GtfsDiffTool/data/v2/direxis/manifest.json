@@ -2,7 +2,7 @@
   "schema": 1,
   "id": "direxis",
   "label": "direxis · mdb-2775",
-  "generated_at": "2026-11-11T13:20:30.020Z",
+  "generated_at": "2026-11-18T19:06:27.396Z",
   "feeds": {
     "base": {
       "file": "base-mdb-2775-202608070145.zip"
@@ -12,91 +12,82 @@
     }
   },
   "files": {
-    "calendar-highlights.json": {
+    "analysis/routes.json": {
+      "bytes": 785
+    },
+    "analysis/routes.parquet": {
+      "bytes": 11099
+    },
+    "analysis/service_dates.parquet": {
+      "bytes": 1912
+    },
+    "analysis/services.json": {
+      "bytes": 8549
+    },
+    "analysis/services.parquet": {
+      "bytes": 3647
+    },
+    "analysis/shapes.parquet": {
+      "bytes": 62435
+    },
+    "analysis/stops.json": {
+      "bytes": 339
+    },
+    "analysis/stops.parquet": {
+      "bytes": 4388
+    },
+    "highlights/index.json": {
+      "bytes": 2932
+    },
+    "highlights/routes.json": {
+      "bytes": 2659
+    },
+    "highlights/services.json": {
       "bytes": 1163
     },
-    "calendar/days.parquet": {
-      "bytes": 4156
+    "highlights/stops.json": {
+      "bytes": 25122
     },
-    "calendar/services.parquet": {
-      "bytes": 4214
-    },
-    "calendar/services_detail.parquet": {
-      "bytes": 4603
-    },
-    "categories/calendar.json": {
-      "bytes": 18491
-    },
-    "categories/routes.json": {
-      "bytes": 6648
-    },
-    "categories/stops.json": {
-      "bytes": 10628
-    },
-    "entity-diff.json": {
-      "bytes": 72524
-    },
-    "highlights.json": {
-      "bytes": 14169
-    },
-    "maps/all_stops_data.json": {
-      "bytes": 48039
-    },
-    "maps/routes.parquet": {
-      "bytes": 26105
-    },
-    "maps/routes_detail.parquet": {
-      "bytes": 57457
-    },
-    "maps/stops.parquet": {
-      "bytes": 24818
-    },
-    "maps/stops_detail.parquet": {
-      "bytes": 37562
+    "highlights/trips.json": {
+      "bytes": 1367
     },
     "raw/calendar.parquet": {
-      "bytes": 7318
+      "bytes": 7191
     },
     "raw/calendar_dates.parquet": {
-      "bytes": 6047
+      "bytes": 4985
     },
     "raw/routes.parquet": {
-      "bytes": 7426
+      "bytes": 7095
     },
     "raw/shapes.parquet": {
-      "bytes": 581663
+      "bytes": 253668
     },
     "raw/stop_times.parquet": {
       "bytes": 136405
     },
     "raw/stops.parquet": {
-      "bytes": 29583
+      "bytes": 27236
     },
     "raw/trips.parquet": {
       "bytes": 19546
     },
     "report.json": {
-      "bytes": 7260
+      "bytes": 9372
     },
-    "routes-highlights.json": {
-      "bytes": 2659
-    },
-    "stops-highlights.json": {
-      "bytes": 25122
-    },
-    "trips-calendar.json": {
-      "bytes": 15458
-    },
-    "trips-diff.json": {
-      "bytes": 26762
-    },
-    "trips-service.json": {
-      "bytes": 19238
-    },
-    "trips/base.parquet": {
+    "views/trips/base.parquet": {
       "bytes": 36748
     },
-    "trips/new.parquet": {
+    "views/trips/calendar.json": {
+      "bytes": 15458
+    },
+    "views/trips/day-routes.parquet": {
+      "bytes": 4832
+    },
+    "views/trips/index.json": {
+      "bytes": 10426
+    },
+    "views/trips/new.parquet": {
       "bytes": 37879
     }
   }

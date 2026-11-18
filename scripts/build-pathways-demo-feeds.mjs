@@ -12,7 +12,8 @@
  * Usage:
  *   node scripts/build-pathways-demo-feeds.mjs <mbta-feed-dir> <out-dir>
  *   node scripts/generate-gtfs-pathways-diff.mjs <out-dir>/base.zip \
- *     <out-dir>/new.zip <out-dir>/pathways-diff.json --new-label "..." --note "..."
+ *     <out-dir>/new.zip <out-dir> --new-label "..." --note "..."
+ * (writes <out-dir>/analysis/pathways.json)
  */
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';

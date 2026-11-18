@@ -3,28 +3,37 @@
 import {
   Alert,
   Box,
+  Button,
   Chip,
   Dialog,
   DialogContent,
   DialogTitle,
-  Divider,
   IconButton,
+  InputAdornment,
   LinearProgress,
-  List,
-  ListItem,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
-import { ChevronLeft, ChevronRight, Close } from '@mui/icons-material';
-import React from 'react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Clear,
+  Close,
+  Search,
+} from '@mui/icons-material';
+import React, { useMemo, useState } from 'react';
 import type {
-  DayException,
   DayModifiedEntry,
   GtfsDate,
   RouteInfo,
 } from '../../lib/entity-diff-types';
 import {
-  CHANGE_COLORS,
   CHANGE_KINDS,
   type ChangeKind,
   exceptionLabel,
@@ -33,44 +42,297 @@ import {
   modifiedEntryText,
 } from '../../lib/calendar-utils';
 import type { DayEntryRow } from '../../lib/calendar-query';
-import SegmentedList from '../diffmap/SegmentedList';
-import { MONO_FONT, RouteChips, ServiceIdLink } from './shared';
+import {
+  DAY_CATEGORY_LABELS,
+  type DayChangeCategory,
+  type DayEntryFilters,
+  NO_DAY_ENTRY_FILTERS,
+  dayEntryCategory,
+  dayEntryCategoryCounts,
+  filterDayEntries,
+  isFilteringEntries,
+} from '../../lib/service-detail';
+import { type CalendarPalette, useCalendarPalette } from '../trips-v5/palette';
+import { CountChange } from '../trips/shared';
+import { MONO_FONT, RoutePreviewChips } from './shared';
 
-const SECTION_TITLES: Record<ChangeKind, string> = {
-  added: 'Added services',
-  removed: 'Removed services',
-  modified: 'Modified services',
+const headSx = {
+  fontWeight: 700,
+  fontSize: '0.72rem',
+  whiteSpace: 'nowrap',
+  color: 'text.secondary',
+} as const;
+const cellSx = { fontSize: '0.8rem', py: 0.75, verticalAlign: 'top' } as const;
+
+/** Rows shown before "Show more". */
+const PAGE_ROWS = 100;
+
+const SIGN: Record<ChangeKind, string> = {
+  added: '+',
+  removed: '−',
+  modified: '~',
 };
 
-function pluralize(n: number, word: string): string {
-  return `${n} ${word}${n === 1 ? '' : 's'}`;
+/** A category's colour: the change colours; gained / lost shades of them. */
+export function categoryColor(
+  palette: CalendarPalette,
+  c: DayChangeCategory,
+): string {
+  switch (c) {
+    case 'added':
+    case 'gained':
+      return palette.change.added;
+    case 'removed':
+    case 'lost':
+      return palette.change.removed;
+    default:
+      return palette.change.modified;
+  }
 }
 
-/** Days with more changes than this list them with virtual scroll. */
-const PLAIN_LIST_MAX = 150;
+function pluralize(n: number, word: string): string {
+  return `${n.toLocaleString()} ${word}${n === 1 ? '' : 's'}`;
+}
 
-/** A section title or a change, in the dialog's (virtual) list. */
-type DialogRow =
-  | { type: 'section'; kind: ChangeKind; count: number; first: boolean }
-  | { type: 'entry'; row: DayEntryRow };
-
-function ExceptionChip({
-  exception,
+function CategoryChip({
+  category,
+  filled,
 }: {
-  exception: DayException | null;
-}): React.ReactElement | null {
-  if (exception == null) return null;
-  const label =
-    exception.base === exception.new
-      ? `Exception: ${exceptionLabel(exception.new)}`
-      : `Exception: ${exceptionLabel(exception.base)} → ${exceptionLabel(exception.new)}`;
+  category: DayChangeCategory;
+  filled: boolean;
+}): React.ReactElement {
+  const color = categoryColor(useCalendarPalette(), category);
+  // New / removed services are filled, kept ones outlined.
   return (
-    <Chip
-      size='small'
-      variant='outlined'
-      label={label}
-      sx={{ height: 20, fontSize: '0.68rem' }}
-    />
+    <Box
+      component='span'
+      sx={{
+        px: 0.75,
+        height: 18,
+        display: 'inline-flex',
+        alignItems: 'center',
+        borderRadius: '9px',
+        fontSize: '0.68rem',
+        fontWeight: 600,
+        whiteSpace: 'nowrap',
+        border: '1px solid',
+        borderColor: color,
+        color: filled ? '#fff' : color,
+        bgcolor: filled ? color : undefined,
+      }}
+    >
+      {DAY_CATEGORY_LABELS[category]}
+    </Box>
+  );
+}
+
+/** What the change is, in words, and the exception in effect. */
+function changeText(r: DayEntryRow, date: GtfsDate): string {
+  if (r.kind === 'added') return r.patternNew;
+  if (r.kind === 'removed') return `Was ${r.patternBase}`;
+  return modifiedEntryText(r.entry as DayModifiedEntry, date).replace(
+    /^[^:]*: /,
+    '',
+  );
+}
+
+function exceptionText(r: DayEntryRow): string | null {
+  const e = r.entry.exception;
+  if (e == null) return null;
+  // A new or removed service has its exception in one feed only.
+  if (r.kind === 'added') return `Exception: ${exceptionLabel(e.new)}`;
+  if (r.kind === 'removed') return `Exception: ${exceptionLabel(e.base)}`;
+  return e.base === e.new
+    ? `Exception: ${exceptionLabel(e.new)}`
+    : `Exception: ${exceptionLabel(e.base)} → ${exceptionLabel(e.new)}`;
+}
+
+function FilterBar({
+  counts,
+  filters,
+  onChange,
+}: {
+  counts: Array<{ category: DayChangeCategory; count: number }>;
+  filters: DayEntryFilters;
+  onChange: (f: DayEntryFilters) => void;
+}): React.ReactElement {
+  const palette = useCalendarPalette();
+  const shown = [
+    ...counts,
+    ...filters.categories
+      .filter((c) => !counts.some((x) => x.category === c))
+      .map((c) => ({ category: c, count: 0 })),
+  ];
+  const toggle = (c: DayChangeCategory): void =>
+    onChange({
+      ...filters,
+      categories: filters.categories.includes(c)
+        ? filters.categories.filter((x) => x !== c)
+        : [...filters.categories, c],
+    });
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 1.5 }}>
+      <TextField
+        size='small'
+        placeholder='Search services or routes'
+        value={filters.search}
+        onChange={(e) => onChange({ ...filters, search: e.target.value })}
+        sx={{
+          maxWidth: 420,
+          '& .MuiOutlinedInput-root': { bgcolor: 'background.default' },
+        }}
+        slotProps={{
+          htmlInput: { 'aria-label': 'Search services or routes' },
+          input: {
+            startAdornment: (
+              <InputAdornment position='start'>
+                <Search fontSize='small' />
+              </InputAdornment>
+            ),
+            endAdornment: filters.search ? (
+              <InputAdornment position='end'>
+                <IconButton
+                  size='small'
+                  aria-label='Clear search'
+                  onClick={() => onChange({ ...filters, search: '' })}
+                >
+                  <Clear fontSize='small' />
+                </IconButton>
+              </InputAdornment>
+            ) : undefined,
+          },
+        }}
+      />
+      {shown.length > 1 || filters.categories.length > 0 ? (
+        <Box
+          role='group'
+          aria-label='Filter by change'
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: 0.5,
+          }}
+        >
+          {shown.map(({ category: c, count }) => {
+            const on = filters.categories.includes(c);
+            const color = categoryColor(palette, c);
+            return (
+              <Chip
+                key={c}
+                size='small'
+                clickable
+                variant={on ? 'filled' : 'outlined'}
+                aria-pressed={on}
+                label={`${DAY_CATEGORY_LABELS[c]} ${count.toLocaleString()}`}
+                onClick={() => toggle(c)}
+                sx={{
+                  fontWeight: 600,
+                  borderColor: color,
+                  color: on ? '#fff' : color,
+                  bgcolor: on ? color : undefined,
+                  '&&:hover': { bgcolor: on ? color : undefined },
+                }}
+              />
+            );
+          })}
+          {isFilteringEntries(filters) ? (
+            <Button
+              size='small'
+              onClick={() => onChange(NO_DAY_ENTRY_FILTERS)}
+              sx={{ textTransform: 'none', ml: 0.5 }}
+            >
+              Clear filters
+            </Button>
+          ) : null}
+        </Box>
+      ) : null}
+    </Box>
+  );
+}
+
+function EntryRow({
+  r,
+  date,
+  routes,
+  onOpen,
+}: {
+  r: DayEntryRow;
+  date: GtfsDate;
+  routes: Record<string, RouteInfo>;
+  onOpen: (serviceId: string) => void;
+}): React.ReactElement {
+  const category = dayEntryCategory(r);
+  const exception = exceptionText(r);
+  const reason =
+    r.kind === 'modified' ? (r.entry as DayModifiedEntry).reason.detail : '';
+  const pattern =
+    r.kind === 'modified' && r.patternBase !== r.patternNew
+      ? `${r.patternBase} → ${r.patternNew}`
+      : r.kind === 'modified'
+        ? r.patternNew
+        : null;
+  return (
+    <TableRow
+      hover
+      tabIndex={0}
+      onClick={() => onOpen(r.entry.service_id)}
+      onKeyDown={(e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        onOpen(r.entry.service_id);
+      }}
+      sx={{ cursor: 'pointer' }}
+    >
+      <TableCell sx={{ ...cellSx, minWidth: 200 }}>
+        <Typography
+          sx={{
+            fontFamily: MONO_FONT,
+            fontWeight: 700,
+            fontSize: '0.8rem',
+            overflowWrap: 'anywhere',
+          }}
+        >
+          {r.entry.service_id}
+        </Typography>
+        {pattern ? (
+          <Typography variant='caption' color='text.secondary' component='div'>
+            {pattern}
+          </Typography>
+        ) : null}
+      </TableCell>
+      <TableCell sx={{ ...cellSx, minWidth: 200 }}>
+        <RoutePreviewChips routeIds={r.routeIds} routes={routes} />
+      </TableCell>
+      <TableCell sx={{ ...cellSx, minWidth: 260 }}>
+        <CategoryChip
+          category={category}
+          filled={r.kind === 'added' || r.kind === 'removed'}
+        />
+        <Typography variant='body2' sx={{ fontSize: '0.8rem', mt: 0.5 }}>
+          {changeText(r, date)}
+        </Typography>
+        {reason || exception ? (
+          <Typography
+            variant='caption'
+            color='text.secondary'
+            component='div'
+            sx={{ fontFamily: reason ? MONO_FONT : undefined }}
+          >
+            {[reason, exception].filter(Boolean).join(' · ')}
+          </Typography>
+        ) : null}
+      </TableCell>
+      <TableCell sx={{ ...cellSx, whiteSpace: 'nowrap' }}>
+        {r.kind === 'added' ? (
+          r.trips.new.toLocaleString()
+        ) : r.kind === 'removed' ? (
+          r.trips.base.toLocaleString()
+        ) : (
+          <CountChange base={r.trips.base} next={r.trips.new} />
+        )}
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -78,8 +340,6 @@ interface DayDetailsDialogProps {
   date: GtfsDate | null;
   /** Changes on this date after filters are applied (undefined while loading). */
   entries: DayEntryRow[] | undefined;
-  /** Changes whenever `entries` are re-queried (date + filters). */
-  entriesKey: string;
   loading: boolean;
   /** Unfiltered change count, to show how many are hidden by filters. */
   unfilteredTotal: number;
@@ -89,13 +349,18 @@ interface DayDetailsDialogProps {
   nextDate: GtfsDate | null;
   onNavigate: (date: GtfsDate) => void;
   onClose: () => void;
-  onServiceClick: (serviceId: string) => void;
+  /** Opens a service's page. */
+  onOpenService: (serviceId: string) => void;
 }
 
+/**
+ * The services changing on one date, like Trips' day popup: the day's
+ * changes per kind, a search and a filter per kind of change, and one row
+ * per service. A service opens its page.
+ */
 export default function DayDetailsDialog({
   date,
   entries,
-  entriesKey,
   loading,
   unfilteredTotal,
   activeCounts,
@@ -104,120 +369,44 @@ export default function DayDetailsDialog({
   nextDate,
   onNavigate,
   onClose,
-  onServiceClick,
+  onOpenService,
 }: DayDetailsDialogProps): React.ReactElement {
-  const total = entries?.length ?? 0;
-  const hidden = entries ? unfilteredTotal - total : 0;
-
-  const renderEntry = ({
-    kind,
-    entry: e,
-    routeIds,
-    patternBase,
-    patternNew,
-    trips,
-  }: DayEntryRow): React.ReactElement => {
-    let description: string;
-    if (kind === 'added')
-      description = `New service · ${patternNew} · ${pluralize(trips.new, 'trip')}`;
-    else if (kind === 'removed')
-      description = `Service removed · was ${patternBase} · ${pluralize(trips.base, 'trip')}`;
-    else description = modifiedEntryText(e as DayModifiedEntry, date ?? '');
-    const detail =
-      kind === 'modified' ? (e as DayModifiedEntry).reason.detail : null;
-
-    return (
-      <ListItem
-        key={`${kind}-${e.service_id}`}
-        disableGutters
-        sx={{ display: 'block', py: 1 }}
-      >
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            flexWrap: 'wrap',
-            mb: 0.5,
-          }}
-        >
-          <Box
-            sx={{
-              width: 10,
-              height: 10,
-              borderRadius: '2px',
-              bgcolor: CHANGE_COLORS[kind],
-              flexShrink: 0,
-            }}
-          />
-          <ServiceIdLink serviceId={e.service_id} onClick={onServiceClick} />
-          <RouteChips routeIds={routeIds} routes={routes} />
-          <ExceptionChip exception={e.exception} />
-        </Box>
-        <Typography variant='body2' sx={{ pl: 2.25 }}>
-          {description}
-        </Typography>
-        {detail && (
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            sx={{ pl: 2.25, fontFamily: MONO_FONT, display: 'block' }}
-          >
-            {detail}
-          </Typography>
-        )}
-        {kind === 'modified' && (patternBase || patternNew) && (
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            sx={{ pl: 2.25, display: 'block' }}
-          >
-            Pattern: {patternBase} → {patternNew}
-          </Typography>
-        )}
-      </ListItem>
-    );
+  const palette = useCalendarPalette();
+  // Kept while paging between days, cleared when the popup closes.
+  const [filters, setFilters] = useState<DayEntryFilters>(NO_DAY_ENTRY_FILTERS);
+  const [limit, setLimit] = useState(PAGE_ROWS);
+  const [limitFor, setLimitFor] = useState(date);
+  if (date !== limitFor) {
+    setLimitFor(date);
+    setLimit(PAGE_ROWS);
+  }
+  const close = (): void => {
+    setFilters(NO_DAY_ENTRY_FILTERS);
+    onClose();
   };
 
-  // Sections (added, removed, modified) as one list: a title row, then
-  // its changes (entries come sorted by kind).
-  const rows: DialogRow[] = [];
-  for (const kind of CHANGE_KINDS) {
-    const list = (entries ?? []).filter((r) => r.kind === kind);
-    if (list.length === 0) continue;
-    rows.push({
-      type: 'section',
-      kind,
-      count: list.length,
-      first: rows.length === 0,
-    });
-    for (const row of list) rows.push({ type: 'entry', row });
-  }
-  const renderRow = (r: DialogRow): React.ReactElement =>
-    r.type === 'section' ? (
-      <Box key={`section-${r.kind}`} sx={{ mt: r.first ? 0 : 2 }}>
-        {!r.first && <Divider sx={{ mb: 2 }} />}
-        <Typography
-          variant='subtitle2'
-          fontWeight={700}
-          sx={{ color: CHANGE_COLORS[r.kind] }}
-        >
-          {SECTION_TITLES[r.kind]} ({r.count})
-        </Typography>
-      </Box>
-    ) : (
-      renderEntry(r.row)
-    );
-  const rowKey = (r: DialogRow): string =>
-    r.type === 'section'
-      ? `section-${r.kind}`
-      : `${r.row.kind}-${r.row.entry.service_id}`;
+  const all = entries ?? [];
+  const kindCounts = useMemo(() => {
+    const c: Record<ChangeKind, number> = { added: 0, removed: 0, modified: 0 };
+    for (const r of entries ?? []) c[r.kind]++;
+    return c;
+  }, [entries]);
+  const categoryCounts = useMemo(
+    () => dayEntryCategoryCounts(entries ?? []),
+    [entries],
+  );
+  const rows = useMemo(
+    () => filterDayEntries(entries ?? [], filters, routes),
+    [entries, filters, routes],
+  );
+  const filtering = isFilteringEntries(filters);
+  const hidden = entries ? unfilteredTotal - all.length : 0;
 
   return (
     <Dialog
       open={date != null}
-      onClose={onClose}
-      maxWidth='md'
+      onClose={close}
+      maxWidth='lg'
       fullWidth
       scroll='paper'
     >
@@ -242,16 +431,17 @@ export default function DayDetailsDialog({
             </IconButton>
           </span>
         </Tooltip>
-        <Box sx={{ flex: 1 }}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant='h6' component='div' fontWeight={700}>
             {date ? formatGtfsDateLong(date) : ''}
           </Typography>
-          {activeCounts && (
+          {activeCounts ? (
             <Typography variant='caption' color='text.secondary'>
-              Active services: {activeCounts[0]} before → {activeCounts[1]}{' '}
-              after
+              {activeCounts[0] + activeCounts[1] === 0
+                ? 'No service in either feed'
+                : `${pluralize(activeCounts[0], 'active service')} before → ${activeCounts[1].toLocaleString()} after`}
             </Typography>
-          )}
+          ) : null}
         </Box>
         <Tooltip
           title={
@@ -271,44 +461,111 @@ export default function DayDetailsDialog({
             </IconButton>
           </span>
         </Tooltip>
-        <IconButton size='small' onClick={onClose} aria-label='Close'>
+        <IconButton size='small' onClick={close} aria-label='Close'>
           <Close />
         </IconButton>
       </DialogTitle>
       <DialogContent dividers>
-        {hidden > 0 && (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            flexWrap: 'wrap',
+            mb: 2,
+          }}
+        >
+          <Box
+            sx={{ display: 'flex', gap: 1, fontWeight: 700, fontSize: '1rem' }}
+            aria-label='Services changed'
+          >
+            {CHANGE_KINDS.filter((k) => kindCounts[k] > 0).map((k) => (
+              <Tooltip key={k} title={`Services ${k}`}>
+                <Box component='span' sx={{ color: palette.change[k] }}>
+                  {SIGN[k]}
+                  {kindCounts[k].toLocaleString()}
+                </Box>
+              </Tooltip>
+            ))}
+          </Box>
+          {activeCounts ? (
+            <Typography variant='body2' color='text.secondary'>
+              Services{' '}
+              <CountChange base={activeCounts[0]} next={activeCounts[1]} />
+            </Typography>
+          ) : null}
+        </Box>
+        {hidden > 0 ? (
           <Alert severity='info' sx={{ mb: 2 }}>
-            {hidden} change{hidden === 1 ? '' : 's'} on this day hidden by the
-            current filters.
+            {pluralize(hidden, 'change')} on this day hidden by the calendar
+            filters.
           </Alert>
-        )}
-        {entries != null && total === 0 && (
+        ) : null}
+        {loading && entries == null ? (
+          <LinearProgress />
+        ) : entries != null && all.length === 0 ? (
           <Typography color='text.secondary'>
             No changes on this day for the current filters.
           </Typography>
-        )}
-        {loading && entries == null ? <LinearProgress /> : null}
-        {rows.length > PLAIN_LIST_MAX ? (
-          <Box
-            sx={{ height: '60vh', display: 'flex', flexDirection: 'column' }}
-          >
-            <SegmentedList<DialogRow>
-              queryKey={entriesKey}
-              total={rows.length}
-              fetchRows={(offset, limit) =>
-                Promise.resolve(rows.slice(offset, offset + limit))
-              }
-              rowKey={rowKey}
-              renderRow={renderRow}
-              emptyText=''
-            />
-          </Box>
         ) : (
-          <List dense disablePadding>
-            {rows.map((r) => (
-              <React.Fragment key={rowKey(r)}>{renderRow(r)}</React.Fragment>
-            ))}
-          </List>
+          <>
+            <FilterBar
+              counts={categoryCounts}
+              filters={filters}
+              onChange={setFilters}
+            />
+            {filtering ? (
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                component='p'
+                sx={{ mb: 0.5 }}
+              >
+                {rows.length.toLocaleString()} of {all.length.toLocaleString()}{' '}
+                services match
+              </Typography>
+            ) : null}
+            <Table size='small' stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={headSx}>Service</TableCell>
+                  <TableCell sx={headSx}>Routes</TableCell>
+                  <TableCell sx={headSx}>Change</TableCell>
+                  <TableCell sx={headSx}>Trips</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {rows.slice(0, limit).map((r) => (
+                  <EntryRow
+                    key={`${r.kind}-${r.entry.service_id}`}
+                    r={r}
+                    date={date ?? ''}
+                    routes={routes}
+                    onOpen={onOpenService}
+                  />
+                ))}
+                {filtering && rows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} sx={{ ...cellSx, py: 2 }}>
+                      <Typography variant='body2' color='text.secondary'>
+                        No services match the filters.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </TableBody>
+            </Table>
+            {rows.length > limit ? (
+              <Button
+                size='small'
+                onClick={() => setLimit((l) => l + PAGE_ROWS)}
+                sx={{ mt: 1, textTransform: 'none' }}
+              >
+                Show {Math.min(PAGE_ROWS, rows.length - limit)} more of{' '}
+                {(rows.length - limit).toLocaleString()}
+              </Button>
+            ) : null}
+          </>
         )}
       </DialogContent>
     </Dialog>

@@ -13,7 +13,12 @@
  * band without moving one into another. Severity stays the rule's, so a
  * highlight reads the same here and on its entity page.
  *
- * Built by scripts/generate-gtfs-highlights.mjs into highlights.json.
+ * Built by scripts/generate-gtfs-highlights.mjs into highlights/index.json
+ * (lib/diff-layout HIGHLIGHTS_INDEX_FILE): an index of the ranking
+ * (highlightsIndex) without entity lists, which stay in each section's
+ * highlights/<section>.json; joinHighlightEntities puts them back for the
+ * pages. Sections are lib/diff-layout's HIGHLIGHT_SECTIONS (services shows on
+ * the Service Dates page: lib/sections sectionPageId).
  * Type-only imports besides the helpers: the Node build imports this file.
  */
 
@@ -22,7 +27,8 @@ import type { HighlightEntities, TripsHighlight } from './trips-v2-highlights';
 import type { ReportHighlight, ReportSummary } from './report';
 import { normalizeText } from './stops-utils';
 
-export const HIGHLIGHTS_FILE = 'highlights.json';
+/** lib/diff-layout's HIGHLIGHTS_INDEX_FILE, under the name the build scripts import. */
+export { HIGHLIGHTS_INDEX_FILE as HIGHLIGHTS_FILE } from './diff-layout';
 
 /** Bonus for the number of things a highlight affects (≤ this). */
 export const IMPACT_WEIGHT = 0.04;
@@ -34,7 +40,7 @@ export const MAX_ROWS = 50;
 export const SUMMARY_TOP = 5;
 
 /** Order of sections for equal scores, and in the filters. */
-export const SECTION_ORDER = ['trips', 'routes', 'stops', 'calendar'];
+export const SECTION_ORDER = ['trips', 'routes', 'stops', 'services'];
 
 /** What the rows of a list highlight are, to link each to its page. */
 export type RowKind = 'stop' | 'route' | 'shape' | 'service' | 'date';
@@ -47,7 +53,7 @@ export type GlobalEntities =
 export interface GlobalHighlight {
   /** "<section>:<rule id>", unique in a diff. */
   key: string;
-  /** Entity-diff category id: trips, routes, stops, calendar. */
+  /** Highlight section (lib/diff-layout HIGHLIGHT_SECTIONS): trips, routes, stops, services. */
   section: string;
   /** Rule id within the section. */
   id: string;
@@ -60,7 +66,10 @@ export interface GlobalHighlight {
   detail: string;
   /** Things affected (stops, routes, rows…); 0 when not countable. */
   affected: number;
+  /** Absent in the index (highlights/index.json): in the section's file. */
   entities?: GlobalEntities;
+  /** In the index: what a list highlight's rows are, for joinHighlightEntities. */
+  row_kind?: RowKind;
 }
 
 export interface HighlightsDoc {
@@ -81,8 +90,19 @@ export interface HighlightsDoc {
    * (COVERED_BY): an entity page still shows its own (rank 0).
    */
   covered?: GlobalHighlight[];
-  /** The block report.json shows on the summary page (top SUMMARY_TOP). */
+  /**
+   * Each section's highlights file (highlights/<section>.json), holding the
+   * entity lists the index leaves out. Absent in older builds, whose items
+   * carry their entities.
+   */
+  files?: Record<string, string>;
+  /** Older builds only: report.json's block (now reportTopHighlights of the index). */
   report?: NonNullable<ReportSummary['highlights']>;
+}
+
+/** A section's highlights file as the index needs it: rule id and entities. */
+export interface SectionHighlightsFile {
+  highlights: Array<{ id: string; entities?: unknown }>;
 }
 
 /** A section's highlights as its entity page computes them. */
@@ -281,6 +301,50 @@ export function highlightsDoc(
       sections,
     },
     items,
+  };
+}
+
+/**
+ * highlights/index.json: the ranking without entity lists (they stay in the
+ * sections' files, `files`), and what each list's rows are.
+ */
+export function highlightsIndex(
+  doc: HighlightsDoc,
+  files: Record<string, string>,
+): HighlightsDoc {
+  const strip = ({ entities, ...h }: GlobalHighlight): GlobalHighlight => ({
+    ...h,
+    ...(entities?.kind === 'list' ? { row_kind: entities.of } : {}),
+  });
+  const { report: _report, ...rest } = doc;
+  return {
+    ...rest,
+    items: doc.items.map(strip),
+    ...(doc.covered ? { covered: doc.covered.map(strip) } : {}),
+    files,
+  };
+}
+
+/**
+ * The index with each highlight's entities taken from its section's file
+ * (trimmed to MAX_ROWS, as the ranking stores them). Highlights that already
+ * carry entities (older builds) or whose file is missing are left as they are.
+ */
+export function joinHighlightEntities(
+  doc: HighlightsDoc,
+  sections: Record<string, SectionHighlightsFile | null | undefined>,
+): HighlightsDoc {
+  const join = (h: GlobalHighlight): GlobalHighlight => {
+    if (h.entities != null) return h;
+    const src = sections[h.section]?.highlights.find((x) => x.id === h.id);
+    const { entities } = entitiesOf(src?.entities, h.row_kind ?? 'route');
+    const { row_kind: _kind, ...rest } = h;
+    return entities ? { ...rest, entities } : rest;
+  };
+  return {
+    ...doc,
+    items: doc.items.map(join),
+    ...(doc.covered ? { covered: doc.covered.map(join) } : {}),
   };
 }
 

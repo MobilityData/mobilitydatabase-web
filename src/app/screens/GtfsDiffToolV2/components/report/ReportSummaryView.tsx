@@ -22,6 +22,7 @@ import {
   type ReportSection,
   type ReportSummary,
   REQUIRED_FILES,
+  highlightSectionLabel,
   isRequiredSection,
 } from '../../lib/report';
 import {
@@ -108,8 +109,7 @@ function NotableHighlightsSummary({
   const h = report.highlights;
   // Only the global ranking carries a total; older reports had none.
   if (h?.total == null) return null;
-  const label = (id: string): string =>
-    report.sections.find((s) => s.id === id)?.label ?? id;
+  const label = (id: string): string => highlightSectionLabel(report, id);
   // The entity page, with this highlight opened ("<section>:<rule id>").
   const hrefOf = (item: ReportHighlight): string =>
     item.key?.startsWith(`${item.section}:`)

@@ -2,7 +2,11 @@
 
 import { Box, Button, Typography } from '@mui/material';
 import React, { useState } from 'react';
-import type { EntityRow, Highlight } from '../../lib/highlights';
+import {
+  type EntityRow,
+  type Highlight,
+  INLINE_ENTITY_ROWS,
+} from '../../lib/highlights';
 import { useHighlightsFile } from '../../lib/useDiffData';
 import { V2Card } from '../trips-v2/shared';
 import EntityList from './EntityList';
@@ -10,13 +14,16 @@ import NotableHighlights from './NotableHighlights';
 
 interface EntityOverviewCardProps {
   datasetId: string;
-  /** Most concerning first; null while loading. */
-  highlights: Array<Highlight<EntityRow[]>> | null;
   /**
-   * The section's highlights with full entity lists (stops-highlights.json),
-   * when `highlights` keep only each list's first rows.
+   * The section's highlights with their entity lists
+   * (highlights/stops.json), loaded for the cards.
    */
   highlightsFile?: string;
+  /**
+   * Older builds only: the highlights inline (first rows of each list),
+   * shown when there is no `highlightsFile`.
+   */
+  highlights?: Array<Highlight<EntityRow[]>> | null;
   /** Noun for the list caption: "stops", "routes". */
   noun: (highlight: Highlight<EntityRow[]>) => string;
   /** Select an entity on the page's map; per highlight (some list other entities). */
@@ -29,60 +36,33 @@ interface EntityOverviewCardProps {
 }
 
 /**
- * A highlight's entities: the rows stored inline, and the whole list from the
- * section's highlights file on "Show all".
+ * A highlight's entities: the first INLINE_ENTITY_ROWS rows, all of them on
+ * "Show all".
  */
 function HighlightEntities({
-  datasetId,
   highlight: h,
-  highlightsFile,
   noun,
   onOpen,
   openHint,
 }: {
-  datasetId: string;
   highlight: Highlight<EntityRow[]>;
-  highlightsFile?: string;
   noun: string;
   onOpen?: (id: string) => void;
   openHint: string;
 }): React.ReactElement {
-  const inline = h.entities ?? [];
-  const total = h.entities_total ?? inline.length;
+  const all = h.entities ?? [];
+  // Older builds' inline lists stop at INLINE_ENTITY_ROWS: entities_total.
+  const total = h.entities_total ?? all.length;
   const [showAll, setShowAll] = useState(false);
-  const file = useHighlightsFile(
-    datasetId,
-    showAll ? (highlightsFile ?? null) : null,
-  );
-  const full = file.data?.highlights.find((x) => x.id === h.id)?.entities;
-  const rows = full ?? inline;
-  const partial = rows.length < total;
-  const caption = `${partial ? `First ${rows.length.toLocaleString()} of ` : ''}${total.toLocaleString()} ${noun}${onOpen ? ` · ${openHint}` : ''}`;
+  const rows = showAll ? all : all.slice(0, INLINE_ENTITY_ROWS);
+  const caption = `${rows.length < total ? `First ${rows.length.toLocaleString()} of ` : ''}${total.toLocaleString()} ${noun}${onOpen ? ` · ${openHint}` : ''}`;
   return (
     <Box>
       <EntityList rows={rows} onOpen={onOpen} caption={caption} />
-      {partial && highlightsFile ? (
-        file.error ? (
-          <Typography
-            variant='caption'
-            color='error'
-            component='div'
-            sx={{ mt: 1 }}
-          >
-            Could not load the full list: {file.error.message}
-          </Typography>
-        ) : (
-          <Button
-            size='small'
-            sx={{ mt: 1 }}
-            disabled={file.isLoading}
-            onClick={() => setShowAll(true)}
-          >
-            {file.isLoading
-              ? `Loading ${total.toLocaleString()} ${noun}…`
-              : `Show all ${total.toLocaleString()} ${noun}`}
-          </Button>
-        )
+      {rows.length < all.length ? (
+        <Button size='small' sx={{ mt: 1 }} onClick={() => setShowAll(true)}>
+          Show all {total.toLocaleString()} {noun}
+        </Button>
       ) : null}
     </Box>
   );
@@ -94,25 +74,33 @@ function HighlightEntities({
  */
 export default function EntityOverviewCard({
   datasetId,
-  highlights,
+  highlights: inline,
   highlightsFile,
   noun,
   onOpen,
   openHint = () => 'select one to show it on the map',
   emptyText,
 }: EntityOverviewCardProps): React.ReactElement {
+  const file = useHighlightsFile(datasetId, highlightsFile);
+  // null while the file loads.
+  const highlights = highlightsFile
+    ? (file.data?.highlights ?? null)
+    : (inline ?? []);
   return (
     <V2Card title='Notable highlights'>
+      {file.error ? (
+        <Typography variant='body2' color='error'>
+          Could not load the highlights: {file.error.message}
+        </Typography>
+      ) : null}
       <NotableHighlights
         heading={false}
-        highlights={highlights}
-        emptyText={emptyText}
+        highlights={file.error ? [] : highlights}
+        emptyText={file.error ? '' : emptyText}
         renderDetails={(h) =>
           h.entities && h.entities.length > 0 ? (
             <HighlightEntities
-              datasetId={datasetId}
               highlight={h}
-              highlightsFile={highlightsFile}
               noun={noun(h)}
               onOpen={onOpen?.(h)}
               openHint={openHint(h)}

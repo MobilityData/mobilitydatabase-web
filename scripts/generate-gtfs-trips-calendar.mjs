@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * trips-calendar.json of a diff folder: trips added / removed / modified on
- * every date, for the Trips v3 calendar and weekday table
+ * views/trips/calendar.json of a diff folder: trips added / removed /
+ * modified on every date, for the Trips v3 calendar and weekday table
  * (src/app/screens/GtfsDiffToolV2/lib/trips-calendar.ts).
  *
  * Each distinct comparison (a pair of service sets) is computed once with
@@ -9,21 +9,32 @@
  * stops that only got a new stop_id aliased, then buildRouteDir), one route
  * at a time, so memory stays bounded on large feeds.
  *
- * Also writes trips-service.json: each route's service on the typical days
- * and on the day with the most trips added, which the highlights step turns
- * into highlights (lib/trips-service-highlights.ts). Build-only: the pages
- * don't load it.
+ * Also writes views/trips/day-routes.parquet: every comparison's trip
+ * changes by route and direction (lib/trips-day-routes.ts), for Trips v6.
  *
- * Run after the trips step (it reads trips-diff.json and trips/*.parquet).
+ * Also writes .build/trips-service.json: each route's service on the
+ * typical days and on the day with the most trips added, which the
+ * highlights step turns into highlights (lib/trips-service-highlights.ts).
+ * Build-only (not published, not loaded by the pages).
+ *
+ * Run after the trips step (it reads views/trips/index.json and
+ * views/trips/*.parquet). Paths from lib/diff-layout.ts.
  *
  * Usage: node scripts/generate-gtfs-trips-calendar.mjs <dataset folder>
  */
 
 import './lib/ts-resolve.mjs';
-import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { DuckDBInstance } from '@duckdb/node-api';
 import { flushTallies, markStartup, tally, timed, timer } from './lib/timings.mjs';
+import { readRouteInfo, readStopNames, rowsOf, writeTable } from './lib/map-tables.mjs';
+import {
+  TRIPS_CALENDAR_FILE,
+  TRIPS_DAY_ROUTES_FILE,
+  TRIPS_INDEX_FILE,
+  TRIPS_SERVICE_FILE,
+} from '../src/app/screens/GtfsDiffToolV2/lib/diff-layout.ts';
 
 const LIB = new URL('../src/app/screens/GtfsDiffToolV2/lib/', import.meta.url);
 const lib = (file) => import(new URL(file, LIB).href);
@@ -60,21 +71,24 @@ async function main() {
         lib('trips-periods.ts'),
         lib('trips-service-highlights.ts'),
         lib('trips-index-codec.ts'),
+        lib('trips-v2-summary.ts'),
+        lib('trips-day-routes.ts'),
       ]),
     )),
   );
-  const indexPath = join(dir, 'trips-diff.json');
-  if (!existsSync(indexPath)) throw new Error(`No trips-diff.json in ${dir}: run the trips step first.`);
-  const index = timed('read trips-diff.json (+ expandServiceSets)', () => m.expandServiceSets(JSON.parse(readFileSync(indexPath, 'utf8'))));
+  const indexPath = join(dir, TRIPS_INDEX_FILE);
+  if (!existsSync(indexPath)) throw new Error(`No ${TRIPS_INDEX_FILE} in ${dir}: run the trips step first.`);
+  const index = timed(`read ${TRIPS_INDEX_FILE} (+ expandServiceSets)`, () => m.expandServiceSets(JSON.parse(readFileSync(indexPath, 'utf8'))));
 
   const plan = timed('planTripsCalendar', () => m.planTripsCalendar(index));
   if (!plan) {
-    console.log('No date with service: no trips-calendar.json.');
+    console.log(`No date with service: no ${TRIPS_CALENDAR_FILE}.`);
     return;
   }
   const services = (side, set) => new Set(set >= 0 ? index.service_sets[side][set] : []);
-  const comparisons = plan.comparisons.map((c) => ({
+  const comparisons = plan.comparisons.map((c, s) => ({
     ...c,
+    s,
     baseServices: services('base', c.base),
     newServices: services('new', c.new),
     counts: m.emptyCounts(),
@@ -132,7 +146,8 @@ async function main() {
   }
   flushTallies();
   endStopSets({ rows: comparisons.length });
-  const stopName = (id) => index.stops?.[id];
+  const stopNames = index.stops ?? (await readStopNames(dir, index.stop_info_file));
+  const stopName = (id) => stopNames[id];
   const endAliases = timer('stop aliases (stopAliases per comparison)');
   for (const c of comparisons) {
     c.aliases = m.stopAliases(c.baseStops, c.newStops, stopName);
@@ -141,7 +156,11 @@ async function main() {
   endAliases({ rows: comparisons.length });
   pass = 2;
 
-  const routeLabel = (id) => index.routes?.[id]?.short_name || id;
+  // Route names: the routes table (lib/route-info); older indexes held them.
+  const routeInfo = index.routes ?? (await readRouteInfo(dir, index.route_info_file));
+  const routeLabel = (id) => routeInfo[id]?.short_name || id;
+  // views/trips/day-routes.parquet rows (lib/trips-day-routes.ts).
+  const dayRoutes = [];
   let done = 0;
   const endMatch = timer('matching loop (routes x comparisons): total');
   for (const route of routes) {
@@ -176,7 +195,19 @@ async function main() {
             m.DEFAULT_MINOR_THRESHOLD_S,
           ),
         );
-        m.addCounts(c.counts, m.changeCounts(r.class_counts, r.trips));
+        const counts = m.changeCounts(r.class_counts, r.trips);
+        m.addCounts(c.counts, counts);
+        tally('matching: day-routes row', () =>
+          dayRoutes.push({
+            s: c.s,
+            route,
+            dir: dirId ?? '',
+            headsign: r.headsign || null,
+            ...counts,
+            mask: m.categoryMask(m.mainChangeCategories(m.mainChangeParts(r, stopNames))),
+            changed: m.routeHasRiderChanges(r),
+          }),
+        );
         svc.trips.base += r.trips.base;
         svc.trips.new += r.trips.new;
         svc.added += r.class_counts.added;
@@ -199,7 +230,7 @@ async function main() {
   flushTallies();
   endMatch({ rows: routes.length * comparisons.length });
 
-  const endDoc = timer(`write ${m.TRIPS_CALENDAR_FILE} (doc + typicalWeekdays + write)`);
+  const endDoc = timer(`write ${TRIPS_CALENDAR_FILE} (doc + typicalWeekdays + write)`);
   const doc = {
     schema: 1,
     mode: plan.mode,
@@ -210,9 +241,17 @@ async function main() {
     sets: comparisons.map((c) => [c.base, c.new]),
     weekdays: m.typicalWeekdays(plan, comparisons.map((c) => c.counts)),
   };
-  writeFileSync(join(dir, m.TRIPS_CALENDAR_FILE), JSON.stringify(doc));
-  endDoc(() => ({ bytes: statSync(join(dir, m.TRIPS_CALENDAR_FILE)).size }));
-  const endService = timer(`write ${m.TRIPS_SERVICE_FILE} (periods + unserved stops + write)`);
+  mkdirSync(dirname(join(dir, TRIPS_CALENDAR_FILE)), { recursive: true });
+  writeFileSync(join(dir, TRIPS_CALENDAR_FILE), JSON.stringify(doc));
+  endDoc(() => ({ bytes: statSync(join(dir, TRIPS_CALENDAR_FILE)).size }));
+  const dayRoutesTable = await writeTable(
+    dir,
+    TRIPS_DAY_ROUTES_FILE,
+    m.DAY_ROUTES_COLUMNS,
+    rowsOf(m.DAY_ROUTES_COLUMNS, dayRoutes),
+    { orderBy: 's, route, dir' },
+  );
+  const endService = timer(`write ${TRIPS_SERVICE_FILE} (periods + unserved stops + write)`);
 
   // Service of the typical days, and of the day with the most trips added.
   const periods = m.servicePeriods(doc);
@@ -240,15 +279,19 @@ async function main() {
           .map((id) => ({ id, label: stopName(id) ?? id })),
       })),
   };
-  writeFileSync(join(dir, m.TRIPS_SERVICE_FILE), JSON.stringify(service));
-  endService(() => ({ bytes: statSync(join(dir, m.TRIPS_SERVICE_FILE)).size }));
+  mkdirSync(dirname(join(dir, TRIPS_SERVICE_FILE)), { recursive: true });
+  writeFileSync(join(dir, TRIPS_SERVICE_FILE), JSON.stringify(service));
+  endService(() => ({ bytes: statSync(join(dir, TRIPS_SERVICE_FILE)).size }));
   const changed = Object.values(doc.days).filter((d) => m.changedTrips(doc.counts[d.s]) > 0).length;
   console.log(
-    `Wrote ${m.TRIPS_CALENDAR_FILE}: ${plan.mode}, ${Object.keys(doc.days).length} dates (${changed} with changes), ` +
+    `Wrote ${TRIPS_CALENDAR_FILE}: ${plan.mode}, ${Object.keys(doc.days).length} dates (${changed} with changes), ` +
       `${comparisons.length} distinct comparisons, ${routes.length} routes, ${((Date.now() - t0) / 1000).toFixed(1)} s`,
   );
   console.log(
-    `Wrote ${m.TRIPS_SERVICE_FILE}: ${service.days.map((d) => `${d.when}${d.typical ? '' : ' (most added)'}`).join(', ') || 'no day'}`,
+    `Wrote ${TRIPS_DAY_ROUTES_FILE}: ${dayRoutesTable.rows} rows, ${dayRoutesTable.bytes} bytes`,
+  );
+  console.log(
+    `Wrote ${TRIPS_SERVICE_FILE}: ${service.days.map((d) => `${d.when}${d.typical ? '' : ' (most added)'}`).join(', ') || 'no day'}`,
   );
   const NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   for (const w of doc.weekdays) {

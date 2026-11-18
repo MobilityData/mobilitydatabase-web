@@ -63,8 +63,10 @@ import {
   parseRouteFilters,
   scopeDayToRoute,
   type TripsView,
+  isV5Style,
   tripsListHref,
   tripsRouteHref,
+  tripsV6RouteHref,
   writeRouteFilters,
 } from '../../lib/trips-v2-routes';
 import ReportLayout, {
@@ -214,7 +216,7 @@ export default function TripsV2Screen({
   const routeInfo = routeId ? trips.data?.routes[routeId] : undefined;
   const routeLabel = routeId ? routeInfo?.short_name || routeId : null;
   // Trips v5: a lighter route page, titled after the route.
-  const v5 = view === 'trips-v5';
+  const v5 = isV5Style(view);
   const routeName = routeInfo?.long_name
     ? `${routeLabel} · ${routeInfo.long_name}`
     : `Route ${routeLabel}`;
@@ -234,7 +236,7 @@ export default function TripsV2Screen({
   if (trips.error != null || first.error != null)
     content = (
       <Alert severity='error' sx={{ mb: 3 }}>
-        Could not load the trips data (trips-diff.json). Build it with{' '}
+        Could not load the trips data (views/trips/index.json). Build it with{' '}
         <code>node scripts/build-gtfs-diff-dataset.mjs {dataset.id}</code>.
       </Alert>
     );
@@ -270,7 +272,11 @@ export default function TripsV2Screen({
           ? {
               label: routeLabel ?? routeId,
               title: v5 ? `Trips: ${routeId}` : routeName,
-              href: tripsListHref(dataset.id, undefined, undefined, view),
+              // Trips v6: back to the route's calendar.
+              href:
+                view === 'trips-v6'
+                  ? tripsV6RouteHref(dataset.id, routeId)
+                  : tripsListHref(dataset.id, undefined, undefined, view),
             }
           : undefined
       }
@@ -454,7 +460,7 @@ function TripsDay({
   );
   // Trips v5: a route page covers its direction only, every figure included.
   const scopedDir =
-    view === 'trips-v5' && routeId != null ? (current?.dir ?? null) : null;
+    isV5Style(view) && routeId != null ? (current?.dir ?? null) : null;
   const oneDirection = scopedDir != null && current != null;
   const day = useMemo(
     () =>
@@ -477,7 +483,7 @@ function TripsDay({
   );
   // Trips v5 route page: the day under the title, then chips: its schedule
   // group, the route's change categories and its day totals.
-  const v5Route = view === 'trips-v5' && routeId != null;
+  const v5Route = isV5Style(view) && routeId != null;
   // A "<base>~<new>" key (feeds sharing no dates) is titled by its new date.
   const shownDate = date.includes('~') ? date.split('~')[1] : date;
   const dayTitle = /^\d{8}$/.test(shownDate)
@@ -553,7 +559,7 @@ function TripsDay({
       route={drawer ? doc.routes[drawer.route] : undefined}
       stopNames={doc.stops}
       onClose={() => setDrawer(null)}
-      detailed={view === 'trips-v5' ? { rawDatasetId } : undefined}
+      detailed={isV5Style(view) ? { rawDatasetId } : undefined}
     />
   );
 
@@ -615,7 +621,7 @@ function TripsDay({
   const selectDir = (d: string): void => {
     setDir(d);
     // Trips v5: each direction is a page of its own.
-    if (view === 'trips-v5')
+    if (isV5Style(view))
       router.push(
         tripsRouteHref(datasetId, routeId, { day: date, dir: d, view }),
       );
@@ -633,7 +639,7 @@ function TripsDay({
         subject={scopeLabel}
       />
     );
-  const v5 = view === 'trips-v5';
+  const v5 = isV5Style(view);
   const daySubheader = v5;
   const v5Chips = (
     <Box

@@ -2,7 +2,7 @@
  * Trips added / removed / modified on every date, for the Trips v3 calendar
  * and its weekday table (/gtfs-diff-tool-v2/<dataset>/trips-v3).
  *
- * Built by scripts/generate-gtfs-trips-calendar.mjs into trips-calendar.json:
+ * Built by scripts/generate-gtfs-trips-calendar.mjs into views/trips/calendar.json:
  * comparing every date in the browser would mean matching every day's trips,
  * so it is done once at build time. Dates running the same pair of service
  * sets give the same result and are compared once.
@@ -25,7 +25,8 @@ import type { TripClass, TripsDiffDoc } from './trips-types';
 import { type AnchorKey, anchorKey } from './trips-anchor';
 import { weekdayIndex } from './calendar-utils';
 
-export const TRIPS_CALENDAR_FILE = 'trips-calendar.json';
+/** lib/diff-layout's, re-exported for the build scripts that import it here. */
+export { TRIPS_CALENDAR_FILE } from './diff-layout';
 
 /** Primary classes counted as "modified" (rider-facing). */
 export const MODIFIED_CLASSES: TripClass[] = [

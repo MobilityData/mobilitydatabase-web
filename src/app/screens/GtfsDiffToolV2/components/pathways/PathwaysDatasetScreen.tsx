@@ -15,7 +15,7 @@ interface PathwaysDatasetScreenProps {
   report: ReportSummary;
 }
 
-/** Loads a dataset's pathways-diff.json, then renders the pathways view. */
+/** Loads a dataset's analysis/pathways.json, then renders the pathways view. */
 export default function PathwaysDatasetScreen({
   dataset,
   report,

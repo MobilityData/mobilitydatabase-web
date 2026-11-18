@@ -1,20 +1,50 @@
 {
-  "schema": 2,
-  "dataset": "direxis",
-  "generated_at": "2026-11-02T13:08:50.077Z",
-  "feeds": {
-    "base": {
-      "file": "base-mdb-2775-202608070145.zip"
+  "metadata": {
+    "schema_version": "2.1.0-poc",
+    "generated_at": "2026-11-18T14:16:47.192Z",
+    "base_feed": {
+      "source": "base-mdb-2775-202608070145.zip"
     },
-    "new": {
-      "file": "new-mdb-2775-202609020046.zip"
+    "new_feed": {
+      "source": "new-mdb-2775-202609020046.zip"
+    },
+    "files": {
+      "base": [
+        "agency.txt",
+        "calendar.txt",
+        "calendar_dates.txt",
+        "routes.txt",
+        "shapes.txt",
+        "stop_times.txt",
+        "stops.txt",
+        "trips.txt"
+      ],
+      "new": [
+        "agency.txt",
+        "calendar.txt",
+        "calendar_dates.txt",
+        "routes.txt",
+        "shapes.txt",
+        "stop_times.txt",
+        "stops.txt",
+        "trips.txt"
+      ]
     }
   },
   "files": [
     {
       "file": "agency.txt",
-      "group": "agency",
-      "present": true,
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 2,
+        "new": 2
+      },
+      "primary_key": [
+        "agency_id"
+      ],
       "counts": {
         "added": 0,
         "deleted": 0,
@@ -23,15 +53,298 @@
       }
     },
     {
-      "file": "attributions.txt",
-      "group": "agency",
-      "present": false,
-      "counts": null
+      "file": "stops.txt",
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 427,
+        "new": 450
+      },
+      "primary_key": [
+        "stop_id"
+      ],
+      "counts": {
+        "added": 34,
+        "deleted": 11,
+        "modified": 312,
+        "unchanged": 104
+      },
+      "raw_table": {
+        "file": "stops.txt",
+        "path": "raw/stops.parquet",
+        "rows": 461,
+        "bytes": 27236,
+        "columns": [
+          "stop_id",
+          "stop_name",
+          "stop_desc",
+          "stop_lat",
+          "stop_lon",
+          "stop_url",
+          "stop_code",
+          "wheelchair_boarding"
+        ],
+        "counts": {
+          "added": 34,
+          "deleted": 11,
+          "modified": 312,
+          "id_only": 0,
+          "unchanged": 104
+        },
+        "compact_unchanged": true,
+        "key_column": "stop_id",
+        "key_columns": [
+          "stop_id"
+        ]
+      }
     },
     {
-      "file": "stops.txt",
-      "group": "stops",
-      "present": true,
+      "file": "shapes.txt",
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 119,
+        "new": 126
+      },
+      "primary_key": [
+        "shape_id"
+      ],
+      "counts": {
+        "added": 14,
+        "deleted": 7,
+        "modified": 109,
+        "unchanged": 3
+      },
+      "raw_table": {
+        "file": "shapes.txt",
+        "path": "raw/shapes.parquet",
+        "rows": 33336,
+        "bytes": 253668,
+        "columns": [
+          "shape_id",
+          "shape_pt_lat",
+          "shape_pt_lon",
+          "shape_pt_sequence"
+        ],
+        "counts": {
+          "added": 10036,
+          "deleted": 5875,
+          "modified": 17425,
+          "id_only": 0,
+          "unchanged": 29842
+        },
+        "unchanged_omitted": true
+      }
+    },
+    {
+      "file": "routes.txt",
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 25,
+        "new": 24
+      },
+      "primary_key": [
+        "route_id"
+      ],
+      "counts": {
+        "added": 0,
+        "deleted": 1,
+        "modified": 0,
+        "unchanged": 24
+      },
+      "raw_table": {
+        "file": "routes.txt",
+        "path": "raw/routes.parquet",
+        "rows": 25,
+        "bytes": 7095,
+        "columns": [
+          "route_id",
+          "agency_id",
+          "route_short_name",
+          "route_long_name",
+          "route_desc",
+          "route_type",
+          "route_url",
+          "route_color",
+          "route_text_color",
+          "route_sort_order"
+        ],
+        "counts": {
+          "added": 0,
+          "deleted": 1,
+          "modified": 0,
+          "id_only": 0,
+          "unchanged": 24
+        },
+        "compact_unchanged": true,
+        "key_column": "route_id",
+        "key_columns": [
+          "route_id"
+        ]
+      }
+    },
+    {
+      "file": "trips.txt",
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 802,
+        "new": 823
+      },
+      "primary_key": [
+        "trip_id"
+      ],
+      "counts": {
+        "added": 23,
+        "deleted": 2,
+        "modified": 362,
+        "unchanged": 438
+      },
+      "id_only": 1,
+      "raw_table": {
+        "file": "trips.txt",
+        "path": "raw/trips.parquet",
+        "rows": 825,
+        "bytes": 19546,
+        "columns": [
+          "route_id",
+          "service_id",
+          "trip_id",
+          "trip_headsign",
+          "trip_short_name",
+          "direction_id",
+          "block_id",
+          "shape_id",
+          "wheelchair_accessible"
+        ],
+        "counts": {
+          "added": 23,
+          "deleted": 2,
+          "modified": 51,
+          "id_only": 4,
+          "unchanged": 745
+        }
+      },
+      "trip_matching": {
+        "mapped": 797,
+        "renamed": 43,
+        "base_trips": 802,
+        "new_trips": 823
+      }
+    },
+    {
+      "file": "stop_times.txt",
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "part_of": "trips.txt",
+      "raw_table": {
+        "file": "stop_times.txt",
+        "path": "raw/stop_times.parquet",
+        "rows": 11158,
+        "bytes": 136405,
+        "columns": [
+          "trip_id",
+          "arrival_time",
+          "departure_time",
+          "stop_id",
+          "stop_sequence",
+          "stop_headsign",
+          "pickup_type",
+          "drop_off_type",
+          "timepoint"
+        ],
+        "counts": {
+          "added": 857,
+          "deleted": 672,
+          "modified": 2824,
+          "id_only": 182,
+          "unchanged": 6623
+        }
+      }
+    },
+    {
+      "file": "calendar.txt",
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "raw_table": {
+        "file": "calendar.txt",
+        "path": "raw/calendar.parquet",
+        "rows": 44,
+        "bytes": 7191,
+        "columns": [
+          "service_id",
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday",
+          "start_date",
+          "end_date"
+        ],
+        "counts": {
+          "added": 6,
+          "deleted": 0,
+          "modified": 7,
+          "id_only": 0,
+          "unchanged": 31
+        },
+        "compact_unchanged": true,
+        "key_column": "service_id",
+        "key_columns": [
+          "service_id"
+        ]
+      }
+    },
+    {
+      "file": "calendar_dates.txt",
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "raw_table": {
+        "file": "calendar_dates.txt",
+        "path": "raw/calendar_dates.parquet",
+        "rows": 355,
+        "bytes": 4985,
+        "columns": [
+          "service_id",
+          "date",
+          "exception_type"
+        ],
+        "counts": {
+          "added": 76,
+          "deleted": 0,
+          "modified": 0,
+          "id_only": 0,
+          "unchanged": 279
+        },
+        "compact_unchanged": true,
+        "key_column": "service_id",
+        "key_columns": [
+          "service_id",
+          "date"
+        ]
+      }
+    }
+  ],
+  "analyses": {
+    "stops": {
+      "file": "analysis/stops.json",
       "counts": {
         "added": 34,
         "deleted": 11,
@@ -39,230 +352,8 @@
         "unchanged": 104
       }
     },
-    {
-      "file": "levels.txt",
-      "group": "stops",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "pathways.txt",
-      "group": "stops",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "shapes.txt",
-      "group": "routes",
-      "present": true,
-      "counts": {
-        "added": 14,
-        "deleted": 7,
-        "modified": 109,
-        "unchanged": 3
-      }
-    },
-    {
-      "file": "routes.txt",
-      "group": "routes",
-      "present": true,
-      "counts": {
-        "added": 0,
-        "deleted": 1,
-        "modified": 0,
-        "unchanged": 24
-      }
-    },
-    {
-      "file": "networks.txt",
-      "group": "routes",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "route_networks.txt",
-      "group": "routes",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "areas.txt",
-      "group": "routes",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "stop_areas.txt",
-      "group": "routes",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "trips.txt",
-      "group": "trips",
-      "present": true,
-      "counts": {
-        "added": 23,
-        "deleted": 2,
-        "modified": 362,
-        "unchanged": 438
-      }
-    },
-    {
-      "file": "stop_times.txt",
-      "group": "trips",
-      "present": true,
-      "counts": {
-        "added": 857,
-        "deleted": 672,
-        "modified": 2824,
-        "unchanged": 6623,
-        "id_only": 182
-      },
-      "part_of": "trips.txt"
-    },
-    {
-      "file": "frequencies.txt",
-      "group": "trips",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "calendar.txt",
-      "group": "calendar",
-      "present": true,
-      "counts": {
-        "added": 6,
-        "deleted": 0,
-        "modified": 7,
-        "unchanged": 31,
-        "id_only": 0
-      }
-    },
-    {
-      "file": "calendar_dates.txt",
-      "group": "calendar",
-      "present": true,
-      "counts": {
-        "added": 76,
-        "deleted": 0,
-        "modified": 0,
-        "unchanged": 279,
-        "id_only": 0
-      }
-    },
-    {
-      "file": "fare_attributes.txt",
-      "group": "fares_v1",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "fare_rules.txt",
-      "group": "fares_v1",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "fare_products.txt",
-      "group": "fares_v2",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "fare_media.txt",
-      "group": "fares_v2",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "fare_leg_rules.txt",
-      "group": "fares_v2",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "fare_leg_join_rules.txt",
-      "group": "fares_v2",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "fare_transfer_rules.txt",
-      "group": "fares_v2",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "rider_categories.txt",
-      "group": "fares_v2",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "timeframes.txt",
-      "group": "fares_v2",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "booking_rules.txt",
-      "group": "flex",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "location_groups.txt",
-      "group": "flex",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "location_group_stops.txt",
-      "group": "flex",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "locations.geojson",
-      "group": "flex",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "feed_info.txt",
-      "group": "meta",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "translations.txt",
-      "group": "meta",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "transfers.txt",
-      "group": "meta",
-      "present": false,
-      "counts": null
-    }
-  ],
-  "groups": [
-    {
-      "id": "agency",
-      "label": "Agency",
-      "present": true
-    },
-    {
-      "id": "stops",
-      "label": "Stops",
-      "present": true
-    },
-    {
-      "id": "routes",
-      "label": "Routes",
-      "present": true,
+    "routes": {
+      "file": "analysis/routes.json",
       "counts": {
         "added": 0,
         "deleted": 1,
@@ -270,43 +361,27 @@
         "unchanged": 5
       }
     },
-    {
-      "id": "trips",
-      "label": "Trips",
-      "present": true
-    },
-    {
-      "id": "calendar",
-      "label": "Service Dates",
-      "present": true,
+    "services": {
+      "file": "analysis/services.json",
       "counts": {
         "added": 6,
         "deleted": 0,
         "modified": 8,
         "unchanged": 30
       }
-    },
-    {
-      "id": "fares_v1",
-      "label": "Fares v1",
-      "present": false
-    },
-    {
-      "id": "fares_v2",
-      "label": "Fares v2",
-      "present": false
-    },
-    {
-      "id": "flex",
-      "label": "Flex",
-      "present": false
-    },
-    {
-      "id": "meta",
-      "label": "Meta",
-      "present": false
     }
-  ],
+  },
+  "schema": 4,
+  "dataset": "direxis",
+  "generated_at": "2026-11-18T14:16:48.901Z",
+  "feeds": {
+    "base": {
+      "file": "base-mdb-2775-202608070145.zip"
+    },
+    "new": {
+      "file": "new-mdb-2775-202609020046.zip"
+    }
+  },
   "highlights": {
     "counts": {
       "error": 3,

@@ -13,6 +13,41 @@ const CHANGE_COLORS: Partial<Record<RouteChange, string>> = {
   stops: OVERVIEW_STYLES.major.color,
 };
 
+/** Outlined pill like a "What changed" chip, as a list item. */
+export function ChangePill({
+  label,
+  color,
+  component = 'li',
+}: {
+  label: string;
+  /** Border and text; neutral grey when absent. */
+  color?: string;
+  /** A span inside buttons, where lists aren't allowed. */
+  component?: 'li' | 'span';
+}): React.ReactElement {
+  return (
+    <Box
+      component={component}
+      sx={{
+        listStyle: 'none',
+        px: 0.75,
+        height: 18,
+        display: 'inline-flex',
+        alignItems: 'center',
+        borderRadius: '9px',
+        fontSize: '0.68rem',
+        fontWeight: 600,
+        whiteSpace: 'nowrap',
+        border: '1px solid',
+        borderColor: color ?? 'divider',
+        color: color ?? 'text.secondary',
+      }}
+    >
+      {label}
+    </Box>
+  );
+}
+
 /** A route's changes, labelled like the "What changed" filter chips. */
 export function ChangeChips({
   changes,
@@ -26,30 +61,13 @@ export function ChangeChips({
       aria-label='Changes'
       sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, m: 0, p: 0 }}
     >
-      {changes.map((c) => {
-        const color = CHANGE_COLORS[c];
-        return (
-          <Box
-            component='li'
-            key={c}
-            sx={{
-              listStyle: 'none',
-              px: 0.75,
-              height: 18,
-              display: 'inline-flex',
-              alignItems: 'center',
-              borderRadius: '9px',
-              fontSize: '0.68rem',
-              fontWeight: 600,
-              border: '1px solid',
-              borderColor: color ?? 'divider',
-              color: color ?? 'text.secondary',
-            }}
-          >
-            {ROUTE_CHANGE_LABELS[c]}
-          </Box>
-        );
-      })}
+      {changes.map((c) => (
+        <ChangePill
+          key={c}
+          label={ROUTE_CHANGE_LABELS[c]}
+          color={CHANGE_COLORS[c]}
+        />
+      ))}
     </Box>
   );
 }

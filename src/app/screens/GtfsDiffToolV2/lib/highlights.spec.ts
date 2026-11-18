@@ -41,6 +41,6 @@ describe('inlineHighlights', () => {
 
 describe('highlightsFileName', () => {
   it('names the file after the section', () => {
-    expect(highlightsFileName('stops')).toBe('stops-highlights.json');
+    expect(highlightsFileName('stops')).toBe('highlights/stops.json');
   });
 });

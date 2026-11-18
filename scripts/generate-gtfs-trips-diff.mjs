@@ -4,13 +4,14 @@
  *
  * Only the files the Trips view needs are read (trips, stop_times,
  * frequencies, calendar, routes, stops, and id_mappings when a feed renames
- * stops per trip), into DuckDB (lib/feed-store.mjs). <out.json> is a small
- * day index; each feed's trips go to trips/<side>.parquet next to it, a
- * route at a time, sorted by service so the Trips view reads only the
- * services running on the selected day (lib/write-trips-diff.mjs).
+ * stops per trip), into DuckDB (lib/feed-store.mjs). Writes into the
+ * dataset folder a small day index (views/trips/index.json) and each
+ * feed's trips (views/trips/<side>.parquet), a route at a time, sorted by
+ * service so the Trips view reads only the services running on the
+ * selected day (lib/write-trips-diff.mjs; paths from lib/diff-layout.ts).
  *
  * Usage:
- *   node scripts/generate-gtfs-trips-diff.mjs <base.zip> <new.zip> <out.json>
+ *   node scripts/generate-gtfs-trips-diff.mjs <base.zip> <new.zip> <dataset folder>
  */
 
 import { openFeedStore, SIDES } from './lib/feed-store.mjs';
@@ -68,9 +69,9 @@ function routeServiceTrips(feeds) {
 }
 
 async function main() {
-  const [basePath, newPath, outPath] = process.argv.slice(2);
-  if (!basePath || !newPath || !outPath) {
-    console.error('Usage: node scripts/generate-gtfs-trips-diff.mjs <base.zip> <new.zip> <out.json>');
+  const [basePath, newPath, outDir] = process.argv.slice(2);
+  if (!basePath || !newPath || !outDir) {
+    console.error('Usage: node scripts/generate-gtfs-trips-diff.mjs <base.zip> <new.zip> <dataset folder>');
     process.exit(1);
   }
   markStartup();
@@ -85,7 +86,7 @@ async function main() {
         (byRoute ? `; over ${BY_ROUTE_DAY_TRIPS}, so trips are sorted by route` : ''),
     );
 
-    const writer = await openTripsWriter(outPath);
+    const writer = await openTripsWriter(outDir);
     let written;
     try {
       const t0 = Date.now();
@@ -117,7 +118,7 @@ async function main() {
       writer.abort();
       throw e;
     }
-    console.log(describeWrite(outPath, written));
+    console.log(describeWrite(outDir, written));
     console.log(`  service sets: base ${index.service_sets.base.length}, new ${index.service_sets.new.length}`);
     for (const d of index.day_types) {
       console.log(`  ${d.primary ? '*' : ' '} ${d.label.padEnd(9)} ${d.date}  ${d.day_count}/${d.group_count} days  (${d.first}–${d.last})`);

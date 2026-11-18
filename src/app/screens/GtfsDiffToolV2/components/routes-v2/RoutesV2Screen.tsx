@@ -14,8 +14,7 @@ import {
   parseLocationHash,
   toFocusHash,
 } from '../../lib/diff-nav';
-import { routeOfShapeQuery } from '../../lib/map-table-query';
-import { mapTableUrl, queryMapTable } from '../../lib/useMapTable';
+import { loadRouteOfShape } from '../../lib/useMapTable';
 import { useCategoryDetail, useDiffData } from '../../lib/useDiffData';
 import { ForeignKeyLinks } from '../../lib/foreign-keys';
 import { type RowAction } from '../../../GtfsDiffTool/components/GtfsDiffFileDiffPanel';
@@ -91,11 +90,9 @@ export default function RoutesV2Screen({
     if (t.kind === 'route') {
       setRouteParam(id, 'replace');
     } else if (t.kind === 'shape') {
-      queryMapTable(mapTableUrl(dataset.id, routesMap.table), (v) =>
-        routeOfShapeQuery(v, id),
-      )
-        .then((rows) => {
-          if (rows[0]) setRouteParam(String(rows[0].route_id), 'replace');
+      loadRouteOfShape(dataset.id, routesMap, id)
+        .then((r) => {
+          if (r) setRouteParam(r.route_id, 'replace');
         })
         .catch(() => undefined);
     }
@@ -156,6 +153,7 @@ export default function RoutesV2Screen({
               <RoutesV2Workspace
                 datasetId={dataset.id}
                 routesMap={routesMap}
+                rawRoutes={rawTables.find((t) => t.file === 'routes.txt')}
                 onSeeRouteRow={showRouteRow}
               />
             </Suspense>

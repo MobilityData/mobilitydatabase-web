@@ -1,4 +1,4 @@
-import type { PatternOp, RouteImpact } from './entity-diff-types';
+import type { RouteImpact } from './entity-diff-types';
 import type { EntityRow, Highlight } from './highlights';
 import {
   DEFAULT_V2_FILTERS,
@@ -6,8 +6,6 @@ import {
   overviewCategory,
   routeChanges,
   routeSummaryLine,
-  serviceGroups,
-  stopStripRows,
 } from './routes-v2';
 
 const NO_FLAGS = {
@@ -45,17 +43,20 @@ function route(
 
 describe('routeSummaryLine', () => {
   it('says what changed and what did not', () => {
-    expect(routeSummaryLine(route('modified', { trips: true }))).toBe(
-      'Schedule changed. Path and stops unchanged.',
-    );
     expect(
       routeSummaryLine(
         route('modified', { path: true, stops: true, services: true }),
       ),
-    ).toBe('Path, stops and schedule changed.');
+    ).toBe('Path and stops changed.');
     expect(routeSummaryLine(route('modified', { attributes: true }))).toBe(
-      'Attributes changed. Path, stops and schedule unchanged.',
+      'Attributes changed. Path and stops unchanged.',
     );
+  });
+
+  it('leaves trips and services to the Trips and Service Dates pages', () => {
+    expect(
+      routeSummaryLine(route('modified', { trips: true, services: true })),
+    ).toBe('Nothing changed.');
     expect(routeSummaryLine(route('added'))).toBe('New route in this feed.');
   });
 });
@@ -68,45 +69,23 @@ describe('route changes and overview categories', () => {
     expect(
       routeChanges('modified', { ...NO_FLAGS, network: true, path: true }),
     ).toEqual(['path', 'network']);
+    expect(
+      routeChanges('modified', { ...NO_FLAGS, trips: true, services: true }),
+    ).toEqual([]);
   });
 
   it('draws path or stop changes bold, the rest thin', () => {
     expect(overviewCategory('modified', { ...NO_FLAGS, stops: true })).toBe(
       'major',
     );
-    expect(overviewCategory('modified', { ...NO_FLAGS, trips: true })).toBe(
+    expect(overviewCategory('modified', { ...NO_FLAGS, network: true })).toBe(
       'minor',
+    );
+    expect(overviewCategory('modified', { ...NO_FLAGS, trips: true })).toBe(
+      'unchanged',
     );
     expect(overviewCategory('removed', NO_FLAGS)).toBe('removed');
     expect(overviewCategory('unchanged', NO_FLAGS)).toBe('unchanged');
-  });
-});
-
-describe('stopStripRows', () => {
-  const ops = (s: string): PatternOp[] =>
-    [...s].map((c, i) => ({
-      op: c === '+' ? 'add' : c === '-' ? 'remove' : 'keep',
-      stop_id: `S${i}`,
-    }));
-  const shape = (rows: ReturnType<typeof stopStripRows>): string =>
-    rows
-      .map((r) => (r.type === 'gap' ? `[${r.count}]` : r.op.stop_id))
-      .join(' ');
-
-  it('collapses long unchanged runs to their ends', () => {
-    expect(shape(stopStripRows(ops('......+-...')))).toBe(
-      'S0 [4] S5 S6 S7 S8 S9 S10',
-    );
-  });
-
-  it('expands a gap on request', () => {
-    const rows = stopStripRows(ops('.....'));
-    expect(shape(rows)).toBe('S0 [3] S4');
-    const gap = rows.find((r) => r.type === 'gap');
-    expect(
-      gap?.type === 'gap' &&
-        shape(stopStripRows(ops('.....'), new Set([gap.from]))),
-    ).toBe('S0 S1 S2 S3 S4');
   });
 });
 
@@ -136,34 +115,5 @@ describe('highlightPreset', () => {
     expect(
       highlightPreset(h('unused_shapes', [{ id: 'S', label: '', note: '' }])),
     ).toBeNull();
-  });
-});
-
-describe('serviceGroups', () => {
-  const services = { base: ['WK', 'SAT', 'OLD'], new: ['WK', 'SAT', 'NEW'] };
-
-  it('groups by added / removed, then by calendar status', () => {
-    expect(
-      serviceGroups(services, { WK: 'modified', SAT: 'unchanged' }),
-    ).toEqual([
-      { key: 'added', label: 'Added', ids: ['NEW'] },
-      { key: 'removed', label: 'Removed', ids: ['OLD'] },
-      { key: 'modified', label: 'Modified', ids: ['WK'] },
-      { key: 'unchanged', label: 'Unchanged', ids: ['SAT'] },
-    ]);
-  });
-
-  it('keeps shared services together while the status is unknown', () => {
-    expect(serviceGroups(services, null).map((g) => g.key)).toEqual([
-      'added',
-      'removed',
-      'both',
-    ]);
-  });
-
-  it('filters by search and drops empty groups', () => {
-    expect(serviceGroups(services, null, 'ne')).toEqual([
-      { key: 'added', label: 'Added', ids: ['NEW'] },
-    ]);
   });
 });

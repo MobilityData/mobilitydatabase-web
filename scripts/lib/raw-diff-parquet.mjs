@@ -2,10 +2,16 @@
  * Full row-level diffs as Parquet, one file per GTFS file, for the raw diff
  * table (DuckDB-WASM in the browser queries them over HTTP range requests).
  *
- * Every row of either feed appears exactly once, with its action:
+ * Every row of either feed appears at most once, with its action:
  *   added | deleted | modified | id_only | unchanged
  * where id_only means the same row whose only differences are identifiers
- * (a renumbered trip_id / block_id / stop_sequence).
+ * (a renumbered trip_id / block_id / stop_sequence). Rows identical in both
+ * feeds are stored in the trip files (trips, stop_times, frequencies: the
+ * Trips pages and highlights count and show whole trips) and in the files
+ * others look entities up in (stops, routes: every stop and route of either
+ * feed, once). There, b_<column> is NULL where the base value equals the new
+ * one (`compact_unchanged` on the table entry), so an unchanged row costs
+ * one side. Elsewhere they are counted but not written (`unchanged_omitted`).
  *
  * Columns (all VARCHAR unless noted):
  *   action, route_id, service_id, direction_id,
@@ -25,8 +31,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DuckDBInstance } from '@duckdb/node-api';
 import { timer } from './timings.mjs';
+import { RAW_DIR, rawTablePath } from '../../src/app/screens/GtfsDiffToolV2/lib/diff-layout.ts';
 
-export const RAW_DIR = 'raw';
+export { RAW_DIR, rawTablePath };
 export const ACTIONS = ['added', 'deleted', 'modified', 'id_only', 'unchanged'];
 
 /** Leading columns of every raw table, before b_<col> / n_<col> pairs. */
@@ -77,7 +84,8 @@ export function tableName(file) {
 
 /**
  * Opens a scratch DuckDB database (on disk, so large feeds can spill) that
- * collects rows and writes one Parquet file per table into `<dir>/raw/`.
+ * collects rows and writes one Parquet file per table into `<dir>/raw/`
+ * (lib/diff-layout.ts rawTablePath).
  */
 export async function openRawParquet(datasetDir) {
   const outDir = join(datasetDir, RAW_DIR);
@@ -87,8 +95,8 @@ export async function openRawParquet(datasetDir) {
   const con = await instance.connect();
 
   return {
-    /** Directory the Parquet files go to (for tables written straight from SQL). */
-    outDir,
+    /** The dataset folder (tables written straight from SQL go to rawTablePath there). */
+    datasetDir,
     async table(file, columns) {
       const name = tableName(file);
       const cols = [...META, ...columns.flatMap((c) => [[`b_${c}`, 'VARCHAR'], [`n_${c}`, 'VARCHAR']])];
@@ -101,7 +109,16 @@ export async function openRawParquet(datasetDir) {
       const str = (v) => (v == null ? appender.appendNull() : appender.appendVarchar(String(v)));
       const int = (v) => (v == null ? appender.appendNull() : appender.appendInteger(v));
       let rows = 0;
+      // Rows counted under their action but not written.
+      const skipped = Object.fromEntries(ACTIONS.map((a) => [a, 0]));
+      let anySkipped = false;
+      let anyCompact = false;
       return {
+        /** Counts a row without writing it. */
+        skip(action) {
+          skipped[action]++;
+          anySkipped = true;
+        },
         append(r) {
           str(r.action);
           str(r.route_id);
@@ -114,29 +131,45 @@ export async function openRawParquet(datasetDir) {
           int(r.base_line);
           int(r.new_line);
           str(r.changed && r.changed.length > 0 ? r.changed.join(',') : null);
+          // compactBase: an unchanged row's base values are left NULL where
+          // they equal the new ones.
+          const compact = r.compactBase === true && r.base != null && r.new != null;
+          if (compact) anyCompact = true;
           for (const c of columns) {
-            str(r.base ? (r.base[c] ?? '') : null);
-            str(r.new ? (r.new[c] ?? '') : null);
+            const b = r.base ? (r.base[c] ?? '') : null;
+            const n = r.new ? (r.new[c] ?? '') : null;
+            str(compact && b === n ? null : b);
+            str(n);
           }
           appender.endRow();
           rows++;
         },
         async finish() {
           // Rows were appended along the way; this is the sort + COPY.
-          const end = timer(`write ${RAW_DIR}/${name}.parquet (sort + COPY)`);
+          const rel = rawTablePath(file);
+          const end = timer(`write ${rel} (sort + COPY)`);
           appender.closeSync();
-          const path = join(outDir, `${name}.parquet`);
+          const path = join(datasetDir, rel);
           await tcon.run(
             `COPY (SELECT * FROM ${ident(name)} ORDER BY route_id NULLS LAST, trip_key, seq) TO ${sqlString(path)} ` +
               `(${parquetOptions()})`,
           );
           const res = await tcon.runAndReadAll(`SELECT action, count(*)::INTEGER AS n FROM ${ident(name)} GROUP BY action`);
-          const counts = Object.fromEntries(ACTIONS.map((a) => [a, 0]));
-          for (const { action, n } of res.getRowObjectsJS()) counts[action] = n;
+          const counts = { ...skipped };
+          for (const { action, n } of res.getRowObjectsJS()) counts[action] += n;
           await tcon.run(`DROP TABLE ${ident(name)}`);
           tcon.closeSync();
           end(() => ({ rows, bytes: statSync(path).size }));
-          return { file, path: `${RAW_DIR}/${name}.parquet`, rows, bytes: statSync(path).size, columns, counts };
+          return {
+            file,
+            path: rel,
+            rows,
+            bytes: statSync(path).size,
+            columns,
+            counts,
+            ...(anySkipped ? { unchanged_omitted: true } : {}),
+            ...(anyCompact ? { compact_unchanged: true } : {}),
+          };
         },
       };
     },
@@ -147,55 +180,4 @@ export async function openRawParquet(datasetDir) {
       rmSync(`${dbPath}.wal`, { force: true });
     },
   };
-}
-
-// ── Entity change lists ────────────────────────────────────────────
-
-export const ENTITIES_DIR = 'entities';
-
-/**
- * Writes one entity type's change list (EntityChange[]) to
- * <dir>/entities/<name>.parquet, in its original order, so entity-diff.json
- * keeps only summaries. Columns: ord, key, status, label, and context /
- * field_changes / children as JSON text.
- */
-export async function writeChangesTable(datasetDir, file, changes) {
-  const outDir = join(datasetDir, ENTITIES_DIR);
-  mkdirSync(outDir, { recursive: true });
-  const name = file.replace(/\.(txt|geojson)$/, '').replace(/[^a-z0-9_]/gi, '_');
-  const path = join(outDir, `${name}.parquet`);
-  const end = timer(`write ${ENTITIES_DIR}/${name}.parquet`);
-  const dbPath = join(tmpdir(), `gtfs-changes-${process.pid}-${Date.now()}.duckdb`);
-  const instance = await DuckDBInstance.create(dbPath);
-  const con = await instance.connect();
-  try {
-    await con.run(
-      'CREATE TABLE c (ord INTEGER, key VARCHAR, status VARCHAR, label VARCHAR, context VARCHAR, field_changes VARCHAR, children VARCHAR)',
-    );
-    const a = await con.createAppender('c');
-    const json = (v) => (v == null ? a.appendNull() : a.appendVarchar(JSON.stringify(v)));
-    changes.forEach((c, i) => {
-      a.appendInteger(i);
-      a.appendVarchar(c.key);
-      a.appendVarchar(c.status);
-      if (c.label == null) a.appendNull();
-      else a.appendVarchar(c.label);
-      json(c.context);
-      json(c.field_changes);
-      json(c.children);
-      a.endRow();
-    });
-    a.closeSync();
-    await con.run(`COPY (SELECT * FROM c ORDER BY ord) TO ${sqlString(path)} (${parquetOptions()})`);
-    const res = await con.runAndReadAll(`SELECT count(*)::INTEGER AS n FROM read_parquet(${sqlString(path)})`);
-    const [{ n }] = res.getRowObjectsJS();
-    if (n !== changes.length) throw new Error(`${path}: ${n} rows for ${changes.length} changes`);
-  } finally {
-    con.closeSync();
-    instance.closeSync();
-    rmSync(dbPath, { force: true });
-    rmSync(`${dbPath}.wal`, { force: true });
-  }
-  end(() => ({ rows: changes.length, bytes: statSync(path).size }));
-  return { path: `${ENTITIES_DIR}/${name}.parquet`, rows: changes.length, bytes: statSync(path).size };
 }

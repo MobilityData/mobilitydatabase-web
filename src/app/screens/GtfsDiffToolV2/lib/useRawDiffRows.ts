@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { diffFileUrl } from './datasets';
+import { rawTablePath } from './diff-layout';
 import { getConnection, parquetView, runQueued } from './duckdb-client';
 import {
   RAW_ACTIONS,
@@ -20,7 +21,7 @@ import {
 
 /** URL of a GTFS file's raw row table: <diff>/raw/<name>.parquet */
 export function rawTableUrl(datasetId: string, file: string): string {
-  return diffFileUrl(datasetId, `raw/${file.replace(/\.txt$/, '')}.parquet`);
+  return diffFileUrl(datasetId, rawTablePath(file));
 }
 
 interface TableInfo {

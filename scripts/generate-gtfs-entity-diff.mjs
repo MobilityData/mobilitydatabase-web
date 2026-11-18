@@ -2,188 +2,135 @@
 /**
  * Generate an entity-level GTFS diff (v2 POC) from two GTFS zip files.
  *
- * Unlike the v1 diff (one section per file), v2 groups GTFS files into
- * entity categories (Agency, Stops, Routes, Trips, Service Dates, ...)
- * and diffs them by their entity keys. The Service Dates category gets a
- * richer, UI-oriented payload: per-service changes, per-day changes with the
- * reason each day changed, and rule-based (non-AI) scheduling highlights.
+ * Writes report.json's files and analyses (lib/report.ts ReportDoc): one
+ * entry per GTFS file of either feed (presence, totals, change counts by its
+ * entity key, its raw row diff in raw/<file>.parquet), plus the analyses that
+ * need more than one file: the stops map, the routes map (shapes, stop
+ * patterns, trips) and the service calendar, each with its own JSON and
+ * Parquet tables, and their counts. The rest of report.json (feeds, pathways
+ * counts, highlights) is the report step's and is kept. Which files make up
+ * which page is the viewer's choice (lib/sections.ts), not this output's.
  *
  * Usage:
- *   node scripts/generate-gtfs-entity-diff.mjs <base.zip> <new.zip> <out.json>
+ *   node scripts/generate-gtfs-entity-diff.mjs <base.zip> <new.zip> <report.json>
  */
 
-import { deepStrictEqual } from 'node:assert/strict';
-import { mkdirSync, writeFileSync, statSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { decodeDeep, encodeDeep } from '../src/app/screens/GtfsDiffToolV2/lib/entity-diff-codec.ts';
-import { ident, openFeedStore } from './lib/feed-store.mjs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path';
+import { ident, openFeedStore, tableOf } from './lib/feed-store.mjs';
 import { buildTripsIndex, forEachRoute, groupByTrip, routeCompactTrips } from './lib/gtfs-trips-diff.mjs';
 import { MAPPING_PASSES, mapTrips, serviceMasks } from './lib/trip-id-mapping.mjs';
 import { openTripsFamilyDiff } from './lib/trips-family-diff.mjs';
 import { writeRoutesTable, writeStopsTable } from './lib/map-tables.mjs';
 import { writeCalendarTables } from './lib/calendar-tables.mjs';
 import { shapeMatcher } from './lib/shape-match.mjs';
-import { ACTIONS, RAW_DIR, openRawParquet, parquetOptions, tableName, writeChangesTable } from './lib/raw-diff-parquet.mjs';
+import { ACTIONS, openRawParquet, parquetOptions, rawTablePath } from './lib/raw-diff-parquet.mjs';
 import { flushTallies, markStartup, tally, timed, timer } from './lib/timings.mjs';
+import { ANALYSIS_FILES } from '../src/app/screens/GtfsDiffToolV2/lib/diff-layout.ts';
 
 const SCHEMA_VERSION = '2.1.0-poc';
-/** Category fields written to their own file (categories/<id>.json). */
-const DETAIL_KEYS = ['calendar', 'stops_map', 'routes_map'];
-const DETAILS_DIR = 'categories';
 
-// ── Category configuration ─────────────────────────────────────────
+// ── GTFS files ─────────────────────────────────────────────────────
 //
-// Each entity type is either:
-//   - keyed:   one row per entity, identified by `key` (optionally with
-//              child files grouped under a parent column)
-//   - grouped: no parent file, entities are groups of rows sharing `groupBy`
-//              (e.g. shapes.txt grouped by shape_id)
+// Every file the diff covers, in output order. Each is either:
+//   - keyed:   one row per entity, identified by `key` (child files' rows
+//              grouped under a parent column)
+//   - grouped: entities are groups of rows sharing `groupBy` (shapes.txt by
+//              shape_id)
+//   - rawOnly: a raw row diff only (calendar files: the calendar analysis
+//              diffs services)
+//   - trips:   trips.txt and its child files, matched by content
+//              (scripts/lib/trips-family-diff.mjs)
 
-const CATEGORIES = [
+const FILES = [
+  { file: 'agency.txt', key: ['agency_id'] },
+  { file: 'attributions.txt', key: ['attribution_id'] },
+  // lookup: other files reference these entities, so their raw table holds
+  // every row of either feed (unchanged ones compact), not only changes.
+  { file: 'stops.txt', key: ['stop_id'], lookup: true },
+  { file: 'levels.txt', key: ['level_id'] },
+  { file: 'pathways.txt', key: ['pathway_id'] },
+  { file: 'shapes.txt', groupBy: 'shape_id', key: ['shape_pt_sequence'] },
+  { file: 'routes.txt', key: ['route_id'], lookup: true },
+  { file: 'networks.txt', key: ['network_id'] },
+  { file: 'route_networks.txt', key: ['route_id'] },
+  { file: 'areas.txt', key: ['area_id'] },
+  { file: 'stop_areas.txt', key: ['area_id', 'stop_id'] },
   {
-    id: 'agency',
-    label: 'Agency',
-    entities: [
-      { file: 'agency.txt', key: ['agency_id'], label: ['agency_name'] },
-      { file: 'attributions.txt', key: ['attribution_id'] },
+    file: 'trips.txt',
+    trips: true,
+    key: ['trip_id'],
+    children: [
+      { file: 'stop_times.txt', parent: 'trip_id', key: ['stop_sequence'] },
+      { file: 'frequencies.txt', parent: 'trip_id', key: ['start_time'] },
     ],
   },
+  // The services analysis (analysis/services.*) stores no rows: a service's
+  // calendar.txt row and calendar_dates.txt exceptions are looked up here.
+  { file: 'calendar.txt', key: ['service_id'], rawOnly: true, lookup: true },
+  { file: 'calendar_dates.txt', key: ['service_id', 'date'], rawOnly: true, lookup: true },
   {
-    id: 'stops',
-    label: 'Stops',
-    entities: [
-      { file: 'stops.txt', key: ['stop_id'], label: ['stop_name'] },
-      { file: 'levels.txt', key: ['level_id'] },
-      { file: 'pathways.txt', key: ['pathway_id'] },
-    ],
-  },
-  {
-    id: 'routes',
-    label: 'Routes',
-    entities: [
-      // Shapes are analysed per route (routes_map.routes[].shapes); this entry
-      // keeps shapes.txt in the category's file list and generic counts.
-      { file: 'shapes.txt', groupBy: 'shape_id', key: ['shape_pt_sequence'] },
+    file: 'fare_attributes.txt',
+    key: ['fare_id'],
+    children: [
       {
-        file: 'routes.txt',
-        key: ['route_id'],
-        label: ['route_short_name', 'route_long_name'],
-      },
-      { file: 'networks.txt', key: ['network_id'] },
-      { file: 'route_networks.txt', key: ['route_id'] },
-      { file: 'areas.txt', key: ['area_id'] },
-      { file: 'stop_areas.txt', key: ['area_id', 'stop_id'] },
-    ],
-  },
-  {
-    id: 'trips',
-    label: 'Trips',
-    entities: [
-      {
-        file: 'trips.txt',
-        key: ['trip_id'],
-        context: ['route_id', 'service_id'],
-        children: [
-          { file: 'stop_times.txt', parent: 'trip_id', key: ['stop_sequence'] },
-          { file: 'frequencies.txt', parent: 'trip_id', key: ['start_time'] },
-        ],
+        file: 'fare_rules.txt',
+        parent: 'fare_id',
+        key: ['route_id', 'origin_id', 'destination_id', 'contains_id'],
       },
     ],
   },
   {
-    id: 'calendar',
-    label: 'Service Dates',
-    special: 'calendar',
-    files: ['calendar.txt', 'calendar_dates.txt'],
+    file: 'fare_products.txt',
+    key: ['fare_product_id', 'rider_category_id', 'fare_media_id'],
   },
+  { file: 'fare_media.txt', key: ['fare_media_id'] },
   {
-    id: 'fares_v1',
-    label: 'Fares v1',
-    entities: [
-      {
-        file: 'fare_attributes.txt',
-        key: ['fare_id'],
-        children: [
-          {
-            file: 'fare_rules.txt',
-            parent: 'fare_id',
-            key: ['route_id', 'origin_id', 'destination_id', 'contains_id'],
-          },
-        ],
-      },
+    file: 'fare_leg_rules.txt',
+    key: [
+      'network_id',
+      'from_area_id',
+      'to_area_id',
+      'from_timeframe_group_id',
+      'to_timeframe_group_id',
+      'fare_product_id',
     ],
   },
   {
-    id: 'fares_v2',
-    label: 'Fares v2',
-    entities: [
-      {
-        file: 'fare_products.txt',
-        key: ['fare_product_id', 'rider_category_id', 'fare_media_id'],
-      },
-      { file: 'fare_media.txt', key: ['fare_media_id'] },
-      {
-        file: 'fare_leg_rules.txt',
-        key: [
-          'network_id',
-          'from_area_id',
-          'to_area_id',
-          'from_timeframe_group_id',
-          'to_timeframe_group_id',
-          'fare_product_id',
-        ],
-      },
-      {
-        file: 'fare_leg_join_rules.txt',
-        key: ['from_network_id', 'to_network_id', 'from_stop_id', 'to_stop_id'],
-      },
-      {
-        file: 'fare_transfer_rules.txt',
-        key: [
-          'from_leg_group_id',
-          'to_leg_group_id',
-          'fare_product_id',
-          'transfer_count',
-          'duration_limit',
-        ],
-      },
-      { file: 'rider_categories.txt', key: ['rider_category_id'] },
-      {
-        file: 'timeframes.txt',
-        key: ['timeframe_group_id', 'start_time', 'end_time', 'service_id'],
-      },
-    ],
+    file: 'fare_leg_join_rules.txt',
+    key: ['from_network_id', 'to_network_id', 'from_stop_id', 'to_stop_id'],
   },
   {
-    id: 'flex',
-    label: 'Flex',
-    entities: [
-      { file: 'booking_rules.txt', key: ['booking_rule_id'] },
-      { file: 'location_groups.txt', key: ['location_group_id'] },
-      { file: 'location_group_stops.txt', key: ['location_group_id', 'stop_id'] },
-      { file: 'locations.geojson', geojson: true },
+    file: 'fare_transfer_rules.txt',
+    key: [
+      'from_leg_group_id',
+      'to_leg_group_id',
+      'fare_product_id',
+      'transfer_count',
+      'duration_limit',
     ],
   },
+  { file: 'rider_categories.txt', key: ['rider_category_id'] },
   {
-    id: 'meta',
-    label: 'Meta',
-    entities: [
-      { file: 'feed_info.txt', key: [] },
-      {
-        file: 'translations.txt',
-        key: ['table_name', 'field_name', 'language', 'record_id', 'record_sub_id', 'field_value'],
-      },
-      {
-        file: 'transfers.txt',
-        key: ['from_stop_id', 'to_stop_id', 'from_route_id', 'to_route_id', 'from_trip_id', 'to_trip_id'],
-      },
-    ],
+    file: 'timeframes.txt',
+    key: ['timeframe_group_id', 'start_time', 'end_time', 'service_id'],
+  },
+  { file: 'booking_rules.txt', key: ['booking_rule_id'] },
+  { file: 'location_groups.txt', key: ['location_group_id'] },
+  { file: 'location_group_stops.txt', key: ['location_group_id', 'stop_id'] },
+  { file: 'locations.geojson', geojson: true },
+  { file: 'feed_info.txt', key: [] },
+  {
+    file: 'translations.txt',
+    key: ['table_name', 'field_name', 'language', 'record_id', 'record_sub_id', 'field_value'],
+  },
+  {
+    file: 'transfers.txt',
+    key: ['from_stop_id', 'to_stop_id', 'from_route_id', 'to_route_id', 'from_trip_id', 'to_trip_id'],
   },
 ];
 
 const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-const WEEKDAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const WEEKDAY_PLURAL = ['Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays', 'Sundays'];
 const CALENDAR_FIELDS = [...WEEKDAYS, 'start_date', 'end_date'];
 
 // ── Feed loading (scripts/lib/feed-store.mjs) ──────────────────────
@@ -234,6 +181,13 @@ function unionColumns(a, b) {
   const cols = [...(a?.header ?? [])];
   for (const c of b?.header ?? []) if (!cols.includes(c)) cols.push(c);
   return cols;
+}
+
+/** The columns rows are compared on: both feeds' when both have the file. */
+function sharedColumns(a, b) {
+  const columns = unionColumns(a, b);
+  if (!a || !b) return columns;
+  return columns.filter((c) => a.header.includes(c) && b.header.includes(c));
 }
 
 function displayKey(k) {
@@ -472,19 +426,21 @@ function diffEntityType(baseFeed, newFeed, spec, sqlGroups) {
 // ── Raw file diff (raw/<file>.parquet) ─────────────────────────────
 
 /**
- * Every row of one keyed file (stops.txt, calendar_dates.txt, …) to
- * raw/<file>.parquet, or null when the file did not change. trip_key and
+ * Every changed row of one keyed file (stops.txt, calendar_dates.txt, …) to
+ * raw/<file>.parquet, or null when the file did not change. A `lookup` file
+ * (stops, routes, calendar, calendar_dates) keeps its unchanged rows too, compact (base values NULL
+ * where equal to the new ones), and always gets a table. trip_key and
  * base/new_trip_id hold the first key column's value (returned as
  * key_column; the whole key as key_columns), seq the CSV line, so rows sort
  * in file order within a key.
  */
-async function writeRawFileTable(parquet, fileName, baseTable, newTable, key) {
+async function writeRawFileTable(parquet, fileName, baseTable, newTable, key, lookup = false) {
   if (!baseTable && !newTable) return null;
   const columns = unionColumns(baseTable, newTable);
   const baseCols = new Set(baseTable?.header ?? []);
   const newCols = new Set(newTable?.header ?? []);
   // Columns in one feed only are column changes, not row changes.
-  const compared = columns.filter((c) => !baseTable || !newTable || (baseCols.has(c) && newCols.has(c)));
+  const compared = sharedColumns(baseTable, newTable);
   const columnsAdded = baseTable && newTable ? newTable.header.filter((c) => !baseCols.has(c)) : [];
   const columnsDeleted = baseTable && newTable ? baseTable.header.filter((c) => !newCols.has(c)) : [];
   const baseIdx = indexRows(baseTable?.rows ?? [], key);
@@ -498,11 +454,12 @@ async function writeRawFileTable(parquet, fileName, baseTable, newTable, key) {
     return false;
   };
   const fileChanged = !baseTable || !newTable || columnsAdded.length + columnsDeleted.length > 0;
-  if (!fileChanged && !rowsChanged()) return null;
+  if (!lookup && !fileChanged && !rowsChanged()) return null;
   const keyColumn = key[0];
   const table = await parquet.table(fileName, columns);
-  const append = (action, b, n, changed) =>
+  const append = (action, b, n, changed, compactBase = false) =>
     table.append({
+      compactBase,
       action,
       trip_key: (n ?? b)[keyColumn] ?? '',
       base_trip_id: b ? (b[keyColumn] ?? '') : null,
@@ -519,7 +476,11 @@ async function writeRawFileTable(parquet, fileName, baseTable, newTable, key) {
     if (!n) append('deleted', b, null, null);
     else {
       const fc = fieldChanges(b, n, compared).map((c) => c.field);
-      append(fc.length > 0 ? 'modified' : 'unchanged', b, n, fc);
+      if (fc.length > 0) append('modified', b, n, fc);
+      // Unchanged rows (a column one feed lacks aside) are counted, not
+      // written, but in lookup files.
+      else if (lookup) append('unchanged', b, n, null, true);
+      else table.skip('unchanged');
     }
   }
   for (const [k, n] of newIdx) if (!baseIdx.has(k)) append('added', null, n, null);
@@ -556,30 +517,49 @@ function round6(n) {
   return Math.round(n * 1e6) / 1e6;
 }
 
-/** Changed stops with full before/after rows, plus compact all-stop lists for overlays. */
+/** Changed stops with full before/after rows. */
 async function diffStopsMap(baseFeed, newFeed, store) {
   const baseTable = baseFeed.files.get('stops.txt');
   const newTable = newFeed.files.get('stops.txt');
   if (!baseTable && !newTable) return null;
   const columns = unionColumns(baseTable, newTable);
+  // As in raw/stops.parquet (writeRawFileTable), which the stops page reads:
+  // a column only one feed has is a column change, not a stop change.
+  const compared = sharedColumns(baseTable, newTable);
   const baseIdx = new Map((baseTable?.rows ?? []).map((r) => [r.stop_id, r]));
   const newIdx = new Map((newTable?.rows ?? []).map((r) => [r.stop_id, r]));
 
-  // Routes serving each stop (via stop_times → trips), for context in the popup.
-  const stopRoutes = async (feed) => {
+  // (route, direction) pairs serving each stop, from every trip (stop_times
+  // joined to trips): the stops table's served_base / served_new, and the
+  // popup's route list. direction_id is '' when trips have none.
+  const servedPairs = async (feed, side) => {
     const out = new Map();
     const st = feed.files.get('stop_times.txt');
+    const trips = feed.files.get('trips.txt');
     if (!st?.sql) return out;
+    // _route is joined on the raw trip_id (feed-store.mjs): so is direction_id.
+    const hasDir = trips?.header.includes('direction_id') ?? false;
     const rows = await store.all(
-      `SELECT trim(stop_id) AS s, list(DISTINCT trim(_route)) AS routes FROM ${ident(st.sql)} WHERE _route IS NOT NULL GROUP BY 1`,
+      `SELECT DISTINCT trim(st.stop_id) AS s, trim(st._route) AS r,
+         ${hasDir ? "coalesce(trim(tr.direction_id), '')" : "''"} AS d
+       FROM ${ident(st.sql)} st
+       ${hasDir ? `LEFT JOIN (SELECT DISTINCT trip_id, direction_id FROM ${ident(tableOf(side, 'trips.txt'))}) tr ON tr.trip_id = st.trip_id` : ''}
+       WHERE st._route IS NOT NULL`,
     );
-    for (const r of rows) out.set(r.s, new Set(r.routes));
+    for (const r of rows) {
+      if (!out.has(r.s)) out.set(r.s, new Map());
+      out.get(r.s).set(`${r.r}${KEY_SEP}${r.d}`, { route_id: r.r, direction_id: r.d });
+    }
     return out;
   };
-  const [baseRoutes, newRoutes] = [
-    await timed('stops map: routes per stop (SQL, base)', () => stopRoutes(baseFeed)),
-    await timed('stops map: routes per stop (SQL, new)', () => stopRoutes(newFeed)),
+  const [baseServed, newServed] = [
+    await timed('stops map: (route, direction) per stop (SQL, base)', () => servedPairs(baseFeed, 'base')),
+    await timed('stops map: (route, direction) per stop (SQL, new)', () => servedPairs(newFeed, 'new')),
   ];
+  const byPair = (x, y) => x.route_id.localeCompare(y.route_id) || x.direction_id.localeCompare(y.direction_id);
+  const servedOf = (m, id) => [...(m.get(id)?.values() ?? [])].sort(byPair);
+  const routesOf = (pairs) => [...new Set(pairs.map((p) => p.route_id))].sort();
+  const movedOf = (bc, nc) => (bc && nc ? Math.round(haversineMeters(bc[1], bc[0], nc[1], nc[0]) * 10) / 10 : null);
   const endStops = timer('stops map: changed stops');
 
   const stops = [];
@@ -587,13 +567,15 @@ async function diffStopsMap(baseFeed, newFeed, store) {
   for (const id of new Set([...baseIdx.keys(), ...newIdx.keys()])) {
     const b = baseIdx.get(id) ?? null;
     const n = newIdx.get(id) ?? null;
-    const status = !b ? 'added' : !n ? 'deleted' : fieldChanges(b, n, columns).length > 0 ? 'modified' : 'unchanged';
+    const fc = b && n ? fieldChanges(b, n, compared) : [];
+    const status = !b ? 'added' : !n ? 'deleted' : fc.length > 0 ? 'modified' : 'unchanged';
     counts[status]++;
     if (status === 'unchanged') continue;
     const bc = coordOf(b);
     const nc = coordOf(n);
-    const movedM = bc && nc ? Math.round(haversineMeters(bc[1], bc[0], nc[1], nc[0]) * 10) / 10 : null;
+    const movedM = movedOf(bc, nc);
     const moved = movedM != null && movedM >= MOVE_THRESHOLD_M;
+    const served = { base: servedOf(baseServed, id), new: servedOf(newServed, id) };
     if (moved) counts.moved++;
     stops.push({
       stop_id: id,
@@ -603,32 +585,34 @@ async function diffStopsMap(baseFeed, newFeed, store) {
       new: n,
       base_coord: bc && [round6(bc[0]), round6(bc[1])],
       new_coord: nc && [round6(nc[0]), round6(nc[1])],
-      field_changes: b && n ? fieldChanges(b, n, columns) : [],
+      field_changes: fc,
       moved_m: movedM,
       moved,
-      route_ids: {
-        base: [...(baseRoutes.get(id) ?? [])].sort(),
-        new: [...(newRoutes.get(id) ?? [])].sort(),
-      },
+      route_ids: { base: routesOf(served.base), new: routesOf(served.new) },
+      served,
     });
+  }
+  // The stops table also holds every stop whose served (route, direction)
+  // pairs differ, its stops.txt row unchanged or not (not in `stops`).
+  const listed = new Set(stops.map((st) => st.stop_id));
+  const servedChanges = [];
+  for (const id of new Set([...baseServed.keys(), ...newServed.keys()])) {
+    if (listed.has(id)) continue;
+    const served = { base: servedOf(baseServed, id), new: servedOf(newServed, id) };
+    const key = (pairs) => pairs.map((p) => `${p.route_id}${KEY_SEP}${p.direction_id}`).join('\u001e');
+    if (key(served.base) === key(served.new)) continue;
+    servedChanges.push({ stop_id: id, moved_m: movedOf(coordOf(baseIdx.get(id)), coordOf(newIdx.get(id))), served });
   }
   const order = { modified: 0, added: 1, deleted: 2 };
   stops.sort((a, b) => order[a.status] - order[b.status] || a.stop_id.localeCompare(b.stop_id));
   endStops({ rows: stops.length });
-
-  const compact = (table) =>
-    (table?.rows ?? [])
-      .map((r) => {
-        const c = coordOf(r);
-        return c ? [r.stop_id, round6(c[0]), round6(c[1]), r.stop_name ?? ''] : null;
-      })
-      .filter(Boolean);
+  console.log(`  stops map: ${stops.length} changed stops, ${servedChanges.length} more with changed (route, direction) pairs`);
 
   return {
     columns,
     counts,
     stops,
-    all_stops: { base: compact(baseTable), new: compact(newTable) },
+    served_changes: servedChanges,
     routes: routeLookup(baseFeed, newFeed),
   };
 }
@@ -922,18 +906,31 @@ function sameCoords(a, b) {
   return true;
 }
 
-/** shape_id -> { trips, routes: Map(route_id -> trips), dirs: Set } from trips.txt */
+/**
+ * shape_id -> { trips, routes: Map(route_id -> trips), dirs: Set, uses:
+ * Map(route + direction -> { route_id, direction_id, trips }) } from
+ * trips.txt (direction_id '' when the trip has none).
+ */
 function shapeUsage(feed) {
   const out = new Map();
   for (const t of feed.files.get('trips.txt')?.rows ?? []) {
     if (!t.shape_id) continue;
-    if (!out.has(t.shape_id)) out.set(t.shape_id, { trips: 0, routes: new Map(), dirs: new Set() });
+    if (!out.has(t.shape_id)) out.set(t.shape_id, { trips: 0, routes: new Map(), dirs: new Set(), uses: new Map() });
     const u = out.get(t.shape_id);
+    const dir = t.direction_id ?? '';
     u.trips++;
     u.routes.set(t.route_id, (u.routes.get(t.route_id) ?? 0) + 1);
-    u.dirs.add(t.direction_id ?? '');
+    u.dirs.add(dir);
+    const k = `${t.route_id}${KEY_SEP}${dir}`;
+    if (!u.uses.has(k)) u.uses.set(k, { route_id: t.route_id, direction_id: dir, trips: 0 });
+    u.uses.get(k).trips++;
   }
   return out;
+}
+
+/** (route, direction) pairs, by route_id then direction_id. */
+function byRouteDir(x, y) {
+  return x.route_id.localeCompare(y.route_id) || x.direction_id.localeCompare(y.direction_id);
 }
 
 /**
@@ -998,8 +995,9 @@ function displayLine(pts) {
 /**
  * Every shape grouped under the routes whose trips use it (either feed),
  * classified against its other version, with renames detected by geometry.
- * Returns per-route shape lists, shapes no trip uses, and pairing info for
- * the raw Parquet table.
+ * Returns per-route shape lists, shapes no trip uses, one row per shape
+ * (the shapes table, `rows`, with `rowByBase` / `rowByNew` to find a row by
+ * either feed's id) and pairing info for the raw Parquet table.
  */
 async function diffRouteShapes(store) {
   const baseFeed = store.base;
@@ -1103,6 +1101,9 @@ async function diffRouteShapes(store) {
   const endClassify = timer('shapes: classify + path comparison (deviation, divergence)');
   const byRoute = new Map(); // route_id -> shape entries
   const unused = [];
+  const rows = []; // one per shape (renamed pairs: one, under the new id)
+  const rowByBase = new Map();
+  const rowByNew = new Map();
   const primaryRoute = new Map(); // shape key (new id, else base id) -> route_id
   const ids = [...new Set([...bs.keys(), ...ns.keys()])].filter((id) => !renamedTo.has(id)).sort();
   for (const id of ids) {
@@ -1134,7 +1135,32 @@ async function diffRouteShapes(store) {
       unused: { base: b != null && ub == null, new: n != null && un == null },
     };
     const geometry = { base: b ? b.display : null, new: n ? n.display : null };
-    primaryRoute.set(newId ?? baseId, [...(un?.routes.keys() ?? []), ...(ub?.routes.keys() ?? [])][0] ?? null);
+    const primary = [...(un?.routes.keys() ?? []), ...(ub?.routes.keys() ?? [])][0] ?? null;
+    primaryRoute.set(newId ?? baseId, primary);
+    // Both lines only when they differ visibly; renamed / points-only /
+    // unchanged shapes draw just their current line.
+    const keepGeometry = status !== 'unchanged' && status !== 'points' && status !== 'renamed';
+    // The shapes table's row. A shape several routes use is stored once:
+    // its deviation and diverging sections (relative to the route's shapes
+    // in the other feed when added / removed) are its primary route's.
+    const row = {
+      shape_id: newId ?? baseId,
+      status,
+      renamed_from: renamedFrom.has(id) ? baseId : null,
+      deviation_m: round(deviation),
+      points: entryBase.points,
+      unused: entryBase.unused,
+      geometry: keepGeometry ? geometry : { base: null, new: geometry.new ?? geometry.base },
+      diverge: { added: [], removed: [] },
+      uses: {
+        base: [...(ub?.uses.values() ?? [])].sort(byRouteDir),
+        new: [...(un?.uses.values() ?? [])].sort(byRouteDir),
+      },
+      main: { base: [], new: [] },
+    };
+    rows.push(row);
+    if (baseId) rowByBase.set(baseId, row);
+    if (newId) rowByNew.set(newId, row);
 
     if (routes.length === 0) {
       unused.push({ ...entryBase, deviation_m: round(deviation), geometry });
@@ -1155,9 +1181,10 @@ async function diffRouteShapes(store) {
       } else if (status === 'rerouted') {
         diverge = { added: divergingSections(geometry.new, geometry.base), removed: divergingSections(geometry.base, geometry.new) };
       }
-      // Both lines only when they differ visibly; renamed / points-only /
-      // unchanged shapes draw just their current line.
-      const keepGeometry = status !== 'unchanged' && status !== 'points' && status !== 'renamed';
+      if (r === primary) {
+        row.deviation_m = round(dev);
+        row.diverge = diverge;
+      }
       if (!byRoute.has(r)) byRoute.set(r, []);
       byRoute.get(r).push({
         ...entryBase,
@@ -1174,7 +1201,7 @@ async function diffRouteShapes(store) {
     }
   }
   endClassify({ rows: ids.length });
-  return { byRoute, unused, renamedFrom, primaryRoute, baseShapes: bs, newShapes: ns };
+  return { byRoute, unused, rows, rowByBase, rowByNew, renamedFrom, primaryRoute, baseShapes: bs, newShapes: ns };
 }
 
 /** Runs of `line` farther than the threshold from every line in `others`. */
@@ -1276,7 +1303,8 @@ async function writeShapesRaw(parquet, store, shapeInfo) {
     const i = columns.indexOf(c);
     return `CASE WHEN b.c${i} <> n.c${i} THEN '${c}' END`;
   });
-  const path = join(parquet.outDir, `${tableName('shapes.txt')}.parquet`);
+  const rel = rawTablePath('shapes.txt');
+  const path = join(parquet.datasetDir, rel);
   const select = (b) =>
     `WITH b AS (${side(bt, 'base_id', true, b)}), n AS (${side(nt, 'new_id', true, b)}),
        j AS (
@@ -1306,21 +1334,30 @@ async function writeShapesRaw(parquet, store, shapeInfo) {
     await store.run(b === 0 ? `CREATE OR REPLACE TABLE shapes_raw AS ${select(b)}` : `INSERT INTO shapes_raw ${select(b)}`);
   }
   endJoin({ calls: batch + 1 });
+  // Every row is counted; unchanged ones are not written (raw-diff-parquet.mjs).
+  const counts = Object.fromEntries(ACTIONS.map((a) => [a, 0]));
+  let rows = 0;
+  for (const r of await store.all('SELECT action, count(*)::INTEGER AS n FROM shapes_raw GROUP BY action')) {
+    counts[r.action] = r.n;
+    if (r.action !== 'unchanged') rows += r.n;
+  }
   // Insertion order is the table order (preserve_insertion_order).
   await timed(
-    `write ${RAW_DIR}/${tableName('shapes.txt')}.parquet (COPY)`,
-    () => store.run(`COPY shapes_raw TO '${path.replace(/'/g, "''")}' (${parquetOptions()})`),
+    `write ${rel} (COPY)`,
+    () => store.run(`COPY (SELECT * FROM shapes_raw WHERE action <> 'unchanged') TO '${path.replace(/'/g, "''")}' (${parquetOptions()})`),
     () => ({ bytes: statSync(path).size }),
   );
   await store.run('DROP TABLE shapes_raw');
   await store.run('DROP TABLE shape_pairs');
-  const counts = Object.fromEntries(ACTIONS.map((a) => [a, 0]));
-  let rows = 0;
-  for (const r of await store.all(`SELECT action, count(*)::INTEGER AS n FROM read_parquet('${path.replace(/'/g, "''")}') GROUP BY action`)) {
-    counts[r.action] = r.n;
-    rows += r.n;
-  }
-  return { file: 'shapes.txt', path: `${RAW_DIR}/${tableName('shapes.txt')}.parquet`, rows, bytes: statSync(path).size, columns, counts };
+  return {
+    file: 'shapes.txt',
+    path: rel,
+    rows,
+    bytes: statSync(path).size,
+    columns,
+    counts,
+    ...(counts.unchanged > 0 ? { unchanged_omitted: true } : {}),
+  };
 }
 
 function diffRoutesMap(store, shapeInfo, patterns) {
@@ -1330,6 +1367,8 @@ function diffRoutesMap(store, shapeInfo, patterns) {
   const newTable = newFeed.files.get('routes.txt');
   if (!baseTable && !newTable) return null;
   const columns = unionColumns(baseTable, newTable);
+  // As in raw/routes.parquet, which the route panel reads the changes from.
+  const compared = sharedColumns(baseTable, newTable);
   const baseRows = new Map((baseTable?.rows ?? []).map((r) => [r.route_id, r]));
   const newRows = new Map((newTable?.rows ?? []).map((r) => [r.route_id, r]));
   const bp = timed('routes map: route profiles (base)', () => routeProfiles(baseFeed, shapeInfo.baseShapes, patterns.base));
@@ -1361,7 +1400,7 @@ function diffRoutesMap(store, shapeInfo, patterns) {
     const pb = bp.get(id);
     const pn = np.get(id);
     const row = n ?? b ?? {};
-    const fc = b && n ? fieldChanges(b, n, columns) : [];
+    const fc = b && n ? fieldChanges(b, n, compared) : [];
     const stopsB = pb?.stops ?? new Set();
     const stopsN = pn?.stops ?? new Set();
     const added = [...stopsN].filter((s) => !stopsB.has(s)).sort();
@@ -1461,6 +1500,16 @@ function diffRoutesMap(store, shapeInfo, patterns) {
     };
   }
 
+  // Each direction's main shape in each feed: the shapes table's main_base /
+  // main_new (routes and directions are sorted, so the lists are too).
+  for (const r of routes) {
+    for (const d of r.directions) {
+      const pair = { route_id: r.route_id, direction_id: d.direction_id };
+      if (d.shape_id.base) shapeInfo.rowByBase.get(d.shape_id.base)?.main.base.push(pair);
+      if (d.shape_id.new) shapeInfo.rowByNew.get(d.shape_id.new)?.main.new.push(pair);
+    }
+  }
+
   endRoutes({ rows: routes.length });
   const counts = emptyCounts();
   for (const r of routes) counts[r.status]++;
@@ -1475,7 +1524,10 @@ function diffRoutesMap(store, shapeInfo, patterns) {
       .sort((x, y) => x.name.localeCompare(y.name)),
     routes,
     stops,
+    // Read by the routes highlights only; the shapes table holds them.
     unused_shapes: shapeInfo?.unused ?? [],
+    // The shapes table's rows (map-tables.mjs writeRoutesTable).
+    shape_rows: shapeInfo?.rows ?? [],
   };
 }
 
@@ -1502,45 +1554,6 @@ function daysBetween(a, b) {
 /** 0 = Monday … 6 = Sunday */
 function weekdayIndex(s) {
   return (toDate(s).getUTCDay() + 6) % 7;
-}
-
-const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-/** "Fri 11 Sep 2026" */
-function fmtDate(s) {
-  return `${WEEKDAY_SHORT[weekdayIndex(s)]} ${fmtDay(s)}`;
-}
-
-/** "11 Sep 2026" (no weekday, for ranges) */
-function fmtDay(s) {
-  return `${+s.slice(6, 8)} ${MONTH_SHORT[+s.slice(4, 6) - 1]} ${s.slice(0, 4)}`;
-}
-
-function plural(n, word) {
-  return `${n} ${word}${n === 1 ? '' : 's'}`;
-}
-
-/** Compress weekday flags into a readable pattern, e.g. "Mon–Fri", "Sat, Sun". */
-function fmtWeekdays(flags) {
-  const runs = [];
-  let i = 0;
-  while (i < 7) {
-    if (!flags[i]) {
-      i++;
-      continue;
-    }
-    let j = i;
-    while (j + 1 < 7 && flags[j + 1]) j++;
-    if (j - i >= 2) runs.push(`${WEEKDAY_SHORT[i]}–${WEEKDAY_SHORT[j]}`);
-    else for (let k = i; k <= j; k++) runs.push(WEEKDAY_SHORT[k]);
-    i = j + 1;
-  }
-  return runs.length > 0 ? runs.join(', ') : 'No regular weekdays';
-}
-
-function listPreview(items, max = 3) {
-  if (items.length <= max) return items.join(', ');
-  return `${items.slice(0, max).join(', ')} and ${items.length - max} more`;
 }
 
 // ── Calendar entity diff ───────────────────────────────────────────
@@ -1679,8 +1692,6 @@ function diffCalendar(baseFeed, newFeed) {
   const newServices = feedServices(newFeed);
   const baseRoutes = serviceRoutes(baseFeed);
   const newRoutes = serviceRoutes(newFeed);
-  const routes = routeLookup(baseFeed, newFeed);
-
   const services = [];
   const days = {}; // YYYYMMDD -> { added: [], removed: [], modified: [] }
   const day = (d) => (days[d] ??= { added: [], removed: [], modified: [] });
@@ -1801,332 +1812,10 @@ function diffCalendar(baseFeed, newFeed) {
     counts,
     total: { base: baseServices.size, new: newServices.size },
     coverage,
-    routes,
     services,
     days: sortedDays,
     active_counts: activeCounts,
-    highlights: timed('calendar: highlights (calendarHighlights)', () =>
-      calendarHighlights({ services, baseServices, newServices, baseRoutes, newRoutes, routes, coverage, activeCounts, days: sortedDays }),
-    ),
   };
-}
-
-// ── Rule-based scheduling highlights ───────────────────────────────
-
-/** Highlights listed one per service, with the summary used past the cap. */
-const PER_SERVICE_KINDS = {
-  service_added: (n) => `${n.toLocaleString('en')} new services`,
-  service_removed: (n) => `${n.toLocaleString('en')} services removed`,
-  service_replaced: (n) => `${n.toLocaleString('en')} service replacements`,
-};
-const HIGHLIGHTS_PER_KIND = 25;
-
-/**
- * Feeds that rename every service (IDFM vs its Google export: 9,780 new
- * services, 74k replacement pairs) would list thousands of highlights:
- * past HIGHLIGHTS_PER_KIND of a kind, keep the largest (by trips, or dates x
- * routes) under one summary highlight.
- */
-function capHighlights(list, weight) {
-  const byKind = new Map();
-  for (const h of list) if (PER_SERVICE_KINDS[h.kind]) byKind.set(h.kind, [...(byKind.get(h.kind) ?? []), h]);
-  const dropped = new Set();
-  const summaries = new Map(); // first kept highlight -> summary placed before it
-  for (const [kind, items] of byKind) {
-    if (items.length <= HIGHLIGHTS_PER_KIND) continue;
-    const ranked = [...items].sort((a, b) => weight.get(b) - weight.get(a));
-    for (const h of ranked.slice(HIGHLIGHTS_PER_KIND)) dropped.add(h);
-    const first = items.find((h) => !dropped.has(h));
-    summaries.set(first, {
-      kind,
-      severity: first.severity,
-      title: PER_SERVICE_KINDS[kind](items.length),
-      detail: `Too many to list one by one (the feeds may name their services differently). The ${HIGHLIGHTS_PER_KIND} largest follow.`,
-      route_ids: [],
-      dates: [],
-      service_ids: [],
-    });
-  }
-  const out = [];
-  for (const h of list) {
-    if (dropped.has(h)) continue;
-    if (summaries.has(h)) out.push(summaries.get(h));
-    out.push(h);
-  }
-  return out.map((h, i) => ({ ...h, id: `h${i + 1}` }));
-}
-
-function calendarHighlights(ctx) {
-  const { services, baseServices, newServices, coverage, activeCounts, days } = ctx;
-  const out = [];
-  const weight = new Map(); // highlight -> size, for capHighlights
-  const push = (h, w = 0) => {
-    const entry = { id: `h${out.length + 1}`, route_ids: [], dates: [], service_ids: [], ...h };
-    out.push(entry);
-    weight.set(entry, w);
-  };
-
-  // Feed coverage
-  if (coverage.base.end && coverage.new.end && coverage.base.end !== coverage.new.end) {
-    const extended = coverage.new.end > coverage.base.end;
-    push({
-      kind: extended ? 'coverage_extended' : 'coverage_shortened',
-      severity: extended ? 'success' : 'warning',
-      title: `Calendar coverage now ends ${fmtDate(coverage.new.end)}`,
-      detail: `Was ${fmtDate(coverage.base.end)} (${extended ? 'extended' : 'shortened'} by ${plural(Math.abs(daysBetween(coverage.base.end, coverage.new.end)), 'day')}).`,
-      dates: [coverage.new.end],
-    });
-  }
-  if (coverage.base.start && coverage.new.start && coverage.base.start !== coverage.new.start) {
-    push({
-      kind: 'coverage_start_changed',
-      severity: 'info',
-      title: `Calendar coverage now starts ${fmtDate(coverage.new.start)}`,
-      detail: `Was ${fmtDate(coverage.base.start)}. Dates before the new feed's start are no longer published.`,
-      dates: [coverage.new.start],
-    });
-  }
-
-  const serviceById = new Map(services.map((s) => [s.service_id, s]));
-  const routesOf = (s) => [...new Set([...s.route_ids.base, ...s.route_ids.new])];
-  const routeText = (ids) => (ids.length > 0 ? ` Used by route${ids.length > 1 ? 's' : ''} ${listPreview(ids)}.` : ' Not used by any trip.');
-
-  for (const s of services) {
-    const routeIds = routesOf(s);
-    if (s.status === 'added') {
-      const cal = s.new.calendar;
-      const pattern = cal && weekdayFlags(cal).some(Boolean)
-        ? `${fmtWeekdays(weekdayFlags(cal))} from ${fmtDay(cal.start_date)} to ${fmtDay(cal.end_date)}`
-        : `on ${plural(s.new.active_day_count, 'specific date')} only`;
-      push({
-        kind: 'service_added',
-        severity: 'success',
-        title: `New service ${s.service_id}`,
-        detail: `Runs ${pattern} (${plural(s.new.active_day_count, 'day')}, ${plural(s.trip_counts.new, 'trip')}).${routeText(routeIds)}`,
-        service_ids: [s.service_id],
-        route_ids: routeIds,
-        dates: s.new.first_date ? [s.new.first_date] : [],
-      }, s.trip_counts.new);
-      continue;
-    }
-    if (s.status === 'deleted') {
-      push({
-        kind: 'service_removed',
-        severity: 'error',
-        title: `Service ${s.service_id} removed`,
-        detail: `Had ${plural(s.base.active_day_count, 'service day')} and ${plural(s.trip_counts.base, 'trip')}.${routeText(routeIds)}`,
-        service_ids: [s.service_id],
-        route_ids: routeIds,
-        dates: s.base.first_date ? [s.base.first_date] : [],
-      }, s.trip_counts.base);
-      continue;
-    }
-    if (s.status !== 'modified') continue;
-
-    const fc = Object.fromEntries(s.calendar_field_changes.map((c) => [c.field, c]));
-    WEEKDAYS.forEach((wd, i) => {
-      const c = fc[wd];
-      if (!c || !s.base.calendar || !s.new.calendar) return;
-      const gained = c.new_value === '1';
-      push({
-        kind: gained ? 'weekday_added' : 'weekday_removed',
-        severity: gained ? 'success' : 'warning',
-        title: `${s.service_id} ${gained ? 'now runs' : 'no longer runs'} on ${WEEKDAY_PLURAL[i]}`,
-        detail: `Regular pattern ${fmtWeekdays(weekdayFlags(s.base.calendar))} → ${fmtWeekdays(weekdayFlags(s.new.calendar))}.${routeText(routeIds)}`,
-        service_ids: [s.service_id],
-        route_ids: routeIds,
-      });
-    });
-    if (s.base.calendar && s.new.calendar && fc.start_date && fc.end_date) {
-      const bc = s.base.calendar;
-      const nc = s.new.calendar;
-      push({
-        kind: 'period_moved',
-        severity: 'info',
-        title: `${s.service_id} service period moved`,
-        detail: `${fmtDay(bc.start_date)} – ${fmtDay(bc.end_date)} → ${fmtDay(nc.start_date)} – ${fmtDay(nc.end_date)}.${routeText(routeIds)}`,
-        service_ids: [s.service_id],
-        route_ids: routeIds,
-        dates: [nc.start_date],
-      });
-    } else if (s.base.calendar && s.new.calendar) {
-      for (const [field, label] of [['start_date', 'starts'], ['end_date', 'ends']]) {
-        const c = fc[field];
-        if (!c) continue;
-        const delta = daysBetween(c.base_value, c.new_value);
-        const later = delta > 0;
-        // A later end or an earlier start extends the period.
-        const extends_ = field === 'end_date' ? later : !later;
-        push({
-          kind: extends_ ? 'period_extended' : 'period_shortened',
-          severity: extends_ ? 'info' : 'warning',
-          title: `${s.service_id} now ${label} ${fmtDate(c.new_value)}`,
-          detail: `Was ${fmtDate(c.base_value)} (${extends_ ? 'extended' : 'shortened'} by ${plural(Math.abs(delta), 'day')}).${routeText(routeIds)}`,
-          service_ids: [s.service_id],
-          route_ids: routeIds,
-          dates: [c.new_value],
-        });
-      }
-    } else if (s.base.calendar || s.new.calendar) {
-      push({
-        kind: s.new.calendar ? 'calendar_row_added' : 'calendar_row_removed',
-        severity: 'info',
-        title: `${s.service_id} ${s.new.calendar ? 'now has' : 'no longer has'} a regular weekly pattern`,
-        detail: `calendar.txt row ${s.new.calendar ? 'added' : 'removed'}.${routeText(routeIds)}`,
-        service_ids: [s.service_id],
-        route_ids: routeIds,
-      });
-    }
-  }
-
-  // Exception changes on services present in both feeds, grouped by date so a
-  // holiday applied to many services reads as one event.
-  const byDate = new Map(); // date -> { type -> Set(service_id) }
-  for (const s of services) {
-    if (s.status !== 'modified') continue;
-    const add = (date, key) => {
-      if (!byDate.has(date)) byDate.set(date, {});
-      (byDate.get(date)[key] ??= new Set()).add(s.service_id);
-    };
-    for (const e of s.exception_changes.added) add(e.date, `added_${e.exception_type}`);
-    for (const e of s.exception_changes.removed) add(e.date, `removed_${e.exception_type}`);
-    for (const e of s.exception_changes.modified) add(e.date, `changed_${e.base_exception_type}_${e.new_exception_type}`);
-  }
-  const singles = new Map(); // `${service}|${key}` -> dates
-  const routesForServices = (ids) => {
-    const set = new Set();
-    for (const id of ids) {
-      for (const r of routesOf(serviceById.get(id))) set.add(r);
-    }
-    return [...set].sort();
-  };
-  for (const date of [...byDate.keys()].sort()) {
-    for (const [key, set] of Object.entries(byDate.get(date))) {
-      const ids = [...set].sort();
-      if (ids.length < 2) {
-        const k = `${ids[0]}|${key}`;
-        if (!singles.has(k)) singles.set(k, []);
-        singles.get(k).push(date);
-        continue;
-      }
-      const routeIds = routesForServices(ids);
-      const n = ids.length;
-      const base = { service_ids: ids, route_ids: routeIds, dates: [date] };
-      if (key === 'added_2') {
-        push({ ...base, kind: 'holiday_added', severity: 'warning', title: `Holiday exception added on ${fmtDate(date)}`, detail: `${n} services suspended: ${listPreview(ids, 4)}.` });
-      } else if (key === 'added_1') {
-        push({ ...base, kind: 'extra_service_added', severity: 'success', title: `Extra service day added on ${fmtDate(date)}`, detail: `${n} services added for this date: ${listPreview(ids, 4)}.` });
-      } else if (key === 'removed_2') {
-        push({ ...base, kind: 'holiday_removed', severity: 'info', title: `Holiday exception removed on ${fmtDate(date)}`, detail: `${n} services now follow their regular schedule: ${listPreview(ids, 4)}.` });
-      } else if (key === 'removed_1') {
-        push({ ...base, kind: 'extra_service_removed', severity: 'warning', title: `Extra service day removed on ${fmtDate(date)}`, detail: `${n} services no longer added for this date: ${listPreview(ids, 4)}.` });
-      } else {
-        push({ ...base, kind: 'exception_type_changed', severity: 'info', title: `Exception type changed on ${fmtDate(date)}`, detail: `${n} services: ${listPreview(ids, 4)}.` });
-      }
-    }
-  }
-  for (const [k, dates] of singles) {
-    const [id, key] = k.split('|');
-    const routeIds = routesForServices([id]);
-    const preview = listPreview(dates.map(fmtDate), 3);
-    const base = { service_ids: [id], route_ids: routeIds, dates };
-    if (key === 'added_2') push({ ...base, kind: 'holiday_added', severity: 'warning', title: `${id}: ${plural(dates.length, 'no-service exception')} added`, detail: `No service on ${preview}.` });
-    else if (key === 'added_1') push({ ...base, kind: 'extra_service_added', severity: 'success', title: `${id}: ${plural(dates.length, 'extra service day')} added`, detail: `Now runs on ${preview}.` });
-    else if (key === 'removed_2') push({ ...base, kind: 'holiday_removed', severity: 'info', title: `${id}: ${plural(dates.length, 'no-service exception')} removed`, detail: `Regular service restored on ${preview}.` });
-    else if (key === 'removed_1') push({ ...base, kind: 'extra_service_removed', severity: 'warning', title: `${id}: ${plural(dates.length, 'extra service day')} removed`, detail: `No longer runs on ${preview}.` });
-    else push({ ...base, kind: 'exception_type_changed', severity: 'info', title: `${id}: exception type changed on ${plural(dates.length, 'date')}`, detail: preview });
-  }
-
-  // Replacement services: on the same route and date, one service stops
-  // running and another starts (e.g. a holiday timetable replacing the
-  // regular one).
-  const pairs = new Map(); // `${from}|${to}` -> { dates, routes }
-  for (const [d, e] of Object.entries(days)) {
-    const lost = [...e.removed.map((x) => x.service_id), ...e.modified.filter((x) => x.change === 'lost').map((x) => x.service_id)];
-    const gained = [...e.added.map((x) => x.service_id), ...e.modified.filter((x) => x.change === 'gained').map((x) => x.service_id)];
-    for (const from of lost) {
-      for (const to of gained) {
-        const shared = routesOf(serviceById.get(from)).filter((r) => routesOf(serviceById.get(to)).includes(r));
-        if (shared.length === 0) continue;
-        const k = `${from}|${to}`;
-        if (!pairs.has(k)) pairs.set(k, { dates: [], routes: new Set() });
-        pairs.get(k).dates.push(d);
-        shared.forEach((r) => pairs.get(k).routes.add(r));
-      }
-    }
-  }
-  for (const [k, { dates, routes: rs }] of pairs) {
-    const [from, to] = k.split('|');
-    const routeIds = [...rs].sort();
-    push({
-      kind: 'service_replaced',
-      severity: 'info',
-      title: `${to} replaces ${from} on ${plural(dates.length, 'date')}`,
-      detail: `Route${routeIds.length > 1 ? 's' : ''} ${listPreview(routeIds)}: ${listPreview(dates.map(fmtDate), 3)}.`,
-      service_ids: [from, to],
-      route_ids: routeIds,
-      dates,
-    }, dates.length * routeIds.length);
-  }
-
-  // Route-level weekday coverage: "Route X now runs on Saturdays".
-  const routeWeekdays = (feedServices, feedRoutes) => {
-    const map = new Map(); // route_id -> counts per weekday
-    for (const [sid, s] of feedServices) {
-      for (const r of feedRoutes.routes.get(sid) ?? []) {
-        if (!map.has(r)) map.set(r, new Array(7).fill(0));
-        const counts = map.get(r);
-        for (const d of s.activeDates) counts[weekdayIndex(d)]++;
-      }
-    }
-    return map;
-  };
-  const baseRw = routeWeekdays(baseServices, ctx.baseRoutes);
-  const newRw = routeWeekdays(newServices, ctx.newRoutes);
-  for (const r of [...new Set([...baseRw.keys(), ...newRw.keys()])].sort()) {
-    const b = baseRw.get(r);
-    const n = newRw.get(r);
-    if (!b || !n) continue;
-    const name = ctx.routes[r]?.short_name || r;
-    WEEKDAYS.forEach((_, i) => {
-      if (b[i] === 0 && n[i] > 0) {
-        push({ kind: 'route_weekday_added', severity: 'success', title: `Route ${name} now runs on ${WEEKDAY_PLURAL[i]}`, detail: `${n[i]} ${WEEKDAY_PLURAL[i].toLowerCase()} with service in the new feed (none before).`, route_ids: [r] });
-      } else if (b[i] > 0 && n[i] === 0) {
-        push({ kind: 'route_weekday_removed', severity: 'warning', title: `Route ${name} no longer runs on ${WEEKDAY_PLURAL[i]}`, detail: `Had ${b[i]} ${WEEKDAY_PLURAL[i].toLowerCase()} with service before.`, route_ids: [r] });
-      }
-    });
-  }
-
-  // Days that lose all service, and the single busiest day of changes.
-  const noService = Object.entries(activeCounts)
-    .filter(([d, [b, n]]) => b > 0 && n === 0 && d >= coverage.new.start && d <= coverage.new.end)
-    .map(([d]) => d);
-  if (noService.length > 0) {
-    push({
-      kind: 'no_service_days',
-      severity: 'error',
-      title: `${plural(noService.length, 'day')} with no service at all`,
-      detail: `Base feed had service on ${listPreview(noService.map(fmtDate), 4)}.`,
-      dates: noService,
-    });
-  }
-  let busiest = null;
-  for (const [d, e] of Object.entries(days)) {
-    const total = e.added.length + e.removed.length + e.modified.length;
-    if (!busiest || total > busiest.total) busiest = { d, total, e };
-  }
-  if (busiest && busiest.total > 0) {
-    const { e } = busiest;
-    push({
-      kind: 'busiest_day',
-      severity: 'info',
-      title: `Most changed day: ${fmtDate(busiest.d)}`,
-      detail: `${e.added.length} added, ${e.removed.length} removed, ${e.modified.length} modified services. Active services ${activeCounts[busiest.d]?.[0] ?? 0} → ${activeCounts[busiest.d]?.[1] ?? 0}.`,
-      dates: [busiest.d],
-    });
-  }
-
-  return capHighlights(out, weight);
 }
 
 // ── Main ───────────────────────────────────────────────────────────
@@ -2134,13 +1823,11 @@ function calendarHighlights(ctx) {
 async function main() {
   const [basePath, newPath, outPath] = process.argv.slice(2);
   if (!basePath || !newPath || !outPath) {
-    console.error('Usage: node scripts/generate-gtfs-entity-diff.mjs <base.zip> <new.zip> <out.json>');
+    console.error('Usage: node scripts/generate-gtfs-entity-diff.mjs <base.zip> <new.zip> <report.json>');
     process.exit(1);
   }
   markStartup();
-  const knownFiles = new Set(
-    CATEGORIES.flatMap((c) => c.files ?? c.entities.flatMap((e) => [e.file, ...(e.children ?? []).map((ch) => ch.file)])),
-  );
+  const knownFiles = new Set(FILES.flatMap((e) => [e.file, ...(e.children ?? []).map((ch) => ch.file)]));
   // Both feeds in DuckDB; stop_times and shapes are only queried, never
   // held as JS rows (scripts/lib/feed-store.mjs).
   const store = await timed('feed store: open (total)', () =>
@@ -2157,24 +1844,7 @@ async function writeEntityDiff(store, outPath) {
   const baseFeed = store.base;
   const newFeed = store.new;
 
-  // Keys of the calendar files' raw row diffs (the category has no entity specs).
-  const RAW_KEYS = {
-    'calendar.txt': ['service_id'],
-    'calendar_dates.txt': ['service_id', 'date'],
-  };
-  /** Entity change lists longer than this are written to Parquet. */
-  const INLINE_CHANGES = 500;
-  /**
-   * The files of a category that get a raw row diff, with their keys (a
-   * child file's key starts with its parent column). Shapes and the trip
-   * files have their own writers.
-   */
-  const rawSpecs = (cat) =>
-    cat.files
-      ? cat.files.map((f) => ({ file: f, key: RAW_KEYS[f] }))
-      : cat.entities
-          .filter((e) => !e.geojson && !e.groupBy)
-          .flatMap((e) => [e, ...(e.children ?? []).map((c) => ({ file: c.file, key: [c.parent, ...c.key] }))]);
+  const outDir = dirname(outPath);
 
   const t1 = Date.now();
   const shapeInfo = await timed('shapes: diffRouteShapes (total)', () => diffRouteShapes(store));
@@ -2237,150 +1907,138 @@ async function writeEntityDiff(store, outPath) {
 
   // Grouped files kept in DuckDB (shapes.txt) are diffed there.
   const sqlGroups = new Map();
-  for (const cat of CATEGORIES) {
-    for (const spec of cat.entities ?? []) {
-      if (spec.groupBy) sqlGroups.set(spec.file, await timed(`entity diff ${spec.file} (SQL groups)`, () => diffGroupsSql(store, spec), (g) => ({ rows: g.length })));
-    }
+  for (const spec of FILES) {
+    if (spec.groupBy) sqlGroups.set(spec.file, await timed(`entity diff ${spec.file} (SQL groups)`, () => diffGroupsSql(store, spec), (g) => ({ rows: g.length })));
   }
 
-  const fileParquet = await openRawParquet(dirname(outPath));
-  /** A category's raw row diffs: one Parquet table per file that changed. */
-  const writeRawTables = async (cat) => {
-    const tables = [];
-    for (const e of rawSpecs(cat)) {
-      const t = await timed(`raw table ${e.file} (writeRawFileTable)`, () =>
-        writeRawFileTable(fileParquet, e.file, baseFeed.files.get(e.file), newFeed.files.get(e.file), e.key),
-      );
-      if (!t) continue;
-      const changed = t.counts.added + t.counts.deleted + t.counts.modified;
-      console.log(`  ${t.path}: ${t.rows} rows (${changed} changed), ${Math.round(t.bytes / 1024)} KB`);
-      tables.push(t);
-    }
-    return tables;
-  };
-
-  const categories = [];
+  // Every file: its entity diff (counts by key) and its raw row diff. Shapes
+  // and the trip files have their own writers (above).
+  const entityTypes = new Map([[tripsFamily.entityType.file, tripsFamily.entityType]]);
+  const rawTables = new Map([...tripsFamily.rawTables, ...(shapesRaw ? [shapesRaw] : [])].map((t) => [t.file, t]));
+  const fileParquet = await openRawParquet(outDir);
   try {
-    for (const cat of CATEGORIES) {
-      const tc = Date.now();
-      const endCat = timer(`category ${cat.label} (total)`);
-      const done = () => {
-        endCat();
-        console.log(`  ${cat.label}: ${((Date.now() - tc) / 1000).toFixed(1)} s`);
-      };
-      if (cat.id === 'trips') {
-        const et = tripsFamily.entityType;
-        categories.push({
-          id: cat.id,
-          label: cat.label,
-          files: cat.entities.flatMap((e) => [e.file, ...(e.children ?? []).map((c) => c.file)]),
-          counts: { ...et.counts },
-          entity_types: et.present.base || et.present.new ? [et] : [],
-          raw_tables: tripsFamily.rawTables,
-          trip_matching: matching,
-        });
-        done();
-        continue;
+    for (const spec of FILES) {
+      if (spec.trips) continue;
+      if (!spec.rawOnly) {
+        const et = timed(`entity diff ${spec.file}`, () => diffEntityType(baseFeed, newFeed, spec, sqlGroups), (e) => ({ rows: e.counts.added + e.counts.deleted + e.counts.modified }));
+        entityTypes.set(spec.file, et);
       }
-      if (cat.special === 'calendar') {
-        const calendar = timed('calendar: diffCalendar', () => diffCalendar(baseFeed, newFeed));
-        const tables = await timed(`category ${cat.label}: raw tables`, () => writeRawTables(cat));
-        categories.push({
-          id: cat.id,
-          label: cat.label,
-          files: cat.files,
-          counts: calendar.counts,
-          calendar,
-          raw_tables: tables.length > 0 ? tables : undefined,
-        });
-        done();
-        continue;
+      if (spec.geojson || spec.groupBy) continue;
+      const keyed = [{ file: spec.file, key: spec.key, lookup: spec.lookup }, ...(spec.children ?? []).map((c) => ({ file: c.file, key: [c.parent, ...c.key] }))];
+      for (const e of keyed) {
+        const t = await timed(`raw table ${e.file} (writeRawFileTable)`, () =>
+          writeRawFileTable(fileParquet, e.file, baseFeed.files.get(e.file), newFeed.files.get(e.file), e.key, e.lookup),
+        );
+        if (!t) continue;
+        const changed = t.counts.added + t.counts.deleted + t.counts.modified;
+        console.log(`  ${t.path}: ${t.rows} rows (${changed} changed), ${Math.round(t.bytes / 1024)} KB`);
+        rawTables.set(t.file, t);
       }
-      const entityTypes = cat.entities.map((spec) =>
-        timed(`entity diff ${spec.file}`, () => diffEntityType(baseFeed, newFeed, spec, sqlGroups), (et) => ({ rows: et.changes.length })),
-      );
-      const counts = emptyCounts();
-      for (const et of entityTypes) for (const k of Object.keys(counts)) counts[k] += et.counts[k];
-      const tables = await timed(`category ${cat.label}: raw tables`, () => writeRawTables(cat));
-      const rawTables = [...(cat.id === 'routes' && shapesRaw ? [shapesRaw] : []), ...tables];
-      categories.push({
-        id: cat.id,
-        label: cat.label,
-        files: cat.entities.flatMap((e) => [e.file, ...(e.children ?? []).map((c) => c.file)]),
-        counts,
-        entity_types: entityTypes.filter((et) => et.present.base || et.present.new),
-        stops_map: cat.id === 'stops' ? await timed('stops map: diffStopsMap', () => diffStopsMap(baseFeed, newFeed, store)) : undefined,
-        routes_map: cat.id === 'routes' ? timed('routes map: diffRoutesMap', () => diffRoutesMap(store, shapeInfo, patterns)) : undefined,
-        raw_tables: rawTables.length > 0 ? rawTables : undefined,
-      });
-      done();
     }
   } finally {
     fileParquet.close();
   }
 
-  // Change lists no page shows: the Stops page and Routes read their maps
-  // (maps/*.parquet) instead. Their counts stay, for the summary.
-  const unlisted = (cat, et) => cat.id === 'stops' || (cat.id === 'routes' && (et.file === 'routes.txt' || et.file === 'shapes.txt'));
-  for (const cat of categories) for (const et of cat.entity_types ?? []) if (unlisted(cat, et)) et.changes = [];
-
-  // Long change lists (MBTA: 80k trips, STM: 240k translations) go to
-  // Parquet, read page by page in the browser; the JSON keeps summaries.
-  for (const cat of categories) {
-    for (const et of cat.entity_types ?? []) {
-      if (et.changes.length <= INLINE_CHANGES) continue;
-      et.changes_table = await writeChangesTable(dirname(outPath), et.file, et.changes);
-      et.changes = [];
-      console.log(`  ${et.changes_table.path}: ${et.changes_table.rows} changes, ${Math.round(et.changes_table.bytes / 1024)} KB`);
+  // One entry per file either feed has. A child file (stop_times.txt) names
+  // its parent: its rows count toward the parent's entities.
+  const parentOf = new Map(FILES.flatMap((spec) => (spec.children ?? []).map((c) => [c.file, spec.file])));
+  const inFeed = (file) => ({ base: baseFeed.files.has(file), new: newFeed.files.has(file) });
+  const files = [];
+  for (const spec of FILES) {
+    for (const file of [spec.file, ...(spec.children ?? []).map((c) => c.file)]) {
+      const et = entityTypes.get(file);
+      const raw = rawTables.get(file);
+      const present = et ? et.present : inFeed(file);
+      if (!present.base && !present.new) continue;
+      const { changes: _changes, child_files: _children, ...entity } = et ?? {};
+      files.push({
+        file,
+        present,
+        ...(et ? { total: entity.total, primary_key: entity.primary_key, counts: entity.counts } : {}),
+        ...(et?.id_only != null ? { id_only: et.id_only } : {}),
+        ...(parentOf.has(file) ? { part_of: parentOf.get(file) } : {}),
+        ...(raw ? { raw_table: raw } : {}),
+        ...(spec.trips && file === spec.file ? { trip_matching: matching } : {}),
+      });
     }
   }
 
-  // Each category's heavy, tab-specific parts go to categories/<id>.json,
-  // loaded when its tab opens (IDFM: 240 MB in one file otherwise), encoded
-  // deeply (columns, polylines) and checked to decode back exactly.
-  const outDir = dirname(outPath);
-  // Stop, route and calendar lists go to Parquet (maps/, calendar/), queried
-  // by their pages.
-  for (const cat of categories) {
-    if (cat.stops_map) {
-      cat.stops_map = await timed('stops map: writeStopsTable (total)', () => writeStopsTable(outDir, cat.stops_map));
-      const t = cat.stops_map.table;
-      console.log(`  ${t.path}: ${t.rows} stops, ${Math.round(t.bytes / 1024)} KB`);
-    }
-    if (cat.routes_map) {
-      cat.routes_map = await timed('routes map: writeRoutesTable (total)', () => writeRoutesTable(outDir, cat.routes_map));
-      const t = cat.routes_map.table;
-      console.log(`  ${t.path}: ${t.rows} routes, ${Math.round(t.bytes / 1024)} KB`);
-    }
-    if (cat.calendar) {
-      cat.calendar = await timed('calendar: writeCalendarTables (total)', () => writeCalendarTables(outDir, cat.calendar));
-      for (const t of Object.values(cat.calendar.tables)) {
-        console.log(`  ${t.path}: ${t.rows} rows, ${Math.round(t.bytes / 1024)} KB`);
-      }
-    }
-  }
-  for (const cat of categories) {
-    const detail = {};
-    for (const k of DETAIL_KEYS) {
-      if (cat[k] === undefined) continue;
-      detail[k] = cat[k];
-      delete cat[k];
-    }
-    if (Object.keys(detail).length === 0) continue;
-    const rel = `${DETAILS_DIR}/${cat.id}.json`;
-    const endDetail = timer(`write ${rel} (encode + decode check + write)`);
-    mkdirSync(join(outDir, DETAILS_DIR), { recursive: true });
-    const text = JSON.stringify(encodeDeep(detail));
-    for (const k of Object.keys(detail)) {
-      deepStrictEqual(decodeDeep(JSON.parse(text))[k], JSON.parse(JSON.stringify(detail[k])));
-    }
+  // Analyses over several files, each with its own JSON and Parquet tables,
+  // loaded by their page.
+  const analyses = {};
+  const writeAnalysis = (name, doc) => {
+    const rel = ANALYSIS_FILES[name];
+    const endWrite = timer(`write ${rel}`);
+    mkdirSync(dirname(join(outDir, rel)), { recursive: true });
+    const text = JSON.stringify(doc);
     writeFileSync(join(outDir, rel), text);
-    endDetail({ bytes: text.length });
-    cat.detail = rel;
+    endWrite({ bytes: text.length });
+    const c = doc.counts;
+    analyses[name] = {
+      file: rel,
+      ...(c ? { counts: { added: c.added, deleted: c.deleted, modified: c.modified, unchanged: c.unchanged } } : {}),
+    };
     console.log(`  ${rel}: ${Math.round(text.length / 1024)} KB`);
+  };
+  const stopsMap = await timed('stops map: diffStopsMap', () => diffStopsMap(baseFeed, newFeed, store));
+  const routesMap = timed('routes map: diffRoutesMap', () => diffRoutesMap(store, shapeInfo, patterns));
+  const calendar = timed('calendar: diffCalendar', () => diffCalendar(baseFeed, newFeed));
+
+  // Every page's route chips (stops and routes maps, calendar, Trips) read
+  // names, colours and feeds from the routes.txt raw table, which holds
+  // every route (lib/route-info); the documents point to it. Route details
+  // look their stops up in the stops.txt one (lib/stop-info).
+  let stopsDoc = stopsMap && (await timed('stops map: writeStopsTable (total)', () => writeStopsTable(outDir, stopsMap)));
+  let routesDoc = routesMap && (await timed('routes map: writeRoutesTable (total)', () => writeRoutesTable(outDir, routesMap)));
+  let calendarDoc = await timed('calendar: writeCalendarTables (total)', () => writeCalendarTables(outDir, calendar));
+  const routesRaw = rawTables.get('routes.txt');
+  const stopsRaw = rawTables.get('stops.txt');
+  const routeInfo = routesRaw ? { route_info_file: routesRaw.path } : {};
+  if (stopsDoc) {
+    const { routes: _r, ...rest } = stopsDoc;
+    stopsDoc = { ...rest, ...routeInfo };
+    console.log(`  ${stopsDoc.table.path}: ${stopsDoc.table.rows} stops, ${Math.round(stopsDoc.table.bytes / 1024)} KB`);
+    writeAnalysis('stops', stopsDoc);
+  }
+  if (routesDoc) {
+    routesDoc = {
+      ...routesDoc,
+      ...routeInfo,
+      ...(stopsRaw ? { stop_info_file: stopsRaw.path } : {}),
+      ...(stopsDoc ? { stop_moves_file: stopsDoc.table.path } : {}),
+    };
+    console.log(`  ${routesDoc.table.path}: ${routesDoc.table.rows} routes, ${Math.round(routesDoc.table.bytes / 1024)} KB`);
+    const sh = routesDoc.shapes_table;
+    console.log(`  ${sh.path}: ${sh.rows} shapes, ${Math.round(sh.bytes / 1024)} KB`);
+    writeAnalysis('routes', routesDoc);
+  }
+  if (calendarDoc) {
+    // A service's rows: the calendar.txt and calendar_dates.txt raw tables.
+    const rowsFile = (file) => rawTables.get(file)?.path ?? null;
+    calendarDoc = {
+      ...calendarDoc,
+      ...routeInfo,
+      calendar_rows_file: rowsFile('calendar.txt'),
+      calendar_dates_rows_file: rowsFile('calendar_dates.txt'),
+    };
+    for (const t of Object.values(calendarDoc.tables)) console.log(`  ${t.path}: ${t.rows} rows, ${Math.round(t.bytes / 1024)} KB`);
+    writeAnalysis('services', calendarDoc);
   }
 
+  // report.json: this step's part (files, analyses) replaces its previous
+  // one; the report step's (feeds, pathways counts, highlights) is kept.
+  let previous = {};
+  try {
+    if (existsSync(outPath)) previous = JSON.parse(readFileSync(outPath, 'utf8'));
+  } catch {
+    previous = {};
+  }
+  const kept = previous.schema === 4 && previous.analyses?.pathways ? { pathways: previous.analyses.pathways } : {};
   const out = {
+    ...previous,
+    schema: 4,
+    dataset: basename(dirname(outPath)),
+    generated_at: new Date().toISOString(),
     metadata: {
       schema_version: SCHEMA_VERSION,
       generated_at: new Date().toISOString(),
@@ -2391,14 +2049,14 @@ async function writeEntityDiff(store, outPath) {
         new: newFeed.allFiles,
       },
     },
-    categories,
+    files,
+    analyses: { ...analyses, ...kept },
   };
-  // Large change lists are already in entities/*.parquet (changes_table).
-  timed('write entity-diff.json', () => writeFileSync(outPath, JSON.stringify(out)), () => ({ bytes: statSync(outPath).size }));
+  timed(`write ${basename(outPath)}`, () => writeFileSync(outPath, JSON.stringify(out)), () => ({ bytes: statSync(outPath).size }));
   const kb = Math.round(statSync(outPath).size / 1024);
   console.log(`Wrote ${outPath} (${kb} KB)`);
-  for (const c of categories) {
-    console.log(`  ${c.label.padEnd(18)} +${c.counts.added} -${c.counts.deleted} ~${c.counts.modified} =${c.counts.unchanged}`);
+  for (const f of files) {
+    if (f.counts) console.log(`  ${f.file.padEnd(26)} +${f.counts.added} -${f.counts.deleted} ~${f.counts.modified} =${f.counts.unchanged}`);
   }
 }
 

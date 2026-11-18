@@ -1,10 +1,12 @@
 /**
- * Writes the Trips view's files next to <out.json>:
+ * Writes the Trips view's files into a dataset folder (paths from
+ * src/app/screens/GtfsDiffToolV2/lib/diff-layout.ts):
  *
- *   trips-diff.json      day index: dates, service sets, day types, route and
- *                        stop names; no trips (small, read on page load)
- *   trips/base.parquet   one row per base trip
- *   trips/new.parquet    one row per new trip
+ *   views/trips/index.json     day index: dates, service sets, day types,
+ *                              route and stop names; no trips (small, read
+ *                              on page load)
+ *   views/trips/base.parquet   one row per base trip
+ *   views/trips/new.parquet    one row per new trip
  *
  * Parquet rows are (ord, service, route, trip) where `trip` is the
  * CompactTrip as JSON and `ord` its position in the feed's trip list. Trips
@@ -21,16 +23,19 @@
  * identical to what was appended, so a lossy write fails loudly.
  */
 
-import { mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { basename, dirname, join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { deepStrictEqual } from 'node:assert/strict';
 import { DuckDBInstance } from '@duckdb/node-api';
 import { parquetOptions } from './raw-diff-parquet.mjs';
 import { timer } from './timings.mjs';
 import { compactServiceSets, expandServiceSets } from '../../src/app/screens/GtfsDiffToolV2/lib/trips-index-codec.ts';
+import { TRIPS_INDEX_FILE, rawTablePath, tripsTablePath } from '../../src/app/screens/GtfsDiffToolV2/lib/diff-layout.ts';
 
-export const TRIPS_DIR = 'trips';
+/** Route names and colours (lib/route-info), and stop names (lib/stop-info). */
+const ROUTE_INFO_TABLE = rawTablePath('routes.txt');
+const STOP_INFO_TABLE = rawTablePath('stops.txt');
 /** Trips per row group: a service's trips span few groups. */
 const ROW_GROUP_SIZE = 2048;
 /** Every n-th appended trip is kept to compare after writing. */
@@ -41,12 +46,13 @@ function sqlString(s) {
 }
 
 /**
- * @param outPath path of trips-diff.json
+ * @param datasetDir the dataset folder
  * @returns { append(side, trips), finish(index, { byRoute }) }
  */
-export async function openTripsWriter(outPath) {
-  const dir = join(dirname(outPath), TRIPS_DIR);
-  mkdirSync(dir, { recursive: true });
+export async function openTripsWriter(datasetDir) {
+  const outPath = join(datasetDir, TRIPS_INDEX_FILE);
+  mkdirSync(dirname(outPath), { recursive: true });
+  for (const side of ['base', 'new']) mkdirSync(dirname(join(datasetDir, tripsTablePath(side))), { recursive: true });
   const dbPath = join(tmpdir(), `gtfs-trips-${process.pid}-${Date.now()}.duckdb`);
   const instance = await DuckDBInstance.create(dbPath);
   const sides = {};
@@ -87,13 +93,13 @@ export async function openTripsWriter(outPath) {
      * @param o.byRoute sort by route then service (huge feeds)
      */
     async finish(index, { byRoute = false } = {}) {
-      const tables = { base: `${TRIPS_DIR}/base.parquet`, new: `${TRIPS_DIR}/new.parquet` };
+      const tables = { base: tripsTablePath('base'), new: tripsTablePath('new') };
       const result = {};
       try {
         for (const [side, s] of Object.entries(sides)) {
           const endWrite = timer(`write ${tables[side]} (sort + COPY + read-back check)`);
           s.appender.closeSync();
-          const path = join(dirname(outPath), tables[side]);
+          const path = join(datasetDir, tables[side]);
           await s.con.run(
             `COPY (SELECT * FROM ${side} ORDER BY ${byRoute ? 'route, ' : ''}service, ord) TO ${sqlString(path)} ` +
               `(${parquetOptions(ROW_GROUP_SIZE)})`,
@@ -118,10 +124,22 @@ export async function openTripsWriter(outPath) {
         close();
       }
 
+      // Route names and colours, and stop names, come from the routes.txt and
+      // stops.txt raw tables the entity step writes (lib/route-info,
+      // lib/stop-info); kept inline only when there are none.
+      const { routes, stops, ...indexRest } = index;
+      const routeInfo = existsSync(join(datasetDir, ROUTE_INFO_TABLE))
+        ? { route_info_file: ROUTE_INFO_TABLE }
+        : { routes };
+      const stopInfo = existsSync(join(datasetDir, STOP_INFO_TABLE))
+        ? { stop_info_file: STOP_INFO_TABLE }
+        : { stops };
       // Service sets as indices into one service_id list (lib/trips-index-codec.ts).
-      const endIndex = timer(`write ${basename(outPath)} (encode + checks + write)`);
+      const endIndex = timer(`write ${TRIPS_INDEX_FILE} (encode + checks + write)`);
       const doc = compactServiceSets({
-        ...index,
+        ...indexRest,
+        ...routeInfo,
+        ...stopInfo,
         feeds: { base: { trips: [] }, new: { trips: [] } },
         trip_tables: { ...tables, ...(byRoute ? { by_route: true } : {}) },
       });
@@ -138,10 +156,10 @@ export async function openTripsWriter(outPath) {
   };
 }
 
-export function describeWrite(outPath, r) {
+export function describeWrite(datasetDir, r) {
   const kb = (b) => `${Math.round(b / 1024)} KB`;
   return [
-    `Wrote ${outPath} (index, ${kb(r.index_bytes)})`,
+    `Wrote ${join(datasetDir, TRIPS_INDEX_FILE)} (index, ${kb(r.index_bytes)})`,
     ...Object.values(r.tables).map((t) => `  ${t.path}: ${t.trips} trips, ${kb(t.bytes)}`),
   ].join('\n');
 }

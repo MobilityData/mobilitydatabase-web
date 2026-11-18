@@ -1,5 +1,5 @@
 /**
- * trips-diff.json stores each feed's service sets as indices into one list
+ * views/trips/index.json stores each feed's service sets as indices into one list
  * of service_ids (`service_ids`) instead of repeating the ids in every set
  * (IDFM: 33 sets naming 95,900 ids, 9,459 distinct; 8.2 of the file's
  * 10.8 MB). expandServiceSets() restores the string sets every reader uses;

@@ -15,7 +15,7 @@ export const dynamic = 'force-static';
 // demand; unknown or invalid params still 404 below.
 export const dynamicParams = true;
 
-/** Every dataset folder that has a pathways-diff.json. */
+/** Every dataset folder that has an analysis/pathways.json. */
 export function generateStaticParams(): Array<{
   locale: Locale;
   dataset: string;

@@ -35,20 +35,18 @@ import {
 } from '../../lib/stops-utils';
 import {
   type StopListRow,
-  stopDetailQuery,
+  stopChangeQuery,
   stopsKindCountsQuery,
   stopsPageQuery,
   stopsPointsQuery,
+  toStopChange,
   toStopListRow,
   toStopPoint,
 } from '../../lib/map-table-query';
-import {
-  mapDetailUrl,
-  mapTableUrl,
-  queryMapTable,
-  useMapTableQuery,
-} from '../../lib/useMapTable';
-import { loadAllStops, useAllStops } from '../../lib/useDiffData';
+import { parquetView, runQueued } from '../../lib/duckdb-client';
+import { diffFileUrl } from '../../lib/datasets';
+import { stopsTableSource, useViewsQuery } from '../../lib/useMapTable';
+import { useRouteInfo } from '../../lib/useDiffData';
 import SegmentedList from '../diffmap/SegmentedList';
 import { type RowAction } from '../../../GtfsDiffTool/components/GtfsDiffFileDiffPanel';
 import EntityOverviewCard from '../overview/EntityOverviewCard';
@@ -62,9 +60,6 @@ import {
 } from '../diffmap/DiffMapControls';
 import MapLegend, { LegendDot } from '../diffmap/MapLegend';
 import { type NavFocus, useDiffNav } from '../../lib/diff-nav';
-import NestedCheckboxList, {
-  type CheckboxStructure,
-} from '../../../../components/NestedCheckboxList';
 import { SearchHeader } from '../../../../styles/Filters.styles';
 import { ReportActions, useReportSubtitle } from '../report/ReportLayout';
 import { StyledChipFilterContainer } from '../../../Feed/Map.styles';
@@ -206,14 +201,6 @@ function StopsMapLegend(): React.ReactElement {
           ),
           label: 'Old position → new position',
         },
-        {
-          symbol: <LegendDot fill='#9e9e9e' stroke='#fff' />,
-          label: 'Original feed',
-        },
-        {
-          symbol: <LegendDot fill='#64b5f6' stroke='#fff' />,
-          label: 'New feed',
-        },
       ]}
     />
   );
@@ -239,15 +226,9 @@ export default function StopsEntityPanel({
 }: StopsEntityPanelProps): React.ReactElement {
   const nav = useDiffNav();
   const highlights = stopsMap.highlights;
+  // For the selected stop's route chips.
+  const routeInfo = useRouteInfo(datasetId, stopsMap.route_info_file);
   const [filters, setFilters] = useState<StopFilters>(DEFAULT_FILTERS);
-  const [showBase, setShowBase] = useState(false);
-  const [showNew, setShowNew] = useState(false);
-  // Every stop of both feeds: fetched the first time an overlay is shown.
-  const allStops = useAllStops(
-    datasetId,
-    stopsMap.all_stops,
-    showBase || showNew,
-  );
   const [selection, setSelectionState] = useState<MapSelection | null>(null);
   const [flyRequest, setFlyRequest] = useState(0);
   const mapBoxRef = useRef<HTMLDivElement>(null);
@@ -255,30 +236,45 @@ export default function StopsEntityPanel({
   /** Select on the map and mirror the stop in the URL hash. */
   const setSelection = (next: MapSelection | null): void => {
     setSelectionState(next);
-    const id =
-      next == null
-        ? undefined
-        : next.type === 'changed'
-          ? next.stopId
-          : next.stop[0];
+    const id = next?.stopId;
     nav?.replaceTarget(
       id ? { tab: 'stops', kind: 'stop', id } : { tab: 'stops' },
     );
   };
 
-  // The changed stops live in maps/stops.parquet: counts, map points, the
-  // list and the selected stop are DuckDB queries (lib/map-table-query.ts).
-  const url = mapTableUrl(datasetId, stopsMap.table);
-  const detailUrl = mapDetailUrl(datasetId, stopsMap.table);
+  // The changed stops are raw/stops.parquet joined with the stops analysis
+  // (analysis/stops.parquet), built into one DuckDB table when the page loads:
+  // counts, map points, the list and the selected stop are queries on it
+  // (lib/map-table-query.ts). A selected stop's full stops.txt rows come
+  // from raw/stops.parquet.
+  const rawStops = rawTables.find((t) => t.file === 'stops.txt');
+  const stops = stopsTableSource(datasetId, stopsMap.table, rawStops);
+  const tableViews = (): Promise<string[]> => stops.table().then((t) => [t]);
+  // The stops table and the raw one; no raw table means no changed stop.
+  const stopViews = async (): Promise<string[]> => {
+    const [t, r] = await Promise.all([
+      stops.table(),
+      rawStops ? parquetView(diffFileUrl(datasetId, rawStops.path)) : null,
+    ]);
+    return r == null ? [] : [t, r];
+  };
+  const readStop = (rows: Array<Record<string, unknown>>): StopChange | null =>
+    rows[0] ? toStopChange(rows[0], stopsMap.columns) : null;
+  const loadStop = async (id: string): Promise<StopChange | null> => {
+    const views = await stopViews();
+    if (views.length === 0) return null;
+    return readStop(await runQueued(stopChangeQuery(views[0], views[1], id)));
+  };
   const effective: StopFilters = {
     ...filters,
     kinds: filters.kinds.length > 0 ? filters.kinds : STOP_KINDS,
   };
   const filterKey = JSON.stringify(effective);
-  const kindCountsQ = useMapTableQuery(
-    url,
+  const kindCountsQ = useViewsQuery(
+    stops.key,
+    tableViews,
     JSON.stringify({ ...filters, kinds: [] }),
-    (v) => stopsKindCountsQuery(v, effective),
+    ([v]) => stopsKindCountsQuery(v, effective),
     (rows) => {
       const c = { ...NO_KIND_COUNTS };
       for (const r of rows) c[r.kind as StopKind] = Number(r.n);
@@ -287,20 +283,21 @@ export default function StopsEntityPanel({
   );
   const kindCounts = kindCountsQ.data ?? NO_KIND_COUNTS;
   const total = effective.kinds.reduce((n, k) => n + kindCounts[k], 0);
-  const pointsQ = useMapTableQuery(
-    url,
+  const pointsQ = useViewsQuery(
+    stops.key,
+    tableViews,
     filterKey,
-    (v) => stopsPointsQuery(v, effective),
+    ([v]) => stopsPointsQuery(v, effective),
     (rows) => rows.map(toStopPoint),
   );
   const points = pointsQ.data ?? [];
-  const selectedId = selection?.type === 'changed' ? selection.stopId : null;
-  const detailQ = useMapTableQuery(
-    selectedId ? detailUrl : null,
+  const selectedId = selection?.stopId ?? null;
+  const detailQ = useViewsQuery(
+    selectedId && rawStops ? stops.key : null,
+    stopViews,
     selectedId ?? '',
-    (v) => stopDetailQuery(v, selectedId ?? ''),
-    (rows) =>
-      rows[0] ? (JSON.parse(String(rows[0].detail)) as StopChange) : null,
+    ([s, r]) => stopChangeQuery(s, r, selectedId ?? ''),
+    readStop,
   );
   const selectedStop =
     detailQ.data?.stop_id === selectedId ? detailQ.data : null;
@@ -309,9 +306,10 @@ export default function StopsEntityPanel({
     offset: number,
     limit: number,
   ): Promise<StopListRow[]> =>
-    queryMapTable(url, (v) => stopsPageQuery(v, effective, offset, limit)).then(
-      (rows) => rows.map(toStopListRow),
-    );
+    stops
+      .table()
+      .then((t) => runQueued(stopsPageQuery(t, effective, offset, limit)))
+      .then((rows) => rows.map(toStopListRow));
 
   const toggleKind = (k: StopKind): void => {
     setFilters((f) => ({
@@ -329,36 +327,19 @@ export default function StopsEntityPanel({
 
   /**
    * Select a stop on the map, fly to it and scroll the map into view. Filters
-   * are only reset when they hide the stop. Resolves false for unknown stops.
+   * are only reset when they hide the stop. Resolves false for stops that
+   * didn't change (only changed stops are mapped).
    */
   const revealStop = async (id: string): Promise<boolean> => {
-    const rows = await queryMapTable(detailUrl, (v) => stopDetailQuery(v, id));
-    const changed = rows[0]
-      ? (JSON.parse(String(rows[0].detail)) as StopChange)
-      : null;
-    if (changed) {
-      if (!points.some((p) => p.stop_id === id)) {
-        setFilters({
-          ...DEFAULT_FILTERS,
-          hidePrecisionOnly: !isPrecisionOnly(
-            changed,
-            DEFAULT_FILTERS.minMoveM,
-          ),
-        });
-      }
-      setSelectionState({ type: 'changed', stopId: id });
-    } else {
-      const all = await loadAllStops(datasetId, stopsMap.all_stops);
-      const inNew = all.new.find((s) => s[0] === id);
-      const inBase = all.base.find((s) => s[0] === id);
-      if (inNew) {
-        setShowNew(true);
-        setSelectionState({ type: 'overlay', feed: 'new', stop: inNew });
-      } else if (inBase) {
-        setShowBase(true);
-        setSelectionState({ type: 'overlay', feed: 'base', stop: inBase });
-      } else return false;
+    const changed = await loadStop(id);
+    if (changed == null) return false;
+    if (!points.some((p) => p.stop_id === id)) {
+      setFilters({
+        ...DEFAULT_FILTERS,
+        hidePrecisionOnly: !isPrecisionOnly(changed, DEFAULT_FILTERS.minMoveM),
+      });
     }
+    setSelectionState({ type: 'changed', stopId: id });
     setFlyRequest((n) => n + 1);
     mapBoxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return true;
@@ -391,28 +372,13 @@ export default function StopsEntityPanel({
   const fullscreen = useDiffMapFullscreen();
   const [refocusRequest, setRefocusRequest] = useState(0);
 
+  // stops.txt rows of each feed.
+  const c = stopsMap.counts;
+  const baseStops = c.deleted + c.modified + c.unchanged;
+  const newStops = c.added + c.modified + c.unchanged;
   useReportSubtitle(
-    `${stopsMap.all_stops.base.toLocaleString()} → ${stopsMap.all_stops.new.toLocaleString()} stops · showing ${total.toLocaleString()} changed`,
+    `${baseStops.toLocaleString()} → ${newStops.toLocaleString()} stops · showing ${total.toLocaleString()} changed`,
   );
-
-  /** Shown on a checked overlay until its stops have arrived. */
-  const overlayStatus = allStops.error
-    ? ' · could not load'
-    : allStops.isLoading
-      ? ' · loading…'
-      : '';
-  const visibilityCheckboxes: CheckboxStructure[] = [
-    {
-      title: `All original stops (${stopsMap.all_stops.base.toLocaleString()})${showBase ? overlayStatus : ''}`,
-      type: 'checkbox',
-      checked: showBase,
-    },
-    {
-      title: `All new stops (${stopsMap.all_stops.new.toLocaleString()})${showNew ? overlayStatus : ''}`,
-      type: 'checkbox',
-      checked: showNew,
-    },
-  ];
 
   /** Active filters, shown as removable chips above the map (as on the feed map). */
   const activeFilters: Array<{
@@ -446,30 +412,10 @@ export default function StopsEntityPanel({
           },
         ]
       : []),
-    ...(showBase
-      ? [
-          {
-            key: 'base',
-            label: 'All original stops',
-            clear: () => setShowBase(false),
-          },
-        ]
-      : []),
-    ...(showNew
-      ? [
-          {
-            key: 'new',
-            label: 'All new stops',
-            clear: () => setShowNew(false),
-          },
-        ]
-      : []),
   ];
 
   const clearAll = (): void => {
     setFilters(DEFAULT_FILTERS);
-    setShowBase(false);
-    setShowNew(false);
   };
 
   const renderFilterChips = (sx?: SxProps<Theme>): React.ReactElement => (
@@ -535,17 +481,6 @@ export default function StopsEntityPanel({
           />
 
           <SearchHeader variant='h6' className='no-collapse'>
-            Visibility
-          </SearchHeader>
-          <NestedCheckboxList
-            checkboxData={visibilityCheckboxes}
-            onCheckboxChange={(data: CheckboxStructure[]) => {
-              setShowBase(data[0].checked);
-              setShowNew(data[1].checked);
-            }}
-          />
-
-          <SearchHeader variant='h6' className='no-collapse'>
             Stops
           </SearchHeader>
           <Box
@@ -594,7 +529,7 @@ export default function StopsEntityPanel({
               }}
             />
             <SegmentedList<StopListRow>
-              queryKey={`${url}|${filterKey}`}
+              queryKey={`${stops.key}|${filterKey}`}
               total={total}
               loading={kindCountsQ.loading}
               fetchRows={fetchListRows}
@@ -667,12 +602,9 @@ export default function StopsEntityPanel({
             <StopsDiffMap
               points={points}
               selectedStop={selectedStop}
-              allStops={allStops.data ?? null}
-              showBaseOverlay={showBase}
-              showNewOverlay={showNew}
               minMoveM={filters.minMoveM}
               columns={stopsMap.columns}
-              routes={stopsMap.routes}
+              routes={routeInfo}
               selection={selection}
               onSelect={setSelection}
               flyRequest={flyRequest}

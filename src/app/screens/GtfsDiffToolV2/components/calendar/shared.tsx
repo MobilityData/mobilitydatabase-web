@@ -1,77 +1,60 @@
 'use client';
 
-import { Box, Chip, Link, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Tooltip, Typography } from '@mui/material';
 import React from 'react';
-import type { RouteInfo } from '../../lib/entity-diff-types';
+import type {
+  DiffType,
+  GtfsDate,
+  RouteInfo,
+} from '../../lib/entity-diff-types';
 import {
-  CHANGE_COLORS,
   CHANGE_KINDS,
   CHANGE_LABELS,
   type DayCounts,
+  countsTotal,
+  formatGtfsDate,
 } from '../../lib/calendar-utils';
 import { useDiffNav } from '../../lib/diff-nav';
+import { routePreview } from '../../lib/service-detail';
+import { useCalendarPalette } from '../trips-v5/palette';
 
 export const MONO_FONT = 'var(--font-ibm-plex-mono)';
 
-// ── Change count squares (green / red / orange) ────────────────────
+// ── Day tooltip ────────────────────────────────────────────────────
 
-interface ChangeSquaresProps {
-  day: DayCounts | undefined;
-  size?: number;
-}
-
-export function ChangeSquares({
+/** Tooltip of a calendar day: its date, active services and changes. */
+export function ServiceDayTip({
+  date,
   day,
-  size = 22,
-}: ChangeSquaresProps): React.ReactElement | null {
-  if (day == null) return null;
-  const counts = day;
+  active: [base, next],
+}: {
+  date: GtfsDate;
+  day: DayCounts | undefined;
+  active: [number, number];
+}): React.ReactElement {
+  const total = countsTotal(day);
   return (
-    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-      {CHANGE_KINDS.filter((k) => counts[k] > 0).map((k) => (
-        <Tooltip
-          key={k}
-          title={`${counts[k]} ${CHANGE_LABELS[k].toLowerCase()} service${counts[k] === 1 ? '' : 's'}`}
-        >
-          <Box
-            sx={{
-              minWidth: size,
-              height: size,
-              px: 0.5,
-              borderRadius: '4px',
-              bgcolor: CHANGE_COLORS[k],
-              color: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: size * 0.55,
-              fontWeight: 700,
-              lineHeight: 1,
-            }}
-          >
-            {counts[k]}
-          </Box>
-        </Tooltip>
-      ))}
+    <Box sx={{ py: 0.25 }}>
+      <Typography variant='caption' fontWeight={700} component='div'>
+        {formatGtfsDate(date)}
+      </Typography>
+      <Typography variant='caption' component='div'>
+        {base + next === 0
+          ? 'No service in either feed'
+          : base === next
+            ? `${next} active service${next === 1 ? '' : 's'}`
+            : `${base} → ${next} active services`}
+      </Typography>
+      {day && total > 0 ? (
+        <Typography variant='caption' component='div'>
+          {CHANGE_KINDS.filter((k) => day[k] > 0)
+            .map((k) => `${day[k]} ${CHANGE_LABELS[k].toLowerCase()}`)
+            .join(' · ')}
+          . Click for details.
+        </Typography>
+      ) : null}
     </Box>
   );
-}
-
-/** Single square split into bands, one per change kind present (year view). */
-export function changeBackground(
-  day: DayCounts | undefined,
-): string | undefined {
-  if (day == null) return undefined;
-  const colors = CHANGE_KINDS.filter((k) => day[k] > 0).map(
-    (k) => CHANGE_COLORS[k],
-  );
-  if (colors.length === 0) return undefined;
-  if (colors.length === 1) return colors[0];
-  const step = 100 / colors.length;
-  const stops = colors
-    .map((c, i) => `${c} ${i * step}% ${(i + 1) * step}%`)
-    .join(', ');
-  return `linear-gradient(135deg, ${stops})`;
 }
 
 // ── Route chip ─────────────────────────────────────────────────────
@@ -145,40 +128,90 @@ export function RouteChips({
   );
 }
 
-// ── Service id link ────────────────────────────────────────────────
+// ── Services ───────────────────────────────────────────────────────
 
-interface ServiceIdLinkProps {
-  serviceId: string;
-  onClick: (serviceId: string) => void;
+/** The change colour of a service's status (unchanged: none). */
+export function statusColor(
+  change: Record<'added' | 'removed' | 'modified', string>,
+  status: DiffType,
+): string | null {
+  if (status === 'added') return change.added;
+  if (status === 'deleted') return change.removed;
+  if (status === 'modified') return change.modified;
+  return null;
 }
 
-export function ServiceIdLink({
-  serviceId,
-  onClick,
-}: ServiceIdLinkProps): React.ReactElement {
+export const STATUS_LABELS: Record<DiffType, string> = {
+  added: 'Added',
+  deleted: 'Removed',
+  modified: 'Modified',
+  unchanged: 'Unchanged',
+};
+
+/** Round dot in a service's status colour; unchanged is hollow. */
+export function StatusDot({
+  status,
+  size = 10,
+}: {
+  status: DiffType;
+  size?: number;
+}): React.ReactElement {
+  const color = statusColor(useCalendarPalette().change, status);
   return (
-    <Tooltip title='Open service details'>
-      <Link
-        component='button'
-        type='button'
-        underline='hover'
-        onClick={(e: React.MouseEvent) => {
-          e.stopPropagation();
-          onClick(serviceId);
-        }}
-        sx={{
-          fontFamily: MONO_FONT,
-          fontWeight: 700,
-          fontSize: '0.8rem',
-          verticalAlign: 'baseline',
-        }}
-      >
-        {serviceId}
-      </Link>
-    </Tooltip>
+    <Box
+      component='span'
+      aria-hidden
+      sx={{
+        display: 'inline-block',
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        flexShrink: 0,
+        boxSizing: 'border-box',
+        ...(color
+          ? { bgcolor: color }
+          : { border: '1.5px solid', borderColor: 'text.disabled' }),
+      }}
+    />
   );
 }
 
-export function serviceAnchorId(serviceId: string): string {
-  return `service-${serviceId}`;
+/** A row's routes: the first few as chips, then "and +N". */
+export function RoutePreviewChips({
+  routeIds,
+  routes,
+}: {
+  routeIds: string[];
+  routes: Record<string, RouteInfo>;
+}): React.ReactElement {
+  const { shown, more } = routePreview(routeIds);
+  if (routeIds.length === 0)
+    return (
+      <Typography variant='caption' color='text.secondary'>
+        No trips
+      </Typography>
+    );
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 0.5,
+        flexWrap: 'wrap',
+      }}
+    >
+      {shown.map((r) => (
+        <RouteChip key={r} routeId={r} route={routes[r]} linked={false} />
+      ))}
+      {more > 0 ? (
+        <Typography
+          variant='caption'
+          color='text.secondary'
+          sx={{ whiteSpace: 'nowrap' }}
+        >
+          and +{more}
+        </Typography>
+      ) : null}
+    </Box>
+  );
 }

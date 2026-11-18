@@ -104,14 +104,29 @@ export function writeRouteFilters(
  * open the technical drill-down in a popup, v5 drops the feed chips and the
  * route list link and puts the day in a subheader).
  */
-export type TripsView = 'trips-v2' | 'trips-v3' | 'trips-v5';
+export type TripsView = 'trips-v2' | 'trips-v3' | 'trips-v5' | 'trips-v6';
+
+/**
+ * Views whose route page is the lighter Trips v5 one: Trips v6 opens the
+ * same page from a route's calendar.
+ */
+export function isV5Style(view: TripsView): boolean {
+  return view === 'trips-v5' || view === 'trips-v6';
+}
+
+/** Trips v6's page of one route: its calendar. */
+export function tripsV6RouteHref(datasetId: string, routeId: string): string {
+  return `/gtfs-diff-tool-v2/${datasetId}/trips-v6/${encodeURIComponent(routeId)}`;
+}
 
 /** The Trips view the report's links open (summary, highlights, routes). */
 export const DEFAULT_TRIPS_VIEW: TripsView = 'trips-v5';
 
 /**
  * /gtfs-diff-tool-v2/<dataset>/trips-v2/<route_id>?day=…&dir=…, carrying the
- * list's filters so "All routes" restores the list as it was.
+ * list's filters so "All routes" restores the list as it was. In Trips v6
+ * /trips-v6/<route_id> is the route's calendar, its day page being
+ * /trips-v6/<route_id>/detail?day=….
  */
 export function tripsRouteHref(
   datasetId: string,
@@ -128,7 +143,9 @@ export function tripsRouteHref(
   if (opts.dir != null) params.set('dir', opts.dir);
   if (opts.filters) writeRouteFilters(params, opts.filters);
   const qs = params.toString();
-  return `/gtfs-diff-tool-v2/${datasetId}/${opts.view ?? 'trips-v2'}/${encodeURIComponent(routeId)}${qs ? `?${qs}` : ''}`;
+  const view = opts.view ?? 'trips-v2';
+  const page = view === 'trips-v6' ? '/detail' : '';
+  return `/gtfs-diff-tool-v2/${datasetId}/${view}/${encodeURIComponent(routeId)}${page}${qs ? `?${qs}` : ''}`;
 }
 
 /** The list page, keeping the service day and filters. */

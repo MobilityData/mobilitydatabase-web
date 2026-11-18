@@ -1,7 +1,7 @@
 {
-  "schema": 2,
+  "schema": 4,
   "dataset": "mbta",
-  "generated_at": "2026-11-02T13:22:17.840Z",
+  "generated_at": "2026-11-18T14:19:43.640Z",
   "feeds": {
     "base": {
       "file": "base-mdb-437-202608010022.zip",
@@ -21,8 +21,17 @@
   "files": [
     {
       "file": "agency.txt",
-      "group": "agency",
-      "present": true,
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 2,
+        "new": 2
+      },
+      "primary_key": [
+        "agency_id"
+      ],
       "counts": {
         "added": 0,
         "deleted": 0,
@@ -31,26 +40,77 @@
       }
     },
     {
-      "file": "attributions.txt",
-      "group": "agency",
-      "present": false,
-      "counts": null
-    },
-    {
       "file": "stops.txt",
-      "group": "stops",
-      "present": true,
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 10298,
+        "new": 10292
+      },
+      "primary_key": [
+        "stop_id"
+      ],
       "counts": {
         "added": 38,
         "deleted": 44,
         "modified": 462,
         "unchanged": 9792
+      },
+      "raw_table": {
+        "file": "stops.txt",
+        "path": "raw/stops.parquet",
+        "rows": 10336,
+        "bytes": 448222,
+        "columns": [
+          "stop_id",
+          "stop_code",
+          "stop_name",
+          "stop_desc",
+          "platform_code",
+          "platform_name",
+          "stop_lat",
+          "stop_lon",
+          "zone_id",
+          "stop_address",
+          "stop_url",
+          "level_id",
+          "location_type",
+          "parent_station",
+          "wheelchair_boarding",
+          "municipality",
+          "on_street",
+          "at_street",
+          "vehicle_type"
+        ],
+        "counts": {
+          "added": 38,
+          "deleted": 44,
+          "modified": 462,
+          "id_only": 0,
+          "unchanged": 9792
+        },
+        "compact_unchanged": true,
+        "key_column": "stop_id",
+        "key_columns": [
+          "stop_id"
+        ]
       }
     },
     {
       "file": "levels.txt",
-      "group": "stops",
-      "present": true,
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 80,
+        "new": 80
+      },
+      "primary_key": [
+        "level_id"
+      ],
       "counts": {
         "added": 0,
         "deleted": 0,
@@ -60,141 +120,412 @@
     },
     {
       "file": "pathways.txt",
-      "group": "stops",
-      "present": true,
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 9311,
+        "new": 9325
+      },
+      "primary_key": [
+        "pathway_id"
+      ],
       "counts": {
         "added": 62,
         "deleted": 48,
         "modified": 111,
         "unchanged": 9152
+      },
+      "raw_table": {
+        "file": "pathways.txt",
+        "path": "raw/pathways.parquet",
+        "rows": 221,
+        "bytes": 21557,
+        "columns": [
+          "pathway_id",
+          "from_stop_id",
+          "to_stop_id",
+          "facility_id",
+          "pathway_mode",
+          "is_bidirectional",
+          "length",
+          "wheelchair_length",
+          "traversal_time",
+          "wheelchair_traversal_time",
+          "stair_count",
+          "max_slope",
+          "pathway_name",
+          "pathway_code",
+          "signposted_as",
+          "instructions"
+        ],
+        "counts": {
+          "added": 62,
+          "deleted": 48,
+          "modified": 111,
+          "id_only": 0,
+          "unchanged": 9152
+        },
+        "unchanged_omitted": true,
+        "key_column": "pathway_id",
+        "key_columns": [
+          "pathway_id"
+        ]
       }
     },
     {
       "file": "shapes.txt",
-      "group": "routes",
-      "present": true,
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 1162,
+        "new": 1149
+      },
+      "primary_key": [
+        "shape_id"
+      ],
       "counts": {
         "added": 448,
         "deleted": 461,
         "modified": 2,
         "unchanged": 699
+      },
+      "raw_table": {
+        "file": "shapes.txt",
+        "path": "raw/shapes.parquet",
+        "rows": 245452,
+        "bytes": 1739516,
+        "columns": [
+          "shape_id",
+          "shape_pt_lat",
+          "shape_pt_lon",
+          "shape_pt_sequence",
+          "shape_dist_traveled"
+        ],
+        "counts": {
+          "added": 85426,
+          "deleted": 87532,
+          "modified": 4271,
+          "id_only": 68223,
+          "unchanged": 234531
+        },
+        "unchanged_omitted": true
       }
     },
     {
       "file": "routes.txt",
-      "group": "routes",
-      "present": true,
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 400,
+        "new": 404
+      },
+      "primary_key": [
+        "route_id"
+      ],
       "counts": {
         "added": 10,
         "deleted": 6,
         "modified": 92,
         "unchanged": 302
+      },
+      "raw_table": {
+        "file": "routes.txt",
+        "path": "raw/routes.parquet",
+        "rows": 410,
+        "bytes": 30984,
+        "columns": [
+          "route_id",
+          "agency_id",
+          "route_short_name",
+          "route_long_name",
+          "route_desc",
+          "route_type",
+          "route_url",
+          "route_color",
+          "route_text_color",
+          "route_sort_order",
+          "route_fare_class",
+          "line_id",
+          "listed_route",
+          "network_id"
+        ],
+        "counts": {
+          "added": 10,
+          "deleted": 6,
+          "modified": 92,
+          "id_only": 0,
+          "unchanged": 302
+        },
+        "compact_unchanged": true,
+        "key_column": "route_id",
+        "key_columns": [
+          "route_id"
+        ]
       }
     },
     {
-      "file": "networks.txt",
-      "group": "routes",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "route_networks.txt",
-      "group": "routes",
-      "present": false,
-      "counts": null
-    },
-    {
       "file": "areas.txt",
-      "group": "routes",
-      "present": true,
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 45,
+        "new": 45
+      },
+      "primary_key": [
+        "area_id"
+      ],
       "counts": {
         "added": 1,
         "deleted": 1,
         "modified": 2,
         "unchanged": 42
+      },
+      "raw_table": {
+        "file": "areas.txt",
+        "path": "raw/areas.parquet",
+        "rows": 4,
+        "bytes": 2974,
+        "columns": [
+          "area_id",
+          "area_name"
+        ],
+        "counts": {
+          "added": 1,
+          "deleted": 1,
+          "modified": 2,
+          "id_only": 0,
+          "unchanged": 42
+        },
+        "unchanged_omitted": true,
+        "key_column": "area_id",
+        "key_columns": [
+          "area_id"
+        ]
       }
     },
     {
       "file": "stop_areas.txt",
-      "group": "routes",
-      "present": true,
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 1223,
+        "new": 1228
+      },
+      "primary_key": [
+        "area_id",
+        "stop_id"
+      ],
       "counts": {
         "added": 8,
         "deleted": 3,
         "modified": 0,
         "unchanged": 1220
+      },
+      "raw_table": {
+        "file": "stop_areas.txt",
+        "path": "raw/stop_areas.parquet",
+        "rows": 11,
+        "bytes": 3086,
+        "columns": [
+          "stop_id",
+          "area_id"
+        ],
+        "counts": {
+          "added": 8,
+          "deleted": 3,
+          "modified": 0,
+          "id_only": 0,
+          "unchanged": 1220
+        },
+        "unchanged_omitted": true,
+        "key_column": "area_id",
+        "key_columns": [
+          "area_id",
+          "stop_id"
+        ]
       }
     },
     {
       "file": "trips.txt",
-      "group": "trips",
-      "present": true,
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 91772,
+        "new": 117468
+      },
+      "primary_key": [
+        "trip_id"
+      ],
       "counts": {
         "added": 35153,
         "deleted": 9457,
         "modified": 38880,
         "unchanged": 43435
+      },
+      "id_only": 42718,
+      "raw_table": {
+        "file": "trips.txt",
+        "path": "raw/trips.parquet",
+        "rows": 126925,
+        "bytes": 1891366,
+        "columns": [
+          "route_id",
+          "service_id",
+          "trip_id",
+          "trip_headsign",
+          "trip_short_name",
+          "direction_id",
+          "block_id",
+          "shape_id",
+          "wheelchair_accessible",
+          "trip_route_type",
+          "route_pattern_id",
+          "bikes_allowed"
+        ],
+        "counts": {
+          "added": 35153,
+          "deleted": 9457,
+          "modified": 9307,
+          "id_only": 72291,
+          "unchanged": 717
+        }
+      },
+      "trip_matching": {
+        "mapped": 82315,
+        "renamed": 81592,
+        "base_trips": 91772,
+        "new_trips": 117468
       }
     },
     {
       "file": "stop_times.txt",
-      "group": "trips",
-      "present": true,
-      "counts": {
-        "added": 954713,
-        "deleted": 114523,
-        "modified": 477015,
-        "unchanged": 6697,
-        "id_only": 1664693
+      "present": {
+        "base": true,
+        "new": true
       },
-      "part_of": "trips.txt"
-    },
-    {
-      "file": "frequencies.txt",
-      "group": "trips",
-      "present": false,
-      "counts": null
+      "part_of": "trips.txt",
+      "raw_table": {
+        "file": "stop_times.txt",
+        "path": "raw/stop_times.parquet",
+        "rows": 3217641,
+        "bytes": 15269871,
+        "columns": [
+          "trip_id",
+          "arrival_time",
+          "departure_time",
+          "stop_id",
+          "stop_sequence",
+          "stop_headsign",
+          "pickup_type",
+          "drop_off_type",
+          "timepoint",
+          "checkpoint_id",
+          "continuous_pickup",
+          "continuous_drop_off"
+        ],
+        "counts": {
+          "added": 954713,
+          "deleted": 114523,
+          "modified": 477015,
+          "id_only": 1664693,
+          "unchanged": 6697
+        }
+      }
     },
     {
       "file": "calendar.txt",
-      "group": "calendar",
-      "present": true,
-      "counts": {
-        "added": 135,
-        "deleted": 166,
-        "modified": 15,
-        "unchanged": 0,
-        "id_only": 0
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "raw_table": {
+        "file": "calendar.txt",
+        "path": "raw/calendar.parquet",
+        "rows": 316,
+        "bytes": 14441,
+        "columns": [
+          "service_id",
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday",
+          "start_date",
+          "end_date"
+        ],
+        "counts": {
+          "added": 135,
+          "deleted": 166,
+          "modified": 15,
+          "id_only": 0,
+          "unchanged": 0
+        },
+        "key_column": "service_id",
+        "key_columns": [
+          "service_id"
+        ]
       }
     },
     {
       "file": "calendar_dates.txt",
-      "group": "calendar",
-      "present": true,
-      "counts": {
-        "added": 97,
-        "deleted": 64,
-        "modified": 0,
-        "unchanged": 0,
-        "id_only": 0
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "raw_table": {
+        "file": "calendar_dates.txt",
+        "path": "raw/calendar_dates.parquet",
+        "rows": 161,
+        "bytes": 7366,
+        "columns": [
+          "service_id",
+          "date",
+          "exception_type",
+          "holiday_name"
+        ],
+        "counts": {
+          "added": 97,
+          "deleted": 64,
+          "modified": 0,
+          "id_only": 0,
+          "unchanged": 0
+        },
+        "key_column": "service_id",
+        "key_columns": [
+          "service_id",
+          "date"
+        ]
       }
     },
     {
-      "file": "fare_attributes.txt",
-      "group": "fares_v1",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "fare_rules.txt",
-      "group": "fares_v1",
-      "present": false,
-      "counts": null
-    },
-    {
       "file": "fare_products.txt",
-      "group": "fares_v2",
-      "present": true,
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 119,
+        "new": 119
+      },
+      "primary_key": [
+        "fare_product_id",
+        "rider_category_id",
+        "fare_media_id"
+      ],
       "counts": {
         "added": 0,
         "deleted": 0,
@@ -204,8 +535,17 @@
     },
     {
       "file": "fare_media.txt",
-      "group": "fares_v2",
-      "present": true,
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 6,
+        "new": 6
+      },
+      "primary_key": [
+        "fare_media_id"
+      ],
       "counts": {
         "added": 0,
         "deleted": 0,
@@ -215,19 +555,78 @@
     },
     {
       "file": "fare_leg_rules.txt",
-      "group": "fares_v2",
-      "present": true,
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 703,
+        "new": 608
+      },
+      "primary_key": [
+        "network_id",
+        "from_area_id",
+        "to_area_id",
+        "from_timeframe_group_id",
+        "to_timeframe_group_id",
+        "fare_product_id"
+      ],
       "counts": {
         "added": 7,
         "deleted": 102,
         "modified": 0,
         "unchanged": 601
+      },
+      "raw_table": {
+        "file": "fare_leg_rules.txt",
+        "path": "raw/fare_leg_rules.parquet",
+        "rows": 109,
+        "bytes": 8247,
+        "columns": [
+          "leg_group_id",
+          "network_id",
+          "from_area_id",
+          "to_area_id",
+          "fare_product_id",
+          "from_timeframe_group_id",
+          "to_timeframe_group_id",
+          "transfer_only"
+        ],
+        "counts": {
+          "added": 7,
+          "deleted": 102,
+          "modified": 0,
+          "id_only": 0,
+          "unchanged": 601
+        },
+        "unchanged_omitted": true,
+        "key_column": "network_id",
+        "key_columns": [
+          "network_id",
+          "from_area_id",
+          "to_area_id",
+          "from_timeframe_group_id",
+          "to_timeframe_group_id",
+          "fare_product_id"
+        ]
       }
     },
     {
       "file": "fare_leg_join_rules.txt",
-      "group": "fares_v2",
-      "present": true,
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 11,
+        "new": 11
+      },
+      "primary_key": [
+        "from_network_id",
+        "to_network_id",
+        "from_stop_id",
+        "to_stop_id"
+      ],
       "counts": {
         "added": 0,
         "deleted": 0,
@@ -237,100 +636,227 @@
     },
     {
       "file": "fare_transfer_rules.txt",
-      "group": "fares_v2",
-      "present": true,
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 85,
+        "new": 72
+      },
+      "primary_key": [
+        "from_leg_group_id",
+        "to_leg_group_id",
+        "fare_product_id",
+        "transfer_count",
+        "duration_limit"
+      ],
       "counts": {
         "added": 0,
         "deleted": 13,
         "modified": 0,
         "unchanged": 72
+      },
+      "raw_table": {
+        "file": "fare_transfer_rules.txt",
+        "path": "raw/fare_transfer_rules.parquet",
+        "rows": 13,
+        "bytes": 5680,
+        "columns": [
+          "from_leg_group_id",
+          "to_leg_group_id",
+          "transfer_count",
+          "duration_limit",
+          "duration_limit_type",
+          "fare_transfer_type",
+          "fare_product_id",
+          "filter_fare_product_id",
+          "fare_media_behavior",
+          "fare_product_behavior"
+        ],
+        "counts": {
+          "added": 0,
+          "deleted": 13,
+          "modified": 0,
+          "id_only": 0,
+          "unchanged": 72
+        },
+        "unchanged_omitted": true,
+        "key_column": "from_leg_group_id",
+        "key_columns": [
+          "from_leg_group_id",
+          "to_leg_group_id",
+          "fare_product_id",
+          "transfer_count",
+          "duration_limit"
+        ]
       }
     },
     {
-      "file": "rider_categories.txt",
-      "group": "fares_v2",
-      "present": false,
-      "counts": null
-    },
-    {
       "file": "timeframes.txt",
-      "group": "fares_v2",
-      "present": true,
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 5,
+        "new": 1
+      },
+      "primary_key": [
+        "timeframe_group_id",
+        "start_time",
+        "end_time",
+        "service_id"
+      ],
       "counts": {
         "added": 0,
         "deleted": 4,
         "modified": 0,
         "unchanged": 1
+      },
+      "raw_table": {
+        "file": "timeframes.txt",
+        "path": "raw/timeframes.parquet",
+        "rows": 4,
+        "bytes": 2774,
+        "columns": [
+          "timeframe_group_id",
+          "start_time",
+          "end_time",
+          "service_id"
+        ],
+        "counts": {
+          "added": 0,
+          "deleted": 4,
+          "modified": 0,
+          "id_only": 0,
+          "unchanged": 1
+        },
+        "unchanged_omitted": true,
+        "key_column": "timeframe_group_id",
+        "key_columns": [
+          "timeframe_group_id",
+          "start_time",
+          "end_time",
+          "service_id"
+        ]
       }
     },
     {
-      "file": "booking_rules.txt",
-      "group": "flex",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "location_groups.txt",
-      "group": "flex",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "location_group_stops.txt",
-      "group": "flex",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "locations.geojson",
-      "group": "flex",
-      "present": false,
-      "counts": null
-    },
-    {
       "file": "feed_info.txt",
-      "group": "meta",
-      "present": true,
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 1,
+        "new": 1
+      },
+      "primary_key": [],
       "counts": {
         "added": 0,
         "deleted": 0,
         "modified": 1,
         "unchanged": 0
+      },
+      "raw_table": {
+        "file": "feed_info.txt",
+        "path": "raw/feed_info.parquet",
+        "rows": 1,
+        "bytes": 4572,
+        "columns": [
+          "feed_publisher_name",
+          "feed_publisher_url",
+          "feed_lang",
+          "feed_start_date",
+          "feed_end_date",
+          "feed_version",
+          "feed_contact_email",
+          "feed_id"
+        ],
+        "counts": {
+          "added": 0,
+          "deleted": 0,
+          "modified": 1,
+          "id_only": 0,
+          "unchanged": 0
+        },
+        "key_columns": []
       }
     },
     {
-      "file": "translations.txt",
-      "group": "meta",
-      "present": false,
-      "counts": null
-    },
-    {
       "file": "transfers.txt",
-      "group": "meta",
-      "present": true,
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 7379,
+        "new": 9590
+      },
+      "primary_key": [
+        "from_stop_id",
+        "to_stop_id",
+        "from_route_id",
+        "to_route_id",
+        "from_trip_id",
+        "to_trip_id"
+      ],
       "counts": {
         "added": 7156,
         "deleted": 4945,
         "modified": 4,
         "unchanged": 2430
+      },
+      "raw_table": {
+        "file": "transfers.txt",
+        "path": "raw/transfers.parquet",
+        "rows": 12105,
+        "bytes": 93844,
+        "columns": [
+          "from_stop_id",
+          "to_stop_id",
+          "transfer_type",
+          "min_transfer_time",
+          "min_walk_time",
+          "min_wheelchair_time",
+          "suggested_buffer_time",
+          "wheelchair_transfer",
+          "from_trip_id",
+          "to_trip_id"
+        ],
+        "counts": {
+          "added": 7156,
+          "deleted": 4945,
+          "modified": 4,
+          "id_only": 0,
+          "unchanged": 2430
+        },
+        "unchanged_omitted": true,
+        "key_column": "from_stop_id",
+        "key_columns": [
+          "from_stop_id",
+          "to_stop_id",
+          "from_route_id",
+          "to_route_id",
+          "from_trip_id",
+          "to_trip_id"
+        ]
       }
     }
   ],
-  "groups": [
-    {
-      "id": "agency",
-      "label": "Agency",
-      "present": true
+  "analyses": {
+    "stops": {
+      "file": "analysis/stops.json",
+      "counts": {
+        "added": 38,
+        "deleted": 44,
+        "modified": 462,
+        "unchanged": 9792
+      }
     },
-    {
-      "id": "stops",
-      "label": "Stops",
-      "present": true
-    },
-    {
-      "id": "routes",
-      "label": "Routes",
-      "present": true,
+    "routes": {
+      "file": "analysis/routes.json",
       "counts": {
         "added": 10,
         "deleted": 6,
@@ -338,15 +864,8 @@
         "unchanged": 129
       }
     },
-    {
-      "id": "trips",
-      "label": "Trips",
-      "present": true
-    },
-    {
-      "id": "calendar",
-      "label": "Service Dates",
-      "present": true,
+    "services": {
+      "file": "analysis/services.json",
       "counts": {
         "added": 135,
         "deleted": 166,
@@ -354,42 +873,16 @@
         "unchanged": 0
       }
     },
-    {
-      "id": "fares_v1",
-      "label": "Fares v1",
-      "present": false
-    },
-    {
-      "id": "fares_v2",
-      "label": "Fares v2",
-      "present": true
-    },
-    {
-      "id": "flex",
-      "label": "Flex",
-      "present": false
-    },
-    {
-      "id": "meta",
-      "label": "Meta",
-      "present": true
-    },
-    {
-      "id": "pathways",
-      "label": "Pathways and levels",
-      "present": true,
+    "pathways": {
+      "file": "analysis/pathways.json",
       "counts": {
         "added": 0,
         "deleted": 0,
         "modified": 10,
         "unchanged": 87
-      },
-      "files": [
-        "levels.txt",
-        "pathways.txt"
-      ]
+      }
     }
-  ],
+  },
   "highlights": {
     "counts": {
       "error": 8,
@@ -440,5 +933,85 @@
         "detail": "271 pickups and 614 drop-offs changed from regular to 1 (not available)."
       }
     ]
+  },
+  "metadata": {
+    "schema_version": "2.1.0-poc",
+    "generated_at": "2026-11-18T14:19:13.798Z",
+    "base_feed": {
+      "source": "base-mdb-437-202608010022.zip"
+    },
+    "new_feed": {
+      "source": "new-mdb-437-202610200127.zip"
+    },
+    "files": {
+      "base": [
+        "agency.txt",
+        "areas.txt",
+        "calendar.txt",
+        "calendar_attributes.txt",
+        "calendar_dates.txt",
+        "checkpoints.txt",
+        "directions.txt",
+        "facilities.txt",
+        "facilities_properties.txt",
+        "facilities_properties_definitions.txt",
+        "fare_leg_join_rules.txt",
+        "fare_leg_rules.txt",
+        "fare_media.txt",
+        "fare_products.txt",
+        "fare_transfer_rules.txt",
+        "feed_info.txt",
+        "levels.txt",
+        "lines.txt",
+        "linked_datasets.txt",
+        "multi_route_trips.txt",
+        "pathways.txt",
+        "route_patterns.txt",
+        "routes.txt",
+        "shapes.txt",
+        "stop_areas.txt",
+        "stop_times.txt",
+        "stops.txt",
+        "timeframes.txt",
+        "transfers.txt",
+        "trips.txt",
+        "trips_properties.txt",
+        "trips_properties_definitions.txt"
+      ],
+      "new": [
+        "agency.txt",
+        "areas.txt",
+        "calendar.txt",
+        "calendar_attributes.txt",
+        "calendar_dates.txt",
+        "checkpoints.txt",
+        "directions.txt",
+        "facilities.txt",
+        "facilities_properties.txt",
+        "facilities_properties_definitions.txt",
+        "fare_leg_join_rules.txt",
+        "fare_leg_rules.txt",
+        "fare_media.txt",
+        "fare_products.txt",
+        "fare_transfer_rules.txt",
+        "feed_info.txt",
+        "levels.txt",
+        "lines.txt",
+        "linked_datasets.txt",
+        "multi_route_trips.txt",
+        "pathways.txt",
+        "route_patterns.txt",
+        "routes.txt",
+        "shapes.txt",
+        "stop_areas.txt",
+        "stop_times.txt",
+        "stops.txt",
+        "timeframes.txt",
+        "transfers.txt",
+        "trips.txt",
+        "trips_properties.txt",
+        "trips_properties_definitions.txt"
+      ]
+    }
   }
 }

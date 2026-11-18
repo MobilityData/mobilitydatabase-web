@@ -3,10 +3,12 @@ import type { DayDiff, RouteDirDiff, RouteVerdict } from './trips-types';
 import {
   defaultDirection,
   filterRouteRows,
+  isV5Style,
   parseRouteFilters,
   scopeDayToRoute,
   tripsListHref,
   tripsRouteHref,
+  tripsV6RouteHref,
   verdictCounts,
   writeRouteFilters,
 } from './trips-v2-routes';
@@ -119,6 +121,21 @@ describe('route page', () => {
     expect(tripsListHref('mbta', '20260901', filters)).toBe(
       '/gtfs-diff-tool-v2/mbta/trips-v2?day=20260901&change=retimed&q=M1',
     );
+  });
+
+  it('links Trips v6 routes to their calendar and day page', () => {
+    expect(tripsV6RouteHref('mbta', 'a/b')).toBe(
+      '/gtfs-diff-tool-v2/mbta/trips-v6/a%2Fb',
+    );
+    expect(
+      tripsRouteHref('mbta', '1', { day: '20260901', view: 'trips-v6' }),
+    ).toBe('/gtfs-diff-tool-v2/mbta/trips-v6/1/detail?day=20260901');
+    expect(
+      tripsRouteHref('mbta', '1', { day: '20260901', view: 'trips-v5' }),
+    ).toBe('/gtfs-diff-tool-v2/mbta/trips-v5/1?day=20260901');
+    expect(isV5Style('trips-v5')).toBe(true);
+    expect(isV5Style('trips-v6')).toBe(true);
+    expect(isV5Style('trips-v3')).toBe(false);
   });
 
   it('scopes a day to one route and recomputes its totals', () => {

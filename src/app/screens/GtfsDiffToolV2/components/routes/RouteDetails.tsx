@@ -15,14 +15,15 @@ import {
   Typography,
 } from '@mui/material';
 import { Close, OpenInNew } from '@mui/icons-material';
-import React, { useState } from 'react';
+import React from 'react';
 import type {
   PatternOp,
+  RouteDetail,
   RouteDirectionDiff,
-  RouteImpact,
   RouteStopInfo,
   RouteInfo,
 } from '../../lib/entity-diff-types';
+import type { DirectionStops } from '../../lib/route-tables';
 import {
   ROUTE_FLAGS,
   ROUTE_FLAG_LABELS,
@@ -31,71 +32,44 @@ import {
 import { formatDistance } from '../../lib/stops-utils';
 import { DiffBadge } from '../../../GtfsDiffTool/components/EntityCard';
 import { useDiffNav } from '../../lib/diff-nav';
-import { MONO_FONT, RouteChip, ServiceIdLink } from '../calendar/shared';
+import { MONO_FONT, RouteChip } from '../calendar/shared';
 import RouteShapes from './RouteShapes';
-
-/** Unchanged runs longer than this are collapsed in the stop sequence diff. */
-const COLLAPSE_RUN = 4;
 
 const OP_STYLES: Record<
   PatternOp['op'],
   { sign: string; color: string; bg?: string }
 > = {
-  keep: { sign: ' ', color: 'text.primary' },
+  keep: { sign: '↔', color: '#ed6c02' },
   add: { sign: '+', color: '#2e7d32', bg: 'rgba(46,125,50,.08)' },
   remove: { sign: '−', color: '#d32f2f', bg: 'rgba(211,47,47,.08)' },
 };
 
-type Row =
-  | { type: 'op'; op: PatternOp; index: number }
-  | { type: 'gap'; count: number; from: number };
-
-/** Collapse long runs of unchanged stops, keeping one stop of context on each side. */
-function collapse(ops: PatternOp[], expanded: boolean): Row[] {
-  if (expanded) return ops.map((op, index) => ({ type: 'op', op, index }));
-  const rows: Row[] = [];
-  let i = 0;
-  while (i < ops.length) {
-    if (ops[i].op !== 'keep') {
-      rows.push({ type: 'op', op: ops[i], index: i });
-      i++;
-      continue;
-    }
-    let j = i;
-    while (j < ops.length && ops[j].op === 'keep') j++;
-    const run = j - i;
-    if (run > COLLAPSE_RUN) {
-      const head = i === 0 ? 0 : 1;
-      const tail = j === ops.length ? 0 : 1;
-      for (let k = i; k < i + head; k++)
-        rows.push({ type: 'op', op: ops[k], index: k });
-      rows.push({ type: 'gap', count: run - head - tail, from: i + head });
-      for (let k = j - tail; k < j; k++)
-        rows.push({ type: 'op', op: ops[k], index: k });
-    } else {
-      for (let k = i; k < j; k++)
-        rows.push({ type: 'op', op: ops[k], index: k });
-    }
-    i = j;
-  }
-  return rows;
+/** A direction's changed stops as rows: added, removed, then moved (keep). */
+function changedStops(changes: DirectionStops | undefined): PatternOp[] {
+  if (changes == null) return [];
+  return [
+    ...changes.added.map((id): PatternOp => ({ op: 'add', stop_id: id })),
+    ...changes.removed.map((id): PatternOp => ({ op: 'remove', stop_id: id })),
+    ...changes.moved.map((id): PatternOp => ({ op: 'keep', stop_id: id })),
+  ];
 }
 
 function DirectionCard({
   direction,
+  changes,
   stops,
   onStopClick,
 }: {
   direction: RouteDirectionDiff;
+  /** The direction's added, removed and moved stops. */
+  changes: DirectionStops | undefined;
   stops: Record<string, RouteStopInfo>;
   onStopClick: (stopId: string) => void;
 }): React.ReactElement {
   const nav = useDiffNav();
-  const [expanded, setExpanded] = useState(false);
   const d = direction;
-  const changed = d.pattern_diff.some((o) => o.op !== 'keep');
   const headsign = d.headsign.new ?? d.headsign.base;
-  const rows = collapse(d.pattern_diff, expanded);
+  const rows = changedStops(changes);
 
   return (
     <Box
@@ -121,22 +95,6 @@ function DirectionCard({
         )}
       </Typography>
       <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', my: 1 }}>
-        <Typography variant='caption'>
-          Trips{' '}
-          <b
-            style={{
-              color: d.trips.base !== d.trips.new ? '#ed6c02' : undefined,
-            }}
-          >
-            {d.trips.base} → {d.trips.new}
-          </b>
-        </Typography>
-        <Typography variant='caption'>
-          Stop patterns{' '}
-          <b>
-            {d.pattern_count.base} → {d.pattern_count.new}
-          </b>
-        </Typography>
         {d.path_change_m != null && (
           <Typography variant='caption'>
             Path deviation{' '}
@@ -159,216 +117,94 @@ function DirectionCard({
         component='div'
         sx={{ mb: 0.5 }}
       >
-        Main stop sequence {changed ? '(base → new)' : '(unchanged)'}
+        {rows.length > 0
+          ? 'Stops added, removed or moved in this direction'
+          : 'No stop added, removed or moved in this direction'}
       </Typography>
       <Box sx={{ maxHeight: 360, overflowY: 'auto' }}>
-        {rows.map((row) =>
-          row.type === 'gap' ? (
-            <Box key={`gap-${row.from}`} sx={{ pl: 3, py: 0.25 }}>
-              <Link
-                component='button'
-                type='button'
-                variant='caption'
-                onClick={() => setExpanded(true)}
-              >
-                ⋯ {row.count} unchanged stops
-              </Link>
-            </Box>
-          ) : (
-            <Box
-              key={`${row.index}-${row.op.stop_id}`}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.75,
-                px: 0.5,
-                py: 0.1,
-                bgcolor: OP_STYLES[row.op.op].bg,
-                borderRadius: '3px',
-              }}
-            >
-              <Box
-                sx={{
-                  width: 12,
-                  fontFamily: MONO_FONT,
-                  fontWeight: 700,
-                  color: OP_STYLES[row.op.op].color,
-                  textAlign: 'center',
-                }}
-              >
-                {OP_STYLES[row.op.op].sign}
-              </Box>
-              <Link
-                component='button'
-                type='button'
-                underline='hover'
-                color='inherit'
-                onClick={() => onStopClick(row.op.stop_id)}
-                sx={{
-                  fontSize: '0.78rem',
-                  textAlign: 'left',
-                  color: OP_STYLES[row.op.op].color,
-                  textDecoration:
-                    row.op.op === 'remove' ? 'line-through' : undefined,
-                }}
-              >
-                {stops[row.op.stop_id]?.name || row.op.stop_id}
-              </Link>
-              <Typography
-                component='span'
-                sx={{
-                  fontFamily: MONO_FONT,
-                  fontSize: '0.65rem',
-                  color: 'text.secondary',
-                }}
-              >
-                {row.op.stop_id}
-              </Typography>
-              {nav && (
-                <Tooltip title='Open in Stops tab'>
-                  <IconButton
-                    size='small'
-                    sx={{ p: 0.25, ml: 'auto' }}
-                    onClick={() =>
-                      nav.navigate({
-                        tab: 'stops',
-                        kind: 'stop',
-                        id: row.op.stop_id,
-                      })
-                    }
-                  >
-                    <OpenInNew sx={{ fontSize: '0.8rem' }} />
-                  </IconButton>
-                </Tooltip>
-              )}
-            </Box>
-          ),
-        )}
-      </Box>
-      {expanded && (
-        <Button
-          size='small'
-          onClick={() => setExpanded(false)}
-          sx={{ mt: 0.5 }}
-        >
-          Collapse unchanged stops
-        </Button>
-      )}
-    </Box>
-  );
-}
-
-function ServiceList({ route }: { route: RouteImpact }): React.ReactElement {
-  const nav = useDiffNav();
-  const base = new Set(route.services.base);
-  const next = new Set(route.services.new);
-  const all = [
-    ...new Set([...route.services.base, ...route.services.new]),
-  ].sort();
-  return (
-    <Box
-      sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}
-    >
-      {all.map((id) => {
-        const color = !base.has(id)
-          ? '#2e7d32'
-          : !next.has(id)
-            ? '#d32f2f'
-            : undefined;
-        return (
+        {rows.map((op) => (
           <Box
-            key={id}
+            key={`${op.op}-${op.stop_id}`}
             sx={{
-              display: 'inline-flex',
+              display: 'flex',
               alignItems: 'center',
-              gap: 0.25,
+              gap: 0.75,
               px: 0.5,
-              borderRadius: '4px',
-              border: '1px solid',
-              borderColor: color ?? 'divider',
+              py: 0.1,
+              bgcolor: OP_STYLES[op.op].bg,
+              borderRadius: '3px',
             }}
           >
-            {color && (
-              <Typography sx={{ color, fontWeight: 700, fontSize: '0.75rem' }}>
-                {color === '#2e7d32' ? '+' : '−'}
+            <Box
+              sx={{
+                width: 12,
+                fontFamily: MONO_FONT,
+                fontWeight: 700,
+                color: OP_STYLES[op.op].color,
+                textAlign: 'center',
+              }}
+            >
+              {OP_STYLES[op.op].sign}
+            </Box>
+            <Link
+              component='button'
+              type='button'
+              underline='hover'
+              color='inherit'
+              onClick={() => onStopClick(op.stop_id)}
+              sx={{
+                fontSize: '0.78rem',
+                textAlign: 'left',
+                color: OP_STYLES[op.op].color,
+                textDecoration: op.op === 'remove' ? 'line-through' : undefined,
+              }}
+            >
+              {stops[op.stop_id]?.name || op.stop_id}
+            </Link>
+            <Typography
+              component='span'
+              sx={{
+                fontFamily: MONO_FONT,
+                fontSize: '0.65rem',
+                color: 'text.secondary',
+              }}
+            >
+              {op.stop_id}
+            </Typography>
+            {op.op === 'keep' && (
+              <Typography
+                component='span'
+                sx={{ fontSize: '0.65rem', color: OP_STYLES.keep.color }}
+              >
+                moved {formatDistance(stops[op.stop_id]?.moved_m ?? null)}
               </Typography>
             )}
-            <ServiceIdLink
-              serviceId={id}
-              onClick={(sid) =>
-                nav?.navigate({ tab: 'calendar', kind: 'service', id: sid })
-              }
-            />
+            {nav && (
+              <Tooltip title='Open in Stops tab'>
+                <IconButton
+                  size='small'
+                  sx={{ p: 0.25, ml: 'auto' }}
+                  onClick={() =>
+                    nav.navigate({
+                      tab: 'stops',
+                      kind: 'stop',
+                      id: op.stop_id,
+                    })
+                  }
+                >
+                  <OpenInNew sx={{ fontSize: '0.8rem' }} />
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
-        );
-      })}
-    </Box>
-  );
-}
-
-/** Stops added/removed on the route but not in any direction's main pattern. */
-function OtherPatternStops({
-  route,
-  stops,
-  onStopClick,
-}: {
-  route: RouteImpact;
-  stops: Record<string, RouteStopInfo>;
-  onStopClick: (stopId: string) => void;
-}): React.ReactElement | null {
-  const inMain = new Set(
-    route.directions.flatMap((d) => d.pattern_diff.map((o) => o.stop_id)),
-  );
-  const groups = [
-    {
-      label: 'Also added on other trip patterns',
-      ids: route.stops.added.filter((s) => !inMain.has(s)),
-      color: '#2e7d32',
-    },
-    {
-      label: 'Also removed from other trip patterns',
-      ids: route.stops.removed.filter((s) => !inMain.has(s)),
-      color: '#d32f2f',
-    },
-  ].filter((g) => g.ids.length > 0);
-  if (groups.length === 0) return null;
-  return (
-    <Box sx={{ mb: 2 }}>
-      {groups.map((g) => (
-        <Box key={g.label} sx={{ mb: 1 }}>
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            component='div'
-            sx={{ mb: 0.5 }}
-          >
-            {g.label} ({g.ids.length})
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-            {g.ids.map((id) => (
-              <Chip
-                key={id}
-                size='small'
-                variant='outlined'
-                label={`${stops[id]?.name || id} · ${id}`}
-                onClick={() => onStopClick(id)}
-                sx={{
-                  height: 22,
-                  fontSize: '0.7rem',
-                  color: g.color,
-                  borderColor: g.color,
-                }}
-              />
-            ))}
-          </Box>
-        </Box>
-      ))}
+        ))}
+      </Box>
     </Box>
   );
 }
 
 interface RouteDetailsProps {
-  route: RouteImpact;
+  route: RouteDetail;
   stops: Record<string, RouteStopInfo>;
   onClose: () => void;
   onStopClick: (stopId: string) => void;
@@ -461,19 +297,11 @@ export default function RouteDetails({
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+          gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
           gap: 2,
           mb: 2,
         }}
       >
-        <Box>
-          <Typography variant='caption' color='text.secondary' component='div'>
-            Trips
-          </Typography>
-          <Typography variant='body2'>
-            {r.trips.base} → {r.trips.new}
-          </Typography>
-        </Box>
         <Box>
           <Typography variant='caption' color='text.secondary' component='div'>
             Stops served
@@ -505,20 +333,6 @@ export default function RouteDetails({
           </Typography>
         </Box>
       </Box>
-
-      <Box sx={{ mb: 2 }}>
-        <Typography
-          variant='caption'
-          color='text.secondary'
-          component='div'
-          sx={{ mb: 0.5 }}
-        >
-          Services used by this route&apos;s trips (open in Service Dates)
-        </Typography>
-        <ServiceList route={r} />
-      </Box>
-
-      <OtherPatternStops route={r} stops={stops} onStopClick={onStopClick} />
 
       {r.field_changes.length > 0 && (
         <Box sx={{ mb: 2 }}>
@@ -585,6 +399,7 @@ export default function RouteDetails({
           <DirectionCard
             key={d.direction_id}
             direction={d}
+            changes={r.direction_stops[d.direction_id]}
             stops={stops}
             onStopClick={onStopClick}
           />

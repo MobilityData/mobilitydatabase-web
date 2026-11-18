@@ -2,7 +2,7 @@
   "schema": 1,
   "id": "mbta",
   "label": "mbta · mdb-437",
-  "generated_at": "2026-11-02T13:22:17.843Z",
+  "generated_at": "2026-11-18T19:06:43.461Z",
   "feeds": {
     "base": {
       "file": "base-mdb-437-202608010022.zip",
@@ -20,59 +20,50 @@
     }
   },
   "files": {
-    "calendar-highlights.json": {
+    "analysis/pathways.json": {
+      "bytes": 2326636
+    },
+    "analysis/routes.json": {
+      "bytes": 903
+    },
+    "analysis/routes.parquet": {
+      "bytes": 57050
+    },
+    "analysis/service_dates.parquet": {
+      "bytes": 6540
+    },
+    "analysis/services.json": {
+      "bytes": 3226
+    },
+    "analysis/services.parquet": {
+      "bytes": 13254
+    },
+    "analysis/shapes.parquet": {
+      "bytes": 207880
+    },
+    "analysis/stops.json": {
+      "bytes": 496
+    },
+    "analysis/stops.parquet": {
+      "bytes": 14815
+    },
+    "highlights/index.json": {
+      "bytes": 6603
+    },
+    "highlights/routes.json": {
+      "bytes": 10303
+    },
+    "highlights/services.json": {
       "bytes": 17665
     },
-    "calendar/days.parquet": {
-      "bytes": 12719
+    "highlights/stops.json": {
+      "bytes": 7150
     },
-    "calendar/services.parquet": {
-      "bytes": 16347
-    },
-    "calendar/services_detail.parquet": {
-      "bytes": 15163
-    },
-    "categories/calendar.json": {
-      "bytes": 122665
-    },
-    "categories/routes.json": {
-      "bytes": 73665
-    },
-    "categories/stops.json": {
-      "bytes": 70356
-    },
-    "entities/transfers.parquet": {
-      "bytes": 81122
-    },
-    "entities/trips.parquet": {
-      "bytes": 381595
-    },
-    "entity-diff.json": {
-      "bytes": 30725
-    },
-    "highlights.json": {
-      "bytes": 38680
-    },
-    "maps/all_stops_data.json": {
-      "bytes": 1109697
-    },
-    "maps/routes.parquet": {
-      "bytes": 165097
-    },
-    "maps/routes_detail.parquet": {
-      "bytes": 459486
-    },
-    "maps/stops.parquet": {
-      "bytes": 35766
-    },
-    "maps/stops_detail.parquet": {
-      "bytes": 65861
-    },
-    "pathways-diff.json": {
-      "bytes": 2706025
+    "highlights/trips.json": {
+      "bytes": 10509
     },
     "raw/areas.parquet": {
-      "bytes": 5699
+      "bytes": 2974
     },
     "raw/calendar.parquet": {
       "bytes": 14441
@@ -81,63 +72,60 @@
       "bytes": 7366
     },
     "raw/fare_leg_rules.parquet": {
-      "bytes": 12744
+      "bytes": 8247
     },
     "raw/fare_transfer_rules.parquet": {
-      "bytes": 9851
+      "bytes": 5680
     },
     "raw/feed_info.parquet": {
       "bytes": 4572
     },
     "raw/pathways.parquet": {
-      "bytes": 439786
+      "bytes": 21557
     },
     "raw/routes.parquet": {
-      "bytes": 37791
+      "bytes": 30984
     },
     "raw/shapes.parquet": {
-      "bytes": 3342243
+      "bytes": 1739516
     },
     "raw/stop_areas.parquet": {
-      "bytes": 13163
+      "bytes": 3086
     },
     "raw/stop_times.parquet": {
       "bytes": 15269871
     },
     "raw/stops.parquet": {
-      "bytes": 699844
+      "bytes": 448222
     },
     "raw/timeframes.parquet": {
-      "bytes": 3623
+      "bytes": 2774
     },
     "raw/transfers.parquet": {
-      "bytes": 144173
+      "bytes": 93844
     },
     "raw/trips.parquet": {
       "bytes": 1891366
     },
     "report.json": {
-      "bytes": 9112
+      "bytes": 22579
     },
-    "routes-highlights.json": {
-      "bytes": 10303
+    "views/routes-overview.pmtiles": {
+      "bytes": 1285388
     },
-    "stops-highlights.json": {
-      "bytes": 7150
-    },
-    "trips-calendar.json": {
-      "bytes": 6253
-    },
-    "trips-diff.json": {
-      "bytes": 340334
-    },
-    "trips-service.json": {
-      "bytes": 189375
-    },
-    "trips/base.parquet": {
+    "views/trips/base.parquet": {
       "bytes": 4379466
     },
-    "trips/new.parquet": {
+    "views/trips/calendar.json": {
+      "bytes": 6253
+    },
+    "views/trips/day-routes.parquet": {
+      "bytes": 27053
+    },
+    "views/trips/index.json": {
+      "bytes": 18057
+    },
+    "views/trips/new.parquet": {
       "bytes": 6248856
     }
   }

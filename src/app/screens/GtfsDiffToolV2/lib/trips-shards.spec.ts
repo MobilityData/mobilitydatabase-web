@@ -38,7 +38,10 @@ const index: TripsIndexDoc = {
   dates: { '20260915': [0, 0] },
   day_types: [],
   feeds: { base: { trips: [] }, new: { trips: [] } },
-  trip_tables: { base: 'trips/base.parquet', new: 'trips/new.parquet' },
+  trip_tables: {
+    base: 'views/trips/base.parquet',
+    new: 'views/trips/new.parquet',
+  },
 };
 
 describe('trip tables', () => {

@@ -9,6 +9,7 @@ import {
   listDiffDatasets,
 } from './gtfs-diff-datasets';
 import { datasetLabel } from '../app/screens/GtfsDiffToolV2/lib/datasets';
+import { MANIFEST_FILE } from '../app/screens/GtfsDiffToolV2/lib/diff-layout';
 
 jest.mock('server-only', () => ({}));
 
@@ -18,7 +19,7 @@ describe('listDiffDatasets', () => {
       .filter((d) => d.isDirectory())
       .map((d) => d.name)
       // A folder still being built has no manifest.json yet.
-      .filter((f) => existsSync(join(DIFF_DATA_DIR, f, 'manifest.json')))
+      .filter((f) => existsSync(join(DIFF_DATA_DIR, f, MANIFEST_FILE)))
       .sort();
     expect(listDiffDatasets().map((d) => d.id)).toEqual(folders);
   });

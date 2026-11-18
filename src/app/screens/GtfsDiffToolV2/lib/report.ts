@@ -2,20 +2,29 @@
  * A diff report: one dataset's entity pages (/gtfs-diff-tool-v2/<dataset>/<slug>)
  * and the summary every page's header needs (feeds, sections with counts).
  *
- * The summary is written as report.json by scripts/build-gtfs-diff-dataset.mjs
- * so a page can render its header without loading the full entity diff.
- * report.json holds per-file counts, each file tagged with its group (ReportDoc);
- * reportSummary() turns them into the sections the pages show.
+ * report.json (ReportDoc, schema 4) is the diff's entry point: the feeds,
+ * one entry per GTFS file (presence, totals, change counts, raw table), each
+ * analysis's file and counts, and the top highlights. The entity step writes
+ * the files and analyses; the report step adds the feeds, the pathways
+ * counts and the highlights. The pages' sections are this viewer's grouping
+ * of it (reportSummary, lib/sections). Older builds: schema 3 (per-file
+ * counts only, the entries in files.json) and schema 2.
  *
- * Type-only imports: the Node build script imports this file directly.
+ * Runtime imports: lib/sections and lib/diff-layout only (the Node build
+ * loads this file through scripts/lib/ts-resolve.mjs).
  */
 
-import type { EntityCategoryDiff, GtfsEntityDiff } from './entity-diff-types';
+import type { AnalysisName as LayoutAnalysisName } from './diff-layout';
+import type {
+  DiffFileEntry,
+  FilesDoc,
+  GtfsEntityDiff,
+} from './entity-diff-types';
+import { PATHWAYS_SECTION, SECTIONS, sectionPageId } from './sections';
 
-export const REPORT_FILE = 'report.json';
-
-/** Section id of the pathways page (not an entity-diff category). */
-export const PATHWAYS_SECTION = 'pathways';
+export { PATHWAYS_SECTION };
+/** lib/diff-layout's, re-exported for the build scripts that import it here. */
+export { REPORT_FILE } from './diff-layout';
 
 export interface ReportFeed {
   /** Zip file name. */
@@ -42,49 +51,83 @@ export interface ReportFileCounts extends ReportCounts {
 /** One GTFS file of report.json. */
 export interface ReportFile {
   file: string;
-  /** Id of the group (summary section) whose counts include this file. */
-  group: string;
+  /** Schema 2 only: the summary section whose counts include the file. */
+  group?: string;
   /** In at least one of the two feeds. */
   present: boolean;
-  /** The file's changes; null when it was not diffed (absent from both feeds). */
+  /** The file's changes; null when it was not diffed. */
   counts: ReportFileCounts | null;
   /**
    * Rows counted inside another file's entities (stop_times.txt in
-   * trips.txt's trips): left out of the group's sum.
+   * trips.txt's trips): left out of any sum of files.
    */
   part_of?: string;
 }
 
-/** One group of report.json: a summary section and its page. */
-export interface ReportGroup {
-  id: string;
-  label: string;
-  /** False when neither feed has the group's files (no page). */
-  present: boolean;
-  /**
-   * Set only when the group's counts are not the sum of its files' (routes:
-   * route impact, calendar: services, pathways: stations).
-   */
-  counts?: ReportCounts;
-  /** Files of other groups this one also shows (pathways: levels.txt, pathways.txt). */
-  files?: string[];
+/** Counts of the analyses that are not one file's: routes, services, stations. */
+export interface ReportAnalyses {
+  /** Route impact: a route changes when its stops, path, trips… do. */
+  routes?: ReportCounts;
+  /** Services (calendar.txt and calendar_dates.txt together). */
+  services?: ReportCounts;
+  /** Stations with pathways (analysis/pathways.json). */
+  pathways?: ReportCounts;
 }
 
-/** report.json: counts per file, grouped into the summary's sections. */
+/** An analysis of report.json: its JSON and its own counts. */
+export interface ReportAnalysis {
+  /** lib/diff-layout ANALYSIS_FILES: analysis/stops.json, analysis/services.json… */
+  file?: string;
+  /** Stops, routes (route impact), services or stations per status. */
+  counts?: ReportCounts;
+}
+
+/** report.json: the diff's feeds, files, analyses and top highlights. */
 export interface ReportDoc {
+  schema: 4;
+  dataset: string;
+  generated_at: string;
+  /** Set by the report step. */
+  feeds?: { base: ReportFeed | null; new: ReportFeed | null };
+  /** The entity step's run: generator version, each zip's source and file list. */
+  metadata: GtfsEntityDiff['metadata'];
+  /** Every GTFS file either feed has: presence, totals, counts, raw table. */
+  files: DiffFileEntry[];
+  analyses: Partial<Record<LayoutAnalysisName, ReportAnalysis>>;
+  highlights?: ReportSummary['highlights'];
+}
+
+/** report.json schema 3 (older builds): per-file counts; entries in files.json. */
+export interface ReportDocV3 {
+  schema: 3;
+  dataset: string;
+  generated_at: string;
+  feeds: { base: ReportFeed | null; new: ReportFeed | null };
+  /** Every file either feed has, in files.json order. */
+  files: ReportFile[];
+  analyses: ReportAnalyses;
+  highlights?: ReportSummary['highlights'];
+}
+
+/** report.json schema 2 (older builds): files tagged with page groups. */
+export interface ReportDocV2 {
   schema: 2;
   dataset: string;
   generated_at: string;
   feeds: { base: ReportFeed | null; new: ReportFeed | null };
-  /** Every file the groups cover, in group order. */
   files: ReportFile[];
-  /** In page order. */
-  groups: ReportGroup[];
+  groups: Array<{
+    id: string;
+    label: string;
+    present: boolean;
+    counts?: ReportCounts;
+    files?: string[];
+  }>;
   highlights?: ReportSummary['highlights'];
 }
 
 export interface ReportSection {
-  /** Entity-diff category id (calendar, fares_v2, …) or "pathways". */
+  /** Page id (calendar, fares_v2, …) or "pathways". */
   id: string;
   /** URL segment: the id with dashes ("fares-v2"). */
   slug: string;
@@ -126,6 +169,10 @@ export function isRequiredSection(s: Pick<ReportSection, 'files'>): boolean {
 
 /** A rule-based highlight worth surfacing on the summary page. */
 export interface ReportHighlight {
+  /**
+   * Highlight section (lib/diff-layout HIGHLIGHT_SECTIONS: stops, routes,
+   * services, trips); lib/sections sectionPageId gives its page.
+   */
   section: string;
   severity: 'error' | 'warning' | 'success' | 'info';
   title: string;
@@ -146,7 +193,7 @@ export interface ReportSummary {
   /** Highlight counts per severity, and the most severe few. */
   highlights?: {
     counts: Record<ReportHighlight['severity'], number>;
-    /** Every highlight of highlights.json (global highlights only). */
+    /** Every highlight of highlights/index.json (global highlights only). */
     total?: number;
     top: ReportHighlight[];
   };
@@ -156,84 +203,34 @@ export function sectionSlug(id: string): string {
   return id.replace(/_/g, '-');
 }
 
-function categoryCounts(c: EntityCategoryDiff): ReportCounts {
-  // Routes count route impact (stops, path, trips…), not just routes.txt rows.
-  const counts = c.routes_map?.counts ?? c.counts;
-  return {
-    added: counts.added,
-    deleted: counts.deleted,
-    modified: counts.modified,
-    unchanged: counts.unchanged,
-  };
+/**
+ * Label of the page a highlight section shows on ("Service Dates" for
+ * services); the section id when the report has no such page.
+ */
+export function highlightSectionLabel(
+  report: Pick<ReportSummary, 'sections'>,
+  section: string,
+): string {
+  const page = sectionPageId(section);
+  return report.sections.find((s) => s.id === page)?.label ?? section;
 }
 
-export function changeCount(c: EntityCategoryDiff): number {
-  const counts = categoryCounts(c);
-  return counts.added + counts.deleted + counts.modified;
-}
-
-/** The category's files at least one feed has, in the category's order. */
-export function presentFiles(c: EntityCategoryDiff): string[] {
-  const has = new Set<string>();
-  if (c.calendar)
-    for (const f of [...c.calendar.present.base, ...c.calendar.present.new])
-      has.add(f);
-  // Tolerates entity types from diffs built before these fields existed.
-  for (const t of c.entity_types ?? []) {
-    if (t.present?.base || t.present?.new) has.add(t.file);
-    for (const child of t.child_files ?? []) has.add(child);
-  }
-  const ordered = c.files.filter((f) => has.has(f));
-  return [...ordered, ...[...has].filter((f) => !c.files.includes(f))];
-}
-
-export function isPresent(c: EntityCategoryDiff): boolean {
-  if (c.calendar)
-    return c.calendar.present.base.length + c.calendar.present.new.length > 0;
-  return (c.entity_types ?? []).length > 0;
-}
-
-/** The part of pathways-diff.json the summary needs. */
+/** The part of analysis/pathways.json the summary needs. */
 export interface PathwaysOverview {
   stations: Array<{ status: 'added' | 'deleted' | 'modified' }>;
   unchanged_station_ids: string[];
 }
 
-/** Sections of a report, in page order: entity categories, then pathways. */
-export function reportSections(
-  entity: Pick<GtfsEntityDiff, 'categories'> | null,
-  pathways: PathwaysOverview | null,
-): ReportSection[] {
-  const sections: ReportSection[] = (entity?.categories ?? []).map((c) => ({
-    id: c.id,
-    slug: sectionSlug(c.id),
-    label: c.label,
-    count: changeCount(c),
-    counts: categoryCounts(c),
-    files: c.files,
-    present_files: presentFiles(c),
-    present: isPresent(c),
-  }));
-  if (pathways != null) {
-    const counts: ReportCounts = {
-      added: 0,
-      deleted: 0,
-      modified: 0,
-      unchanged: pathways.unchanged_station_ids.length,
-    };
-    for (const st of pathways.stations) counts[st.status]++;
-    sections.push({
-      id: PATHWAYS_SECTION,
-      slug: PATHWAYS_SECTION,
-      label: 'Pathways and levels',
-      count: pathways.stations.length,
-      counts,
-      files: ['levels.txt', 'pathways.txt'],
-      present_files: ['levels.txt', 'pathways.txt'],
-      present: true,
-    });
-  }
-  return sections;
+/** Stations per status. */
+export function pathwaysCounts(pathways: PathwaysOverview): ReportCounts {
+  const counts: ReportCounts = {
+    added: 0,
+    deleted: 0,
+    modified: 0,
+    unchanged: pathways.unchanged_station_ids.length,
+  };
+  for (const st of pathways.stations) counts[st.status]++;
+  return counts;
 }
 
 const NO_COUNTS: ReportCounts = {
@@ -242,6 +239,16 @@ const NO_COUNTS: ReportCounts = {
   modified: 0,
   unchanged: 0,
 };
+
+/** report.json's file entries and analysis paths, as the pages read them (FilesDoc). */
+export function filesDocFromReport(doc: ReportDoc): FilesDoc {
+  const analyses: FilesDoc['analyses'] = {};
+  for (const name of ['stops', 'routes', 'services'] as const) {
+    const file = doc.analyses[name]?.file;
+    if (file != null) analyses[name] = file;
+  }
+  return { schema: 1, metadata: doc.metadata, files: doc.files, analyses };
+}
 
 /** Sum of the files' counts, without files counted inside another one. */
 export function groupFileCounts(files: ReportFile[]): ReportCounts {
@@ -256,85 +263,71 @@ export function groupFileCounts(files: ReportFile[]): ReportCounts {
   return out;
 }
 
-function sameCounts(a: ReportCounts, b: ReportCounts): boolean {
-  return (
-    a.added === b.added &&
-    a.deleted === b.deleted &&
-    a.modified === b.modified &&
-    a.unchanged === b.unchanged
-  );
+/**
+ * The summary's per-file counts: by the file's key where it has one, else
+ * its raw row diff's (calendar files, child files).
+ */
+export function reportFiles(doc: FilesDoc): ReportFile[] {
+  return doc.files.map((f) => {
+    const c = f.counts;
+    const raw = f.raw_table?.counts;
+    const counts: ReportFileCounts | null = c
+      ? {
+          added: c.added,
+          deleted: c.deleted,
+          modified: c.modified,
+          unchanged: c.unchanged,
+        }
+      : raw
+        ? {
+            added: raw.added,
+            deleted: raw.deleted,
+            modified: raw.modified,
+            unchanged: raw.unchanged,
+            id_only: raw.id_only,
+          }
+        : null;
+    return {
+      file: f.file,
+      present: f.present.base || f.present.new,
+      counts,
+      ...(f.part_of != null ? { part_of: f.part_of } : {}),
+    };
+  });
 }
 
-/**
- * Files and groups of report.json, from the sections: each file's counts
- * come from its entity type, else from its raw row diff. A group keeps its
- * own counts only where the sum of its files' would show something else.
- */
-export function reportFilesAndGroups(
-  entity: Pick<GtfsEntityDiff, 'categories'> | null,
-  pathways: PathwaysOverview | null,
-  inFeeds: ReadonlySet<string>,
-): Pick<ReportDoc, 'files' | 'groups'> {
-  const fileCounts = new Map<string, ReportFileCounts>();
-  const partOf = new Map<string, string>();
-  for (const c of entity?.categories ?? []) {
-    for (const t of c.raw_tables ?? [])
-      fileCounts.set(t.file, {
-        added: t.counts.added,
-        deleted: t.counts.deleted,
-        modified: t.counts.modified,
-        unchanged: t.counts.unchanged,
-        id_only: t.counts.id_only,
-      });
-    for (const t of c.entity_types ?? []) {
-      fileCounts.set(t.file, {
-        added: t.counts.added,
-        deleted: t.counts.deleted,
-        modified: t.counts.modified,
-        unchanged: t.counts.unchanged,
-      });
-      for (const child of t.child_files ?? []) partOf.set(child, t.file);
-    }
-  }
-  const files: ReportFile[] = [];
-  const groups: ReportGroup[] = [];
-  const seen = new Set<string>();
-  for (const s of reportSections(entity, pathways)) {
-    const own: ReportFile[] = [];
-    const shared: string[] = [];
-    for (const file of s.files) {
-      if (seen.has(file)) {
-        shared.push(file);
-        continue;
-      }
-      seen.add(file);
-      const parent = partOf.get(file);
-      own.push({
-        file,
-        group: s.id,
-        present: inFeeds.has(file),
-        counts: fileCounts.get(file) ?? null,
-        ...(parent != null ? { part_of: parent } : {}),
-      });
-    }
-    files.push(...own);
-    const counts = s.counts ?? NO_COUNTS;
-    groups.push({
+function summarySections(
+  files: ReportFile[],
+  analyses: ReportAnalyses,
+): ReportSection[] {
+  const byName = new Map(files.map((f) => [f.file, f]));
+  const sections: ReportSection[] = [];
+  for (const s of SECTIONS) {
+    const own = s.files
+      .map((f) => byName.get(f))
+      .filter((f): f is ReportFile => f != null);
+    const fromAnalysis = s.counts ? analyses[s.counts] : undefined;
+    // Pathways has a page only when analysis/pathways.json was built.
+    if (s.id === PATHWAYS_SECTION && fromAnalysis == null) continue;
+    const counts = fromAnalysis ?? groupFileCounts(own);
+    const presentFiles = s.files.filter((f) => byName.get(f)?.present);
+    sections.push({
       id: s.id,
+      slug: sectionSlug(s.id),
       label: s.label,
-      present: s.present,
-      ...(sameCounts(counts, groupFileCounts(own)) ? {} : { counts }),
-      ...(shared.length > 0 ? { files: shared } : {}),
+      count: counts.added + counts.deleted + counts.modified,
+      counts,
+      files: s.files,
+      present_files: presentFiles,
+      present: presentFiles.length > 0,
     });
   }
-  return { files, groups };
+  return sections;
 }
 
-/** The pages' sections from report.json (reports built before ReportDoc pass through). */
-export function reportSummary(doc: ReportDoc | ReportSummary): ReportSummary {
-  if (!('groups' in doc)) return doc;
+function legacySections(doc: ReportDocV2): ReportSection[] {
   const byName = new Map(doc.files.map((f) => [f.file, f]));
-  const sections = doc.groups.map((g): ReportSection => {
+  return doc.groups.map((g): ReportSection => {
     const own = doc.files.filter((f) => f.group === g.id);
     const files = [...own.map((f) => f.file), ...(g.files ?? [])];
     const counts = g.counts ?? groupFileCounts(own);
@@ -349,11 +342,37 @@ export function reportSummary(doc: ReportDoc | ReportSummary): ReportSummary {
       present: g.present,
     };
   });
+}
+
+/** The analyses' counts of a schema 4 report. */
+function analysisCounts(doc: ReportDoc): ReportAnalyses {
+  const out: ReportAnalyses = {};
+  for (const name of ['routes', 'services', 'pathways'] as const) {
+    const c = doc.analyses[name]?.counts;
+    if (c != null) out[name] = c;
+  }
+  return out;
+}
+
+/** The pages' sections from report.json (schema 1 summaries pass through). */
+export function reportSummary(
+  doc: ReportDoc | ReportDocV3 | ReportDocV2 | ReportSummary,
+): ReportSummary {
+  if (doc.schema === 1) return doc;
+  const sections =
+    doc.schema === 4
+      ? summarySections(
+          reportFiles(filesDocFromReport(doc)),
+          analysisCounts(doc),
+        )
+      : doc.schema === 3
+        ? summarySections(doc.files, doc.analyses)
+        : legacySections(doc);
   return {
     schema: 1,
     dataset: doc.dataset,
     generated_at: doc.generated_at,
-    feeds: doc.feeds,
+    feeds: doc.feeds ?? { base: null, new: null },
     sections,
     ...(doc.highlights ? { highlights: doc.highlights } : {}),
   };
@@ -366,22 +385,22 @@ const SEVERITY_RANK: Record<ReportHighlight['severity'], number> = {
   info: 3,
 };
 
-/** Calendar highlights (rule-based, see the entity generator), most severe first. */
+/**
+ * The services' own highlights, most severe first: report.json's fallback
+ * when highlights/index.json was not built.
+ */
 export function reportHighlights(
-  entity: Pick<GtfsEntityDiff, 'categories'> | null,
+  services: {
+    highlights: Array<Pick<ReportHighlight, 'severity' | 'title' | 'detail'>>;
+  } | null,
   max = 6,
 ): ReportSummary['highlights'] {
-  const all: ReportHighlight[] = [];
-  for (const c of entity?.categories ?? []) {
-    for (const h of c.calendar?.highlights ?? []) {
-      all.push({
-        section: c.id,
-        severity: h.severity,
-        title: h.title,
-        ...(h.detail ? { detail: h.detail } : {}),
-      });
-    }
-  }
+  const all: ReportHighlight[] = (services?.highlights ?? []).map((h) => ({
+    section: 'services',
+    severity: h.severity,
+    title: h.title,
+    ...(h.detail ? { detail: h.detail } : {}),
+  }));
   const counts = { error: 0, warning: 0, success: 0, info: 0 };
   for (const h of all) counts[h.severity]++;
   const top = all

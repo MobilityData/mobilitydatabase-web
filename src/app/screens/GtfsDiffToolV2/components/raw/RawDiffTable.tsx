@@ -103,6 +103,25 @@ const ACTION_LABELS: Record<RawAction, string> = {
   unchanged: 'Unchanged',
 };
 
+/**
+ * Files whose unchanged rows the raw diff shows: the trip files, whose
+ * pages count and show whole trips. Lookup files (stops, routes) also store
+ * theirs, for the pages to look entities up in, but the file diff shows
+ * changes only.
+ */
+const SHOWS_UNCHANGED = new Set([
+  'trips.txt',
+  'stop_times.txt',
+  'frequencies.txt',
+]);
+
+/** A tab's actions for `file` (no unchanged rows but in the trip files). */
+function tabActions(t: ViewTab, file: string): RawAction[] {
+  return SHOWS_UNCHANGED.has(file)
+    ? TAB_ACTIONS[t]
+    : TAB_ACTIONS[t].filter((a) => a !== 'unchanged');
+}
+
 function tabFor(actions: RawAction[] | undefined): ViewTab {
   if (actions == null) return 'changes';
   const key = [...actions].sort().join();
@@ -241,10 +260,11 @@ export default function RawDiffTable({
 }: RawDiffTableProps): React.ReactElement {
   // Fixed for the table's lifetime (callers remount to change it).
   const predicate = initialFilters?.predicate ?? null;
+  const keyId = initialFilters?.keyId ?? null;
   const [tab, setTab] = useState<ViewTab>(() =>
     tabFor(initialFilters?.actions),
   );
-  const actions = TAB_ACTIONS[tab];
+  const actions = tabActions(tab, file);
   const [routeId, setRouteId] = useState<string | null>(
     initialFilters?.routeId ?? null,
   );
@@ -271,8 +291,9 @@ export default function RawDiffTable({
       stopId: s,
       search: q,
       predicate,
+      keyId,
     };
-  }, [actions, routeId, changedColumn, typed, predicate]);
+  }, [actions, routeId, changedColumn, typed, predicate, keyId]);
   // Totals, counts, columns and route ids for the query; rows come by segment.
   const { columns, routes, total, counts, columnStats, loading, error } =
     useRawDiffRows({
@@ -340,7 +361,15 @@ export default function RawDiffTable({
     </TableSortLabel>
   );
   const tabCount = (t: ViewTab): number =>
-    TAB_ACTIONS[t].reduce((s, a) => s + counts[a], 0);
+    tabActions(t, file).reduce((s, a) => s + counts[a], 0);
+  // Only the trip files show unchanged rows (SHOWS_UNCHANGED); elsewhere
+  // they are not stored, or stored for lookups only.
+  const tabs = (Object.keys(TAB_ACTIONS) as ViewTab[]).filter(
+    (t) =>
+      t !== 'unchanged' ||
+      t === tab ||
+      (SHOWS_UNCHANGED.has(file) && counts.unchanged > 0),
+  );
 
   if (error != null)
     return (
@@ -376,7 +405,7 @@ export default function RawDiffTable({
               sx={{ minHeight: 36, mb: 1.5 }}
               slotProps={{ indicator: { style: { height: 2 } } }}
             >
-              {(Object.keys(TAB_ACTIONS) as ViewTab[]).map((t) => (
+              {tabs.map((t) => (
                 <Tab
                   key={t}
                   value={t}

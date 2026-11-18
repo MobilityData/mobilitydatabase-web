@@ -28,7 +28,7 @@ import {
   parseHighlightFilters,
   writeHighlightFilters,
 } from '../../lib/global-highlights';
-import type { ReportSummary } from '../../lib/report';
+import { type ReportSummary, highlightSectionLabel } from '../../lib/report';
 import ReportLayout from '../report/ReportLayout';
 import HighlightRow from './HighlightRow';
 
@@ -120,8 +120,7 @@ export default function HighlightsScreen({
     );
   }, [filters, ready]);
 
-  const label = (id: string): string =>
-    report.sections.find((s) => s.id === id)?.label ?? id;
+  const label = (id: string): string => highlightSectionLabel(report, id);
   const sections = Object.keys(doc.counts.sections).sort(
     (a, b) =>
       (SECTION_ORDER.indexOf(a) + 1 || 99) -

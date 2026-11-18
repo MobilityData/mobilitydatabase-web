@@ -1,0 +1,1 @@
+{"columns":["stop_id","stop_name","stop_desc","stop_lat","stop_lon","stop_url","stop_code","wheelchair_boarding"],"counts":{"added":34,"deleted":11,"modified":312,"unchanged":104,"moved":137},"highlights_file":"highlights/stops.json","table":{"path":"analysis/stops.parquet","rows":375,"bytes":4388},"route_info_file":"raw/routes.parquet"}

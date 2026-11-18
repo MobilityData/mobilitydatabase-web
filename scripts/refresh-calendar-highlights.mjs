@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 /**
- * Recompute the service calendar's notable highlights of built datasets,
- * without rebuilding them: reads the full service records from
- * calendar/services_detail.parquet and the day counts / coverage from
- * categories/calendar.json, runs the same rules as the build
+ * Recompute the services section's notable highlights of built datasets,
+ * without rebuilding them: puts every service's full record back together
+ * from the services analysis tables and the calendar raw tables
+ * (lib/calendar-rows), reads the day counts / coverage from
+ * analysis/services.json, runs the same rules as the build
  * (src/app/screens/GtfsDiffToolV2/lib/calendar-overview-highlights.ts), and
- * writes calendar.overview_highlights back into categories/calendar.json
- * (first rows of each list) and calendar-highlights.json (full lists).
+ * writes highlights/services.json (analysis/services.json keeps its path).
+ * Paths from lib/diff-layout.ts.
  *
  * Useful after tuning the rules, or for a dataset built before they existed
  * (rebuilding IDFM takes far longer and far more memory). Run
@@ -18,34 +19,74 @@
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
-import { deepStrictEqual } from 'node:assert/strict';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DuckDBInstance } from '@duckdb/node-api';
 import './lib/ts-resolve.mjs';
 import { writeHighlightsFile } from './lib/map-tables.mjs';
+import { ANALYSIS_FILES } from '../src/app/screens/GtfsDiffToolV2/lib/diff-layout.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DATA_DIR = join(ROOT, 'src/app/screens/GtfsDiffTool/data/v2');
 const LIB = new URL('../src/app/screens/GtfsDiffToolV2/lib/', import.meta.url);
 
-const { encodeDeep, decodeDeep } = await import(new URL('entity-diff-codec.ts', LIB).href);
 const { calendarOverviewHighlights } = await import(
   new URL('calendar-overview-highlights.ts', LIB).href
 );
+const { serviceRowsQueries } = await import(new URL('calendar-query.ts', LIB).href);
+const { serviceDiffFromRows } = await import(new URL('calendar-rows.ts', LIB).href);
 
 function sqlString(s) {
   return `'${s.replace(/'/g, "''")}'`;
 }
 
-/** Every service's full record (ServiceDiff), from the detail table. */
-async function readServices(datasetDir) {
+/** rows grouped by service_id. */
+function byService(rows) {
+  const out = new Map();
+  for (const r of rows) {
+    const id = String(r.service_id);
+    if (!out.has(id)) out.set(id, []);
+    out.get(id).push(r);
+  }
+  return out;
+}
+
+/** Every service's full record (ServiceDiff), from the services analysis tables and raw tables. */
+async function readServices(datasetDir, calendar) {
   const instance = await DuckDBInstance.create(':memory:');
   const con = await instance.connect();
   try {
-    const path = join(datasetDir, 'calendar', 'services_detail.parquet');
-    const res = await con.runAndReadAll(`SELECT detail FROM read_parquet(${sqlString(path)})`);
-    return res.getRowObjectsJS().map((r) => JSON.parse(String(r.detail)));
+    const register = async (name, rel) => {
+      if (!rel) return null;
+      await con.run(`CREATE VIEW ${name} AS SELECT * FROM read_parquet(${sqlString(join(datasetDir, rel))})`);
+      return name;
+    };
+    const views = {
+      services: await register('services', calendar.tables.services.path),
+      days: await register('days', calendar.tables.days.path),
+      calendar: await register('raw_calendar', calendar.calendar_rows_file),
+      dates: await register('raw_dates', calendar.calendar_dates_rows_file),
+    };
+    const q = serviceRowsQueries(views, null);
+    const read = async ({ sql }) => (await con.runAndReadAll(sql)).getRowObjectsJS();
+    const [services, calendars, exceptions, days] = await Promise.all([
+      read(q.service),
+      read(q.calendar),
+      read(q.exceptions),
+      read(q.days),
+    ]);
+    const calendarOf = byService(calendars);
+    const exceptionsOf = byService(exceptions);
+    const daysOf = byService(days);
+    return services.map((service) => {
+      const id = String(service.service_id);
+      return serviceDiffFromRows({
+        service,
+        calendar: calendarOf.get(id)?.[0] ?? null,
+        exceptions: exceptionsOf.get(id) ?? [],
+        days: daysOf.get(id) ?? [],
+      });
+    });
   } finally {
     con.closeSync();
     instance.closeSync();
@@ -60,22 +101,20 @@ if (datasets.length === 0) {
 
 for (const id of datasets) {
   const dir = join(DATA_DIR, id);
-  const file = join(dir, 'categories', 'calendar.json');
-  const detail = decodeDeep(JSON.parse(readFileSync(file, 'utf8')));
-  const services = await readServices(dir);
+  const file = join(dir, ANALYSIS_FILES.services);
+  const calendar = JSON.parse(readFileSync(file, 'utf8'));
+  if (calendar.calendar_rows_file === undefined)
+    throw new Error(`${id}: older services layout, rebuild it (--only entity,report)`);
+  const services = await readServices(dir, calendar);
   const highlights = calendarOverviewHighlights({
     services,
-    active_counts: detail.calendar.active_counts,
-    coverage: detail.calendar.coverage,
+    active_counts: calendar.active_counts,
+    coverage: calendar.coverage,
   });
-  const inline = await writeHighlightsFile(dir, 'calendar', highlights);
-  detail.calendar.overview_highlights = inline.highlights;
-  detail.calendar.overview_highlights_file = inline.file;
+  const { file: highlightsFile } = await writeHighlightsFile(dir, 'services', highlights);
+  calendar.highlights_file = highlightsFile;
 
-  // Same encoding and check as the build (generate-gtfs-entity-diff.mjs).
-  const text = JSON.stringify(encodeDeep(detail));
-  deepStrictEqual(decodeDeep(JSON.parse(text)), JSON.parse(JSON.stringify(detail)));
-  writeFileSync(file, text);
+  writeFileSync(file, JSON.stringify(calendar));
 
   console.log(`${id}: ${services.length} services`);
   for (const h of highlights) {

@@ -42,6 +42,16 @@ function unionColumns(...tables) {
   return cols;
 }
 
+/**
+ * Columns rows are compared on: both feeds' when both have the file (a
+ * column one feed lacks is a column change, as in the raw tables).
+ */
+function sharedColumns(a, b) {
+  const cols = unionColumns(a, b);
+  if (!a || !b) return cols;
+  return cols.filter((c) => a.header.includes(c) && b.header.includes(c));
+}
+
 function fieldChanges(base, next, columns, ignore = new Set()) {
   const out = [];
   for (const field of columns) {
@@ -247,7 +257,8 @@ export function diffPathways(baseFeed, newFeed) {
   const base = indexFeed(baseFeed);
   const next = indexFeed(newFeed);
   const cols = {
-    stops: unionColumns(baseFeed.files.get('stops.txt'), newFeed.files.get('stops.txt')),
+    // As in raw/stops.parquet, which the page reads node rows from.
+    stops: sharedColumns(baseFeed.files.get('stops.txt'), newFeed.files.get('stops.txt')),
     levels: unionColumns(baseFeed.files.get('levels.txt'), newFeed.files.get('levels.txt')),
     pathways: unionColumns(baseFeed.files.get('pathways.txt'), newFeed.files.get('pathways.txt')),
   };

@@ -3,7 +3,7 @@
  * row counts of lib/trips-v2-highlights: service added, shorter hours, less
  * frequent service and stops left without service.
  *
- * Built from trips-service.json (scripts/generate-gtfs-trips-calendar.mjs):
+ * Built from .build/trips-service.json (scripts/generate-gtfs-trips-calendar.mjs):
  * each route's trips, span and trips per hour on the typical days of the
  * service periods (lib/trips-periods), plus the day with the most service
  * added. Ranked with the others by scripts/generate-gtfs-highlights.mjs.
@@ -14,7 +14,11 @@
 import type { EntityRow } from './highlights';
 import type { TripsHighlight } from './trips-v2-highlights';
 
-export const TRIPS_SERVICE_FILE = 'trips-service.json';
+/**
+ * Build-only, so in the dataset's .build/ folder: not a published output
+ * (manifest.json leaves dotfiles out) and not loaded by the pages.
+ */
+export const TRIPS_SERVICE_FILE = '.build/trips-service.json';
 
 /** One route's service on a compared day (all directions). */
 export interface RouteService {

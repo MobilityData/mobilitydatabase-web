@@ -1,7 +1,7 @@
 {
-  "schema": 2,
+  "schema": 4,
   "dataset": "mbta-pathways-demo",
-  "generated_at": "2026-11-02T12:44:42.551Z",
+  "generated_at": "2026-11-18T14:16:51.011Z",
   "feeds": {
     "base": {
       "file": "base.zip",
@@ -20,21 +20,186 @@
   },
   "files": [
     {
-      "file": "agency.txt",
-      "group": "agency",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "attributions.txt",
-      "group": "agency",
-      "present": false,
-      "counts": null
-    },
-    {
       "file": "stops.txt",
-      "group": "stops",
-      "present": true,
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 124,
+        "new": 126
+      },
+      "primary_key": [
+        "stop_id"
+      ],
+      "counts": {
+        "added": 2,
+        "deleted": 0,
+        "modified": 1,
+        "unchanged": 123
+      },
+      "raw_table": {
+        "file": "stops.txt",
+        "path": "raw/stops.parquet",
+        "rows": 126,
+        "bytes": 16430,
+        "columns": [
+          "stop_id",
+          "stop_code",
+          "stop_name",
+          "stop_desc",
+          "platform_code",
+          "platform_name",
+          "stop_lat",
+          "stop_lon",
+          "zone_id",
+          "stop_address",
+          "stop_url",
+          "level_id",
+          "location_type",
+          "parent_station",
+          "wheelchair_boarding",
+          "municipality",
+          "on_street",
+          "at_street",
+          "vehicle_type"
+        ],
+        "counts": {
+          "added": 2,
+          "deleted": 0,
+          "modified": 1,
+          "id_only": 0,
+          "unchanged": 123
+        },
+        "compact_unchanged": true,
+        "key_column": "stop_id",
+        "key_columns": [
+          "stop_id"
+        ]
+      }
+    },
+    {
+      "file": "levels.txt",
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 10,
+        "new": 10
+      },
+      "primary_key": [
+        "level_id"
+      ],
+      "counts": {
+        "added": 0,
+        "deleted": 0,
+        "modified": 1,
+        "unchanged": 9
+      },
+      "raw_table": {
+        "file": "levels.txt",
+        "path": "raw/levels.parquet",
+        "rows": 1,
+        "bytes": 2768,
+        "columns": [
+          "level_id",
+          "level_index",
+          "level_name",
+          "level_elevation"
+        ],
+        "counts": {
+          "added": 0,
+          "deleted": 0,
+          "modified": 1,
+          "id_only": 0,
+          "unchanged": 9
+        },
+        "unchanged_omitted": true,
+        "key_column": "level_id",
+        "key_columns": [
+          "level_id"
+        ]
+      }
+    },
+    {
+      "file": "pathways.txt",
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 315,
+        "new": 317
+      },
+      "primary_key": [
+        "pathway_id"
+      ],
+      "counts": {
+        "added": 65,
+        "deleted": 63,
+        "modified": 7,
+        "unchanged": 245
+      },
+      "raw_table": {
+        "file": "pathways.txt",
+        "path": "raw/pathways.parquet",
+        "rows": 135,
+        "bytes": 14566,
+        "columns": [
+          "pathway_id",
+          "from_stop_id",
+          "to_stop_id",
+          "facility_id",
+          "pathway_mode",
+          "is_bidirectional",
+          "length",
+          "wheelchair_length",
+          "traversal_time",
+          "wheelchair_traversal_time",
+          "stair_count",
+          "max_slope",
+          "pathway_name",
+          "pathway_code",
+          "signposted_as",
+          "instructions"
+        ],
+        "counts": {
+          "added": 65,
+          "deleted": 63,
+          "modified": 7,
+          "id_only": 0,
+          "unchanged": 245
+        },
+        "unchanged_omitted": true,
+        "key_column": "pathway_id",
+        "key_columns": [
+          "pathway_id"
+        ]
+      }
+    },
+    {
+      "file": "feed_info.txt",
+      "present": {
+        "base": true,
+        "new": true
+      },
+      "total": {
+        "base": 1,
+        "new": 1
+      },
+      "primary_key": [],
+      "counts": {
+        "added": 0,
+        "deleted": 0,
+        "modified": 0,
+        "unchanged": 1
+      }
+    }
+  ],
+  "analyses": {
+    "stops": {
+      "file": "analysis/stops.json",
       "counts": {
         "added": 2,
         "deleted": 0,
@@ -42,258 +207,25 @@
         "unchanged": 123
       }
     },
-    {
-      "file": "levels.txt",
-      "group": "stops",
-      "present": true,
-      "counts": {
-        "added": 0,
-        "deleted": 0,
-        "modified": 1,
-        "unchanged": 9
-      }
-    },
-    {
-      "file": "pathways.txt",
-      "group": "stops",
-      "present": true,
-      "counts": {
-        "added": 65,
-        "deleted": 63,
-        "modified": 7,
-        "unchanged": 245
-      }
-    },
-    {
-      "file": "shapes.txt",
-      "group": "routes",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "routes.txt",
-      "group": "routes",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "networks.txt",
-      "group": "routes",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "route_networks.txt",
-      "group": "routes",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "areas.txt",
-      "group": "routes",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "stop_areas.txt",
-      "group": "routes",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "trips.txt",
-      "group": "trips",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "stop_times.txt",
-      "group": "trips",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "frequencies.txt",
-      "group": "trips",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "calendar.txt",
-      "group": "calendar",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "calendar_dates.txt",
-      "group": "calendar",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "fare_attributes.txt",
-      "group": "fares_v1",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "fare_rules.txt",
-      "group": "fares_v1",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "fare_products.txt",
-      "group": "fares_v2",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "fare_media.txt",
-      "group": "fares_v2",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "fare_leg_rules.txt",
-      "group": "fares_v2",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "fare_leg_join_rules.txt",
-      "group": "fares_v2",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "fare_transfer_rules.txt",
-      "group": "fares_v2",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "rider_categories.txt",
-      "group": "fares_v2",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "timeframes.txt",
-      "group": "fares_v2",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "booking_rules.txt",
-      "group": "flex",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "location_groups.txt",
-      "group": "flex",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "location_group_stops.txt",
-      "group": "flex",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "locations.geojson",
-      "group": "flex",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "feed_info.txt",
-      "group": "meta",
-      "present": true,
+    "services": {
+      "file": "analysis/services.json",
       "counts": {
         "added": 0,
         "deleted": 0,
         "modified": 0,
-        "unchanged": 1
+        "unchanged": 0
       }
     },
-    {
-      "file": "translations.txt",
-      "group": "meta",
-      "present": false,
-      "counts": null
-    },
-    {
-      "file": "transfers.txt",
-      "group": "meta",
-      "present": false,
-      "counts": null
-    }
-  ],
-  "groups": [
-    {
-      "id": "agency",
-      "label": "Agency",
-      "present": false
-    },
-    {
-      "id": "stops",
-      "label": "Stops",
-      "present": true
-    },
-    {
-      "id": "routes",
-      "label": "Routes",
-      "present": false
-    },
-    {
-      "id": "trips",
-      "label": "Trips",
-      "present": false
-    },
-    {
-      "id": "calendar",
-      "label": "Service Dates",
-      "present": false
-    },
-    {
-      "id": "fares_v1",
-      "label": "Fares v1",
-      "present": false
-    },
-    {
-      "id": "fares_v2",
-      "label": "Fares v2",
-      "present": false
-    },
-    {
-      "id": "flex",
-      "label": "Flex",
-      "present": false
-    },
-    {
-      "id": "meta",
-      "label": "Meta",
-      "present": true
-    },
-    {
-      "id": "pathways",
-      "label": "Pathways and levels",
-      "present": true,
+    "pathways": {
+      "file": "analysis/pathways.json",
       "counts": {
         "added": 0,
         "deleted": 0,
         "modified": 4,
         "unchanged": 2
-      },
-      "files": [
-        "levels.txt",
-        "pathways.txt"
-      ]
+      }
     }
-  ],
+  },
   "highlights": {
     "counts": {
       "error": 0,
@@ -312,5 +244,29 @@
         "detail": "Added to stops.txt, but no stop_times row uses them."
       }
     ]
+  },
+  "metadata": {
+    "schema_version": "2.1.0-poc",
+    "generated_at": "2026-11-18T14:16:49.781Z",
+    "base_feed": {
+      "source": "base.zip"
+    },
+    "new_feed": {
+      "source": "new.zip"
+    },
+    "files": {
+      "base": [
+        "feed_info.txt",
+        "levels.txt",
+        "pathways.txt",
+        "stops.txt"
+      ],
+      "new": [
+        "feed_info.txt",
+        "levels.txt",
+        "pathways.txt",
+        "stops.txt"
+      ]
+    }
   }
 }

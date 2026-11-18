@@ -67,9 +67,14 @@ export interface TripsDiffDoc {
     base_feed: FeedSource;
     new_feed: FeedSource;
   };
+  /** Every route's name and colours: the route lookup (lib/route-info), attached when the index loads (useDiffData). */
   routes: Record<string, RouteInfo>;
-  /** stop_id -> stop_name (new feed preferred). */
+  /** The routes.txt raw table (raw/routes.parquet; maps/route_info.json in older builds); absent when `routes` is inline or there is no routes table. */
+  route_info_file?: string;
+  /** stop_id -> stop_name (new feed preferred): the stop lookup (lib/stop-info), attached when the index loads (useDiffData); inline in older builds. */
   stops: Record<string, string>;
+  /** The stops.txt raw table the stop names come from; absent when `stops` is inline. */
+  stop_info_file?: string;
   /** Distinct sets of active service_ids, referenced by `dates`. */
   service_sets: { base: string[][]; new: string[][] };
   /** date -> [base set index, new set index]; -1 = no service in that feed. */

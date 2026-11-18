@@ -69,7 +69,7 @@ const cellSx = { fontSize: '0.8rem', py: 0.75, verticalAlign: 'top' } as const;
 
 interface DayTripsDialogProps {
   datasetId: string;
-  /** Trips index (trips-diff.json); undefined while loading. */
+  /** Trips index (views/trips/index.json); undefined while loading. */
   index: TripsIndexDoc | undefined;
   calendar: TripsCalendarDoc;
   /** Service period of the date (lib/trips-periods). */

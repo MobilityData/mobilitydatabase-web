@@ -4,7 +4,9 @@ import {
   MAX_ROWS,
   filterHighlights,
   highlightsDoc,
+  highlightsIndex,
   impactOf,
+  joinHighlightEntities,
   parseHighlightFilters,
   rankGlobalHighlights,
   reportTopHighlights,
@@ -101,6 +103,74 @@ describe('rankGlobalHighlights', () => {
   });
 });
 
+describe('highlights index', () => {
+  // Section files as the build writes them: full entity lists.
+  const sources = [
+    {
+      section: 'stops',
+      highlights: [h('served_removed', 0.9, rows(70)), h('renamed', 0.35)],
+      rowKind: () => 'stop' as const,
+    },
+    {
+      section: 'services',
+      highlights: [h('fewer_days', 0.7, rows(3, 'svc'))],
+      rowKind: () => 'service' as const,
+    },
+    {
+      section: 'trips',
+      highlights: [
+        h('routes_dropped', 0.95, {
+          kind: 'routes',
+          routes: [{ route: 'R1', base: 10, new: 0 }],
+        }),
+      ],
+    },
+  ];
+  const doc = highlightsDoc(
+    'demo',
+    rankGlobalHighlights(sources),
+    '2026-10-26T00:00:00.000Z',
+  );
+  const files = {
+    stops: 'highlights/stops.json',
+    services: 'highlights/services.json',
+    trips: 'highlights/trips.json',
+  };
+  const index = highlightsIndex(doc, files);
+
+  it('keeps the ranking but no entity lists', () => {
+    expect(index.files).toEqual(files);
+    expect(index.items.map((x) => x.key)).toEqual(doc.items.map((x) => x.key));
+    expect(index.items.every((x) => x.entities == null)).toBe(true);
+    expect(index.items.find((x) => x.id === 'fewer_days')?.row_kind).toBe(
+      'service',
+    );
+    expect(index.items.find((x) => x.id === 'served_removed')?.affected).toBe(
+      70,
+    );
+  });
+
+  it('gets the entities back from the section files', () => {
+    const joined = joinHighlightEntities(
+      index,
+      Object.fromEntries(sources.map((src) => [src.section, src])),
+    );
+    expect(joined.items).toEqual(doc.items);
+  });
+
+  it('leaves a highlight without entities when its file is missing', () => {
+    const joined = joinHighlightEntities(index, {});
+    expect(joined.items.every((x) => x.entities == null)).toBe(true);
+    expect(joined.items.map((x) => x.affected)).toEqual(
+      doc.items.map((x) => x.affected),
+    );
+  });
+
+  it('gives report.json the same top from the index', () => {
+    expect(reportTopHighlights(index)).toEqual(reportTopHighlights(doc));
+  });
+});
+
 describe('report and filters', () => {
   const items = rankGlobalHighlights([
     {
@@ -112,7 +182,7 @@ describe('report and filters', () => {
       rowKind: () => 'stop',
     },
     {
-      section: 'calendar',
+      section: 'services',
       highlights: [h('coverage_shorter', 0.6)],
     },
   ]);
@@ -124,7 +194,7 @@ describe('report and filters', () => {
       error: 1,
       warning: 2,
       info: 0,
-      sections: { stops: 2, calendar: 1 },
+      sections: { stops: 2, services: 1 },
     });
   });
 
@@ -139,7 +209,7 @@ describe('report and filters', () => {
 
   it('filters by section, severity and text in entity names', () => {
     expect(
-      filterHighlights(items, { ...EMPTY_FILTERS, sections: ['calendar'] }),
+      filterHighlights(items, { ...EMPTY_FILTERS, sections: ['services'] }),
     ).toHaveLength(1);
     expect(
       filterHighlights(items, { ...EMPTY_FILTERS, severities: ['error'] }),

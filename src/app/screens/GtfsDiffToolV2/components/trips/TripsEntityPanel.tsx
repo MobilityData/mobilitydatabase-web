@@ -74,7 +74,7 @@ const cardSx = {
 } as const;
 
 interface TripsEntityPanelProps {
-  /** Dataset folder whose trips-diff.json to load. */
+  /** Dataset folder whose views/trips/index.json to load. */
   datasetId: string;
   /** trips.txt file-level diff, shown in the technical drill-down. */
   entityTypes: EntityTypeDiff[];
@@ -105,7 +105,7 @@ export default function TripsEntityPanel({
   if (error != null || first.error != null)
     content = (
       <Alert severity='error' sx={{ mb: 3 }}>
-        Could not load the trips data (trips-diff.json). Generate it with
+        Could not load the trips data (views/trips/index.json). Generate it with
         scripts/generate-gtfs-trips-diff.mjs.
       </Alert>
     );

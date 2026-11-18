@@ -47,3 +47,5 @@ tsconfig.tsbuildinfo
 !/src/app/screens/GtfsDiffTool/data/v2/mbta/
 !/src/app/screens/GtfsDiffTool/data/v2/mbta-pathways-demo/
 /src/app/screens/GtfsDiffTool/data/v2/**/*.zip
+# Build-only files (scripts/build-gtfs-diff-dataset.mjs), not published.
+/src/app/screens/GtfsDiffTool/data/v2/**/.build/

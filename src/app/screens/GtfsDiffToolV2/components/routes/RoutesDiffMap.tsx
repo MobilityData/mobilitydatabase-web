@@ -9,13 +9,17 @@ import MapGL, {
   Popup,
   Source,
 } from 'react-map-gl/maplibre';
-import type { StyleSpecification } from 'maplibre-gl';
+import {
+  type ExpressionSpecification,
+  type StyleSpecification,
+} from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { ensurePmtilesProtocol, pmtilesUrl } from '../../lib/pmtiles-protocol';
 import { Box, Button, Chip, Typography } from '@mui/material';
 import { useMapConfig } from '../../../../hooks/useMapConfig';
 import type {
   LonLat,
-  RouteImpact,
+  RouteDetail,
   RouteShapeDiff,
   RouteStopInfo,
 } from '../../lib/entity-diff-types';
@@ -56,6 +60,19 @@ function line(coords: LonLat[], properties: Feature['properties']): Feature {
   };
 }
 
+/** A route's overview colour from its `kind` (tiles carry no colour). */
+const KIND_COLOR: ExpressionSpecification = [
+  'match',
+  ['get', 'kind'],
+  'added',
+  ROUTE_KIND_COLORS.added,
+  'removed',
+  ROUTE_KIND_COLORS.removed,
+  'modified',
+  ROUTE_KIND_COLORS.modified,
+  ROUTE_KIND_COLORS.unchanged,
+];
+
 function stopStatusText(s: RouteStopInfo): string | null {
   if (s.status === 'added') return 'New stop in this feed';
   if (s.status === 'deleted') return 'Stop removed from the feed';
@@ -67,10 +84,10 @@ function stopStatusText(s: RouteStopInfo): string | null {
 }
 
 interface RoutesDiffMapProps {
-  /** Routes matching the filters, as the overview draws them (maps/routes.parquet). */
+  /** Routes matching the filters, as the overview draws them (analysis/routes.parquet). */
   routes: RouteOverview[];
   /** The selected route's full detail, once loaded. */
-  selected: RouteImpact | null;
+  selected: RouteDetail | null;
   stops: Record<string, RouteStopInfo>;
   onSelectRoute: (routeId: string | null) => void;
   selectedStopId: string | null;
@@ -82,6 +99,12 @@ interface RoutesDiffMapProps {
   onOpenStop: (stopId: string) => void;
   /** A shape of the selected route, drawn on top (old dashed, new solid). */
   selectedShape?: RouteShapeDiff | null;
+  /**
+   * Prototype: the overview's lines as PMTiles (routes map `overview_tiles`).
+   * When set, the overview and its added / removed sections are drawn from
+   * the tiles, filtered to `routes`, instead of GeoJSON built from them.
+   */
+  overviewTiles?: string | null;
 }
 
 /** Accent for the selected shape, distinct from route and change colors. */
@@ -98,7 +121,10 @@ export default function RoutesDiffMap({
   refocusRequest = 0,
   onOpenStop,
   selectedShape = null,
+  overviewTiles = null,
 }: RoutesDiffMapProps): React.ReactElement {
+  const tiles = overviewTiles != null;
+  if (tiles) ensurePmtilesProtocol();
   const mapCfg = useMapConfig();
   const mapRef = React.useRef<MapRef>(null);
   const [loaded, setLoaded] = React.useState(false);
@@ -132,6 +158,7 @@ export default function RoutesDiffMap({
 
   const overview = React.useMemo(() => {
     const features: Feature[] = [];
+    if (tiles) return collection(features);
     for (const r of routes) {
       for (const g of r.lines) {
         features.push(
@@ -144,7 +171,7 @@ export default function RoutesDiffMap({
       }
     }
     return collection(features);
-  }, [routes]);
+  }, [routes, tiles]);
 
   const diverge = React.useMemo(() => {
     const features: Feature[] = [];
@@ -164,12 +191,27 @@ export default function RoutesDiffMap({
       }
       return collection(features);
     }
+    if (tiles) return collection(features);
     for (const r of routes) {
       for (const g of r.added) features.push(line(g, { kind: 'added' }));
       for (const g of r.removed) features.push(line(g, { kind: 'removed' }));
     }
     return collection(features);
-  }, [routes, selected, selectedShape]);
+  }, [routes, selected, selectedShape, tiles]);
+
+  // Tiles: only the routes matching the filters, by id.
+  const visibleRoutes = React.useMemo<ExpressionSpecification>(
+    () => [
+      'in',
+      ['get', 'route_id'],
+      ['literal', routes.map((r) => r.route_id)],
+    ],
+    [routes],
+  );
+  const tileUrl = React.useMemo(
+    () => (overviewTiles == null ? null : pmtilesUrl(overviewTiles)),
+    [overviewTiles],
+  );
 
   const shapeLines = React.useMemo(() => {
     const g = selectedShape?.geometry;
@@ -333,30 +375,97 @@ export default function RoutesDiffMap({
             }}
           />
         </Source>
-        <Source id='routes-src' type='geojson' data={overview}>
-          <Layer
-            id='routes-line'
-            type='line'
-            filter={['!', ['get', 'deleted']]}
-            layout={{ 'line-cap': 'round', 'line-join': 'round' }}
-            paint={{
-              'line-color': ['get', 'color'],
-              'line-width': 3,
-              'line-opacity': selected ? 0.15 : 0.85,
-            }}
-          />
-          <Layer
-            id='routes-line-deleted'
-            type='line'
-            filter={['get', 'deleted']}
-            paint={{
-              'line-color': ['get', 'color'],
-              'line-width': 3,
-              'line-opacity': selected ? 0.15 : 0.85,
-              'line-dasharray': [2, 1.5],
-            }}
-          />
-        </Source>
+        {tileUrl != null ? (
+          <Source id='routes-tiles' type='vector' url={tileUrl}>
+            {selected == null && selectedShape == null ? (
+              <>
+                <Layer
+                  id='diverge-added-tiles'
+                  type='line'
+                  source-layer='routes'
+                  filter={['all', ['==', ['get', 'part'], 'a'], visibleRoutes]}
+                  layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+                  paint={{
+                    'line-color': '#2e7d32',
+                    'line-width': 10,
+                    'line-opacity': 0.35,
+                  }}
+                />
+                <Layer
+                  id='diverge-removed-tiles'
+                  type='line'
+                  source-layer='routes'
+                  filter={['all', ['==', ['get', 'part'], 'r'], visibleRoutes]}
+                  layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+                  paint={{
+                    'line-color': '#d32f2f',
+                    'line-width': 10,
+                    'line-opacity': 0.35,
+                  }}
+                />
+              </>
+            ) : null}
+            <Layer
+              id='routes-line'
+              type='line'
+              source-layer='routes'
+              filter={[
+                'all',
+                ['==', ['get', 'part'], 'l'],
+                ['!=', ['get', 'kind'], 'removed'],
+                visibleRoutes,
+              ]}
+              layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+              paint={{
+                'line-color': KIND_COLOR,
+                'line-width': 3,
+                'line-opacity': selected ? 0.15 : 0.85,
+              }}
+            />
+            <Layer
+              id='routes-line-deleted'
+              type='line'
+              source-layer='routes'
+              filter={[
+                'all',
+                ['==', ['get', 'part'], 'l'],
+                ['==', ['get', 'kind'], 'removed'],
+                visibleRoutes,
+              ]}
+              paint={{
+                'line-color': KIND_COLOR,
+                'line-width': 3,
+                'line-opacity': selected ? 0.15 : 0.85,
+                'line-dasharray': [2, 1.5],
+              }}
+            />
+          </Source>
+        ) : (
+          <Source id='routes-src' type='geojson' data={overview}>
+            <Layer
+              id='routes-line'
+              type='line'
+              filter={['!', ['get', 'deleted']]}
+              layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+              paint={{
+                'line-color': ['get', 'color'],
+                'line-width': 3,
+                'line-opacity': selected ? 0.15 : 0.85,
+              }}
+            />
+            <Layer
+              id='routes-line-deleted'
+              type='line'
+              filter={['get', 'deleted']}
+              paint={{
+                'line-color': ['get', 'color'],
+                'line-width': 3,
+                'line-opacity': selected ? 0.15 : 0.85,
+                'line-dasharray': [2, 1.5],
+              }}
+            />
+          </Source>
+        )}
         <Source id='sel-base-src' type='geojson' data={selectedLines.base}>
           <Layer
             id='sel-base'

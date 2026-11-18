@@ -10,6 +10,8 @@ import {
   ListItemButton,
   ListItemText,
   MenuItem,
+  Tab,
+  Tabs,
   TextField,
   Typography,
 } from '@mui/material';
@@ -33,8 +35,6 @@ import {
 import {
   type RouteListRow,
   type RouteTableFilters,
-  routeDetailQuery,
-  routeOfShapeQuery,
   routesFlagCountsQuery,
   routesKindCountsQuery,
   routesOverviewQuery,
@@ -42,13 +42,19 @@ import {
   toRouteListRow,
   toRouteOverview,
 } from '../../lib/map-table-query';
-import { readRouteDetail as readDetail } from '../../lib/route-detail-codec';
 import {
-  mapDetailUrl,
+  loadRouteDetail,
+  loadRouteOfShape,
   mapTableUrl,
   queryMapTable,
+  routesOverviewUrls,
   useMapTableQuery,
+  useMapTablesQuery,
+  useRouteDetail,
+  useUnusedShapes,
 } from '../../lib/useMapTable';
+import { useRouteInfo } from '../../lib/useDiffData';
+import { diffFileUrl } from '../../lib/datasets';
 import SegmentedList from '../diffmap/SegmentedList';
 import { type NavFocus, useDiffNav } from '../../lib/diff-nav';
 import { type RowAction } from '../../../GtfsDiffTool/components/GtfsDiffFileDiffPanel';
@@ -217,6 +223,12 @@ export default function RoutesEntityPanel({
   const highlights = routesMap.highlights;
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Prototype: draw the overview from the list table's `geom` or from tiles.
+  const [mapSource, setMapSource] = useState<'geom' | 'pmtiles'>('geom');
+  const overviewTiles =
+    routesMap.overview_tiles != null && mapSource === 'pmtiles'
+      ? diffFileUrl(datasetId, routesMap.overview_tiles)
+      : null;
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
   const [stopFlyRequest, setStopFlyRequest] = useState(0);
   const [refocusRequest, setRefocusRequest] = useState(0);
@@ -234,10 +246,11 @@ export default function RoutesEntityPanel({
   const sameM = routesMap.shape_same_m ?? 2;
   const shapesTable = rawTables.find((t) => t.file === 'shapes.txt') ?? null;
 
-  // Routes live in maps/routes.parquet: counts, the overview lines, the
-  // list and the selected route are DuckDB queries (lib/map-table-query.ts).
+  // Routes live in analysis/routes.parquet and their lines in
+  // analysis/shapes.parquet: counts, the overview lines, the list and the
+  // selected route are DuckDB queries (lib/map-table-query.ts).
   const url = mapTableUrl(datasetId, routesMap.table);
-  const detailUrl = mapDetailUrl(datasetId, routesMap.table);
+  const rawRoutes = rawTables.find((t) => t.file === 'routes.txt');
   const tableFilters: RouteTableFilters = {
     kinds: effectiveKinds(filters),
     flags: filters.flags,
@@ -273,24 +286,20 @@ export default function RoutesEntityPanel({
       RouteFlag,
       number
     >);
-  const overviewQ = useMapTableQuery(
-    url,
+  const overviewQ = useMapTablesQuery(
+    routesOverviewUrls(datasetId, routesMap),
     filterKey,
-    (v) => routesOverviewQuery(v, tableFilters),
+    ([r, s]) => routesOverviewQuery(r, s, tableFilters),
     (rows) => rows.map(toRouteOverview),
   );
   const overview = overviewQ.data ?? [];
-  const detailQ = useMapTableQuery(
-    selectedId ? detailUrl : null,
-    selectedId ?? '',
-    (v) => routeDetailQuery(v, selectedId ?? ''),
-    readDetail,
-  );
+  const detailQ = useRouteDetail(datasetId, routesMap, rawRoutes, selectedId);
+  const unusedShapes = useUnusedShapes(datasetId, routesMap).data ?? [];
   const selected =
     detailQ.data?.route_id === selectedId ? (detailQ.data ?? null) : null;
   const selectedShape =
     selected?.shapes?.find((sh) => sh.shape_id === selectedShapeId) ?? null;
-  const routeInfo = routesMap.route_info;
+  const routeInfo = useRouteInfo(datasetId, routesMap.route_info_file);
   const fetchListRows = (
     offset: number,
     limit: number,
@@ -376,9 +385,7 @@ export default function RoutesEntityPanel({
    * route's detail, or null for an unknown route.
    */
   const revealRoute = async (id: string): Promise<RouteDetail | null> => {
-    const route = readDetail(
-      await queryMapTable(detailUrl, (v) => routeDetailQuery(v, id)),
-    );
+    const route = await loadRouteDetail(datasetId, routesMap, rawRoutes, id);
     if (route == null) return null;
     if (!overview.some((r) => r.route_id === id)) {
       setFilters({
@@ -396,16 +403,14 @@ export default function RoutesEntityPanel({
 
   /** Reveal the route a shape belongs to, with the shape selected. */
   const revealShape = async (id: string): Promise<void> => {
-    const owner = await queryMapTable(url, (v) => routeOfShapeQuery(v, id));
-    const route = owner[0]
-      ? await revealRoute(String(owner[0].route_id))
-      : null;
+    const owner = await loadRouteOfShape(datasetId, routesMap, id);
+    const route = owner ? await revealRoute(owner.route_id) : null;
     if (route) {
       const sh = route.shapes?.find(
         (x) => x.shape_id === id || x.renamed_from === id,
       );
       setSelectedShapeId(sh?.shape_id ?? null);
-    } else if (routesMap.unused_shapes?.some((sh) => sh.shape_id === id)) {
+    } else if (unusedShapes.some((sh) => sh.shape_id === id)) {
       document
         .getElementById('unused-shapes')
         ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -750,6 +755,25 @@ export default function RoutesEntityPanel({
             flexDirection: 'column',
           }}
         >
+          {routesMap.overview_tiles != null ? (
+            <Tabs
+              value={mapSource}
+              onChange={(_, v: 'geom' | 'pmtiles') => setMapSource(v)}
+              aria-label='Overview map data'
+              sx={{ minHeight: 36, mb: 1 }}
+            >
+              <Tab
+                value='geom'
+                label='geom (Parquet)'
+                sx={{ minHeight: 36, textTransform: 'none' }}
+              />
+              <Tab
+                value='pmtiles'
+                label='PMTiles'
+                sx={{ minHeight: 36, textTransform: 'none' }}
+              />
+            </Tabs>
+          ) : null}
           <DiffMapFrame
             ref={mapBoxRef}
             recenterLabel='Recenter on the selected or visible routes'
@@ -759,6 +783,8 @@ export default function RoutesEntityPanel({
             onToggleFullscreen={fullscreen.toggle}
           >
             <RoutesDiffMap
+              key={mapSource}
+              overviewTiles={overviewTiles}
               routes={overview}
               selected={selected}
               stops={selected?.stop_info ?? {}}
@@ -802,9 +828,9 @@ export default function RoutesEntityPanel({
         </Typography>
       )}
 
-      {(routesMap.unused_shapes?.length ?? 0) > 0 && (
+      {unusedShapes.length > 0 && (
         <UnusedShapes
-          shapes={routesMap.unused_shapes ?? []}
+          shapes={unusedShapes}
           sameM={sameM}
           thresholdM={thresholdM}
         />

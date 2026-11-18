@@ -27,8 +27,10 @@ interface RawTablesSectionProps {
 /** Rows changed relative to the larger of the two versions, as in the file diff panel. */
 function changedPercent(t: RawTable): number {
   const changed = t.counts.added + t.counts.deleted + t.counts.modified;
-  const base = t.rows - t.counts.added;
-  const next = t.rows - t.counts.deleted;
+  // Every row of either feed, including unchanged rows the table may omit.
+  const all = Object.values(t.counts).reduce((s, n) => s + n, 0);
+  const base = all - t.counts.added;
+  const next = all - t.counts.deleted;
   return Math.round((changed / Math.max(base, next, 1)) * 10000) / 100;
 }
 

@@ -42,6 +42,8 @@ export interface RawDiffFilters {
   search?: string;
   /** A named rider-facing regression (fixed SQL, see RAW_PREDICATES). */
   predicate?: RawPredicate | null;
+  /** Exact key (trip_key column: trip_id, service_id…), base or new. */
+  keyId?: string | null;
 }
 
 /**
@@ -160,6 +162,10 @@ export function buildWhere(
   if (trip) {
     parts.push('(base_trip_id ILIKE ? OR new_trip_id ILIKE ?)');
     params.push(`%${trip}%`, `%${trip}%`);
+  }
+  if (f.keyId) {
+    parts.push('(base_trip_id = ? OR new_trip_id = ?)');
+    params.push(f.keyId, f.keyId);
   }
   const stop = f.stopId?.trim();
   if (stop && columns.includes('stop_id')) {

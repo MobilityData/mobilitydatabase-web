@@ -7,6 +7,8 @@
 import type { EntityRow } from './highlights';
 import type { RowKind } from './global-highlights';
 import { sectionSlug } from './report';
+import { sectionPageId } from './sections';
+import { serviceHref } from './service-detail';
 import {
   DEFAULT_TRIPS_VIEW as TRIPS_VIEW,
   tripsListHref,
@@ -20,11 +22,14 @@ export function highlightsHref(datasetId: string): string {
   return `/gtfs-diff-tool-v2/${datasetId}/highlights`;
 }
 
-/** The section's page; trips open in the default Trips view (v5). */
+/**
+ * The highlight section's page (lib/sections sectionPageId: services on the
+ * Service Dates page); trips open in the default Trips view (v5).
+ */
 export function sectionPageHref(datasetId: string, section: string): string {
   if (section === 'trips')
     return tripsListHref(datasetId, undefined, undefined, TRIPS_VIEW);
-  return `/gtfs-diff-tool-v2/${datasetId}/${sectionSlug(section)}`;
+  return `/gtfs-diff-tool-v2/${datasetId}/${sectionSlug(sectionPageId(section))}`;
 }
 
 /**
@@ -70,7 +75,7 @@ export function entityRowHref(
     case 'shape':
       return `${base('routes')}#shape/${id}`;
     case 'service':
-      return `${base('calendar')}#service/${id}`;
+      return serviceHref(datasetId, row.openId ?? row.id);
     default:
       return sectionPageHref(datasetId, section);
   }

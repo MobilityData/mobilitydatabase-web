@@ -9,26 +9,36 @@ import MapGL, {
   Popup,
   Source,
 } from 'react-map-gl/maplibre';
-import type { ExpressionSpecification, StyleSpecification } from 'maplibre-gl';
+import {
+  type ExpressionSpecification,
+  type FilterSpecification,
+  type StyleSpecification,
+} from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { ensurePmtilesProtocol, pmtilesUrl } from '../../lib/pmtiles-protocol';
 import { Box, ButtonBase, Link as MuiLink, Typography } from '@mui/material';
 import { useMapConfig } from '../../../../hooks/useMapConfig';
 import { Link as IntlLink } from '../../../../../i18n/navigation';
 import { MONO_FONT } from '../calendar/shared';
 import type {
   LonLat,
-  RouteImpact,
+  RouteDetail,
   RouteShapeDiff,
   RouteStopInfo,
 } from '../../lib/entity-diff-types';
 import {
-  STOP_RELATION_COLORS,
-  STOP_RELATION_LABELS,
   SHAPE_STATUS_COLORS,
   routeBounds,
-  routeStops,
   shapeBounds,
 } from '../../lib/routes-utils';
+import {
+  DIRECTION_STOP_COLORS,
+  DIRECTION_STOP_LABELS,
+  selectedDirections,
+  stopMarkers,
+  stopsForDirection,
+} from '../../lib/routes-v2-directions';
+import { formatDistance } from '../../lib/stops-utils';
 import {
   type RouteV2Overview,
   overviewBounds,
@@ -49,6 +59,8 @@ const INTERACTIVE_LAYERS = [HIT_LAYER, STOPS_LAYER];
 /** Accent for the selected shape, distinct from route and change colors. */
 const SHAPE_ACCENT = SHAPE_STATUS_COLORS.rerouted;
 const FIT = { padding: 60, maxZoom: 15, duration: 600 };
+/** The overview tiles' layer (routes map `overview_tiles`). */
+const TILES_LAYER = 'routes';
 
 type Feature = GeoJSON.Feature<
   GeoJSON.Geometry,
@@ -147,16 +159,27 @@ interface RoutesV2MapProps {
   fitKey: string;
   selectedId: string | null;
   /** The selected route's detail, once loaded. */
-  selected: RouteImpact | null;
+  selected: RouteDetail | null;
+  /**
+   * The selected route's direction: only its lines, sections and stop
+   * changes are drawn (null: every direction).
+   */
+  directionId?: string | null;
   stops: Record<string, RouteStopInfo>;
   onSelectRoute: (routeId: string) => void;
   hoverRouteId: string | null;
   onHoverRoute: (routeId: string | null) => void;
-  /** A stop hovered in the detail's stop strip. */
+  /** A stop hovered in the detail's stop lists. */
   hoverStopId: string | null;
   selectedShape: RouteShapeDiff | null;
   /** The stops page focused on a stop (the stop popup's link). */
   stopHref: (stopId: string) => string;
+  /**
+   * Prototype: the overview's lines as PMTiles (routes map `overview_tiles`).
+   * When set, the overview is drawn from the tiles, filtered to `routes` by
+   * id, with hover and selection keyed by route_id, instead of GeoJSON.
+   */
+  overviewTiles?: string | null;
 }
 
 /**
@@ -170,6 +193,7 @@ export default function RoutesV2Map({
   fitKey,
   selectedId,
   selected,
+  directionId = null,
   stops,
   onSelectRoute,
   hoverRouteId,
@@ -177,7 +201,10 @@ export default function RoutesV2Map({
   hoverStopId,
   selectedShape,
   stopHref,
+  overviewTiles = null,
 }: RoutesV2MapProps): React.ReactElement {
+  const tiles = overviewTiles != null;
+  if (tiles) ensurePmtilesProtocol();
   const mapCfg = useMapConfig();
   const mapRef = React.useRef<MapRef>(null);
   const [loaded, setLoaded] = React.useState(false);
@@ -223,6 +250,7 @@ export default function RoutesV2Map({
   /** One feature per drawn route; its numeric id is its index in `routes`. */
   const overview = React.useMemo(() => {
     const features: Feature[] = [];
+    if (tiles) return collection(features);
     routes.forEach((r, i) => {
       const cat = overviewCategory(r.kind, r.flags);
       if (cat === 'unchanged' || r.lines.length === 0) return;
@@ -234,11 +262,40 @@ export default function RoutesV2Map({
       });
     });
     return collection(features);
-  }, [routes]);
+  }, [routes, tiles]);
 
   const featureIdOf = React.useMemo(
     () => new Map(routes.map((r, i) => [r.route_id, i])),
     [routes],
+  );
+
+  // Tiles: the routes' lines (not their added / removed sections), only
+  // those matching the filters. Features are keyed by route_id (promoteId).
+  const tileFilter = React.useMemo<ExpressionSpecification>(
+    () => [
+      'all',
+      ['==', ['get', 'part'], 'l'],
+      ['in', ['get', 'route_id'], ['literal', routes.map((r) => r.route_id)]],
+    ],
+    [routes],
+  );
+  const tileUrl = React.useMemo(
+    () => (overviewTiles == null ? null : pmtilesUrl(overviewTiles)),
+    [overviewTiles],
+  );
+  /** A layer's filter, combined with the tiles' when drawing from them. */
+  const withTiles = (f?: ExpressionSpecification): FilterSpecification =>
+    (tiles
+      ? f
+        ? ['all', tileFilter, f]
+        : tileFilter
+      : (f ?? true)) as FilterSpecification;
+  const tileLayer = tiles ? { 'source-layer': TILES_LAYER } : {};
+
+  /** The selected route's directions drawn: the selected one, or all. */
+  const directions = React.useMemo(
+    () => selectedDirections(selected?.directions ?? [], directionId),
+    [selected, directionId],
   );
 
   const diverge = React.useMemo(() => {
@@ -248,21 +305,21 @@ export default function RoutesV2Map({
       for (const g of d.removed) features.push(line(g, { kind: 'removed' }));
     };
     if (selectedShape) add(selectedShape.diverge);
-    else for (const d of selected?.directions ?? []) add(d.diverge);
+    else for (const d of directions) add(d.diverge);
     return collection(features);
-  }, [selected, selectedShape]);
+  }, [directions, selectedShape]);
 
   const selectedLines = React.useMemo(() => {
     const base: Feature[] = [];
     const next: Feature[] = [];
-    for (const d of selected?.directions ?? []) {
+    for (const d of directions) {
       if (d.geometry.base && d.geometry.base.length > 1)
         base.push(line(d.geometry.base, {}));
       if (d.geometry.new && d.geometry.new.length > 1)
         next.push(line(d.geometry.new, {}));
     }
     return { base: collection(base), new: collection(next) };
-  }, [selected]);
+  }, [directions]);
 
   const shapeLines = React.useMemo(() => {
     const g = selectedShape?.geometry;
@@ -276,9 +333,14 @@ export default function RoutesV2Map({
     ? `#${selected.color}`
     : mapCfg.primaryMain;
 
+  // Another direction draws other stops: close the stop popup.
+  React.useEffect(() => setStopPopup(null), [directionId]);
+
+  /** The selected direction's (or every direction's) stop changes. */
   const routeStopList = React.useMemo(
-    () => (selected ? routeStops(selected) : []),
-    [selected],
+    () =>
+      selected ? stopMarkers(stopsForDirection(selected, directionId)) : [],
+    [selected, directionId],
   );
   const stopFeatures = React.useMemo(() => {
     const features: Feature[] = [];
@@ -291,30 +353,36 @@ export default function RoutesV2Map({
         geometry: { type: 'Point', coordinates: s.coord },
         properties: {
           stop_id: id,
-          fill: STOP_RELATION_COLORS[relation],
-          stroke: relation === 'kept' ? routeColor : '#ffffff',
+          fill: DIRECTION_STOP_COLORS[relation],
+          stroke: '#ffffff',
         },
       });
     });
     return collection(features);
-  }, [routeStopList, stops, routeColor]);
+  }, [routeStopList, stops]);
 
   // ── Feature-state: hover and selection ───────────────────────────
 
   React.useEffect(() => {
     const map = mapRef.current?.getMap();
     if (!loaded || map?.getSource(ROUTES_SRC) == null) return;
-    map.removeFeatureState({ source: ROUTES_SRC });
-    const sel = selectedId != null ? featureIdOf.get(selectedId) : undefined;
+    // Tiles: features are keyed by route_id within their layer.
+    const target = tiles
+      ? { source: ROUTES_SRC, sourceLayer: TILES_LAYER }
+      : { source: ROUTES_SRC };
+    const idOf = (routeId: string): string | number | undefined =>
+      tiles ? routeId : featureIdOf.get(routeId);
+    map.removeFeatureState(target);
+    const sel = selectedId != null ? idOf(selectedId) : undefined;
     if (sel != null)
-      map.setFeatureState({ source: ROUTES_SRC, id: sel }, { selected: true });
+      map.setFeatureState({ ...target, id: sel }, { selected: true });
     const hov =
       hoverRouteId != null && selectedId == null
-        ? featureIdOf.get(hoverRouteId)
+        ? idOf(hoverRouteId)
         : undefined;
     if (hov != null)
-      map.setFeatureState({ source: ROUTES_SRC, id: hov }, { hover: true });
-  }, [loaded, featureIdOf, selectedId, hoverRouteId]);
+      map.setFeatureState({ ...target, id: hov }, { hover: true });
+  }, [loaded, featureIdOf, selectedId, hoverRouteId, tiles]);
 
   React.useEffect(() => {
     const map = mapRef.current?.getMap();
@@ -357,13 +425,19 @@ export default function RoutesV2Map({
     }
   }, [loaded, selectedId]);
 
-  // Fit the selected route (or its selected shape) once its detail is in.
-  const focusBounds =
-    selected?.route_id === selectedId
-      ? ((selectedShape ? shapeBounds(selectedShape) : null) ??
-        (selected ? routeBounds([selected]) : null))
-      : null;
-  const focusKey = focusBounds ? focusBounds.flat().join(',') : '';
+  // Fit the selected route, direction or shape once its detail is in.
+  const focusBounds = React.useMemo(() => {
+    if (selected == null || selected.route_id !== selectedId) return null;
+    return (
+      (selectedShape ? shapeBounds(selectedShape) : null) ??
+      routeBounds([{ ...selected, directions }]) ??
+      routeBounds([selected])
+    );
+  }, [selected, selectedId, selectedShape, directions]);
+  // The direction too: picking one re-fits even when its bounds are the same.
+  const focusKey = focusBounds
+    ? `${directionId ?? '*'}|${focusBounds.flat().join(',')}`
+    : '';
   React.useEffect(() => {
     if (!loaded || focusBounds == null) return;
     mapRef.current?.fitBounds(focusBounds, FIT);
@@ -422,6 +496,8 @@ export default function RoutesV2Map({
   const popupRelation = routeStopList.find(
     (s) => s.stop_id === stopPopup,
   )?.relation;
+  // The popup only shows the stops drawn.
+  const popupShown = popupRelation != null;
 
   return (
     <Box
@@ -454,11 +530,21 @@ export default function RoutesV2Map({
         onLoad={() => setLoaded(true)}
         cursor={cursor}
       >
-        <Source id={ROUTES_SRC} type='geojson' data={overview}>
+        <Source
+          id={ROUTES_SRC}
+          {...(tileUrl != null
+            ? { type: 'vector', url: tileUrl, promoteId: 'route_id' }
+            : { type: 'geojson', data: overview })}
+        >
           <Layer
             id='v2-routes-solid'
             type='line'
-            filter={['!=', CAT, 'removed']}
+            {...tileLayer}
+            filter={withTiles(
+              tiles
+                ? ['!', ['in', CAT, ['literal', ['removed', 'unchanged']]]]
+                : ['!=', CAT, 'removed'],
+            )}
             layout={{
               'line-cap': 'round',
               'line-join': 'round',
@@ -483,7 +569,8 @@ export default function RoutesV2Map({
           <Layer
             id='v2-routes-dashed'
             type='line'
-            filter={['==', CAT, 'removed']}
+            {...tileLayer}
+            filter={withTiles(['==', CAT, 'removed'])}
             paint={{
               'line-color': categoryColor(selectedId != null),
               'line-width': categoryWidth(selectedId != null),
@@ -495,6 +582,12 @@ export default function RoutesV2Map({
           <Layer
             id={HIT_LAYER}
             type='line'
+            {...tileLayer}
+            {...(tiles
+              ? {
+                  filter: withTiles(['!=', CAT, 'unchanged']),
+                }
+              : {})}
             paint={{
               'line-color': '#000000',
               'line-width': 14,
@@ -664,7 +757,7 @@ export default function RoutesV2Map({
           </Popup>
         ) : null}
 
-        {popupStop != null && stopPopup != null ? (
+        {popupStop != null && stopPopup != null && popupShown ? (
           <Popup
             longitude={popupStop.coord[0]}
             latitude={popupStop.coord[1]}
@@ -687,9 +780,18 @@ export default function RoutesV2Map({
                 <Typography
                   variant='caption'
                   component='div'
-                  color='text.secondary'
+                  sx={{
+                    color: DIRECTION_STOP_COLORS[popupRelation],
+                    fontWeight: 600,
+                  }}
                 >
-                  {STOP_RELATION_LABELS[popupRelation]}
+                  {DIRECTION_STOP_LABELS[popupRelation]}
+                  {popupRelation === 'moved'
+                    ? ` ${formatDistance(popupStop.moved_m)}`
+                    : ''}
+                  {directionId != null && popupRelation !== 'moved'
+                    ? ' in this direction'
+                    : ''}
                 </Typography>
               ) : null}
               <MuiLink
@@ -734,18 +836,22 @@ function RoutesLegend({
           label: 'Abandoned section',
         },
         {
-          symbol: <LegendDot fill={STOP_RELATION_COLORS.added} stroke='#fff' />,
+          symbol: (
+            <LegendDot fill={DIRECTION_STOP_COLORS.added} stroke='#fff' />
+          ),
           label: 'Stop added',
         },
         {
           symbol: (
-            <LegendDot fill={STOP_RELATION_COLORS.removed} stroke='#fff' />
+            <LegendDot fill={DIRECTION_STOP_COLORS.removed} stroke='#fff' />
           ),
           label: 'Stop removed',
         },
         {
-          symbol: <LegendDot fill='#fff' stroke={routeColor} />,
-          label: 'Stop kept',
+          symbol: (
+            <LegendDot fill={DIRECTION_STOP_COLORS.moved} stroke='#fff' />
+          ),
+          label: 'Stop moved',
         },
       ]
     : (['major', 'minor', 'added', 'removed'] as const).map((c) => ({

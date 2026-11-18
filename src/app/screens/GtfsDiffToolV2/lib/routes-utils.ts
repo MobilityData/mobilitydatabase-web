@@ -5,6 +5,7 @@
 
 import type {
   LonLat,
+  RouteDetail,
   RouteFlag,
   RouteImpact,
   RouteShapeDiff,
@@ -306,15 +307,20 @@ export const STOP_RELATION_LABELS: Record<StopRelation, string> = {
   kept: 'Served before and after',
 };
 
-/** All stops to draw for a route, with their relation to it. */
+/**
+ * The stops to draw for a route, with their relation to it: its added and
+ * removed stops, and each direction's (direction_stops: added, removed or
+ * moved there; kept when the route still serves it, e.g. in another
+ * direction).
+ */
 export function routeStops(
-  r: RouteImpact,
+  r: Pick<RouteDetail, 'stops' | 'direction_stops'>,
 ): Array<{ stop_id: string; relation: StopRelation }> {
   const added = new Set(r.stops.added);
   const removed = new Set(r.stops.removed);
   const ids = new Set<string>([...r.stops.added, ...r.stops.removed]);
-  for (const d of r.directions)
-    for (const o of d.pattern_diff) ids.add(o.stop_id);
+  for (const d of Object.values(r.direction_stops))
+    for (const id of [...d.added, ...d.removed, ...d.moved]) ids.add(id);
   return [...ids].map((id) => ({
     stop_id: id,
     relation: added.has(id) ? 'added' : removed.has(id) ? 'removed' : 'kept',

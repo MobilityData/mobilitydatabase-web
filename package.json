@@ -7,6 +7,7 @@
     "@emotion/cache": "11.14.0",
     "@emotion/react": "11.13.0",
     "@emotion/styled": "11.13.0",
+    "@googlemaps/polyline-codec": "1.0.28",
     "@mui/icons-material": "7.3.6",
     "@mui/material": "7.3.6",
     "@mui/material-nextjs": "7.3.6",

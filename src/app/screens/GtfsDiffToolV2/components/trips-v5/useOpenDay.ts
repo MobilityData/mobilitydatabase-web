@@ -3,14 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { GtfsDate } from '../../lib/entity-diff-types';
 import type { TripsCalendarDoc } from '../../lib/trips-calendar';
+import { DAY_PARAM } from '../../lib/service-detail';
 
-/** Query param of the day whose popup is open: ?day=20250314. */
-const DAY_PARAM = 'day';
-
-/** ?day= when it names a compared date of the calendar. */
-function readDay(calendar: TripsCalendarDoc | null): GtfsDate | null {
+/** ?day= when it names a date the page can open. */
+function readDay(isDay: (d: GtfsDate) => boolean): GtfsDate | null {
   const d = new URLSearchParams(window.location.search).get(DAY_PARAM);
-  return d != null && calendar?.days[d] != null ? d : null;
+  return d != null && isDay(d) ? d : null;
 }
 
 function writeDay(date: GtfsDate | null, mode: 'push' | 'replace'): void {
@@ -38,19 +36,30 @@ export interface OpenDay {
  * mount, and on Back / Forward.
  */
 export function useOpenDay(calendar: TripsCalendarDoc | null): OpenDay {
+  return useDayParam((d) => calendar?.days[d] != null, calendar);
+}
+
+/**
+ * useOpenDay for any page: `isDay` says which dates open (read again when
+ * `key` changes).
+ */
+export function useDayParam(
+  isDay: (d: GtfsDate) => boolean,
+  key: unknown,
+): OpenDay {
   const [open, setOpen] = useState<GtfsDate | null>(null);
   // Whether this page pushed the entry the popup is open on.
   const pushed = useRef(false);
 
   useEffect(() => {
-    setOpen(readDay(calendar));
+    setOpen(readDay(isDay));
     const onPop = (): void => {
       pushed.current = false;
-      setOpen(readDay(calendar));
+      setOpen(readDay(isDay));
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
-  }, [calendar]);
+  }, [key]);
 
   // Read by the callbacks without making them change on every open.
   const openRef = useRef(open);

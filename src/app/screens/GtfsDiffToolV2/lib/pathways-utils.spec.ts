@@ -1,5 +1,17 @@
-import demo from '../../GtfsDiffTool/data/v2/mbta-pathways-demo/pathways-diff.json';
+/**
+ * @jest-environment node
+ */
+import { DuckDBInstance } from '@duckdb/node-api';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { ANALYSIS_FILES } from './diff-layout';
 import type { PathwaysDiff, StationPathwaysDiff } from './pathways-types';
+import {
+  pathwaysStopIds,
+  stopRowSides,
+  stopRowsQuery,
+  withPathwaysStopRows,
+} from './stop-info';
 import {
   analyzeStation,
   explainCell,
@@ -8,7 +20,40 @@ import {
 } from './pathways-utils';
 import { layoutSchematic } from './pathways-layout';
 
-const diff = demo as unknown as PathwaysDiff;
+const DEMO_DIR = join(
+  __dirname,
+  '../../GtfsDiffTool/data/v2/mbta-pathways-demo',
+);
+
+let diff = JSON.parse(
+  readFileSync(join(DEMO_DIR, ANALYSIS_FILES.pathways), 'utf8'),
+) as PathwaysDiff;
+
+// The demo stores node ids only: their rows come from its stops.txt raw
+// table, as the page loads them (lib/lookups withPathwaysStops).
+beforeAll(async () => {
+  if (diff.stop_info_file == null) return;
+  const db = await DuckDBInstance.create(':memory:');
+  const con = await db.connect();
+  await con.run(
+    `CREATE VIEW raw_stops AS SELECT * FROM read_parquet('${join(DEMO_DIR, diff.stop_info_file)}')`,
+  );
+  const q = stopRowsQuery('raw_stops', pathwaysStopIds(diff));
+  const stmt = await con.prepare(q.sql);
+  stmt.bindValue(1, String(q.params[0]));
+  const rows = (await stmt.runAndReadAll()).getRowObjectsJS();
+  diff = withPathwaysStopRows(
+    diff,
+    new Map(
+      rows.map((r) => [
+        typeof r.trip_key === 'string' ? r.trip_key : '',
+        stopRowSides(r),
+      ]),
+    ),
+  );
+  con.closeSync();
+  db.closeSync();
+});
 
 function station(id: string): StationPathwaysDiff {
   const s = diff.stations.find((x) => x.station_id === id);

@@ -4,18 +4,20 @@
  *
  * Feeds can be .zip files or unzipped directories. Only stops.txt,
  * levels.txt, pathways.txt and feed_info.txt are read, so large feeds
- * (stop_times.txt in the hundreds of MB) are fine.
+ * (stop_times.txt in the hundreds of MB) are fine. Writes the pathways
+ * analysis of a dataset folder (analysis/pathways.json, lib/diff-layout.ts).
  *
  * Usage:
- *   node scripts/generate-gtfs-pathways-diff.mjs <base> <new> <out.json>
+ *   node scripts/generate-gtfs-pathways-diff.mjs <base> <new> <dataset folder>
  *     [--base-label "MBTA, 15 Jul 2026"] [--new-label "..."] [--note "..."]
  */
 
-import { readFileSync, writeFileSync, statSync, readdirSync } from 'node:fs';
-import { basename, join } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, statSync, readdirSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path';
 import { unzipSync, strFromU8 } from 'fflate';
 import { diffPathways } from './lib/gtfs-pathways-diff.mjs';
 import { markStartup, timed } from './lib/timings.mjs';
+import { ANALYSIS_FILES, rawTablePath } from '../src/app/screens/GtfsDiffToolV2/lib/diff-layout.ts';
 
 const SCHEMA_VERSION = '2.1.0-poc-pathways';
 const FILES = new Set(['stops.txt', 'levels.txt', 'pathways.txt', 'feed_info.txt']);
@@ -97,11 +99,12 @@ function parseArgs(argv) {
 
 function main() {
   const { positional, opts } = parseArgs(process.argv.slice(2));
-  const [basePath, newPath, outPath] = positional;
-  if (!basePath || !newPath || !outPath) {
-    console.error('Usage: node scripts/generate-gtfs-pathways-diff.mjs <base> <new> <out.json> [--base-label ..] [--new-label ..] [--note ..]');
+  const [basePath, newPath, outDir] = positional;
+  if (!basePath || !newPath || !outDir) {
+    console.error('Usage: node scripts/generate-gtfs-pathways-diff.mjs <base> <new> <dataset folder> [--base-label ..] [--new-label ..] [--note ..]');
     process.exit(1);
   }
+  const outPath = join(outDir, ANALYSIS_FILES.pathways);
   markStartup();
   const baseFeed = timed('load base feed (unzip + parse CSV)', () => loadFeed(basePath));
   const newFeed = timed('load new feed (unzip + parse CSV)', () => loadFeed(newPath));
@@ -109,6 +112,17 @@ function main() {
   if (diff == null) {
     console.error('Neither feed has pathways.txt; nothing to diff.');
     process.exit(1);
+  }
+  // Station nodes' stops.txt rows are looked up by stop_id in the stops.txt
+  // raw table the entity step writes (lib/stop-info); kept inline only when
+  // there is none.
+  const stopInfoFile = rawTablePath('stops.txt');
+  if (existsSync(join(outDir, stopInfoFile))) {
+    diff.stop_info_file = stopInfoFile;
+    for (const s of diff.stations) {
+      Reflect.deleteProperty(s, 'station');
+      s.nodes = s.nodes.map(({ stop_id, status }) => ({ stop_id, status }));
+    }
   }
   const out = {
     metadata: {
@@ -120,7 +134,8 @@ function main() {
     },
     ...diff,
   };
-  timed(`write ${basename(outPath)}`, () => writeFileSync(outPath, JSON.stringify(out)), () => ({ bytes: statSync(outPath).size }));
+  mkdirSync(dirname(outPath), { recursive: true });
+  timed(`write ${ANALYSIS_FILES.pathways}`, () => writeFileSync(outPath, JSON.stringify(out)), () => ({ bytes: statSync(outPath).size }));
   console.log(`Wrote ${outPath} (${Math.round(statSync(outPath).size / 1024)} KB)`);
   console.log(`  ${diff.stations.length} stations changed, ${diff.unchanged_station_ids.length} unchanged`);
   for (const s of diff.stations) {
