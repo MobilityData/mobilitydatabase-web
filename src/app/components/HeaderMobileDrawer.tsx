@@ -21,6 +21,7 @@ import { useColorScheme } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
 import {
   ACCOUNT_TARGET,
+  feedsMenuItems,
   gbfsMetricsNavItems,
   gtfsMetricsNavItems,
   SIGN_IN_TARGET,
@@ -140,20 +141,56 @@ export default function DrawerContent({
         </IconButton>
       </Box>
       <List sx={{ p: 0 }}>
-        {navigationItems.map((item) => (
-          <Button
-            variant='text'
-            sx={mobileNavElementStyle}
-            key={item.title}
-            href={item.external === true ? item.target : '/' + item.target}
-            target={item.external === true ? '_blank' : '_self'}
-            rel={item.external === true ? 'noopener noreferrer' : ''}
-            endIcon={item.external === true ? <OpenInNew /> : null}
-            // className={activeTab.includes('/' + item.target) ? 'active' : ''}
-          >
-            {item.title}
-          </Button>
-        ))}
+        {navigationItems.map((item) =>
+          item.target === 'feeds' ? (
+            <Accordion
+              key={item.title}
+              disableGutters={true}
+              sx={{ boxShadow: 'none' }}
+            >
+              <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                aria-controls='feeds-content'
+                id='feeds-header'
+                data-cy='drawer-feeds'
+              >
+                <Typography
+                  variant={'subtitle1'}
+                  sx={{ fontFamily: fontFamily.secondary }}
+                >
+                  {item.title}
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails sx={{ p: 0 }}>
+                {feedsMenuItems.map((subItem) => (
+                  <Button
+                    key={subItem.target}
+                    variant='text'
+                    sx={mobileNavElementStyle}
+                    component={LocaleLink}
+                    href={subItem.target}
+                    onClick={onClose}
+                  >
+                    {t(subItem.titleKey)}
+                  </Button>
+                ))}
+              </AccordionDetails>
+            </Accordion>
+          ) : (
+            <Button
+              variant='text'
+              sx={mobileNavElementStyle}
+              key={item.title}
+              href={item.external === true ? item.target : '/' + item.target}
+              target={item.external === true ? '_blank' : '_self'}
+              rel={item.external === true ? 'noopener noreferrer' : ''}
+              endIcon={item.external === true ? <OpenInNew /> : null}
+              // className={activeTab.includes('/' + item.target) ? 'active' : ''}
+            >
+              {item.title}
+            </Button>
+          ),
+        )}
 
         <Divider />
         <Accordion disableGutters={true} sx={{ boxShadow: 'none' }}>

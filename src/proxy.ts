@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import {
+  getLowercaseLocationPathname,
   isFeedDetailPage,
   isAuthenticatedNotGuest,
   rewriteFeedRequest,
@@ -19,8 +20,9 @@ import {
  * 2. Direct access to /static/ routes without proxy header → returns 404
  * 3. Feed detail pages with auth session → rewrite to /authed route (dynamic, non-cached)
  * 4. Feed detail pages without auth → rewrite to /static route (dynamic, ISR-cacheable)
- * 5. If supported locale exists in pathname → pass through unchanged
- * 6. Otherwise → internally rewrite to include default locale
+ * 5. Location directory paths with uppercase letters → 308 redirect to the lowercase path
+ * 6. If supported locale exists in pathname → pass through unchanged
+ * 7. Otherwise → internally rewrite to include default locale
  *
  * See src/app/utils/proxy-helpers.ts for routing helper functions.
  */
@@ -83,6 +85,15 @@ export default function proxy(request: NextRequest): NextResponse<unknown> {
       subPath,
       routeType: 'static',
     });
+  }
+
+  // === Location directory: one lowercase URL per place ===
+
+  const lowercaseLocationPathname = getLowercaseLocationPathname(pathname);
+  if (lowercaseLocationPathname !== null) {
+    const url = request.nextUrl.clone();
+    url.pathname = lowercaseLocationPathname;
+    return NextResponse.redirect(url, 308);
   }
 
   // === Locale routing ===

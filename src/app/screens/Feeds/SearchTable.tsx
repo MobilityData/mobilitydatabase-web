@@ -39,35 +39,37 @@ const HeaderTableCell = styled(TableCell)(() => ({
   border: 'none',
 }));
 
+const DATA_TYPE_LABEL_KEYS = {
+  gtfs: 'gtfsSchedule',
+  gtfs_rt: 'gtfsRealtime',
+  gbfs: 'gbfs',
+} as const;
+
+function DataTypeElement({
+  dataType,
+}: {
+  dataType: 'gtfs' | 'gtfs_rt' | 'gbfs';
+}): React.ReactElement {
+  const tCommon = useTranslations('common');
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+      }}
+    >
+      {tCommon(DATA_TYPE_LABEL_KEYS[dataType])}
+    </Box>
+  );
+}
+
+// The translation hook lives in DataTypeElement, not here: this is called once
+// per row, and a hook called in a loop breaks when the row count changes
+// between renders of the same table (e.g. paging to a partial last page).
 export const getDataTypeElement = (
   dataType: 'gtfs' | 'gtfs_rt' | 'gbfs',
-): React.ReactElement => {
-  const tCommon = useTranslations('common');
-  const DataTypeHolder = ({
-    children,
-  }: {
-    children: React.ReactNode;
-  }): React.ReactElement => {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-        }}
-      >
-        {children}
-      </Box>
-    );
-  };
-  if (dataType === 'gtfs') {
-    return <DataTypeHolder>{tCommon('gtfsSchedule')}</DataTypeHolder>;
-  } else if (dataType === 'gtfs_rt') {
-    return <DataTypeHolder>{tCommon('gtfsRealtime')}</DataTypeHolder>;
-  } else {
-    return <DataTypeHolder>{tCommon('gbfs')}</DataTypeHolder>;
-  }
-};
+): React.ReactElement => <DataTypeElement dataType={dataType} />;
 
 export default function SearchTable({
   feedsData,
