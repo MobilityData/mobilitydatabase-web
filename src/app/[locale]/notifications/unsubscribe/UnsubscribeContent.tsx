@@ -23,6 +23,7 @@ import {
   ACCOUNT_NOTIFICATIONS_TARGET,
   SIGN_IN_TARGET,
 } from '../../../constants/Navigation';
+import { ACCOUNT_ANNOUNCEMENTS_SYNC_TARGET } from '../../account/lib/announcementsSync';
 import {
   getSubscriptionById,
   unsubscribeBySubscriptionId,
@@ -80,6 +81,7 @@ export default function UnsubscribeContent(): React.ReactElement {
 
   const lookup = toSubscriptionLookup({
     subscriptionId,
+    idMissing: idParam === null,
     data,
     error,
     authFailed: !isAuthReady && anonymousLoginError,
@@ -95,12 +97,16 @@ export default function UnsubscribeContent(): React.ReactElement {
   }
 
   // Signed-out (or not yet registered) users go through sign-in, which sends
-  // them on to the notifications page once their account is ready.
+  // them on to their account once it's ready. After a Brevo unsubscribe (no
+  // id) that's the account page, which refreshes the announcements opt-in
+  // from Brevo before showing it.
+  const manageTarget =
+    lookup.status === 'noId'
+      ? ACCOUNT_ANNOUNCEMENTS_SYNC_TARGET
+      : ACCOUNT_NOTIFICATIONS_TARGET;
   const manageHref = isRegistered
-    ? ACCOUNT_NOTIFICATIONS_TARGET
-    : `${SIGN_IN_TARGET}?redirect_to=${encodeURIComponent(
-        ACCOUNT_NOTIFICATIONS_TARGET,
-      )}`;
+    ? manageTarget
+    : `${SIGN_IN_TARGET}?redirect_to=${encodeURIComponent(manageTarget)}`;
 
   // The subscription the buttons act on, while the user can still act.
   const actionable =
@@ -227,11 +233,13 @@ export default function UnsubscribeContent(): React.ReactElement {
             <Button
               component={Link}
               href={manageHref}
-              variant='text'
+              variant={lookup.status === 'noId' ? 'outlined' : 'text'}
               disabled={isPending}
               data-testid='manage-notifications'
             >
-              {t('manageNotifications')}
+              {lookup.status === 'noId' && !isRegistered
+                ? t('signInToManage')
+                : t('manageNotifications')}
             </Button>
           </Stack>
         )}

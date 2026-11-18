@@ -162,7 +162,10 @@
     "notFoundDescription": "This unsubscribe link is invalid, or you've already unsubscribed.",
     "loadFailedDescription": "We couldn't load this subscription. Please try again in a moment.",
     "unsubscribeFailed": "Something went wrong and you're still subscribed. Please try again.",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "brevoUnsubscribedTitle": "You've been unsubscribed",
+    "brevoUnsubscribedDescription": "You'll no longer receive Mobility Database API announcements. Your account can take up to 24 hours to show this change.",
+    "signInToManage": "Sign in to manage other subscriptions"
   },
   "resetPassword": {
     "verifyingTitle": "Checking your link",
@@ -692,6 +695,7 @@
     "personalInformationSubtitle": "Your account details and contact information",
     "saveSuccess": "Account changes were successful",
     "saveError": "Failed to save account changes. Please try again.",
+    "announcementsSyncFailed": "We couldn't refresh your API announcements preference. If you just unsubscribed from an email, it can take up to 24 hours to show here.",
     "edit": "Edit",
     "save": "Save",
     "cancel": "Cancel",

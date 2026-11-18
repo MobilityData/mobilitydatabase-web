@@ -19,11 +19,12 @@ export type UnsubscribeResult = 'success' | 'notFound' | 'error';
 export type SubscriptionLookup =
   | { status: 'loading' }
   | { status: 'found'; notificationId: string; active: boolean }
+  | { status: 'noId' }
   | { status: 'invalidId' }
   | { status: 'notFound' }
   | { status: 'error' };
 
-export type ViewStatus = 'loading' | 'ready' | 'success' | 'error';
+export type ViewStatus = 'loading' | 'ready' | 'success' | 'error' | 'info';
 
 export interface ViewCopy {
   status: ViewStatus;
@@ -58,15 +59,19 @@ export function toUnsubscribeResult(status: number): UnsubscribeResult {
  * `data` is null when the API reported the subscription missing, and
  * undefined while the request hasn't settled (or hasn't started because the
  * Firebase user isn't ready yet). `authFailed` means no Firebase user is
- * coming, so the request never will.
+ * coming, so the request never will. `idMissing` means the URL has no `id`
+ * at all: Brevo's unsubscribe confirmation redirects here without one, since
+ * API announcements are Brevo campaigns that don't know the subscription.
  */
 export function toSubscriptionLookup({
   subscriptionId,
+  idMissing = false,
   data,
   error,
   authFailed,
 }: {
   subscriptionId: string | undefined;
+  idMissing?: boolean;
   data:
     | Pick<NotificationSubscription, 'notification_id' | 'active'>
     | null
@@ -75,7 +80,7 @@ export function toSubscriptionLookup({
   authFailed: boolean;
 }): SubscriptionLookup {
   if (subscriptionId === undefined) {
-    return { status: 'invalidId' };
+    return idMissing ? { status: 'noId' } : { status: 'invalidId' };
   }
   if (error != null || authFailed) {
     return { status: 'error' };
@@ -132,6 +137,12 @@ export function resolveViewCopy(
         descriptionKey: lookup.active
           ? 'description'
           : 'alreadyUnsubscribedDescription',
+      };
+    case 'noId':
+      return {
+        status: 'info',
+        titleKey: 'brevoUnsubscribedTitle',
+        descriptionKey: 'brevoUnsubscribedDescription',
       };
     case 'error':
       return {

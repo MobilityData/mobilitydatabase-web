@@ -162,7 +162,10 @@
     "notFoundDescription": "Ce lien de désabonnement n'est pas valide, ou vous êtes déjà désabonné.",
     "loadFailedDescription": "Nous n'avons pas pu charger cet abonnement. Veuillez réessayer dans un instant.",
     "unsubscribeFailed": "Une erreur s'est produite et vous êtes toujours abonné. Veuillez réessayer.",
-    "tryAgain": "Réessayer"
+    "tryAgain": "Réessayer",
+    "brevoUnsubscribedTitle": "Vous êtes désabonné",
+    "brevoUnsubscribedDescription": "Vous ne recevrez plus les annonces de l'API de la Mobility Database. La mise à jour de votre compte peut prendre jusqu'à 24 heures.",
+    "signInToManage": "Se connecter pour gérer les autres abonnements"
   },
   "resetPassword": {
     "verifyingTitle": "Vérification de votre lien",
@@ -692,6 +695,7 @@
     "personalInformationSubtitle": "Vos informations de compte et de contact",
     "saveSuccess": "Les modifications du compte ont été effectuées avec succès",
     "saveError": "Échec de l'enregistrement des modifications du compte. Veuillez réessayer.",
+    "announcementsSyncFailed": "Nous n'avons pas pu actualiser votre préférence pour les annonces de l'API. Si vous venez de vous désabonner depuis un courriel, l'affichage peut prendre jusqu'à 24 heures.",
     "edit": "Modifier",
     "save": "Enregistrer",
     "cancel": "Annuler",
