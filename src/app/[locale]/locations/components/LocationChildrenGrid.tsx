@@ -13,11 +13,14 @@ import {
   getTotalFeedCount,
   sortByFeedCount,
   type ChildrenKind,
+  type ContinentInfo,
   type LocationResult,
 } from '../lib/location-directory';
 
 interface Props {
   locations: LocationResult[];
+  /** To link each location through its continent. */
+  continents: ContinentInfo[];
   kind: ChildrenKind;
   locale: string;
 }
@@ -41,6 +44,7 @@ function getFlag(location: LocationResult): string | undefined {
  */
 export default async function LocationChildrenGrid({
   locations,
+  continents,
   kind,
   locale,
 }: Props): Promise<ReactElement> {
@@ -53,7 +57,7 @@ export default async function LocationChildrenGrid({
       counts: location.feed_counts,
     })),
   ).map(({ location, name, counts }) => {
-    const href = buildLocationHref(getLocationSegments(location));
+    const href = buildLocationHref(getLocationSegments(location, continents));
     return {
       key: href,
       name,

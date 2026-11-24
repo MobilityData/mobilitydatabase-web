@@ -1,6 +1,6 @@
 import { type ReactElement } from 'react';
 import { type Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { Box, Container, Typography } from '@mui/material';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import BreadcrumbNavigation, {
@@ -19,12 +19,16 @@ import {
   getChildrenKind,
   getLocationName,
   getPageCount,
+  getLocationSegments,
   getTotalFeedCount,
-  parseLocationSegments,
+  isSameSegments,
+  parseLocationRequest,
   parsePageParam,
+  type LocationRequest,
 } from '../lib/location-directory';
 import {
   fetchLocationPage,
+  requestKey,
   type LocationPageData,
 } from '../lib/location-directory-data';
 
@@ -37,8 +41,7 @@ interface PageProps {
 
 interface ParsedRequest {
   locale: string;
-  /** URL segments: the location's API path slugs, continent first. */
-  segments: string[];
+  location: LocationRequest;
   page: number;
 }
 
@@ -50,10 +53,10 @@ async function parseRequest({
   const [{ locale, location: segments }, { page: rawPage }] = await Promise.all(
     [params, searchParams],
   );
-  const slugs = parseLocationSegments(segments);
+  const location = parseLocationRequest(segments);
   const page = parsePageParam(rawPage);
-  if (slugs === null || page === null) return null;
-  return { locale, segments: slugs, page };
+  if (location === null || page === null) return null;
+  return { locale, location, page };
 }
 
 /**
@@ -62,12 +65,53 @@ async function parseRequest({
  * the page.
  */
 async function fetchPageData({
-  segments,
+  location,
   page,
 }: ParsedRequest): Promise<LocationPageData | null> {
-  const data = await fetchLocationPage(page, segments.join('/'));
+  const data = await fetchLocationPage(
+    page,
+    location.kind,
+    requestKey(location),
+  );
   if (data === null || page > getPageCount(data.feeds.total ?? 0)) {
     return null;
+  }
+  return data;
+}
+
+/** The canonical URL segments of the page's location; empty at the root. */
+function canonicalSegments({ location, continents }: LocationPageData) {
+  return location === null ? [] : getLocationSegments(location, continents);
+}
+
+/** The page's URL in the request's locale (`/fr/...` in French). */
+function localizedHref(
+  segments: readonly string[],
+  page: number,
+  locale: string,
+): string {
+  const [pathname, query] = buildLocationHref(segments, page).split('?');
+  const localizedPathname = getPathname({ href: pathname, locale });
+  return `${localizedPathname}${query !== undefined ? `?${query}` : ''}`;
+}
+
+/**
+ * The page's data, or a 404 when the location does not exist, or a permanent
+ * redirect when the URL is not the location's canonical URL: only the last
+ * segment identifies the location, so any other URL of it (an outdated name,
+ * another continent) moves to the canonical one.
+ *
+ * The page streams (loading.tsx), so the 404 and the redirect reach the
+ * browser inside a 200 response, as a not-found page and a client-side
+ * redirect. The metadata of a non-canonical URL still points crawlers to the
+ * canonical one.
+ */
+async function resolvePage(request: ParsedRequest): Promise<LocationPageData> {
+  const data = await fetchPageData(request);
+  if (data === null) notFound();
+  const segments = canonicalSegments(data);
+  if (!isSameSegments(request.location.segments, segments)) {
+    permanentRedirect(localizedHref(segments, request.page, request.locale));
   }
   return data;
 }
@@ -101,15 +145,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
           gtfs_rt: counts?.gtfs_rt ?? 0,
           gbfs: counts?.gbfs ?? 0,
         });
-  // The URL is the location's API path, in the request's locale (`/fr/...` in French).
-  const [pathname, query] = buildLocationHref(request.segments, page).split(
-    '?',
-  );
-  const localizedPathname = getPathname({
-    href: pathname,
-    locale: request.locale,
-  });
-  const url = `${SITE_URL}${localizedPathname}${query !== undefined ? `?${query}` : ''}`;
+  const url = `${SITE_URL}${localizedHref(canonicalSegments(data), page, request.locale)}`;
 
   return {
     title,
@@ -130,22 +166,22 @@ export default async function LocationsPage(
 ): Promise<ReactElement> {
   const request = await parseRequest(props);
   if (request === null) notFound();
-  const { locale, page, segments } = request;
+  const { locale, page } = request;
   setRequestLocale(locale);
 
   const [data, t, tCommon] = await Promise.all([
-    fetchPageData(request),
+    resolvePage(request),
     getTranslations('locations'),
     getTranslations('common'),
   ]);
-  if (data === null) notFound();
+  const segments = canonicalSegments(data);
 
-  const { location, children, feeds } = data;
+  const { location, children, feeds, continents } = data;
   const isRoot = location === null;
   const total = feeds.total ?? 0;
   const pageCount = getPageCount(total);
   const place = buildPlaceName(location);
-  const steps = buildBreadcrumbSteps(location);
+  const steps = buildBreadcrumbSteps(location, continents);
 
   const crumbs: Crumb[] = [
     { label: tCommon('feeds'), href: '/feeds' },
@@ -215,6 +251,7 @@ export default async function LocationsPage(
             </Typography>
             <LocationChildrenGrid
               locations={children}
+              continents={continents}
               kind={childrenKind}
               locale={locale}
             />

@@ -15,9 +15,14 @@ export const LOCATIONS_API_PAGE_SIZE = 100;
 /** Anchor of the feed list; pagination links jump back to it. */
 export const FEEDS_SECTION_ID = 'feeds';
 
-// API slugs: lowercase letters (any script), digits and hyphens, e.g.
-// `north-america`, `montreal`, `washington-township-123456`.
+// URL segments: lowercase letters (any script), digits and hyphens, e.g.
+// `north-america`, `ca`, `175905-montreal`.
 const SLUG_PATTERN = /^[\p{Ll}\p{Lo}\p{M}\p{Nd}-]+$/u;
+// A country's segment is its ISO 3166-1 alpha-2 code, lowercased.
+const COUNTRY_SEGMENT_PATTERN = /^[a-z]{2}$/;
+// Below the country, a segment starts with the location id; the rest is the
+// name, only there to be read.
+const PLACE_SEGMENT_PATTERN = /^(\d+)(?:-|$)/;
 
 function decodeSegment(segment: string): string | null {
   if (!segment.includes('%')) return segment;
@@ -28,25 +33,58 @@ function decodeSegment(segment: string): string | null {
   }
 }
 
+/** The location id at the start of a place segment (`175905-montreal`). */
+function placeIdOf(segment: string): number | null {
+  const match = PLACE_SEGMENT_PATTERN.exec(segment);
+  if (match === null) return null;
+  const id = Number(match[1]);
+  return Number.isSafeInteger(id) && id > 0 ? id : null;
+}
+
 /**
- * Maps the optional catch-all segments to the slugs of a location's API
- * `path`, continent first, at any depth: `/locations/<path>` is the
- * location's `path`.
- *
- * @returns the slugs (empty at the root), or null when a segment is not a
- * valid slug (empty, uppercase, spaces, punctuation other than `-`).
+ * The location a directory URL asks for. `segments` are the URL segments as
+ * requested, to compare with the location's canonical segments.
  */
-export function parseLocationSegments(
-  segments: readonly string[] | undefined,
-): string[] | null {
-  if (segments == undefined) return [];
-  const slugs: string[] = [];
-  for (const segment of segments) {
-    const slug = decodeSegment(segment);
-    if (slug === null || !SLUG_PATTERN.test(slug)) return null;
-    slugs.push(slug);
+export type LocationRequest =
+  | { kind: 'root'; segments: string[] }
+  | { kind: 'continent'; segments: string[]; continentSlug: string }
+  | { kind: 'country'; segments: string[]; countryCode: string }
+  | { kind: 'place'; segments: string[]; locationId: number };
+
+/**
+ * Parses the optional catch-all segments of `/locations/...`:
+ * `<continent>/<country code>/<id>-<name>/...`, as deep as the location. A
+ * country without continent starts at its code. Only the last segment
+ * identifies the location (continent slug, country code or location id);
+ * the others are checked against its canonical URL by the page.
+ *
+ * @returns null when a segment is malformed: empty, uppercase, spaces,
+ * punctuation other than `-`, or a place segment without its id.
+ */
+export function parseLocationRequest(
+  rawSegments: readonly string[] | undefined,
+): LocationRequest | null {
+  const segments: string[] = [];
+  for (const rawSegment of rawSegments ?? []) {
+    const segment = decodeSegment(rawSegment);
+    if (segment === null || !SLUG_PATTERN.test(segment)) return null;
+    segments.push(segment);
   }
-  return slugs;
+  if (segments.length === 0) return { kind: 'root', segments };
+  // Continent slugs are never two letters long, unlike country codes.
+  const startsWithContinent = !COUNTRY_SEGMENT_PATTERN.test(segments[0]);
+  const fromCountry = startsWithContinent ? segments.slice(1) : segments;
+  if (fromCountry.length === 0) {
+    return { kind: 'continent', segments, continentSlug: segments[0] };
+  }
+  if (!COUNTRY_SEGMENT_PATTERN.test(fromCountry[0])) return null;
+  if (fromCountry.length === 1) {
+    return { kind: 'country', segments, countryCode: fromCountry[0] };
+  }
+  const placeIds = fromCountry.slice(1).map(placeIdOf);
+  const locationId = placeIds[placeIds.length - 1];
+  if (placeIds.includes(null) || locationId == null) return null;
+  return { kind: 'place', segments, locationId };
 }
 
 const PAGE_PATTERN = /^[1-9]\d*$/;
@@ -85,9 +123,9 @@ export function getPageOffset(
 
 /**
  * Locale-less path to a directory location, e.g.
- * `/locations/north-america/canada/quebec?page=2`. Page 1 has no query string
- * so that it stays the canonical URL of the location. Pass the result to the
- * next-intl `Link`, which adds the locale prefix.
+ * `/locations/north-america/ca/61549-quebec?page=2`. Page 1 has no query
+ * string so that it stays the canonical URL of the location. Pass the result
+ * to the next-intl `Link`, which adds the locale prefix.
  */
 export function buildLocationHref(
   segments: readonly string[],
@@ -104,13 +142,61 @@ export function getLocationName(location: LocationResult): string {
   return location.name ?? location.slug ?? '';
 }
 
+/** A continent, as the directory names and links it. */
+export interface ContinentInfo {
+  code: string;
+  slug: string;
+  name: string;
+}
+
+/** The continents of the `/v1/locations` results, by code. */
+export function toContinentInfo(
+  continents: readonly LocationResult[],
+): ContinentInfo[] {
+  return continents.flatMap((continent) =>
+    continent.location_type === 'continent' &&
+    continent.continent_code != undefined
+      ? [
+          {
+            code: continent.continent_code,
+            slug: continent.slug,
+            name: getLocationName(continent),
+          },
+        ]
+      : [],
+  );
+}
+
+function continentOf(
+  location: LocationResult,
+  continents: readonly ContinentInfo[],
+): ContinentInfo | undefined {
+  return continents.find(({ code }) => code === location.continent_code);
+}
+
 /**
- * URL segments of a location: its `path_slugs`, continent first
- * (`['north-america', 'canada', 'quebec']`), so that its directory URL is
- * `/locations/<path>`.
+ * Canonical URL segments of a location: a continent's slug, then for any
+ * other location its continent's slug and its `path_slugs`, from the country
+ * down (`['north-america', 'ca', '61549-quebec']`). A country without
+ * continent starts at its code.
  */
-export function getLocationSegments(location: LocationResult): string[] {
-  return location.path_slugs;
+export function getLocationSegments(
+  location: LocationResult,
+  continents: readonly ContinentInfo[],
+): string[] {
+  if (location.location_type === 'continent') return [location.slug];
+  const continent = continentOf(location, continents);
+  return continent !== undefined
+    ? [continent.slug, ...location.path_slugs]
+    : [...location.path_slugs];
+}
+
+/** Whether two segment lists are the same URL path. */
+export function isSameSegments(
+  a: readonly string[],
+  b: readonly string[],
+): boolean {
+  return a.length === b.length && a.every((segment, i) => segment === b[i]);
 }
 
 /** What the children of a directory page are, for their heading and search. */
@@ -129,40 +215,47 @@ export interface BreadcrumbStep {
 }
 
 /**
- * One step per `path_names` entry, continent first, each linked through the
- * matching prefix of `path_slugs`. Empty at the root.
+ * One step per level of the location, continent first: its continent, then
+ * one per `path_names` entry, each linked through the matching prefix of
+ * `path_slugs`. Empty at the root.
  */
 export function buildBreadcrumbSteps(
   location: LocationResult | null,
+  continents: readonly ContinentInfo[],
 ): BreadcrumbStep[] {
   if (location === null) return [];
+  if (location.location_type === 'continent') {
+    return [{ label: getLocationName(location), segments: [location.slug] }];
+  }
+  const continent = continentOf(location, continents);
+  const prefix = continent !== undefined ? [continent.slug] : [];
+  const steps: BreadcrumbStep[] =
+    continent !== undefined
+      ? [{ label: continent.name, segments: prefix }]
+      : [];
   const names = location.path_names;
   const slugs = location.path_slugs;
   const depth = Math.min(names.length, slugs.length);
-  const steps: BreadcrumbStep[] = [];
   for (let index = 0; index < depth; index++) {
     steps.push({
       label: names[index],
-      segments: slugs.slice(0, index + 1),
+      segments: [...prefix, ...slugs.slice(0, index + 1)],
     });
   }
   return steps;
 }
 
 /**
- * Human-readable place for titles, most specific first and without the
- * continent: `Montréal, Québec, Canada`. A continent is named on its own;
- * empty at the root.
+ * Human-readable place for titles, most specific first: `Montréal, Québec,
+ * Canada`. A continent is named on its own; empty at the root.
  */
 export function buildPlaceName(location: LocationResult | null): string {
   if (location === null) return '';
   if (location.location_type === 'continent') return getLocationName(location);
+  // `path_names` runs from the country down.
   const names = location.path_names;
-  // `path_names` starts with the continent, when the country has one.
-  const placeNames =
-    location.continent_code != undefined ? names.slice(1) : names;
-  if (placeNames.length === 0) return getLocationName(location);
-  return [...placeNames].reverse().join(', ');
+  if (names.length === 0) return getLocationName(location);
+  return [...names].reverse().join(', ');
 }
 
 export interface ResultsPage<T> {
