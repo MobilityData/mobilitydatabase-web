@@ -22,6 +22,7 @@ import Typography from '@mui/material/Typography';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Link as LocaleLink } from '../../../../i18n/navigation';
 import { useAuthSession } from '../../../components/AuthSessionProvider';
+import FeedbackButton from '../../../components/FeedbackButton';
 import NotificationSettingsDialog, {
   type NotificationSettings,
 } from '../../../screens/Feed/components/NotificationSettingsDialog';
@@ -276,6 +277,7 @@ export default function AccountNotifications(): React.ReactElement {
       subtitle='View and manage the feeds you are subscribed to for update notifications'
       loading={isLoading}
     >
+      <FeedbackButton form='notifications' />
       <Snackbar
         open={actionError !== null}
         autoHideDuration={4000}

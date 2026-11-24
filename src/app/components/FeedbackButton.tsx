@@ -8,12 +8,23 @@ import { useTranslations } from 'next-intl';
 import { useAppSelector } from '../hooks';
 import { selectUserProfile } from '../store/profile-selectors';
 import { useAuthSession } from './AuthSessionProvider';
-import {
-  buildSealFeedbackUrl,
-  SEAL_FEEDBACK_URL,
-} from '../utils/seal-feedback-url';
+import { buildFeedbackUrl, type FeedbackFormId } from '../utils/feedback-url';
+
+interface FeedbackButtonProps {
+  /** Which feature's feedback form the button opens. */
+  form: FeedbackFormId;
+}
+
+/** Per-form accessible label: the visible label is the same for every form. */
+const ARIA_LABEL_KEYS = {
+  seal: 'sealFeedbackButtonAriaLabel',
+  notifications: 'notificationsFeedbackButtonAriaLabel',
+} as const satisfies Record<FeedbackFormId, string>;
 
 /**
+ *
+ * Floating "Got feedback?" link to a feature's Google Form: a vertical tab on
+ * the right edge on large screens, a FAB in the bottom-right corner below.
  *
  * The user's name and email are prefilled into the form when the app knows
  * them. Both sources are read because they settle at different times: the
@@ -23,7 +34,9 @@ import {
  * an unprefilled form - the link is never gated on identity.
  *
  */
-export default function SealFeedbackButton(): ReactElement {
+export default function FeedbackButton({
+  form,
+}: FeedbackButtonProps): ReactElement {
   const t = useTranslations('common');
   const user = useAppSelector(selectUserProfile);
   const {
@@ -52,8 +65,10 @@ export default function SealFeedbackButton(): ReactElement {
   // prefill, so it works for anyone who clicks during hydration.
   const feedbackUrl = useMemo(
     () =>
-      isMounted ? buildSealFeedbackUrl({ name, email }) : SEAL_FEEDBACK_URL,
-    [isMounted, name, email],
+      isMounted
+        ? buildFeedbackUrl(form, { name, email })
+        : buildFeedbackUrl(form),
+    [form, isMounted, name, email],
   );
 
   return (
@@ -64,8 +79,8 @@ export default function SealFeedbackButton(): ReactElement {
         href={feedbackUrl}
         target='_blank'
         rel='noreferrer'
-        data-testid='seal-feedback-button'
-        aria-label={t('sealFeedbackButtonAriaLabel')}
+        data-testid={`${form}-feedback-button`}
+        aria-label={t(ARIA_LABEL_KEYS[form])}
         sx={{
           display: { xs: 'none', lg: 'inline-flex' },
           position: 'fixed',
@@ -80,15 +95,15 @@ export default function SealFeedbackButton(): ReactElement {
         }}
         startIcon={<FeedbackOutlinedIcon fontSize='small' aria-hidden />}
       >
-        {t('sealFeedbackButtonLabel')}
+        {t('feedbackButtonLabel')}
       </Button>
       <Fab
         color='primary'
         href={feedbackUrl}
         target='_blank'
         rel='noreferrer'
-        data-testid='seal-feedback-fab'
-        aria-label={t('sealFeedbackButtonAriaLabel')}
+        data-testid={`${form}-feedback-fab`}
+        aria-label={t(ARIA_LABEL_KEYS[form])}
         sx={{
           display: { xs: 'flex', lg: 'none' },
           position: 'fixed',

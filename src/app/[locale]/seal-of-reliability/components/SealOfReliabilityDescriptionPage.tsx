@@ -23,7 +23,7 @@ import { getTranslations } from 'next-intl/server';
 import CardSectionTitle from '../../../components/CardSectionTitle';
 import SectionContainer from '../../../components/SectionContainer';
 import SealOfReliability from '../../../components/SealOfReliability';
-import SealFeedbackButton from '../../../components/SealFeedbackButton';
+import FeedbackButton from '../../../components/FeedbackButton';
 import { accordionStyle } from '../../../components/accordionStyle';
 import { Link as LocaleLink } from '../../../../i18n/navigation';
 import {
@@ -50,7 +50,7 @@ export default async function SealOfReliabilityDescriptionPage(): Promise<ReactE
       }}
       maxWidth='lg'
     >
-      <SealFeedbackButton />
+      <FeedbackButton form='seal' />
 
       <SectionContainer sx={{ mt: 0 }} maxWidth='lg'>
         <Container
