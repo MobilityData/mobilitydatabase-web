@@ -22,6 +22,8 @@ import Typography from '@mui/material/Typography';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Link as LocaleLink } from '../../../../i18n/navigation';
 import { useAuthSession } from '../../../components/AuthSessionProvider';
+import FeedbackButton from '../../../components/FeedbackButton';
+import { useUserFeatureFlags } from '../../../hooks/useUserFeatureFlags';
 import NotificationSettingsDialog, {
   type NotificationSettings,
 } from '../../../screens/Feed/components/NotificationSettingsDialog';
@@ -50,6 +52,12 @@ type SortKey = 'title' | 'type' | 'status';
 export default function AccountNotifications(): React.ReactElement {
   const t = useTranslations('feeds');
   const { isAuthenticated } = useAuthSession();
+  const { flags: userFeatureFlags, isResolved: areUserFeatureFlagsResolved } =
+    useUserFeatureFlags();
+  // The feedback form is for users in the notifications early release, so the
+  // button stays hidden until their entitlement is known and true.
+  const showFeedbackButton =
+    areUserFeatureFlagsResolved && userFeatureFlags.isNotificationsEnabled;
   const [orderBy, setOrderBy] = React.useState<SortKey | null>(null);
   const [order, setOrder] = React.useState<'asc' | 'desc'>('asc');
 
@@ -276,6 +284,7 @@ export default function AccountNotifications(): React.ReactElement {
       subtitle='View and manage the feeds you are subscribed to for update notifications'
       loading={isLoading}
     >
+      {showFeedbackButton && <FeedbackButton form='notifications' />}
       <Snackbar
         open={actionError !== null}
         autoHideDuration={4000}

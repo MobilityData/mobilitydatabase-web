@@ -22,7 +22,7 @@ import SectionContainer from '../../../../components/SectionContainer';
 import CardSectionTitle from '../../../../components/CardSectionTitle';
 import BreadcrumbNavigation from '../../../../components/BreadcrumbNavigation';
 import SealOfReliability from '../../../../components/SealOfReliability';
-import SealFeedbackButton from '../../../../components/SealFeedbackButton';
+import FeedbackButton from '../../../../components/FeedbackButton';
 import {
   GTFS_VALIDATOR_URL,
   clockStartEntries,
@@ -110,7 +110,7 @@ export default async function HowItIsCalculatedPage(): Promise<ReactElement> {
 
   return (
     <Container component='main' sx={{ width: '100%', m: 'auto' }} maxWidth='lg'>
-      <SealFeedbackButton />
+      <FeedbackButton form='seal' />
 
       <BreadcrumbNavigation
         crumbs={[

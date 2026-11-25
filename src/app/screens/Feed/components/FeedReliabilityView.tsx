@@ -34,7 +34,7 @@ import { getCoverageWindowLength } from '../lib/continuous-coverage';
 import { getLatestCoverageWindow } from '../lib/fresh-coverage';
 import { displayFormattedDate } from '../../../utils/date';
 import SectionContainer from '../../../components/SectionContainer';
-import SealFeedbackButton from '../../../components/SealFeedbackButton';
+import FeedbackButton from '../../../components/FeedbackButton';
 
 interface Props {
   feed: AllFeedType;
@@ -103,7 +103,7 @@ export default async function FeedReliabilityView({
     >
       <ScrollToTop />
       <CssBaseline />
-      <SealFeedbackButton />
+      <FeedbackButton form='seal' />
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         <SectionContainer maxWidth='xl'>
           <Box sx={{ position: 'relative' }}>

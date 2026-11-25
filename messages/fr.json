@@ -1,7 +1,8 @@
 {
   "common": {
-    "sealFeedbackButtonLabel": "Des commentaires ?",
+    "feedbackButtonLabel": "Des commentaires ?",
     "sealFeedbackButtonAriaLabel": "Donnez votre avis sur le Sceau de fiabilité (ouvre un nouvel onglet)",
+    "notificationsFeedbackButtonAriaLabel": "Donnez votre avis sur les notifications (ouvre un nouvel onglet)",
     "copyToClipboard": "Copier dans le presse-papiers",
     "copied": "Copié!",
     "name": "Nom",
