@@ -73,6 +73,7 @@ const Footer: React.FC = () => {
           <Box sx={{ width: FOOTER_COLUMN_WIDTH }}>
             <FooterColumnTitle>{t('columns.platform')}</FooterColumnTitle>
             <FooterLink href='/feeds'>{t('links.feeds')}</FooterLink>
+            <FooterLink href='/locations'>{t('links.locations')}</FooterLink>
             <FooterLink href='/contribute'>{t('links.addFeed')}</FooterLink>
             <FooterLink
               href='https://mobilitydata.github.io/mobility-feed-api/SwaggerUI/index.html'

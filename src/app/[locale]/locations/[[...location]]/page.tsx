@@ -1,0 +1,286 @@
+import { type ReactElement } from 'react';
+import { type Metadata } from 'next';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { Box, Container, Typography } from '@mui/material';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
+import BreadcrumbNavigation, {
+  type Crumb,
+} from '../../../components/BreadcrumbNavigation';
+import SectionContainer from '../../../components/SectionContainer';
+import { getPathname } from '../../../../i18n/navigation';
+import FeedCountSummary from '../components/FeedCountSummary';
+import LocationChildrenGrid from '../components/LocationChildrenGrid';
+import LocationFeedsList from '../components/LocationFeedsList';
+import {
+  buildBreadcrumbSteps,
+  buildLocationHref,
+  buildPlaceName,
+  FEEDS_SECTION_ID,
+  getChildrenKind,
+  getLocationName,
+  getPageCount,
+  getLocationSegments,
+  getTotalFeedCount,
+  isSameSegments,
+  parseLocationRequest,
+  parsePageParam,
+  type LocationRequest,
+} from '../lib/location-directory';
+import {
+  fetchLocationPage,
+  requestKey,
+  type LocationPageData,
+} from '../lib/location-directory-data';
+
+const SITE_URL = 'https://mobilitydatabase.org';
+
+interface PageProps {
+  params: Promise<{ locale: string; location?: string[] }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+interface ParsedRequest {
+  locale: string;
+  location: LocationRequest;
+  page: number;
+}
+
+/** The request, or null when the URL or the page number is malformed. */
+async function parseRequest({
+  params,
+  searchParams,
+}: PageProps): Promise<ParsedRequest | null> {
+  const [{ locale, location: segments }, { page: rawPage }] = await Promise.all(
+    [params, searchParams],
+  );
+  const location = parseLocationRequest(segments);
+  const page = parsePageParam(rawPage);
+  if (location === null || page === null) return null;
+  return { locale, location, page };
+}
+
+/**
+ * The page data, or null when the location does not exist or the page is
+ * past the last one. Deduped by React cache() between generateMetadata and
+ * the page.
+ */
+async function fetchPageData({
+  location,
+  page,
+}: ParsedRequest): Promise<LocationPageData | null> {
+  const data = await fetchLocationPage(
+    page,
+    location.kind,
+    requestKey(location),
+  );
+  if (data === null || page > getPageCount(data.feeds.total ?? 0)) {
+    return null;
+  }
+  return data;
+}
+
+/** The canonical URL segments of the page's location; empty at the root. */
+function canonicalSegments({ location, continents }: LocationPageData) {
+  return location === null ? [] : getLocationSegments(location, continents);
+}
+
+/** The page's URL in the request's locale (`/fr/...` in French). */
+function localizedHref(
+  segments: readonly string[],
+  page: number,
+  locale: string,
+): string {
+  const [pathname, query] = buildLocationHref(segments, page).split('?');
+  const localizedPathname = getPathname({ href: pathname, locale });
+  return `${localizedPathname}${query !== undefined ? `?${query}` : ''}`;
+}
+
+/**
+ * The page's data, or a 404 when the location does not exist, or a permanent
+ * redirect when the URL is not the location's canonical URL: only the last
+ * segment identifies the location, so any other URL of it (an outdated name,
+ * another continent) moves to the canonical one.
+ *
+ * The page streams (loading.tsx), so the 404 and the redirect reach the
+ * browser inside a 200 response, as a not-found page and a client-side
+ * redirect. The metadata of a non-canonical URL still points crawlers to the
+ * canonical one.
+ */
+async function resolvePage(request: ParsedRequest): Promise<LocationPageData> {
+  const data = await fetchPageData(request);
+  if (data === null) notFound();
+  const segments = canonicalSegments(data);
+  if (!isSameSegments(request.location.segments, segments)) {
+    permanentRedirect(localizedHref(segments, request.page, request.locale));
+  }
+  return data;
+}
+
+export async function generateMetadata(props: PageProps): Promise<Metadata> {
+  const request = await parseRequest(props);
+  if (request === null) return {};
+  const [data, t] = await Promise.all([
+    fetchPageData(request),
+    getTranslations({ locale: request.locale, namespace: 'locations.meta' }),
+  ]);
+  if (data === null) return {};
+
+  const { location } = data;
+  const { page } = request;
+  const place = buildPlaceName(location);
+  const counts = location?.feed_counts;
+  const title =
+    location === null
+      ? t('rootTitle')
+      : page > 1
+        ? t('nodeTitlePaged', { place, page })
+        : t('nodeTitle', { place });
+  const description =
+    location === null
+      ? t('rootDescription')
+      : t('nodeDescription', {
+          place,
+          total: getTotalFeedCount(counts),
+          gtfs: counts?.gtfs ?? 0,
+          gtfs_rt: counts?.gtfs_rt ?? 0,
+          gbfs: counts?.gbfs ?? 0,
+        });
+  const url = `${SITE_URL}${localizedHref(canonicalSegments(data), page, request.locale)}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: 'Mobility Database',
+      type: 'website',
+    },
+  };
+}
+
+export default async function LocationsPage(
+  props: PageProps,
+): Promise<ReactElement> {
+  const request = await parseRequest(props);
+  if (request === null) notFound();
+  const { locale, page } = request;
+  setRequestLocale(locale);
+
+  const [data, t, tCommon] = await Promise.all([
+    resolvePage(request),
+    getTranslations('locations'),
+    getTranslations('common'),
+  ]);
+  const segments = canonicalSegments(data);
+
+  const { location, children, feeds, continents } = data;
+  const isRoot = location === null;
+  const total = feeds.total ?? 0;
+  const pageCount = getPageCount(total);
+  const place = buildPlaceName(location);
+  const steps = buildBreadcrumbSteps(location, continents);
+
+  const crumbs: Crumb[] = [
+    { label: tCommon('feeds'), href: '/feeds' },
+    { label: t('root'), href: isRoot ? undefined : buildLocationHref([]) },
+    ...steps.map((step, index) => ({
+      label: step.label,
+      href:
+        index === steps.length - 1
+          ? undefined
+          : buildLocationHref(step.segments),
+    })),
+  ];
+  // Without history to pop, back goes one level up the directory.
+  const backFallbackHref = isRoot
+    ? '/feeds'
+    : buildLocationHref(segments.slice(0, -1));
+  const childrenKind = getChildrenKind(location);
+
+  return (
+    <Container
+      component='main'
+      maxWidth='xl'
+      sx={{ width: '100%', m: 'auto', px: 0 }}
+    >
+      <SectionContainer maxWidth='xl'>
+        <BreadcrumbNavigation
+          crumbs={crumbs}
+          backFallbackHref={backFallbackHref}
+        />
+        <Typography variant='h1' sx={{ mt: 1 }}>
+          {isRoot ? t('title') : getLocationName(location)}
+        </Typography>
+        <Typography
+          variant='subtitle1'
+          color='text.secondary'
+          sx={{ mb: 3, maxWidth: 760 }}
+        >
+          {isRoot
+            ? t('rootIntro')
+            : t('nodeIntro', {
+                total: getTotalFeedCount(location.feed_counts),
+                place,
+              })}
+        </Typography>
+
+        {/* No catalog-wide counts by data type at the root. */}
+        {isRoot ? null : (
+          <FeedCountSummary counts={location.feed_counts} locale={locale} />
+        )}
+
+        {children.length > 0 ? (
+          <Box
+            component='section'
+            aria-labelledby='location-children-heading'
+            sx={{ mt: { xs: 4, md: 5 } }}
+          >
+            <Typography
+              id='location-children-heading'
+              component='h2'
+              variant='h5'
+              sx={{ fontWeight: 700, mb: 2 }}
+            >
+              {t(`childrenHeading.${childrenKind}`)}{' '}
+              <Box component='span' sx={{ color: 'text.secondary' }}>
+                ({children.length})
+              </Box>
+            </Typography>
+            <LocationChildrenGrid
+              locations={children}
+              continents={continents}
+              kind={childrenKind}
+              locale={locale}
+            />
+          </Box>
+        ) : null}
+
+        <Box
+          component='section'
+          id={FEEDS_SECTION_ID}
+          aria-labelledby='location-feeds-heading'
+          sx={{ mt: { xs: 4, md: 5 }, scrollMarginTop: '88px' }}
+        >
+          <Typography
+            id='location-feeds-heading'
+            component='h2'
+            variant='h5'
+            sx={{ fontWeight: 700, mb: 2 }}
+          >
+            {isRoot ? t('allFeedsHeading') : t('feedsHeading', { place })}
+          </Typography>
+          <LocationFeedsList
+            feeds={feeds.results ?? []}
+            total={total}
+            page={page}
+            pageCount={pageCount}
+            segments={segments}
+          />
+        </Box>
+      </SectionContainer>
+    </Container>
+  );
+}

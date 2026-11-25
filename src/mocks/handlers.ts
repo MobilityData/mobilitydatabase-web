@@ -7,10 +7,28 @@ import datasetsFeedJson from '../../cypress/fixtures/feed_datasets_test-516.json
 import feed2947 from '../../cypress/fixtures/feed_mdb-2947.json';
 import gtfsFeed2947 from '../../cypress/fixtures/gtfs_feed_mdb-2947.json';
 import datasets2947 from '../../cypress/fixtures/feed_datasets_mdb-2947.json';
+import {
+  getMockLocationFeeds,
+  getMockLocations,
+  isLocationSearch,
+} from './locationDirectory';
 
 export const handlers = [
-  // Mock search endpoint: return a list including test-516 and mdb-2947
-  http.get(`*/v1/search`, () => {
+  // Locations: search and filters, with feed counts
+  http.get(`*/v1/locations`, ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const { status, body } = getMockLocations(params);
+    return HttpResponse.json(body, { status });
+  }),
+  // Mock search endpoint. With `location_id` or `continent` (location
+  // directory pages): the feeds located there, paginated and sorted.
+  // Otherwise: a list including test-516 and mdb-2947.
+  http.get(`*/v1/search`, ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    if (isLocationSearch(params)) {
+      const { status, body } = getMockLocationFeeds(params);
+      return HttpResponse.json(body, { status });
+    }
     return HttpResponse.json({
       total: 2,
       results: [
